@@ -1,0 +1,116 @@
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
+from database import Base
+from sqlalchemy.orm import relationship
+
+
+# definimos una clase que es una tabla en la base de datos
+class SpotDB(Base):
+    __tablename__ = "spots"
+
+    # definimos las columnas en la tabla, ademas de su primary key. Index hace mas rapida las busquedas
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    description = Column(String)
+    department = Column(String)
+    
+    category_id = Column(Integer, ForeignKey("categories.id"))
+    category = relationship("Category", back_populates="spots")
+    amenities = relationship("SpotAmenity", back_populates="spot")
+    camping_detail = relationship("CampingDetail", uselist=False, back_populates="spot")
+    routes = relationship("Route", back_populates="spot")
+    climbing_sectors = relationship("ClimbingSector", back_populates="spot") 
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+
+    spots = relationship("SpotDB", back_populates="category")
+
+class CampingDetail(Base):
+    __tablename__ = "camping_details"
+
+    id = Column(Integer, primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    price = Column(Float)
+
+    spot = relationship("SpotDB", back_populates="camping_detail")
+
+class Amenity(Base):
+    __tablename__ = "amenities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
+
+    spots = relationship("SpotAmenity", back_populates="amenity")
+
+class SpotAmenity(Base):
+    __tablename__ = "spot_amenities"
+
+    spot_id = Column(Integer, ForeignKey("spots.id"), primary_key=True)
+    amenity_id = Column(Integer, ForeignKey("amenities.id"), primary_key=True)
+
+    spot = relationship("SpotDB", back_populates="amenities")
+    amenity = relationship("Amenity", back_populates="spots")
+
+
+class Route(Base):
+    __tablename__ = "routes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    
+    spot_id = Column(Integer, ForeignKey("spots.id"))
+    spot = relationship("SpotDB", back_populates="routes")
+
+    name = Column(String)
+
+    # métricas básicas
+    distance_km = Column(Float)
+    duration_hours = Column(Float)
+    elevation_gain = Column(Integer)
+    elevation_loss = Column(Integer)
+
+    max_altitude = Column(Integer)
+    min_altitude = Column(Integer)
+
+    # características
+    difficulty = Column(String)        # fácil / moderado / difícil
+    route_type = Column(String)        # circular / ida y vuelta
+
+    # extras útiles
+    technical_level = Column(String)   # bajo / medio / alto
+    physical_demand = Column(String)   # bajo / medio / alto
+
+    water_available = Column(Boolean)
+    camping_allowed = Column(Boolean)
+    signal = Column(String)            # none / low / medium
+
+
+class ClimbingSector(Base): 
+    __tablename__ = "climbingsectors"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"))
+    
+    name = Column(String) 
+    type = Column(String)
+    max_altitude = Column(Integer)
+    restrictions = Column(String)
+
+    spot = relationship("SpotDB", back_populates="climbing_sectors")
+    routes = relationship("ClimbingRoute", back_populates="sector")
+
+class ClimbingRoute(Base):
+    __tablename__ = "climbingroutes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sector_id = Column(Integer, ForeignKey("climbingsectors.id"))
+
+    name = Column(String)
+    grade = Column(String)   # mejor string (6a, 7b, V5...)
+    bolts = Column(Integer)
+    length = Column(Float)
+    description = Column(String)
+
+    sector = relationship("ClimbingSector", back_populates="routes")
