@@ -6,6 +6,8 @@ from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDet
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
+from typing import Optional
+
 
 
 
@@ -59,27 +61,28 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
 # Obtener los spots
 # usa la sesion para hablar con la DB
 @router.get("/spots", response_model=list[SpotResponse])
-def get_spots(db: Session = Depends(get_db)):
-    spots = (
-        db.query(SpotDB)
-        .options(
-            joinedload(SpotDB.category),
-            joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity)
-        )
-        .all()
+def get_spots(
+    db: Session = Depends(get_db),
+    activity: Optional[str] = None,
+    department: Optional[str] = None
+):
+    query = db.query(SpotDB).options(
+        joinedload(SpotDB.category),
+        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity)
     )
 
+    if department:
+        query = query.filter(SpotDB.department == department)
+
+    if activity:
+        query = query.join(SpotDB.category).filter(models.Category.name == activity)
+
+    spots = query.all()
+
     result = []
-
     for spot in spots:
-        amenities = [
-            sa.amenity for sa in spot.amenities if sa.amenity is not None
-        ]
-
-        result.append({
-            **spot.__dict__,
-            "amenities": amenities
-        })
+        amenities = [sa.amenity for sa in spot.amenities if sa.amenity is not None]
+        result.append({**spot.__dict__, "amenities": amenities})
 
     return result
 

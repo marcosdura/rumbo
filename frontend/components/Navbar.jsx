@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import SearchBar from "./SearchBar"
 
 function Navbar() {
   const [open, setOpen] = useState(false)
@@ -37,7 +38,7 @@ function Navbar() {
         .navbar-logo {
           font-family: 'Playfair Display', serif;
           font-weight: 600;
-          font-size: 18px;
+          font-size: 23px;
           color: #1a1a1a;
           text-decoration: none;
           letter-spacing: -0.01em;
@@ -165,7 +166,7 @@ function Navbar() {
         }
       `}</style>
 
-      <nav className="navbar-root px-5 py-3 flex items-center justify-between relative" style={{ zIndex: 100 }}>
+      <nav className="navbar-root px-5 py-5 flex items-center justify-between relative" style={{ zIndex: 100 }}>
 
 
         {/* Izquierda */}
@@ -181,17 +182,13 @@ function Navbar() {
           </button>
 
           <Link href="/" className="navbar-logo">
-            Travel App
+            Rumbo
           </Link>
         </div>
 
         {/* Buscador centrado */}
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <input
-            type="text"
-            placeholder="Buscar spots..."
-            className="search-input"
-          />
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex">
+          <SearchBar compact />
         </div>
 
         {/* Overlay */}
