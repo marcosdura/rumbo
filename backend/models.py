@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime
 from database import Base
 from sqlalchemy.orm import relationship
+from datetime import datetime
+
 
 
 # definimos una clase que es una tabla en la base de datos
@@ -147,5 +149,15 @@ class SurfSchool(Base):
     class_type = Column(String)        # grupal | privada | intensivo
     duration = Column(Float)
     equipment_include = Column(Boolean)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id       = Column(String, primary_key=True)  # el sub de Google
+    email    = Column(String, unique=True, nullable=False)
+    name     = Column(String, nullable=True)
+    image    = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     

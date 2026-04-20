@@ -10,6 +10,7 @@ import TrekkingRoutes from "../../../components/TrekkingRoutes"
 import ClimbingSectorsCards from "../../../components/ClimbingSectorsCards"
 import KayakDetail from "../../../components/KayakDetail"
 import SurfSchoolDetail from "../../../components/SurfSchoolDetail"
+import Footer from "../../../components/Footer"
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
@@ -49,7 +50,7 @@ function SpotDetail({ spot }) {
     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
     "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",]
 
-  return (<div className="h-screen flex flex-col bg-[#f5f4f0]">
+  return (<div className="min-h-screen flex flex-col bg-[#f5f4f0]">
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
@@ -165,7 +166,7 @@ function SpotDetail({ spot }) {
 
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden spot-page">
+      <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-6xl mx-auto px-6 py-8">
 
@@ -264,6 +265,7 @@ function SpotDetail({ spot }) {
 
             </div>
           </div>
+          <Footer />
         </div>
       </div>
     </div>

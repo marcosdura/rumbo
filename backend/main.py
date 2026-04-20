@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from database import engine
 import models
 from models import Base
-from routers import spots, categories, amenities, routes, sectors, kayak, surfschools
+from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert
 from fastapi.middleware.cors import CORSMiddleware
 
 # crea la tabla en la db
@@ -25,3 +25,4 @@ app.include_router(sectors.router)
 app.include_router(amenities.router)
 app.include_router(surfschools.router)
 app.include_router(kayak.router)
+app.include_router(upsert.router)
