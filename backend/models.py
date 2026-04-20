@@ -18,7 +18,9 @@ class SpotDB(Base):
     amenities = relationship("SpotAmenity", back_populates="spot")
     camping_detail = relationship("CampingDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
-    climbing_sectors = relationship("ClimbingSector", back_populates="spot") 
+    climbing_sectors = relationship("ClimbingSector", back_populates="spot")
+    kayak_detail = relationship("KayakDetail", uselist=False, back_populates="spot")
+    surf_schools = relationship("SurfSchool", uselist=False, back_populates="spot")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -114,3 +116,36 @@ class ClimbingRoute(Base):
     description = Column(String)
 
     sector = relationship("ClimbingSector", back_populates="routes")
+
+class KayakDetail(Base):
+    __tablename__ = "kayak_details"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot = relationship("SpotDB", back_populates="kayak_detail")
+
+    name = Column(String)
+    water_type = Column(String)       # rio | lago | mar
+    difficulty = Column(String)       # facil | intermedio | dificil
+    duration = Column(Float)          # horas
+
+    kayak_type = Column(String)       # travesia | recreativo | rapido
+
+    rental_available = Column(Boolean, default=False)
+
+
+class SurfSchool(Base):
+    __tablename__ = "surf_beach"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot = relationship("SpotDB", back_populates="surf_schools")
+
+    name = Column(String)
+    class_type = Column(String)        # grupal | privada | intensivo
+    duration = Column(Float)
+    equipment_include = Column(Boolean)
+
+    

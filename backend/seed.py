@@ -6,7 +6,7 @@ db = SessionLocal()
 # -------------------------
 # CATEGORÍAS
 # -------------------------
-categories = ["Camping", "Trekking", "Escalada", "Surf"]
+categories = ["Camping", "Trekking", "Escalada", "Surf", "Kayak"]
 
 category_map = {}
 
@@ -47,6 +47,26 @@ for name in amenities_list:
 # -------------------------
 # FUNCIONES
 # -------------------------
+def create_surf_school(spot, name, class_type, duration, equipment_include):
+    existing = db.query(models.SurfSchool).filter_by(spot_id=spot.id).first()
+
+    if existing:
+        return existing
+
+    surf = models.SurfSchool(
+        spot_id=spot.id,
+        name=name,
+        class_type=class_type,
+        duration=duration,
+        equipment_include=equipment_include
+    )
+
+    db.add(surf)
+    db.commit()
+    db.refresh(surf)
+
+    return surf
+
 
 def create_spot(name, description, department, category_name):
     existing = db.query(models.SpotDB).filter_by(name=name).first()
@@ -135,6 +155,29 @@ def create_climbing_route(sector, name, grade, bolts):
     db.add(route)
     db.commit()
 
+
+def create_kayak(spot, name, water_type, difficulty, duration, kayak_type, rental_available):
+    existing = db.query(models.KayakDetail).filter_by(spot_id=spot.id).first()
+
+    if existing:
+        return existing
+
+    kayak = models.KayakDetail(
+        spot_id=spot.id,
+        name=name,
+        water_type=water_type,
+        difficulty=difficulty,
+        duration=duration,
+        kayak_type=kayak_type,
+        rental_available=rental_available
+    )
+
+    db.add(kayak)
+    db.commit()
+    db.refresh(kayak)
+
+    return kayak
+
 # -------------------------
 # CAMPING (2)
 # -------------------------
@@ -199,5 +242,87 @@ create_climbing_route(sector1, "Vertical Loca", "6c", 10)
 sector2 = create_sector(climb, "La Cueva")
 create_climbing_route(sector2, "Techo Negro", "7a", 12)
 create_climbing_route(sector2, "Salida Técnica", "6b", 9)
+
+
+# -------------------------
+# KAYAK (2)
+# -------------------------
+
+kayak1 = create_spot(
+    "Laguna Garzón",
+    "Laguna ideal para travesías en kayak con aguas calmas",
+    "Rocha",
+    "Kayak"  # ⚠️ por ahora no tenés categoría Kayak
+)
+
+create_kayak(
+    kayak1,
+    name="Travesía Laguna Garzón",
+    water_type="lago",
+    difficulty="facil",
+    duration=2.5,
+    kayak_type="travesia",
+    rental_available=True
+)
+
+add_amenities(kayak1, ["Playa", "Estacionamiento", "Kayak"])
+
+# ------------------------------------
+
+kayak2 = create_spot(
+    "Río Santa Lucía",
+    "Tramo tranquilo ideal para kayak recreativo",
+    "Canelones",
+    "Kayak"  # mismo tema categoría
+)
+
+create_kayak(
+    kayak2,
+    name="Recorrido Río Santa Lucía",
+    water_type="rio",
+    difficulty="intermedio",
+    duration=3.0,
+    kayak_type="recreativo",
+    rental_available=False
+)
+
+add_amenities(kayak2, ["Acceso a río/lago/mar", "Sombra", "Zona para fogón"])
+
+
+surf1 = create_spot(
+    "Playa La Paloma",
+    "Una de las playas más populares para el surf en Uruguay, con olas constantes y buena formación para principiantes.",
+    "Rocha",
+    "Surf"
+)
+
+create_surf_school(
+    surf1,
+    name="La Paloma Surf School",
+    class_type="grupal",
+    duration=2.0,
+    equipment_include=True
+)
+
+add_amenities(surf1, ["Playa", "Ducha", "Estacionamiento", "Proveeduría/kiosco"])
+
+# ------------------------------------
+
+surf2 = create_spot(
+    "Playa Punta del Diablo",
+    "Punto clásico del surf uruguayo, con olas de mayor potencia ideales para surfistas intermedios y avanzados.",
+    "Rocha",
+    "Surf"
+)
+
+create_surf_school(
+    surf2,
+    name="Diablo Surf Co.",
+    class_type="privada",
+    duration=1.5,
+    equipment_include=False
+)
+
+add_amenities(surf2, ["Playa", "Estacionamiento", "Acepta mascotas", "Cafetería"])
 
 print("✅ Seed completado")

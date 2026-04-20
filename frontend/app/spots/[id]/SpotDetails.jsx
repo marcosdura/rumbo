@@ -8,23 +8,40 @@ import SpotDescription from "../../../components/SpotDescription"
 import SpotDetails from "../../../components/SpotDetails"
 import TrekkingRoutes from "../../../components/TrekkingRoutes"
 import ClimbingSectorsCards from "../../../components/ClimbingSectorsCards"
+import KayakDetail from "../../../components/KayakDetail"
+import SurfSchoolDetail from "../../../components/SurfSchoolDetail"
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
   const [sectors, setSectors] = useState([])
+  const [kayakDetail, setKayakDetail] = useState(null)
+  const [surfSchool, setSurfSchool] = useState(null)
 
   useEffect(() => {
-    if (spot?.category?.name === "Trekking") {
-      fetch(`http://localhost:8000/spots/${spot.id}/routes`)
-        .then(res => res.json())
-        .then(data => setRoutes(data))
-    }
-    if (spot?.category?.name === "Escalada") {
-      fetch(`http://localhost:8000/spots/${spot.id}/sectors`)
-        .then(res => res.json())
-        .then(data => setSectors(data))
-    }
-  }, [spot])
+  if (!spot?.id) return
+
+  if (spot.category?.name === "Trekking") {
+    fetch(`http://localhost:8000/spots/${spot.id}/routes`)
+      .then(res => res.json())
+      .then(data => setRoutes(data))
+  }
+  if (spot.category?.name === "Escalada") {
+    fetch(`http://localhost:8000/spots/${spot.id}/sectors`)
+      .then(res => res.json())
+      .then(data => setSectors(data))
+  }
+  if (spot.category?.name === "Kayak") {
+    fetch(`http://localhost:8000/spots/${spot.id}/kayak-detail`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setKayakDetail(data) })
+  }
+  if (spot.category?.name === "Surf") {
+    fetch(`http://localhost:8000/spots/${spot.id}/surf-school`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setSurfSchool(data) })
+  }
+}, [spot.id])
+
 
   const images = ["https://images.unsplash.com/photo-1501785888041-af3ef285b470",
     "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
@@ -124,15 +141,15 @@ function SpotDetail({ spot }) {
         }
 
         .category-pill {
-          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-          color: #065f46;
-          border: 1px solid #6ee7b7;
+          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
+          border: 1px solid #b4aa96;
+          color: #4a443b;
         }
 
         .department-pill {
-          background: linear-gradient(135deg, #d8e0ff, #b0c1fe);
-          color: #161f3e;
-          border: 1px solid #2652b8;
+          background: linear-gradient(135deg, #4a5650, #2C3932);
+          color: #f0f1f0;
+          border: 1px solid #4f5853;
         }
 
         .amenity-badge {
@@ -236,6 +253,13 @@ function SpotDetail({ spot }) {
                   </p>
                   <AmenitiesList amenities={spot.amenities} />
                 </div>
+              )}
+
+              {spot.category?.name === "Kayak" && kayakDetail && (
+                <KayakDetail kayak={kayakDetail} />
+              )}
+              {spot.category?.name === "Surf" && surfSchool && (
+                <SurfSchoolDetail surfSchool={surfSchool} />
               )}
 
             </div>

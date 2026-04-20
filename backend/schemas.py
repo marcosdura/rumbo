@@ -118,6 +118,7 @@ class ClimbingSectorResponse(ClimbingSectorBase):
     class Config:
         from_attributes = True
 
+##################################################
 
 class ClimbingRouteBase(BaseModel):
     name: str
@@ -134,6 +135,49 @@ class ClimbingRouteCreate(ClimbingRouteBase):
 
 
 class ClimbingRouteResponse(ClimbingRouteBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+###########################################
+
+class KayakDetail(BaseModel):
+    name: str
+    water_type: Optional[str] = None   # rio | lago | mar
+    difficulty: Optional[str] = None         # facil | intermedio | dificil
+    duration: Optional[float] = None            # horas
+
+    kayak_type: Optional[str] = None          # travesia | recreativo | rapido
+
+    rental_available: Optional[bool] = None
+  
+
+class KayakDetailCreate(KayakDetail):
+    spot_id: int
+
+
+class KayakDetailResponse(KayakDetail):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+################################################
+
+class SurfSchool(BaseModel):
+    name: str
+    duration: Optional[float] = None            # horas
+    class_type: Optional[str] = None          # grupal | privada | intensivo
+    equipment_include: Optional[bool] = None
+
+
+class SurfSchoolCreate(SurfSchool):
+    spot_id: int
+
+
+class SurfSchoolResponse(SurfSchool):
     id: int
 
     class Config:

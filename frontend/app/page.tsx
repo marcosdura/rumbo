@@ -1,5 +1,6 @@
 "use client"
 
+import Footer from "@/components/Footer"
 import { useEffect, useState } from "react"
 import SpotList from "../components/SpotList"
 import Navbar from "../components/Navbar"
@@ -12,6 +13,19 @@ export default function Home() {
       .then(res => res.json())
       .then(data => setSpots(data))
   }, [])
+
+   const lavallejaSpots = spots.filter(
+    (spot) => spot.department === "Lavalleja"
+  )
+
+  const visibleLavallejaSpots = lavallejaSpots.slice(0, 5)
+
+  const RochaSpots = spots.filter(
+    (spot) => spot.department === "Rocha"
+  )
+
+  const visibleRochaSpots = RochaSpots.slice(0, 5)
+  
 
   return (
     <div className="h-screen flex flex-col bg-[#f5f4f0]">
@@ -48,9 +62,9 @@ export default function Home() {
           justify-content: center;
           font-size: 12px;
           font-weight: 500;
-          color: #065f46;
-          background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-          border: 1px solid #6ee7b7;
+          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
+          border: 1px solid #b4aa96;
+          color: #4a443b;
           border-radius: 20px;
           padding: 2px 10px;
           margin-left: 10px;
@@ -70,7 +84,7 @@ export default function Home() {
 
       <div className="flex flex-1 overflow-hidden home-page">
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-8 py-8">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6">
 
             {/* Header */}
             <div className="mb-2 fade-up fade-up-1">
@@ -98,12 +112,72 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  <SpotList spots={spots} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                  <SpotList spots={spots.slice(0, 5)} />
                 </div>
               )}
             </div>
 
+            <div className="mb-2 fade-up fade-up-1 pt-8">
+              <p className="section-label">Destacados</p>
+              <h2 className="home-title text-4xl font-semibold text-gray-900 mt-1">
+                Spots destacados en Lavalleja
+                {lavallejaSpots.length > 0 && (
+                  <span className="spots-count">{lavallejaSpots.length}</span>
+                )}
+              </h2>
+            </div>
+            
+            <div className="divider fade-up fade-up-2" />
+            
+            <div className="fade-up fade-up-3">
+              {spots.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-64 rounded-2xl animate-pulse"
+                      style={{ background: "rgba(0,0,0,0.06)" }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                  <SpotList spots={visibleLavallejaSpots} />
+                </div>
+              )}
+            </div>
+
+            <div className="mb-2 fade-up fade-up-1 pt-8">
+              <p className="section-label">Destacados</p>
+              <h2 className="home-title text-4xl font-semibold text-gray-900 mt-1">
+                Spots destacados en Rocha
+                {lavallejaSpots.length > 0 && (
+                  <span className="spots-count">{lavallejaSpots.length}</span>
+                )}
+              </h2>
+            </div>
+            
+            <div className="divider fade-up fade-up-2" />
+            
+            <div className="fade-up fade-up-3">
+              {spots.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-64 rounded-2xl animate-pulse"
+                      style={{ background: "rgba(0,0,0,0.06)" }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                  <SpotList spots={visibleRochaSpots} />
+                </div>
+              )}
+            </div>
+              <Footer />
           </div>
         </div>
       </div>

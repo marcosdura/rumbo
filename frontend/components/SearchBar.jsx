@@ -145,8 +145,8 @@ export default function SearchBar() {
           transition: background 0.15s ease;
         }
         .search-dropdown-item:hover {
-          background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-          color: #065f46;
+          background: linear-gradient(135deg, #e8e3d8, #C6BDAA);
+          color: #4a443b;
         }
 
         .search-btn {
@@ -155,19 +155,23 @@ export default function SearchBar() {
           align-items: center;
           gap: 6px;
           margin-left: 2px;
-          background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-          border: 1px solid #6ee7b7;
-          color: #065f46;
+
+          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
+          border: 1px solid #b4aa96;
+          color: #4a443b;
+
           font-size: 13px;
           font-weight: 500;
           padding: 7px 18px;
           border-radius: 999px;
           cursor: pointer;
+
           transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
         }
+
         .search-btn:hover {
-          background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
-          box-shadow: 0 4px 14px rgba(110, 231, 183, 0.4);
+          background: linear-gradient(135deg, #d6cebf, #b4aa96);
+          box-shadow: 0 4px 14px rgba(198, 189, 170, 0.4);
           transform: translateY(-1px);
         }
         .search-btn:active {

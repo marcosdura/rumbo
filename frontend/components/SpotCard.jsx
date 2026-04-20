@@ -105,9 +105,9 @@ function SpotCard({ spot, index = 0 }) {
           font-weight: 500;
           padding: 3px 10px;
           border-radius: 999px;
-          background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-          color: #065f46;
-          border: 1px solid #6ee7b7;
+          background: linear-gradient(135deg, #d6cebf, #b4aa96);
+          color: #4a443b;
+          border: 1px solid #b4aa96;
         }
 
           .spot-card-badge-department {
@@ -115,9 +115,9 @@ function SpotCard({ spot, index = 0 }) {
           font-weight: 500;
           padding: 3px 10px;
           border-radius: 999px;
-          background: linear-gradient(135deg, #d8e0ff, #b0c1fe);
-          color: #161f3e;
-          border: 1px solid #2652b8;
+          background: linear-gradient(135deg, #4a5650, #2C3932);
+          color: #f0f1f0;
+          border: 1px solid #4f5853;
         }
 
         .spot-card-arrow {
@@ -134,8 +134,8 @@ function SpotCard({ spot, index = 0 }) {
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .spot-card:hover .spot-card-arrow {
-          background: #065f46;
-          border-color: #065f46;
+          background: #c6bdaa;
+          border-color: #b4aa96;
           color: white;
           transform: translateX(2px);
         }

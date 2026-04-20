@@ -16,7 +16,7 @@ function MapCard() {
         ></iframe>
       </div>
 
-      <button className="mt-4 w-full bg-green-800 text-white text-sm font-medium py-2.5 rounded-xl transition hover:-translate-y-1 hover:shadow-lg">
+      <button className="mt-4 w-full bg-[#c6bdaa] text-white text-sm font-medium py-2.5 rounded-xl transition hover:-translate-y-1 hover:shadow-lg">
         Cómo llegar →
       </button>
 

@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, RouteResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool
+from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
 from typing import Optional
 
+from database import engine
+from models import Base
 
+Base.metadata.create_all(bind=engine)
 
 
 router = APIRouter()
@@ -195,3 +198,17 @@ def get_routes_by_spot(spot_id: int, db: Session = Depends(get_db)):
 def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
     sectors = db.query(ClimbingSector).filter(ClimbingSector.spot_id == spot_id).all()
     return sectors
+
+@router.get("/spots/{spot_id}/kayak-detail", response_model=KayakDetailResponse)
+def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
+    kayak = db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id).first()
+    if not kayak:
+        raise HTTPException(status_code=404, detail="Kayak no encontrado")
+    return kayak
+
+@router.get("/spots/{spot_id}/surf-school", response_model=SurfSchoolResponse)
+def get_surf_school(spot_id: int, db: Session = Depends(get_db)):
+    surf = db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).first()
+    if not surf:
+        raise HTTPException(status_code=404, detail="SurfSchool no encontrada")
+    return surf
