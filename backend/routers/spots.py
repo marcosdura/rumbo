@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool, SpotImage
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse
 import models
 from sqlalchemy.orm import joinedload
@@ -113,6 +113,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.category),
             selectinload(SpotDB.routes), 
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
+            selectinload(SpotDB.images),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -131,7 +132,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "amenities": [
             sa.amenity for sa in spot.amenities if sa.amenity is not None
         ],
-        "routes": spot.routes
+        "routes": spot.routes,
+        "images": spot.images
     }
 
 

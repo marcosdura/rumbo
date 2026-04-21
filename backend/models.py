@@ -23,6 +23,8 @@ class SpotDB(Base):
     climbing_sectors = relationship("ClimbingSector", back_populates="spot")
     kayak_detail = relationship("KayakDetail", uselist=False, back_populates="spot")
     surf_schools = relationship("SurfSchool", uselist=False, back_populates="spot")
+    images = relationship("SpotImage", back_populates="spot")
+
 
 class Category(Base):
     __tablename__ = "categories"
@@ -159,5 +161,18 @@ class User(Base):
     name     = Column(String, nullable=True)
     image    = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+
+class SpotImage(Base):
+    __tablename__ = "spot_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"))
+    cloudinary_public_id = Column(String)  # lo que guardás de Cloudinary
+    is_main = Column(Boolean, default=False)  # para saber cuál mostrar primero
+    order = Column(Integer, default=0)  # para ordenar las fotos
+
+    spot = relationship("SpotDB", back_populates="images")
 
     

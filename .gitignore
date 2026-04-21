@@ -1,0 +1,47 @@
+# --- DEPENDENCIAS ---
+# Ignora node_modules y entornos virtuales en cualquier lugar del proyecto
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.venv/
+env/
+__pycache__/
+
+# --- BASES DE DATOS (Vital para el backend) ---
+*.db
+*.sqlite3
+
+# --- FRONTEND (Rutas relativas) ---
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/coverage/
+
+# --- BACKEND ---
+backend/dist/
+backend/build/
+
+# --- VARIABLES SENSIBLES (.env) ---
+# Bloquea cualquier archivo .env en cualquier carpeta
+.env*
+**/.env*
+
+# --- ARCHIVOS DE SISTEMA Y DEBUG ---
+.DS_Store
+Thumbs.db
+*.pem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# --- IDEs ---
+.vscode/
+.idea/

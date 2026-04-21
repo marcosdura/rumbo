@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from database import engine
 import models
 from models import Base
-from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert
+from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images
 from fastapi.middleware.cors import CORSMiddleware
+import cloudinary_config
 
 # crea la tabla en la db
 Base.metadata.create_all(bind=engine)
@@ -26,3 +27,4 @@ app.include_router(amenities.router)
 app.include_router(surfschools.router)
 app.include_router(kayak.router)
 app.include_router(upsert.router)
+app.include_router(images.router)

@@ -13,3 +13,9 @@ SessionLocal = sessionmaker(bind=engine)
 #clase para definir tablas
 Base = declarative_base()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

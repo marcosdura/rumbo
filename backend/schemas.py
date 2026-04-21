@@ -34,6 +34,7 @@ class SpotResponse(BaseModel):
     camping_detail: CampingDetailResponse | None = None
     amenities: list[AmenityResponse] = []
     routes: list[RouteResponse] = []
+    images: list[SpotImageResponse] = []
 
     class Config:
         from_attributes = True
@@ -179,6 +180,16 @@ class SurfSchoolCreate(SurfSchool):
 
 class SurfSchoolResponse(SurfSchool):
     id: int
+
+    class Config:
+        from_attributes = True
+
+
+class SpotImageResponse(BaseModel):
+    id: int
+    cloudinary_public_id: str
+    is_main: bool
+    order: int
 
     class Config:
         from_attributes = True

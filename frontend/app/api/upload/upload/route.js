@@ -1,0 +1,35 @@
+// app/api/upload/route.js
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function POST(request) {
+  const formData = await request.formData();
+  const file = formData.get('file');
+  const spotId = formData.get('spotId');
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const result = await new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: `spots/${spotId}`, // organiza por spot
+        public_id: `spot_${spotId}_main`, // o un nombre dinámico
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    ).end(buffer);
+  });
+
+  // Acá guardás result.public_id en tu DB asociado al spot
+  // await db.spot.update({ where: { id: spotId }, data: { imageId: result.public_id } })
+
+  return Response.json({ public_id: result.public_id, url: result.secure_url });
+}

@@ -11,12 +11,17 @@ import ClimbingSectorsCards from "../../../components/ClimbingSectorsCards"
 import KayakDetail from "../../../components/KayakDetail"
 import SurfSchoolDetail from "../../../components/SurfSchoolDetail"
 import Footer from "../../../components/Footer"
+import SpotImage from '@/components/SpotImage';
+import { CldImage } from 'next-cloudinary';
+
+
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
   const [sectors, setSectors] = useState([])
   const [kayakDetail, setKayakDetail] = useState(null)
   const [surfSchool, setSurfSchool] = useState(null)
+  const displayImages = spot.images?.length > 0 ? spot.images : null;
 
   useEffect(() => {
   if (!spot?.id) return
@@ -43,12 +48,6 @@ function SpotDetail({ spot }) {
   }
 }, [spot.id])
 
-
-  const images = ["https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-    "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",]
 
   return (<div className="min-h-screen flex flex-col bg-[#f5f4f0]">
 
@@ -195,21 +194,36 @@ function SpotDetail({ spot }) {
             </div>
 
             {/* Imágenes */}
+
             <div className="grid grid-cols-2 gap-3 mb-10 fade-up fade-up-2">
-              <div className="img-zoom overflow-hidden rounded-2xl img-reveal h-[340px]">
-                <img
-                  src={`${images[0]}?w=1200&q=80`}
+              <div className="img-zoom overflow-hidden rounded-2xl img-reveal h-[340px] relative">
+                <CldImage
+                  src={spot.images[0].cloudinary_public_id}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  alt={spot.name}
+                  crop="fill"
+                  gravity="auto"
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  className="object-cover"
+                  quality="auto"
+                  format="auto"
                 />
               </div>
               <div className="grid grid-cols-2 grid-rows-2 gap-2 h-[340px]">
-                {images.slice(1).map((img, i) => (
-                  <div key={i} className="img-zoom overflow-hidden rounded-xl img-reveal">
-                    <img
-                      src={`${img}?w=800&q=80`}
+                {spot.images.slice(1).map((img, i) => (
+                  <div key={i} className="img-zoom overflow-hidden rounded-xl img-reveal relative">
+                    <CldImage
+                      src={img.cloudinary_public_id}
+                      fill
+                      sizes="25vw"
+                      alt={`${spot.name} ${i + 2}`}
+                      crop="fill"
+                      gravity="auto"
                       loading="lazy"
-                      className="w-full h-full object-cover"
+                      className="object-cover"
+                      quality="auto"
+                      format="auto"
                     />
                   </div>
                 ))}

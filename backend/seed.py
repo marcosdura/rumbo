@@ -178,6 +178,30 @@ def create_kayak(spot, name, water_type, difficulty, duration, kayak_type, renta
 
     return kayak
 
+def add_images_to_spot(spot, public_ids):
+    for i, public_id in enumerate(public_ids):
+        existing = db.query(models.SpotImage).filter_by(
+            spot_id=spot.id,
+            cloudinary_public_id=public_id
+        ).first()
+        if not existing:
+            image = models.SpotImage(
+                spot_id=spot.id,
+                cloudinary_public_id=public_id,
+                is_main=(i == 0),
+                order=i
+            )
+            db.add(image)
+    db.commit()
+
+STOCK_IMAGES = [
+    "photo-1501785888041-af3ef285b470_j1gl7e",
+    "photo-1500530855697-b586d89ba3ee_k7j5oo",
+    "photo-1441974231531-c6227db76b6e_h8lizq",
+    "photo-1507525428034-b723cf961d3e_jzicy6",
+    "photo-1470770841072-f978cf4d019e_isvtni",
+]
+
 # -------------------------
 # CAMPING (2)
 # -------------------------
@@ -324,5 +348,17 @@ create_surf_school(
 )
 
 add_amenities(surf2, ["Playa", "Estacionamiento", "Acepta mascotas", "Cafetería"])
+
+
+add_images_to_spot(camp1, STOCK_IMAGES)
+add_images_to_spot(camp2, STOCK_IMAGES)
+add_images_to_spot(trek1, STOCK_IMAGES)
+add_images_to_spot(trek2, STOCK_IMAGES)
+add_images_to_spot(climb, STOCK_IMAGES)
+add_images_to_spot(kayak1, STOCK_IMAGES)
+add_images_to_spot(kayak2, STOCK_IMAGES)
+add_images_to_spot(surf1, STOCK_IMAGES)
+add_images_to_spot(surf2, STOCK_IMAGES)
+
 
 print("✅ Seed completado")
