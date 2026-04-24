@@ -29,8 +29,10 @@ class SpotResponse(BaseModel):
     name: str
     description: str
     department: str
-    category: CategoryResponse  # 👈 importante
+    lat: float | None = None
+    lng: float | None = None
 
+    category: CategoryResponse  # 👈 importante
     camping_detail: CampingDetailResponse | None = None
     amenities: list[AmenityResponse] = []
     routes: list[RouteResponse] = []

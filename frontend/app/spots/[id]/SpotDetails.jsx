@@ -204,10 +204,11 @@ function SpotDetail({ spot }) {
                   alt={spot.name}
                   crop="fill"
                   gravity="auto"
-                  loading="lazy"
+                  loading="eager"
                   className="object-cover"
                   quality="auto"
                   format="auto"
+                  priority
                 />
               </div>
               <div className="grid grid-cols-2 grid-rows-2 gap-2 h-[340px]">
@@ -220,10 +221,11 @@ function SpotDetail({ spot }) {
                       alt={`${spot.name} ${i + 2}`}
                       crop="fill"
                       gravity="auto"
-                      loading="lazy"
+                      loading="eager"
                       className="object-cover"
                       quality="auto"
                       format="auto"
+                      priority
                     />
                   </div>
                 ))}

@@ -124,8 +124,8 @@ export default function SearchBar() {
           border: 1px solid rgba(255,255,255,0.9);
           border-radius: 16px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-          z-index: 50;
-          overflow: hidden;
+          z-index: 9999;
+          overflow: visible;
           transform-origin: top center;
           animation: dropdownIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }

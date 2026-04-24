@@ -127,6 +127,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "name": spot.name,
         "description": spot.description,
         "department": spot.department,
+        "lat": spot.lat,       # 👈
+        "lng": spot.lng,
         "category": spot.category,
         "camping_detail": spot.camping_detail,
         "amenities": [

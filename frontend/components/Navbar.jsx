@@ -318,13 +318,13 @@ function Navbar() {
         {/* DERECHA: avatar (si está logueado) + botón menú */}
         <div className="flex items-center gap-2">
           {isLoggedIn && (
-            <button
+            <Link
+              href="/profile"
               className="avatar-btn"
-              onClick={() => setOpen(!open)}
               aria-label="Abrir menú de usuario"
             >
               <Avatar user={session.user} size={32} />
-            </button>
+            </Link>
           )}
 
           <button

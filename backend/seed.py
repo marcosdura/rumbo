@@ -68,16 +68,21 @@ def create_surf_school(spot, name, class_type, duration, equipment_include):
     return surf
 
 
-def create_spot(name, description, department, category_name):
+def create_spot(name, description, department, category_name, lat=None, lng=None):
     existing = db.query(models.SpotDB).filter_by(name=name).first()
     if existing:
+        existing.lat = lat
+        existing.lng = lng
+        db.commit()
         return existing
 
     spot = models.SpotDB(
         name=name,
         description=description,
         department=department,
-        category_id=category_map[category_name].id
+        category_id=category_map[category_name].id,
+        lat=lat,
+        lng=lng
     )
     db.add(spot)
     db.commit()
@@ -206,21 +211,13 @@ STOCK_IMAGES = [
 # CAMPING (2)
 # -------------------------
 
-camp1 = create_spot(
-    "Camping Santa Teresa",
-    "Camping icónico cerca del mar",
-    "Rocha",
-    "Camping"
-)
+camp1 = create_spot("Camping Santa Teresa", "Camping icónico cerca del mar", "Rocha", "Camping", lat=-33.9671, lng=-53.5328)
+
 create_camping(camp1, 500)
 add_amenities(camp1, ["Ducha", "Baños", "Parrillero", "Playa", "WiFi"])
 
-camp2 = create_spot(
-    "Camping Arequita",
-    "Camping en zona serrana",
-    "Lavalleja",
-    "Camping"
-)
+camp2 = create_spot("Camping Arequita", "Camping en zona serrana", "Lavalleja", "Camping", lat=-34.0203, lng=-55.2847)
+
 create_camping(camp2, 300)
 add_amenities(camp2, ["Ducha", "Baños", "Sombra", "Zona para fogón"])
 
@@ -228,22 +225,14 @@ add_amenities(camp2, ["Ducha", "Baños", "Sombra", "Zona para fogón"])
 # TREKKING (2)
 # -------------------------
 
-trek1 = create_spot(
-    "Quebrada de los Cuervos",
-    "Reserva natural con senderos",
-    "Treinta y Tres",
-    "Trekking"
-)
+trek1 = create_spot("Quebrada de los Cuervos", "Reserva natural con senderos", "Treinta y Tres", "Trekking", lat=-32.8961, lng=-54.4203)
+
 
 create_trekking_route(trek1, "Sendero Principal", "Media", 8)
 create_trekking_route(trek1, "Mirador", "Fácil", 3)
 
-trek2 = create_spot(
-    "Valle del Lunarejo",
-    "Zona de sierras y biodiversidad",
-    "Rivera",
-    "Trekking"
-)
+trek2 = create_spot("Valle del Lunarejo", "Zona de sierras y biodiversidad", "Rivera", "Trekking", lat=-31.4833, lng=-55.9667)
+
 
 create_trekking_route(trek2, "Ruta del Valle", "Media", 10)
 create_trekking_route(trek2, "Cascadas", "Difícil", 6)
@@ -252,12 +241,8 @@ create_trekking_route(trek2, "Cascadas", "Difícil", 6)
 # ESCALADA (1 spot, 2 sectores, 2 rutas c/u)
 # -------------------------
 
-climb = create_spot(
-    "Cerro Arequita",
-    "Principal zona de escalada en Uruguay",
-    "Lavalleja",
-    "Escalada"
-)
+climb = create_spot("Cerro Arequita", "Principal zona de escalada en Uruguay", "Lavalleja", "Escalada", lat=-34.0150, lng=-55.2900)
+
 
 sector1 = create_sector(climb, "Placa Sur")
 create_climbing_route(sector1, "Fisura Azul", "6a", 8)
@@ -272,12 +257,8 @@ create_climbing_route(sector2, "Salida Técnica", "6b", 9)
 # KAYAK (2)
 # -------------------------
 
-kayak1 = create_spot(
-    "Laguna Garzón",
-    "Laguna ideal para travesías en kayak con aguas calmas",
-    "Rocha",
-    "Kayak"  # ⚠️ por ahora no tenés categoría Kayak
-)
+kayak1 = create_spot("Laguna Garzón", "Laguna ideal para travesías en kayak con aguas calmas", "Rocha", "Kayak", lat=-34.6167, lng=-54.3500)
+
 
 create_kayak(
     kayak1,
@@ -293,12 +274,8 @@ add_amenities(kayak1, ["Playa", "Estacionamiento", "Kayak"])
 
 # ------------------------------------
 
-kayak2 = create_spot(
-    "Río Santa Lucía",
-    "Tramo tranquilo ideal para kayak recreativo",
-    "Canelones",
-    "Kayak"  # mismo tema categoría
-)
+kayak2 = create_spot("Río Santa Lucía", "Tramo tranquilo ideal para kayak recreativo", "Canelones", "Kayak", lat=-34.6500, lng=-56.3833)
+
 
 create_kayak(
     kayak2,
@@ -313,12 +290,8 @@ create_kayak(
 add_amenities(kayak2, ["Acceso a río/lago/mar", "Sombra", "Zona para fogón"])
 
 
-surf1 = create_spot(
-    "Playa La Paloma",
-    "Una de las playas más populares para el surf en Uruguay, con olas constantes y buena formación para principiantes.",
-    "Rocha",
-    "Surf"
-)
+surf1 = create_spot("Playa La Paloma", "Una de las playas más populares para el surf en Uruguay, con olas constantes y buena formación para principiantes.", "Rocha", "Surf", lat=-34.6667, lng=-54.1667)
+
 
 create_surf_school(
     surf1,
@@ -332,12 +305,8 @@ add_amenities(surf1, ["Playa", "Ducha", "Estacionamiento", "Proveeduría/kiosco"
 
 # ------------------------------------
 
-surf2 = create_spot(
-    "Playa Punta del Diablo",
-    "Punto clásico del surf uruguayo, con olas de mayor potencia ideales para surfistas intermedios y avanzados.",
-    "Rocha",
-    "Surf"
-)
+surf2 = create_spot("Playa Punta del Diablo", "Punto clásico del surf uruguayo, con olas de mayor potencia ideales para surfistas intermedios y avanzados.", "Rocha", "Surf", lat=-34.0000, lng=-53.5500)
+
 
 create_surf_school(
     surf2,

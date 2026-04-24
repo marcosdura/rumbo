@@ -28,7 +28,7 @@ export default function Home() {
   
 
   return (
-    <div className="h-screen flex flex-col bg-[#f5f4f0]">
+    <div className="min-h-screen flex flex-col bg-[#f5f4f0]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
 
