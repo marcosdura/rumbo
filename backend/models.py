@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy.sql import func
 
 
 
@@ -26,6 +27,7 @@ class SpotDB(Base):
     kayak_detail = relationship("KayakDetail", uselist=False, back_populates="spot")
     surf_schools = relationship("SurfSchool", uselist=False, back_populates="spot")
     images = relationship("SpotImage", back_populates="spot")
+    favorites = relationship("Favorite", back_populates="spot") 
 
 
 class Category(Base):
@@ -163,6 +165,7 @@ class User(Base):
     name     = Column(String, nullable=True)
     image    = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    favorites  = relationship("Favorite", back_populates="user")
 
 
 
@@ -176,5 +179,25 @@ class SpotImage(Base):
     order = Column(Integer, default=0)  # para ordenar las fotos
 
     spot = relationship("SpotDB", back_populates="images")
+
+
+
+
+
+
+
+class Favorite(Base):
+    __tablename__ = "favorites"
+ 
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(String, ForeignKey("users.id"), nullable=False)
+    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+ 
+    user = relationship("User", back_populates="favorites")
+    spot = relationship("SpotDB", back_populates="favorites")
+ 
+    # Un usuario no puede favoritear el mismo spot dos veces
+    __table_args__ = (UniqueConstraint("user_id", "spot_id", name="uq_user_spot"),)
 
     

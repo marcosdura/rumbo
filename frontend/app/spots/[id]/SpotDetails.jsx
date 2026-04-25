@@ -13,6 +13,7 @@ import SurfSchoolDetail from "../../../components/SurfSchoolDetail"
 import Footer from "../../../components/Footer"
 import SpotImage from '@/components/SpotImage';
 import { CldImage } from 'next-cloudinary';
+import FavoriteButton from "@/components/FavoriteButton"
 
 
 
@@ -184,9 +185,7 @@ function SpotDetail({ spot }) {
               </div>
 
               <div className="flex gap-2 shrink-0">
-                <button className="btn-action flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl shadow-sm text-sm text-gray-600 font-medium border border-gray-100">
-                  ⭐ Guardar
-                </button>
+                <FavoriteButton spot={spot} variant="detail" />
                 <button className="btn-action flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl shadow-sm text-sm text-gray-600 font-medium border border-gray-100">
                   🔗 Compartir
                 </button>

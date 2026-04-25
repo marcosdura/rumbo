@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-const activities = ["Camping","Escalada", "Kayak", "Trekking"]
+const activities = ["Camping","Escalada", "Kayak", "Trekking", "Surf"]
 const departments = [
   "Artigas",
   "Canelones",
@@ -125,7 +125,7 @@ export default function SearchBar() {
           border-radius: 16px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.1);
           z-index: 9999;
-          overflow: visible;
+          overflow: hidden;
           transform-origin: top center;
           animation: dropdownIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
@@ -192,8 +192,16 @@ export default function SearchBar() {
           onClick={() => toggleField("activity")}
         >
           <div className="search-field-label">Actividad</div>
-          <div className={`search-field-value ${!activity ? "placeholder" : ""}`}>
-            {activity || "Seleccionar"}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className={`search-field-value ${!activity ? "placeholder" : ""}`}>
+              {activity || "Seleccionar"}
+            </div>
+            {activity && (
+              <span
+                onClick={(e) => { e.stopPropagation(); setActivity("") }}
+                style={{ fontSize: 16, color: "#9ca3a0", cursor: "pointer", lineHeight: 1 }}
+              >✕</span>
+            )}
           </div>
           {openField === "activity" && (
             <div className="search-dropdown">
@@ -224,8 +232,16 @@ export default function SearchBar() {
           onClick={() => toggleField("department")}
         >
           <div className="search-field-label">Departamento</div>
-          <div className={`search-field-value ${!department ? "placeholder" : ""}`}>
-            {department || "Seleccionar"}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className={`search-field-value ${!department ? "placeholder" : ""}`}>
+              {department || "Seleccionar"}
+            </div>
+            {department && (
+              <span
+                onClick={(e) => { e.stopPropagation(); setDepartment("") }}
+                style={{ fontSize: 16, color: "#9ca3a0", cursor: "pointer", lineHeight: 1,  }}
+              >✕</span>
+            )}
           </div>
           {openField === "department" && (
             <div className="search-dropdown">

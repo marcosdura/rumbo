@@ -370,14 +370,7 @@ function Navbar() {
             Home
           </Link>
 
-          <Link
-            href="/spots"
-            onClick={() => setOpen(false)}
-            className={`menu-link ${isActive("/spots") ? "active" : ""}`}
-          >
-            <span className="menu-link-icon">🏔️</span>
-            Spots
-          </Link>
+          
 
           <Link
             href="/settings"
@@ -400,6 +393,15 @@ function Navbar() {
               >
                 <span className="menu-link-icon">👤</span>
                 Mi perfil
+              </Link>
+
+              <Link
+                href="/favorites"
+                onClick={() => setOpen(false)}
+                className={`menu-link ${isActive("/favoritos") ? "active" : ""}`}
+              >
+                <span className="menu-link-icon">❤️</span>
+                Favoritos
               </Link>
 
               <button

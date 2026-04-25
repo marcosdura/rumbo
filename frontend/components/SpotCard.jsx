@@ -1,5 +1,6 @@
 "use client"
 
+import FavoriteButton from "@/components/FavoriteButton"
 
 const IMAGES = [
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
@@ -148,6 +149,12 @@ function SpotCard({ spot, index = 0 }) {
         <div className="spot-card-img-wrap">
           <img src={`${image}?w=600&q=80`} loading="lazy" alt={spot.name} />
           <div className="spot-card-img-overlay" />
+          <div
+            style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FavoriteButton spot={spot} variant="card" />
+          </div>
         </div>
 
         <div className="spot-card-body">
