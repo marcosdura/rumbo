@@ -14,8 +14,7 @@ import Footer from "../../../components/Footer"
 import SpotImage from '@/components/SpotImage';
 import { CldImage } from 'next-cloudinary';
 import FavoriteButton from "@/components/FavoriteButton"
-
-
+import ReviewsSection from "@/components/ReviewsSection"
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
@@ -25,32 +24,32 @@ function SpotDetail({ spot }) {
   const displayImages = spot.images?.length > 0 ? spot.images : null;
 
   useEffect(() => {
-  if (!spot?.id) return
+    if (!spot?.id) return
 
-  if (spot.category?.name === "Trekking") {
-    fetch(`http://localhost:8000/spots/${spot.id}/routes`)
-      .then(res => res.json())
-      .then(data => setRoutes(data))
-  }
-  if (spot.category?.name === "Escalada") {
-    fetch(`http://localhost:8000/spots/${spot.id}/sectors`)
-      .then(res => res.json())
-      .then(data => setSectors(data))
-  }
-  if (spot.category?.name === "Kayak") {
-    fetch(`http://localhost:8000/spots/${spot.id}/kayak-detail`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setKayakDetail(data) })
-  }
-  if (spot.category?.name === "Surf") {
-    fetch(`http://localhost:8000/spots/${spot.id}/surf-school`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setSurfSchool(data) })
-  }
-}, [spot.id])
+    if (spot.category?.name === "Trekking") {
+      fetch(`http://localhost:8000/spots/${spot.id}/routes`)
+        .then(res => res.json())
+        .then(data => setRoutes(data))
+    }
+    if (spot.category?.name === "Escalada") {
+      fetch(`http://localhost:8000/spots/${spot.id}/sectors`)
+        .then(res => res.json())
+        .then(data => setSectors(data))
+    }
+    if (spot.category?.name === "Kayak") {
+      fetch(`http://localhost:8000/spots/${spot.id}/kayak-detail`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setKayakDetail(data) })
+    }
+    if (spot.category?.name === "Surf") {
+      fetch(`http://localhost:8000/spots/${spot.id}/surf-school`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setSurfSchool(data) })
+    }
+  }, [spot.id])
 
-
-  return (<div className="min-h-screen flex flex-col bg-[#f5f4f0]">
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f5f4f0]">
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
@@ -171,20 +170,26 @@ function SpotDetail({ spot }) {
           <div className="max-w-6xl mx-auto px-6 py-8">
 
             {/* Header */}
-            <div className="flex items-end justify-between mb-6 fade-up fade-up-1">
-              <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-start justify-between mb-6 fade-up fade-up-1">
+              <div className="flex flex-col gap-2">
                 <h1 className="text-4xl font-semibold spot-title text-gray-900 leading-tight">
                   {spot.name}
                 </h1>
-                <span className="px-3 py-1 rounded-full text-sm font-medium category-pill">
-                  {spot.category?.name || "Sin categoría"}
-                </span>
-                <span className="px-3 py-1 rounded-full text-sm font-medium department-pill">
-                  {spot.department || "Sin departamento"}
-                </span>
+                <div className="flex items-center gap-3 text-sm flex-wrap">
+                  <span className="text-gray-500 font-medium">
+                    ★ 4.9 · <span className="underline underline-offset-2 cursor-pointer">ver reseñas</span>
+                  </span>
+                  <span className="text-gray-300">·</span>
+                  <span className="px-3 py-1 rounded-full text-sm font-medium category-pill">
+                    {spot.category?.name || "Sin categoría"}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-sm font-medium department-pill">
+                    {spot.department || "Sin departamento"}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 mt-1">
                 <FavoriteButton spot={spot} variant="detail" />
                 <button className="btn-action flex items-center gap-1.5 px-4 py-2 bg-white rounded-xl shadow-sm text-sm text-gray-600 font-medium border border-gray-100">
                   🔗 Compartir
@@ -193,7 +198,6 @@ function SpotDetail({ spot }) {
             </div>
 
             {/* Imágenes */}
-
             <div className="grid grid-cols-2 gap-3 mb-10 fade-up fade-up-2">
               <div className="img-zoom overflow-hidden rounded-2xl img-reveal h-[340px] relative">
                 <CldImage
@@ -278,6 +282,9 @@ function SpotDetail({ spot }) {
                 <SurfSchoolDetail surfSchool={surfSchool} />
               )}
 
+            </div>
+            <div className="mt-6">
+              <ReviewsSection spotId={spot.id} />
             </div>
           </div>
           <Footer />

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from database import engine
 import models
 from models import Base
-from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites          
+from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews        
 from fastapi.middleware.cors import CORSMiddleware
 import cloudinary_config
 
@@ -29,3 +29,4 @@ app.include_router(kayak.router)
 app.include_router(upsert.router)
 app.include_router(images.router)
 app.include_router(favorites.router)
+app.include_router(reviews.router)

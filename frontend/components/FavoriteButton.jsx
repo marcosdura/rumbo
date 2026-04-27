@@ -5,11 +5,14 @@ import { useSession } from "next-auth/react"
 import { useFavoritesStore } from "@/store/favoritesStore"
 import Toast from "@/components/Toast"
 import { createPortal } from "react-dom"
+import AuthModal from "@/components/AuthModal"
+
 
 export default function FavoriteButton({ spot, variant = "detail" }) {
   const { data: session } = useSession()
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
-  const [showToast, setShowToast] = useState(false)
+
+  const [showAuth, setShowAuth] = useState(false)
 
   const userId = session?.user?.id
   const active = isFavorite(spot.id)
@@ -19,7 +22,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
     e.stopPropagation()
 
     if (!userId) {
-      setShowToast(true)
+      setShowAuth(true)
       return
     }
 
@@ -34,13 +37,8 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   if (variant === "detail") {
     return (
       <>
-        {showToast && createPortal(
-          <Toast
-            message="Iniciá sesión para guardar favoritos"
-            onClose={() => setShowToast(false)}
-          />,
-          document.body
-        )}
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
         <style>{`
           .fav-btn-detail {
             display: flex;
@@ -89,13 +87,9 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   // ─── Variante "card" ──────────────────────────────────────────────────────
   return (
     <>
-      {showToast && createPortal(
-        <Toast
-          message="Iniciá sesión para guardar favoritos"
-          onClose={() => setShowToast(false)}
-        />,
-        document.body
-      )}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
+        
       <style>{`
         .fav-btn-card {
           width: 32px;

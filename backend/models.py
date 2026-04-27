@@ -28,6 +28,7 @@ class SpotDB(Base):
     surf_schools = relationship("SurfSchool", uselist=False, back_populates="spot")
     images = relationship("SpotImage", back_populates="spot")
     favorites = relationship("Favorite", back_populates="spot") 
+    reviews = relationship("Review", back_populates="spot")
 
 
 class Category(Base):
@@ -166,6 +167,7 @@ class User(Base):
     image    = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     favorites  = relationship("Favorite", back_populates="user")
+    reviews = relationship("Review", back_populates="user")
 
 
 
@@ -201,3 +203,18 @@ class Favorite(Base):
     __table_args__ = (UniqueConstraint("user_id", "spot_id", name="uq_user_spot"),)
 
     
+
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+ 
+    id         = Column(Integer, primary_key=True, index=True)
+    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False)
+    user_id    = Column(String, ForeignKey("users.id"), nullable=False)
+    rating     = Column(Integer, nullable=False)   # 1 a 5
+    comment    = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+ 
+    spot = relationship("SpotDB", back_populates="reviews")
+    user = relationship("User", back_populates="reviews")

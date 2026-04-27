@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 
 # -------- CATEGORY --------
@@ -193,5 +194,32 @@ class SpotImageResponse(BaseModel):
     is_main: bool
     order: int
 
+    class Config:
+        from_attributes = True
+
+
+
+class ReviewUserResponse(BaseModel):
+    id: str
+    name: str | None = None
+    image: str | None = None
+ 
+    class Config:
+        from_attributes = True
+ 
+ 
+class ReviewCreate(BaseModel):
+    user_id: str
+    rating: int       # 1 a 5
+    comment: str | None = None
+ 
+ 
+class ReviewResponse(BaseModel):
+    id: int
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+    user: ReviewUserResponse
+ 
     class Config:
         from_attributes = True

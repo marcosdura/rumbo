@@ -83,6 +83,8 @@ function Navbar() {
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
           border-bottom: 1px solid rgba(0,0,0,0.07);
+          position: sticky;
+          top: 0;
         }
 
         .navbar-logo {
@@ -402,6 +404,11 @@ function Navbar() {
               >
                 <span className="menu-link-icon">❤️</span>
                 Favoritos
+              </Link>
+
+              <Link href="/reviews" onClick={() => setOpen(false)} className={`menu-link ${isActive("/reviews") ? "active" : ""}`}>
+                <span className="menu-link-icon">💬</span>
+                Mis reviews
               </Link>
 
               <button
