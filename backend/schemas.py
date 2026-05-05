@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from pydantic import field_validator
 
 
 # -------- CATEGORY --------
@@ -36,6 +37,20 @@ class SpotResponse(BaseModel):
     category: CategoryResponse  # 👈 importante
     camping_detail: CampingDetailResponse | None = None
     amenities: list[AmenityResponse] = []
+
+    @field_validator("amenities", mode="before")
+    @classmethod
+    def flatten_amenities(cls, v):
+        result = []
+        for item in v:
+            if hasattr(item, "amenity"):
+                result.append(item.amenity)  # navega SpotAmenity → Amenity
+            else:
+                result.append(item)
+        return result
+
+    class Config:
+        from_attributes = True
     routes: list[RouteResponse] = []
     images: list[SpotImageResponse] = []
 

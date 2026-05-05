@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f4f0;
+  --foreground: #1b1b19;
 }
 
 @theme inline {
@@ -12,15 +12,165 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'DM Sans', Arial, sans-serif;
+}
+
+/* ─── Responsive: Spot Detail ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .spot-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .spot-map-col {
+    display: none !important;
+  }
+  .spot-images-secondary {
+    display: none !important;
+  }
+  .spot-images-primary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Responsive: Home / SpotSection ─────────────────────────────────────── */
+
+@media (max-width: 1280px) {
+  .spots-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+@media (max-width: 1024px) {
+  .spots-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+@media (max-width: 640px) {
+  .spots-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ─── Responsive: Search Page ─────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .search-layout {
+    flex-direction: column !important;
+  }
+  .search-list {
+    width: 100% !important;
+  }
+  .search-map-col {
+    display: none !important;
+  }
+  .search-list-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 480px) {
+  .search-list-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Responsive: SearchBar ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column !important;
+    border-radius: 16px !important;
+    width: calc(100% - 48px) !important;
+    padding: 8px !important;
+  }
+  .search-divider {
+    width: 100% !important;
+    height: 1px !important;
+  }
+  .search-field {
+    min-width: unset !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+  }
+  .search-btn {
+    width: 100% !important;
+    border-radius: 10px !important;
+    justify-content: center !important;
+  }
+}
+
+/* ─── Responsive: Sector / Trekking cards ─────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .sectors-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .routes-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 640px) {
+  .sectors-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Responsive: Sector detail — tabla de rutas ─────────────────────────── */
+
+@media (max-width: 640px) {
+  .routes-table-header {
+    display: none !important;
+  }
+  .route-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* ─── Responsive: Profile / Favorites / Reviews ───────────────────────────── */
+
+@media (max-width: 640px) {
+  .profile-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ─── Responsive: Footer ──────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .sf-footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (max-width: 640px) {
+  .sf-footer {
+    padding: 28px 20px 20px !important;
+  }
+  .sf-footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sf-bottom {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* ─── Responsive: Navbar ──────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .navbar-searchbar {
+    display: none !important;
+  }
+  .navbar-root {
+    padding: 12px 16px !important;
+  }
+}
+
+/* ─── Responsive: Sector stats grid ──────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .sector-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }

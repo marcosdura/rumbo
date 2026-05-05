@@ -1,93 +1,170 @@
-// components/TrekkingRoutes.jsx
-
 function TrekkingRoutes({ routes }) {
+
+  const difficultyConfig = {
+    "fácil":       { label: "Fácil",       color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8", dot: "🟢" },
+    "intermedio":  { label: "Intermedio",  color: "#78590a", bg: "#fef9e7", border: "#f0d98a", dot: "🟡" },
+    "difícil":     { label: "Difícil",     color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0", dot: "🔴" },
+  }
+
+  const signalConfig = {
+    none: { label: "Sin señal",    color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
+    low:  { label: "Señal baja",   color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
+    mid:  { label: "Señal media",  color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
+  }
+
+  const boolBadge = (val, trueLabel, falseLabel) => ({
+    label: val ? trueLabel : falseLabel,
+    color: val ? "#1b4332" : "#7c1d1d",
+    bg:    val ? "#e8f5ee" : "#fdf0f0",
+    border: val ? "#b7dfc8" : "#f5c0c0",
+  })
+
+  const neutralBadge = (label) => ({
+    label,
+    color: "#4a443b",
+    bg: "#f7f5f0",
+    border: "#e0ddd6",
+  })
+
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-widest text-gray-700 mb-5">
-        Rutas de Trekking
-      </p>
-      <div className="grid grid-cols-2 gap-4">
-        {routes.map(route => (
-          <div key={route.id} className="bg-white rounded-2xl p-5 border border-[#e8e8e3]">
+    <div style={{
+      background: "#fff",
+      border: "1px solid #e0ddd6",
+      borderRadius: 20,
+      padding: "24px 28px",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
 
-            <h3 className="spot-title text-xl text-gray-900 mb-4">{route.name}</h3>
+      {/* Section label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          Rutas de Trekking
+        </p>
+      </div>
 
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[
-                { val: `${route.distance_km} km`, lbl: "Distancia" },
-                { val: `${route.duration_hours} h`, lbl: "Duración" },
-                { val: `↑ ${route.elevation_gain} m`, lbl: "Desnivel +" },
-                { val: `↓ ${route.elevation_loss} m`, lbl: "Desnivel −" },
-              ].map(({ val, lbl }) => (
-                <div key={lbl} className="bg-[#f5f4f0] rounded-xl p-3 text-center">
-                  <p className="text-base font-semibold text-gray-900 leading-tight">{val}</p>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-1">{lbl}</p>
-                </div>
-              ))}
-            </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {routes.map(route => {
+          const diff   = difficultyConfig[route.difficulty] || { label: route.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
+          const signal = signalConfig[route.signal] || signalConfig.mid
 
-            <div className="flex gap-2 mb-4">
-              {[
-                { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máx." },
-                { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mín." },
-              ].map(({ icon, val, lbl }) => (
-                <div key={lbl} className="flex-1 bg-[#f5f4f0] rounded-xl px-3 py-2 flex items-center gap-2">
-                  <span>{icon}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{val}</p>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">{lbl}</p>
+          return (
+            <div key={route.id} style={{
+              background: "#fff",
+              border: "1px solid #e0ddd6",
+              borderRadius: 16,
+              padding: 20,
+            }}>
+
+              {/* Route name */}
+              <h3 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 18, fontWeight: 600,
+                color: "#1b1b19", margin: "0 0 16px",
+              }}>
+                {route.name}
+              </h3>
+
+              {/* Stats grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+                {[
+                  { val: `${route.distance_km} km`, lbl: "Distancia" },
+                  { val: `${route.duration_hours} h`, lbl: "Duración" },
+                  { val: `↑ ${route.elevation_gain} m`, lbl: "Desnivel +" },
+                  { val: `↓ ${route.elevation_loss} m`, lbl: "Desnivel −" },
+                ].map(({ val, lbl }) => (
+                  <div key={lbl} style={{
+                    background: "#f7f5f0",
+                    border: "1px solid #e0ddd6",
+                    borderRadius: 12,
+                    padding: "10px 6px",
+                    textAlign: "center",
+                  }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>{val}</p>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 0 0" }}>{lbl}</p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                route.difficulty === "fácil"
-                  ? "bg-green-100 text-green-800 border-green-300"
-                  : route.difficulty === "difícil"
-                  ? "bg-red-100 text-red-800 border-red-300"
-                  : "bg-yellow-100 text-yellow-800 border-yellow-300"
-              }`}>
-                {route.difficulty === "fácil" ? "🟢" : route.difficulty === "difícil" ? "🔴" : "🟡"} {route.difficulty}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
-                {route.route_type === "circular" ? "🔁" : "↩️"} {route.route_type}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                🧗 Técnico: {route.technical_level}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                💪 Físico: {route.physical_demand}
-              </span>
-            </div>
+              {/* Altitudes */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                {[
+                  { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máx." },
+                  { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mín." },
+                ].map(({ icon, val, lbl }) => (
+                  <div key={lbl} style={{
+                    flex: 1,
+                    background: "#f7f5f0",
+                    border: "1px solid #e0ddd6",
+                    borderRadius: 12,
+                    padding: "8px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}>
+                    <span style={{ fontSize: 16 }}>{icon}</span>
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{val}</p>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 0 0" }}>{lbl}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${
-                route.water_available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-              }`}>
-                💧 {route.water_available ? "Agua disponible" : "Sin agua"}
-              </span>
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${
-                route.camping_allowed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-              }`}>
-                ⛺ {route.camping_allowed ? "Camping permitido" : "Sin camping"}
-              </span>
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${
-                route.signal === "none"
-                  ? "bg-red-100 text-red-800"
-                  : route.signal === "low"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
-              }`}>
-                📶 {route.signal === "none" ? "Sin señal" : route.signal === "low" ? "Señal baja" : "Señal media"}
-              </span>
-            </div>
+              {/* Badges */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {/* Dificultad */}
+                <Badge color={diff.color} bg={diff.bg} border={diff.border}>
+                  {diff.dot} {diff.label}
+                </Badge>
 
-          </div>
-        ))}
+                {/* Tipo de ruta */}
+                <Badge {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`) } />
+
+                {/* Técnico */}
+                <Badge {...neutralBadge(`🧗 Técnico: ${route.technical_level}`)} />
+
+                {/* Físico */}
+                <Badge {...neutralBadge(`💪 Físico: ${route.physical_demand}`)} />
+
+                {/* Agua */}
+                <Badge {...boolBadge(route.water_available, "💧 Agua disponible", "💧 Sin agua")} />
+
+                {/* Camping */}
+                <Badge {...boolBadge(route.camping_allowed, "⛺ Camping permitido", "⛺ Sin camping")} />
+
+                {/* Señal */}
+                <Badge color={signal.color} bg={signal.bg} border={signal.border}>
+                  📶 {signal.label}
+                </Badge>
+              </div>
+
+            </div>
+          )
+        })}
       </div>
     </div>
+  )
+}
+
+function Badge({ color, bg, border, children, label }) {
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 5,
+      padding: "4px 10px",
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 600,
+      color,
+      background: bg,
+      border: `1px solid ${border}`,
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      {children ?? label}
+    </span>
   )
 }
 

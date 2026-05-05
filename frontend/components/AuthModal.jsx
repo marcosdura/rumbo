@@ -7,20 +7,20 @@ export default function AuthModal({ onClose }) {
   return createPortal(
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .auth-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.5);
+          background: rgba(0,0,0,0.35);
           backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
           animation: overlayIn 0.2s ease forwards;
         }
-
         @keyframes overlayIn {
           from { opacity: 0; }
           to   { opacity: 1; }
@@ -28,17 +28,17 @@ export default function AuthModal({ onClose }) {
 
         .auth-modal {
           font-family: 'DM Sans', sans-serif;
-          background: white;
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 24px;
           padding: 40px 36px 32px;
           width: 100%;
           max-width: 400px;
           margin: 16px;
           position: relative;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+          box-shadow: 0 24px 64px rgba(0,0,0,0.12);
           animation: modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.96) translateY(8px); }
           to   { opacity: 1; transform: scale(1) translateY(0); }
@@ -46,57 +46,20 @@ export default function AuthModal({ onClose }) {
 
         .auth-close {
           position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 32px;
-          height: 32px;
+          top: 14px; right: 14px;
+          width: 32px; height: 32px;
           border-radius: 50%;
-          border: none;
-          background: rgba(0,0,0,0.06);
+          border: 1px solid #e0ddd6;
+          background: #fff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 16px;
-          color: #555;
-          transition: background 0.15s;
-        }
-        .auth-close:hover { background: rgba(0,0,0,0.1); }
-
-        .auth-icon {
-          width: 64px;
-          height: 64px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 28px;
-          margin: 0 auto 20px;
-        }
-
-        .auth-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 24px;
-          font-weight: 600;
-          color: #1a1a1a;
-          text-align: center;
-          margin-bottom: 10px;
-        }
-
-        .auth-subtitle {
           font-size: 14px;
-          color: #6b7280;
-          text-align: center;
-          line-height: 1.6;
-          margin-bottom: 28px;
+          color: #9a9690;
+          transition: background 0.15s, color 0.15s;
         }
-
-        .auth-divider {
-          height: 1px;
-          background: rgba(0,0,0,0.07);
-          margin-bottom: 24px;
-        }
+        .auth-close:hover { background: #f7f5f0; color: #1b1b19; }
 
         .auth-google-btn {
           width: 100%;
@@ -106,28 +69,22 @@ export default function AuthModal({ onClose }) {
           gap: 10px;
           padding: 13px;
           border-radius: 14px;
-          border: 1px solid rgba(0,0,0,0.12);
-          background: white;
-          font-size: 15px;
-          font-weight: 500;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          font-size: 14px;
+          font-weight: 600;
           font-family: 'DM Sans', sans-serif;
-          color: #1a1a1a;
+          color: #1b1b19;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
         .auth-google-btn:hover {
-          background: #f9fafb;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+          background: #f7f5f0;
           transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(0,0,0,0.08);
         }
-
-        .auth-note {
-          font-size: 12px;
-          color: #9ca3a0;
-          text-align: center;
-          margin-top: 16px;
-        }
+        .auth-google-btn:active { transform: translateY(0); }
       `}</style>
 
       <div className="auth-overlay" onClick={onClose}>
@@ -135,15 +92,38 @@ export default function AuthModal({ onClose }) {
 
           <button className="auth-close" onClick={onClose}>✕</button>
 
-          <div className="auth-icon">🔒</div>
+          {/* Icono */}
+          <div style={{
+            width: 60, height: 60, borderRadius: "50%",
+            background: "linear-gradient(135deg, #52b788, #1b4332)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26, margin: "0 auto 20px",
+            border: "3px solid #b7dfc8",
+          }}>
+            🔒
+          </div>
 
-          <h2 className="auth-title">Iniciá sesión</h2>
-          <p className="auth-subtitle">
+          {/* Título */}
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 24, fontWeight: 600,
+            color: "#1b1b19", textAlign: "center", margin: "0 0 10px",
+          }}>
+            Iniciá sesión
+          </h2>
+
+          <p style={{
+            fontSize: 14, color: "#9a9690",
+            textAlign: "center", lineHeight: 1.65,
+            margin: "0 0 24px",
+          }}>
             Necesitás iniciar sesión para completar esta acción.
           </p>
 
-          <div className="auth-divider" />
+          {/* Divider */}
+          <div style={{ height: 1, background: "#ede9e1", marginBottom: 24 }} />
 
+          {/* Botón Google */}
           <button
             className="auth-google-btn"
             onClick={() => signIn("google", {}, { prompt: "select_account" })}
@@ -157,7 +137,10 @@ export default function AuthModal({ onClose }) {
             Continuar con Google
           </button>
 
-          <p className="auth-note">
+          <p style={{
+            fontSize: 12, color: "#b0aca5",
+            textAlign: "center", marginTop: 16, lineHeight: 1.5,
+          }}>
             Tu información está segura y no compartimos tus datos.
           </p>
 

@@ -2,8 +2,9 @@
 
 import Footer from "@/components/Footer"
 import { useEffect, useState } from "react"
-import SpotList from "../components/SpotList"
-import Navbar from "../components/Navbar"
+import Navbar from "@/components/Navbar"
+import SpotSection from "@/components/SpotSection"
+import SearchBar from "@/components/SearchBar"
 
 export default function Home() {
   const [spots, setSpots] = useState([])
@@ -14,26 +15,36 @@ export default function Home() {
       .then(data => setSpots(data))
   }, [])
 
-   const lavallejaSpots = spots.filter(
-    (spot) => spot.department === "Lavalleja"
-  )
+  const loading = spots.length === 0
 
-  const visibleLavallejaSpots = lavallejaSpots.slice(0, 5)
+  const lavallejaSpots = spots.filter(s => s.department === "Lavalleja").slice(0, 5)
+  const rochaSpots     = spots.filter(s => s.department === "Rocha").slice(0, 5)
 
-  const RochaSpots = spots.filter(
-    (spot) => spot.department === "Rocha"
-  )
-
-  const visibleRochaSpots = RochaSpots.slice(0, 5)
-  
+  const sections = [
+    {
+      label: "Descubrí Uruguay",
+      title: "Spots populares del mes",
+      spots: spots.slice(0, 5),
+      count: spots.length,
+    },
+    {
+      label: "Destacados",
+      title: "Spots en Lavalleja",
+      spots: lavallejaSpots,
+      count: lavallejaSpots.length,
+    },
+    {
+      label: "Destacados",
+      title: "Spots en Rocha",
+      spots: rochaSpots,
+      count: rochaSpots.length,
+    },
+  ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f4f0]">
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
-
-        .home-page { font-family: 'DM Sans', sans-serif; }
-        .home-title { font-family: 'Playfair Display', serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .fade-up {
           opacity: 0;
@@ -43,143 +54,28 @@ export default function Home() {
         .fade-up-1 { animation-delay: 0.05s; }
         .fade-up-2 { animation-delay: 0.15s; }
         .fade-up-3 { animation-delay: 0.25s; }
-
-        @keyframes fadeUp {
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .section-label {
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #9ca3a0;
-        }
-
-        .spots-count {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 500;
-          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
-          border: 1px solid #b4aa96;
-          color: #4a443b;
-          border-radius: 20px;
-          padding: 2px 10px;
-          margin-left: 10px;
-          vertical-align: middle;
-          position: relative;
-          top: -2px;
-        }
-
-        .divider {
-          height: 1px;
-          background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
-          margin: 0.75rem 0 1.5rem;
-        }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
       <Navbar />
 
-      <div className="flex flex-1 overflow-hidden home-page">
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6">
+      <div style={{ flex: 1, overflowY: "auto", fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 64px" }}>
 
-            {/* Header */}
-            <div className="mb-2 fade-up fade-up-1">
-              <p className="section-label">Descubrí Uruguay</p>
-              <h2 className="home-title text-4xl font-semibold text-gray-900 mt-1">
-                Spots populares del mes
-                {spots.length > 0 && (
-                  <span className="spots-count">{spots.length}</span>
-                )}
-              </h2>
-            </div>
+          {/* Secciones */}
+          {sections.map((section) => (
+            <SpotSection
+              key={section.title}
+              label={section.label}
+              title={section.title}
+              count={section.count}
+              spots={section.spots}
+              loading={loading}
+            />
+          ))}
 
-            <div className="divider fade-up fade-up-2" />
-
-            {/* Grid */}
-            <div className="fade-up fade-up-3">
-              {spots.length === 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-64 rounded-2xl animate-pulse"
-                      style={{ background: "rgba(0,0,0,0.06)" }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-                  <SpotList spots={spots.slice(0, 5)} />
-                </div>
-              )}
-            </div>
-
-            <div className="mb-2 fade-up fade-up-1 pt-8">
-              <p className="section-label">Destacados</p>
-              <h2 className="home-title text-4xl font-semibold text-gray-900 mt-1">
-                Spots destacados en Lavalleja
-                {lavallejaSpots.length > 0 && (
-                  <span className="spots-count">{lavallejaSpots.length}</span>
-                )}
-              </h2>
-            </div>
-            
-            <div className="divider fade-up fade-up-2" />
-            
-            <div className="fade-up fade-up-3">
-              {spots.length === 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-64 rounded-2xl animate-pulse"
-                      style={{ background: "rgba(0,0,0,0.06)" }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-                  <SpotList spots={visibleLavallejaSpots} />
-                </div>
-              )}
-            </div>
-
-            <div className="mb-2 fade-up fade-up-1 pt-8">
-              <p className="section-label">Destacados</p>
-              <h2 className="home-title text-4xl font-semibold text-gray-900 mt-1">
-                Spots destacados en Rocha
-                {lavallejaSpots.length > 0 && (
-                  <span className="spots-count">{lavallejaSpots.length}</span>
-                )}
-              </h2>
-            </div>
-            
-            <div className="divider fade-up fade-up-2" />
-            
-            <div className="fade-up fade-up-3">
-              {spots.length === 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-64 rounded-2xl animate-pulse"
-                      style={{ background: "rgba(0,0,0,0.06)" }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-                  <SpotList spots={visibleRochaSpots} />
-                </div>
-              )}
-            </div>
-          </div>
-          <Footer />
         </div>
+        <Footer />
       </div>
     </div>
   )

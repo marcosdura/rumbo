@@ -19,19 +19,19 @@ export default function FavoritosPage() {
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (status === "loading" || loading) {
     return (
-      <div className="h-screen flex flex-col bg-[#f5f4f0]">
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
         <Navbar />
-        <div className="flex flex-1 items-center justify-center">
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <style>{`
             @keyframes bounce {
-              0%, 100% { transform: translateY(0); opacity: 0.4; }
-              50% { transform: translateY(-8px); opacity: 1; }
+              0%, 100% { transform: translateY(0); opacity: 0.35; }
+              50%       { transform: translateY(-8px); opacity: 1; }
             }
           `}</style>
-          <div className="flex gap-2">
+          <div style={{ display: "flex", gap: 8 }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{
-                width: 8, height: 8, borderRadius: "50%", background: "#b4aa96",
+                width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f",
                 animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
               }} />
             ))}
@@ -44,122 +44,145 @@ export default function FavoritosPage() {
   // ─── No logueado ───────────────────────────────────────────────────────────
   if (!session) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f5f4f0]">
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
         <Navbar />
-        <div className="flex flex-1 items-center justify-center flex-col gap-3">
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, color: "#1a1a1a" }}>
-            Iniciá sesión para ver tus favoritos
-          </p>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#9ca3a0" }}>
-            Guardá los spots que más te gustan
-          </p>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            background: "#fff",
+            border: "1px solid #e0ddd6",
+            borderRadius: 20,
+            padding: "60px 48px",
+            textAlign: "center",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            maxWidth: 400,
+          }}>
+            <p style={{ fontSize: 40, marginBottom: 16, opacity: 0.25 }}>🔒</p>
+            <p style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8,
+            }}>
+              Iniciá sesión
+            </p>
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14, color: "#9a9690", lineHeight: 1.6,
+            }}>
+              Guardá los spots que más te gustan y accedé a tu colección desde cualquier lugar
+            </p>
+          </div>
         </div>
       </div>
     )
   }
 
+  // ─── Página principal ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f4f0]">
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
-
-        .fav-page  { font-family: 'DM Sans', sans-serif; }
-        .fav-title { font-family: 'Playfair Display', serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .fade-up   { opacity: 0; transform: translateY(18px); animation: fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
         .fade-up-1 { animation-delay: 0.05s; }
         .fade-up-2 { animation-delay: 0.15s; }
-
+        .fade-up-3 { animation-delay: 0.25s; }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
-        .section-label {
-          font-size: 11px; font-weight: 500;
-          letter-spacing: 0.12em; text-transform: uppercase; color: #9ca3a0;
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
-
-        .divider {
-          height: 1px;
-          background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
-          margin: 0.75rem 0 1.5rem;
-        }
-
-        .empty-state {
-          background: rgba(255,255,255,0.75);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.9);
-          border-radius: 20px;
-          padding: 60px 40px;
-          text-align: center;
-        }
-
-        .explore-btn {
-          display: inline-flex; align-items: center; gap: 6px;
-          padding: 10px 20px; border-radius: 12px;
-          font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif;
-          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
-          color: #4a443b; border: 1px solid #b4aa96;
-          text-decoration: none; margin-top: 16px;
-          transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
-        }
-        .explore-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
       `}</style>
 
       <Navbar />
 
-      <div className="flex flex-1 fav-page">
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-6 py-8" style={{ minHeight: "calc(100vh - 200px)" }}>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px", minHeight: "calc(100vh - 200px)" }}>
 
-            {/* Header */}
-            <div className="mb-2 fade-up fade-up-1">
-              <p className="section-label">Tu colección</p>
-              <h2 className="fav-title text-4xl font-semibold text-gray-900 mt-1">
-                Favoritos
-                {favorites.length > 0 && (
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 400, color: "#9ca3a0", marginLeft: 12 }}>
-                    {favorites.length} spot{favorites.length !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </h2>
+          {/* Header */}
+          <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                Tu colección
+              </p>
             </div>
 
-            <div className="divider fade-up fade-up-1" />
-
-            {/* Estado vacío */}
-            {favorites.length === 0 && (
-              <div className="empty-state fade-up fade-up-2">
-                <p style={{ fontSize: 44, marginBottom: 16, opacity: 0.35 }}>🤍</p>
-                <p className="fav-title" style={{ fontSize: 22, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>
-                  Todavía no tenés favoritos
-                </p>
-                <p style={{ fontSize: 14, color: "#9ca3a0" }}>
-                  Explorá los spots y guardá los que más te gustan
-                </p>
-                <Link href="/spots" className="explore-btn">
-                  Explorar spots →
-                </Link>
-              </div>
-            )}
-
-            {/* Grid */}
-            {favorites.length > 0 && (
-              <div
-                className="fade-up fade-up-2"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                  gap: 20,
-                }}
-              >
-                {favorites.map((spot, index) => (
-                  <SpotCard key={spot.id} spot={spot} index={index} />
-                ))}
-              </div>
-            )}
-
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <h1 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 36, fontWeight: 600,
+                color: "#1b1b19", margin: 0, lineHeight: 1.2,
+              }}>
+                Favoritos
+              </h1>
+              {favorites.length > 0 && (
+                <span style={{
+                  fontSize: 12, fontWeight: 600,
+                  padding: "3px 12px", borderRadius: 999,
+                  background: "#1b4332", color: "#d8f3dc",
+                  border: "1px solid #2d6a4f",
+                  letterSpacing: "0.03em", flexShrink: 0,
+                }}>
+                  {favorites.length} spot{favorites.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
           </div>
-          <Footer />
+
+          {/* Divider */}
+          <div className="fade-up fade-up-1" style={{ height: 1, background: "#e0ddd6", marginBottom: 28 }} />
+
+          {/* Estado vacío */}
+          {favorites.length === 0 && (
+            <div className="fade-up fade-up-2" style={{
+              background: "#fff",
+              border: "1px solid #e0ddd6",
+              borderRadius: 20,
+              padding: "64px 40px",
+              textAlign: "center",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            }}>
+              <p style={{ fontSize: 44, marginBottom: 16, opacity: 0.25 }}>❤️</p>
+              <p style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8,
+              }}>
+                Todavía no tenés favoritos
+              </p>
+              <p style={{ fontSize: 14, color: "#9a9690", marginBottom: 24, lineHeight: 1.6 }}>
+                Explorá los spots y guardá los que más te gustan
+              </p>
+              <Link href="/search" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "10px 22px", borderRadius: 12,
+                fontSize: 14, fontWeight: 600,
+                background: "#1b4332", color: "#fff",
+                textDecoration: "none",
+                transition: "background 0.2s, transform 0.2s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#2d6a4f"; e.currentTarget.style.transform = "translateY(-1px)" }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#1b4332"; e.currentTarget.style.transform = "translateY(0)" }}
+              >
+                Explorar spots →
+              </Link>
+            </div>
+          )}
+
+          {/* Grid */}
+          {favorites.length > 0 && (
+            <div className="fade-up fade-up-2" style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: 20,
+            }}>
+              {favorites.map((spot, index) => (
+                <SpotCard key={spot.id} spot={spot} index={index} />
+              ))}
+            </div>
+          )}
+
         </div>
+        <Footer />
       </div>
     </div>
   )

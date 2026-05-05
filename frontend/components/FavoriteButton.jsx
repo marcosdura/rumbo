@@ -3,15 +3,11 @@
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useFavoritesStore } from "@/store/favoritesStore"
-import Toast from "@/components/Toast"
-import { createPortal } from "react-dom"
 import AuthModal from "@/components/AuthModal"
-
 
 export default function FavoriteButton({ spot, variant = "detail" }) {
   const { data: session } = useSession()
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
-
   const [showAuth, setShowAuth] = useState(false)
 
   const userId = session?.user?.id
@@ -20,17 +16,9 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   const toggle = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-
-    if (!userId) {
-      setShowAuth(true)
-      return
-    }
-
-    if (active) {
-      await removeFavorite(spot.id, userId)
-    } else {
-      await addFavorite(spot, userId)
-    }
+    if (!userId) { setShowAuth(true); return }
+    if (active) await removeFavorite(spot.id, userId)
+    else        await addFavorite(spot, userId)
   }
 
   // ─── Variante "detail" ────────────────────────────────────────────────────
@@ -38,46 +26,48 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
     return (
       <>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-
         <style>{`
           .fav-btn-detail {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 16px;
+            padding: 9px 16px;
             border-radius: 12px;
-            border: 1px solid rgba(0,0,0,0.1);
-            background: rgba(255,255,255,0.8);
-            font-size: 14px;
+            font-size: 13px;
             font-family: 'DM Sans', sans-serif;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-            color: #374151;
+            border: 1px solid #e0ddd6;
+            background: #fff;
+            color: #3d3d3a;
           }
           .fav-btn-detail:hover {
+            background: #f7f5f0;
             transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
           }
           .fav-btn-detail.active {
-            background: #fee2e2;
-            border-color: #fca5a5;
+            background: #ffcccc;
+            border-color: #f78080;
             color: #dc2626;
           }
+          .fav-btn-detail.active:hover {
+            background: #fce8e8;
+          }
           .fav-heart {
-            font-size: 15px;
+            font-size: 14px;
             transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           }
-          .fav-btn-detail:hover .fav-heart {
-            transform: scale(1.2);
-          }
+          .fav-btn-detail:hover .fav-heart { transform: scale(1.2); }
         `}</style>
+
         <button
           onClick={toggle}
-          className={`fav-btn-detail btn-action ${active ? "active" : ""}`}
+          className={`fav-btn-detail ${active ? "active" : ""}`}
           aria-label={active ? "Quitar de favoritos" : "Guardar en favoritos"}
         >
-          <span className="fav-heart">{active ? "❤️" : "🖤"}</span>
+          <span className="fav-heart">{active ? "❤️" : <span style={{ opacity: 0.25 }}>❤️</span>}
+          </span>
           {active ? "Guardado" : "Guardar"}
         </button>
       </>
@@ -88,41 +78,44 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-
-        
       <style>{`
         .fav-btn-card {
-          width: 32px;
-          height: 32px;
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
-          border: 1px solid rgba(255,255,255,0.9);
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(8px);
+          border: 1px solid #e0ddd6;
+
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 16px;
+          font-size: 14px;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-          box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-          color: #e11d48;
+
+          background: rgba(255,255,255,0.95);
+          box-shadow: 0 1px 6px rgba(0,0,0,0.18);
         }
         .fav-btn-card:hover {
           transform: scale(1.15);
-          background: white;
-          box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+          background: #f7f5f0;
         }
         .fav-btn-card.active {
-          background: #fee2e2;
-          border-color: #fca5a5;
+          background: #ffcccc;
+          border-color: #f78080;
+        }
+        .fav-btn-card.active:hover {
+          background: #fce8e8;
         }
       `}</style>
+
       <button
         onClick={toggle}
         className={`fav-btn-card ${active ? "active" : ""}`}
         aria-label={active ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
-        {active ? "❤️" : "🖤"}
+        {active ? "❤️" : <span style={{ opacity: 0.25 }}>❤️</span>}
+
       </button>
     </>
   )

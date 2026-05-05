@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
-
+from sqlalchemy.orm import joinedload
 from database import SessionLocal
 from models import Favorite, SpotDB
 from schemas import SpotResponse
@@ -34,6 +34,7 @@ def get_favorites(user_id: str, db: Session = Depends(get_db)):
         db.query(SpotDB)
         .join(Favorite, Favorite.spot_id == SpotDB.id)
         .filter(Favorite.user_id == user_id)
+        .options(joinedload(SpotDB.amenities))  # ← esto
         .all()
     )
     return spots

@@ -4,25 +4,9 @@ import { useRouter } from "next/navigation"
 
 const activities = ["Camping","Escalada", "Kayak", "Trekking", "Surf"]
 const departments = [
-  "Artigas",
-  "Canelones",
-  "Cerro Largo",
-  "Colonia",
-  "Durazno",
-  "Flores",
-  "Florida",
-  "Lavalleja",
-  "Maldonado",
-  "Montevideo",
-  "Paysandú",
-  "Río Negro",
-  "Rivera",
-  "Rocha",
-  "Salto",
-  "San José",
-  "Soriano",
-  "Tacuarembó",
-  "Treinta y Tres"
+  "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
+  "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",
+  "Rivera","Rocha","Salto","San José","Soriano","Tacuarembó","Treinta y Tres"
 ]
 
 export default function SearchBar() {
@@ -33,7 +17,6 @@ export default function SearchBar() {
 
   const handleSearch = () => {
     setOpenField(null)
-
     const params = new URLSearchParams({ activity, department })
     router.push(`/search?${params.toString()}`)
   }
@@ -42,7 +25,6 @@ export default function SearchBar() {
     setOpenField((prev) => (prev === field ? null : field))
   }
 
-  // Cerrar al clickar afuera
   useEffect(() => {
     if (!openField) return
     const handler = (e) => {
@@ -55,132 +37,155 @@ export default function SearchBar() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .search-bar {
           font-family: 'DM Sans', sans-serif;
           display: inline-flex;
           align-items: center;
-          background: rgba(255,255,255,0.75);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.9);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 999px;
           padding: 5px 6px;
           gap: 4px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.07);
         }
 
         .search-divider {
           width: 1px;
           height: 24px;
-          background: rgba(0,0,0,0.1);
+          background: #e0ddd6;
           flex-shrink: 0;
         }
 
         .search-field {
           position: relative;
-          padding: 5px 16px;
+          padding: 6px 18px;
           border-radius: 999px;
           cursor: pointer;
           min-width: 170px;
           transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           user-select: none;
         }
-        .search-field:hover,
+        .search-field:hover {
+          background: #f7f5f0;
+        }
         .search-field.is-open {
-          background: rgba(234, 234, 234, 0.75);
+          background: #f0f7f3;
         }
 
         .search-field-label {
-          font-size: 14px;
-          font-weight: 500;
-          color: #464948;
-          margin-bottom: 1px;
-          letter-spacing: 0.02em;
+          font-size: 11px;
+          font-weight: 600;
+          color: #2d6a4f;
+          margin-bottom: 2px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
           line-height: 1.3;
         }
 
         .search-field-value {
-          font-size: 12px;
-          font-weight: 400;
-          color: #1a1a1a;
+          font-size: 13px;
+          font-weight: 500;
+          color: #1b1b19;
           line-height: 1.4;
         }
         .search-field-value.placeholder {
-          color: #9ca3a0;
+          color: #b0aca5;
+          font-weight: 400;
         }
 
         .search-dropdown {
           position: absolute;
           left: 0;
-          top: calc(100% + 8px);
-          min-width: 170px;
-          max-height: 260px; 
-          overflow-y: auto;  
-          background: rgba(255,255,255,0.96);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.9);
+          top: calc(100% + 10px);
+          min-width: 190px;
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+          box-shadow: 0 8px 28px rgba(0,0,0,0.09);
           z-index: 9999;
-          overflow: hidden;
           transform-origin: top center;
-          animation: dropdownIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: dropdownIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          overflow: hidden;
         }
 
         @keyframes dropdownIn {
           from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .search-dropdown-content {
+          max-height: 260px;
+          overflow-y: auto;
         }
 
         .search-dropdown-item {
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
           font-weight: 400;
-          color: #1a1a1a;
+          color: #3d3d3a;
           padding: 10px 16px;
           cursor: pointer;
-          transition: background 0.15s ease;
+          transition: background 0.13s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
         .search-dropdown-item:hover {
-          background: linear-gradient(135deg, #e8e3d8, #C6BDAA);
-          color: #4a443b;
+          background: #f0f7f3;
+          color: #1b4332;
+        }
+        .search-dropdown-item.selected {
+          background: #e8f5ee;
+          color: #1b4332;
+          font-weight: 600;
         }
 
         .search-btn {
           font-family: 'DM Sans', sans-serif;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 6px;
           margin-left: 2px;
-
-          background: linear-gradient(135deg, #e8e3d8, #c6bdaa);
-          border: 1px solid #b4aa96;
-          color: #4a443b;
-
+          background: #1b4332;
+          border: none;
+          color: #fff;
           font-size: 13px;
-          font-weight: 500;
-          padding: 7px 18px;
+          font-weight: 600;
+          padding: 10px 20px;
           border-radius: 999px;
           cursor: pointer;
-
-          transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+          letter-spacing: 0.03em;
+          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
-
         .search-btn:hover {
-          background: linear-gradient(135deg, #d6cebf, #b4aa96);
-          box-shadow: 0 4px 14px rgba(198, 189, 170, 0.4);
+          background: #2d6a4f;
           transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
         }
         .search-btn:active {
-          transform: translateY(0px);
+          transform: translateY(0);
         }
-        
-        .search-dropdown-content {
-          max-height: 260px;
-          overflow-y: auto;
+
+        .clear-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #d0cdc7;
+          color: #fff;
+          font-size: 9px;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.15s;
+          line-height: 1;
+        }
+        .clear-btn:hover {
+          background: #9a9690;
         }
       `}</style>
 
@@ -194,31 +199,31 @@ export default function SearchBar() {
           <div className="search-field-label">Actividad</div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div className={`search-field-value ${!activity ? "placeholder" : ""}`}>
-              {activity || "Seleccionar"}
+              {activity || "¿Qué querés hacer?"}
             </div>
             {activity && (
               <span
+                className="clear-btn"
                 onClick={(e) => { e.stopPropagation(); setActivity("") }}
-                style={{ fontSize: 16, color: "#9ca3a0", cursor: "pointer", lineHeight: 1 }}
               >✕</span>
             )}
           </div>
+
           {openField === "activity" && (
             <div className="search-dropdown">
               <div className="search-dropdown-content">
-              {activities.map((a) => (
-                <div
-                  key={a}
-                  className="search-dropdown-item"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActivity(a)
-                    setOpenField(null)
-                  }}
-                >
-                  {a}
-                </div>
-              ))}
+                {activities.map((a) => (
+                  <div
+                    key={a}
+                    className={`search-dropdown-item ${activity === a ? "selected" : ""}`}
+                    onClick={(e) => { e.stopPropagation(); setActivity(a); setOpenField(null) }}
+                  >
+                    {activity === a && (
+                      <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                    )}
+                    {a}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -234,31 +239,31 @@ export default function SearchBar() {
           <div className="search-field-label">Departamento</div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div className={`search-field-value ${!department ? "placeholder" : ""}`}>
-              {department || "Seleccionar"}
+              {department || "¿A dónde vas?"}
             </div>
             {department && (
               <span
+                className="clear-btn"
                 onClick={(e) => { e.stopPropagation(); setDepartment("") }}
-                style={{ fontSize: 16, color: "#9ca3a0", cursor: "pointer", lineHeight: 1,  }}
               >✕</span>
             )}
           </div>
+
           {openField === "department" && (
             <div className="search-dropdown">
               <div className="search-dropdown-content">
-              {departments.map((d) => (
-                <div
-                  key={d}
-                  className="search-dropdown-item"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDepartment(d)
-                    setOpenField(null)
-                  }}
-                >
-                  {d}
-                </div>
-              ))}
+                {departments.map((d) => (
+                  <div
+                    key={d}
+                    className={`search-dropdown-item ${department === d ? "selected" : ""}`}
+                    onClick={(e) => { e.stopPropagation(); setDepartment(d); setOpenField(null) }}
+                  >
+                    {department === d && (
+                      <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                    )}
+                    {d}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -267,7 +272,7 @@ export default function SearchBar() {
         <div className="search-divider" />
 
         <button className="search-btn" onClick={handleSearch}>
-          🔍
+          Buscar
         </button>
 
       </div>
