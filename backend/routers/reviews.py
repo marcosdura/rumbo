@@ -8,7 +8,6 @@ from schemas import ReviewCreate, ReviewResponse
 router = APIRouter(prefix="/reviews", tags=["reviews"])
  
  
-# ─── Dependencia DB ───────────────────────────────────────────────────────────
 def get_db():
     db = SessionLocal()
     try:
@@ -37,7 +36,7 @@ def get_user_reviews(user_id: str, db: Session = Depends(get_db)):
         for r in reviews
     ]
  
-# ─── GET /reviews/{spot_id} ───────────────────────────────────────────────────
+
 # Retorna todas las reviews de un spot, con info del usuario
 @router.get("/{spot_id}", response_model=list[ReviewResponse])
 def get_reviews(spot_id: int, db: Session = Depends(get_db)):
@@ -50,7 +49,6 @@ def get_reviews(spot_id: int, db: Session = Depends(get_db)):
     return reviews
  
  
-# ─── GET /reviews/{spot_id}/summary ──────────────────────────────────────────
 # Retorna el rating promedio y cantidad de reviews de un spot
 @router.get("/{spot_id}/summary")
 def get_reviews_summary(spot_id: int, db: Session = Depends(get_db)):
@@ -68,7 +66,6 @@ def get_reviews_summary(spot_id: int, db: Session = Depends(get_db)):
     }
  
  
-# ─── POST /reviews/{spot_id} ─────────────────────────────────────────────────
 # Crea una review para un spot
 @router.post("/{spot_id}", status_code=status.HTTP_201_CREATED, response_model=ReviewResponse)
 def create_review(spot_id: int, data: ReviewCreate, db: Session = Depends(get_db)):
@@ -98,8 +95,7 @@ def create_review(spot_id: int, data: ReviewCreate, db: Session = Depends(get_db
     return review
  
  
-# ─── DELETE /reviews/{review_id} ─────────────────────────────────────────────
-# Borra una review (solo el autor puede borrarla)
+# Borra una review (solo el creador)
 @router.delete("/{review_id}")
 def delete_review(review_id: int, user_id: str, db: Session = Depends(get_db)):
     review = db.query(Review).filter(Review.id == review_id).first()
