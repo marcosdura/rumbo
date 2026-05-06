@@ -16,7 +16,7 @@ export default function FavoritosPage() {
     if (session?.user?.id) loadFavorites(session.user.id)
   }, [session?.user?.id])
 
-  // ─── Loading ───────────────────────────────────────────────────────────────
+  // cargando
   if (status === "loading" || loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
@@ -41,7 +41,7 @@ export default function FavoritosPage() {
     )
   }
 
-  // ─── No logueado ───────────────────────────────────────────────────────────
+  // si no esta logueado
   if (!session) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
@@ -75,7 +75,7 @@ export default function FavoritosPage() {
     )
   }
 
-  // ─── Página principal ──────────────────────────────────────────────────────
+  // si esta logueado
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`

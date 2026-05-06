@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import SpotAmenity
 from schemas import AmenityResponse, AmenityCreate
 import models
 from database import SessionLocal

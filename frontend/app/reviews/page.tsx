@@ -47,7 +47,7 @@ export default function ReviewsPage() {
     } catch {}
   }
 
-  // ─── Loading ───────────────────────────────────────────────────────────────
+  // cargando
   if (status === "loading" || loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
@@ -72,7 +72,7 @@ export default function ReviewsPage() {
     )
   }
 
-  // ─── No logueado ───────────────────────────────────────────────────────────
+  // si no esta logueado
   if (!session) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>

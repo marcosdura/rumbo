@@ -14,6 +14,7 @@ def get_db():
     finally:
         db.close()
 
+# guarda un usuario en la base de datos
 @router.post("/upsert")
 def upsert_user(data: dict, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data["email"]).first()

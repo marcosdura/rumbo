@@ -14,6 +14,7 @@ def get_db():
         db.close()
 
 
+
 @router.post("/", response_model=KayakDetailResponse)
 def create_kayak(kayak: KayakDetailCreate, db: Session = Depends(get_db)):
 
@@ -30,9 +31,11 @@ def create_kayak(kayak: KayakDetailCreate, db: Session = Depends(get_db)):
     return db_kayak
 
 
+
 @router.get("/", response_model=list[KayakDetailResponse])
 def get_kayaks(db: Session = Depends(get_db)):
     return db.query(KayakDetail).all()
+
 
 
 @router.get("/{kayak_id}", response_model=KayakDetailResponse)

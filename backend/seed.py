@@ -3,9 +3,8 @@ import models
 
 db = SessionLocal()
 
-# -------------------------
+
 # CATEGORÍAS
-# -------------------------
 categories = ["Camping", "Trekking", "Escalada", "Surf", "Kayak"]
 
 category_map = {}
@@ -19,9 +18,8 @@ for name in categories:
         db.refresh(cat)
     category_map[name] = cat
 
-# -------------------------
-# AMENITIES (igual que antes)
-# -------------------------
+
+# AMENITIES
 amenities_list = [
     "Ducha", "Agua caliente", "Baños", "Agua potable", "Electricidad",
     "Lavadero", "Parrillero", "Cocina compartida", "Comedor", "Heladera",
@@ -44,9 +42,8 @@ for name in amenities_list:
         db.refresh(am)
     amenity_map[name] = am
 
-# -------------------------
+
 # FUNCIONES
-# -------------------------
 def create_surf_school(spot, name, class_type, duration, equipment_include):
     existing = db.query(models.SurfSchool).filter_by(spot_id=spot.id).first()
 
@@ -207,10 +204,8 @@ STOCK_IMAGES = [
     "photo-1470770841072-f978cf4d019e_isvtni",
 ]
 
-# -------------------------
-# CAMPING (2)
-# -------------------------
 
+# CAMPING (2)
 camp1 = create_spot("Camping Santa Teresa", "Camping icónico cerca del mar", "Rocha", "Camping", lat=-33.9671, lng=-53.5328)
 
 create_camping(camp1, 500)
@@ -221,10 +216,8 @@ camp2 = create_spot("Camping Arequita", "Camping en zona serrana", "Lavalleja", 
 create_camping(camp2, 300)
 add_amenities(camp2, ["Ducha", "Baños", "Sombra", "Zona para fogón"])
 
-# -------------------------
-# TREKKING (2)
-# -------------------------
 
+# TREKKING (2)
 trek1 = create_spot("Quebrada de los Cuervos", "Reserva natural con senderos", "Treinta y Tres", "Trekking", lat=-32.8961, lng=-54.4203)
 
 
@@ -237,10 +230,8 @@ trek2 = create_spot("Valle del Lunarejo", "Zona de sierras y biodiversidad", "Ri
 create_trekking_route(trek2, "Ruta del Valle", "Media", 10)
 create_trekking_route(trek2, "Cascadas", "Difícil", 6)
 
-# -------------------------
-# ESCALADA (1 spot, 2 sectores, 2 rutas c/u)
-# -------------------------
 
+# ESCALADA (1 spot, 2 sectores, 2 rutas c/u)
 climb = create_spot("Cerro Arequita", "Principal zona de escalada en Uruguay", "Lavalleja", "Escalada", lat=-34.0150, lng=-55.2900)
 
 
@@ -253,10 +244,8 @@ create_climbing_route(sector2, "Techo Negro", "7a", 12)
 create_climbing_route(sector2, "Salida Técnica", "6b", 9)
 
 
-# -------------------------
-# KAYAK (2)
-# -------------------------
 
+# KAYAK (2)
 kayak1 = create_spot("Laguna Garzón", "Laguna ideal para travesías en kayak con aguas calmas", "Rocha", "Kayak", lat=-34.6167, lng=-54.3500)
 
 

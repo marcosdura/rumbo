@@ -152,7 +152,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* ── Mapa ── */}
+        {/* Mapa */}
         <div style={{ width: 700, flexShrink: 0, padding: 20, position: "relative", zIndex: 0 }}>
           <div style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid #e0ddd6", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 

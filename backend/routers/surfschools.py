@@ -30,9 +30,11 @@ def create_surfschool(surfschool: SurfSchoolCreate, db: Session = Depends(get_db
     return db_surfschool
 
 
+
 @router.get("/", response_model=list[SurfSchoolResponse])
 def get_surfschools(db: Session = Depends(get_db)):
     return db.query(SurfSchool).all()
+
 
 
 @router.get("/{surfschool_id}", response_model=SurfSchoolResponse)

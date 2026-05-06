@@ -28,8 +28,5 @@ export async function POST(request) {
     ).end(buffer);
   });
 
-  // Acá guardás result.public_id en tu DB asociado al spot
-  // await db.spot.update({ where: { id: spotId }, data: { imageId: result.public_id } })
-
   return Response.json({ public_id: result.public_id, url: result.secure_url });
 }

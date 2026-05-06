@@ -5,12 +5,9 @@ from datetime import datetime
 from sqlalchemy.sql import func
 
 
-
-# definimos una clase que es una tabla en la base de datos
 class SpotDB(Base):
     __tablename__ = "spots"
 
-    # definimos las columnas en la tabla, ademas de su primary key. Index hace mas rapida las busquedas
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     description = Column(String)
@@ -76,7 +73,6 @@ class Route(Base):
 
     name = Column(String)
 
-    # métricas básicas
     distance_km = Column(Float)
     duration_hours = Column(Float)
     elevation_gain = Column(Integer)
@@ -85,11 +81,9 @@ class Route(Base):
     max_altitude = Column(Integer)
     min_altitude = Column(Integer)
 
-    # características
     difficulty = Column(String)        # fácil / moderado / difícil
     route_type = Column(String)        # circular / ida y vuelta
 
-    # extras útiles
     technical_level = Column(String)   # bajo / medio / alto
     physical_demand = Column(String)   # bajo / medio / alto
 
@@ -119,7 +113,7 @@ class ClimbingRoute(Base):
     sector_id = Column(Integer, ForeignKey("climbingsectors.id"))
 
     name = Column(String)
-    grade = Column(String)   # mejor string (6a, 7b, V5...)
+    grade = Column(String)
     bolts = Column(Integer)
     length = Column(Float)
     description = Column(String)
@@ -176,15 +170,11 @@ class SpotImage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id"))
-    cloudinary_public_id = Column(String)  # lo que guardás de Cloudinary
-    is_main = Column(Boolean, default=False)  # para saber cuál mostrar primero
-    order = Column(Integer, default=0)  # para ordenar las fotos
+    cloudinary_public_id = Column(String)
+    is_main = Column(Boolean, default=False)
+    order = Column(Integer, default=0)
 
     spot = relationship("SpotDB", back_populates="images")
-
-
-
-
 
 
 
@@ -203,8 +193,6 @@ class Favorite(Base):
     __table_args__ = (UniqueConstraint("user_id", "spot_id", name="uq_user_spot"),)
 
     
-
-
 
 class Review(Base):
     __tablename__ = "reviews"

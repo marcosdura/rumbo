@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
- 
 from database import SessionLocal
 from models import Review, SpotDB, User
 from schemas import ReviewCreate, ReviewResponse

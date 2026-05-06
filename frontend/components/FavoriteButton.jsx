@@ -21,7 +21,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
     else        await addFavorite(spot, userId)
   }
 
-  // ─── Variante "detail" ────────────────────────────────────────────────────
+  // variante en los detalles del spot
   if (variant === "detail") {
     return (
       <>
@@ -74,7 +74,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
     )
   }
 
-  // ─── Variante "card" ──────────────────────────────────────────────────────
+  // variante sobre la card
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}

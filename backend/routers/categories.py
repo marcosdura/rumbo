@@ -12,6 +12,8 @@ def get_db():
     finally:
         db.close()
 
+
+
 @router.post("/")
 def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db)):
     db_category = models.Category(name=category.name)
@@ -19,6 +21,8 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(db_category)
     return db_category
+
+
 
 @router.get("/")
 def get_categories(db: Session = Depends(get_db)):

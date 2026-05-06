@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool, SpotImage
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
 from typing import Optional
-
 from database import engine
 from models import Base
 
@@ -44,9 +43,8 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
         name=spot.name,
         description=spot.description,
         department=spot.department,
-        category_id=spot.category_id  # 👈 cambio clave
+        category_id=spot.category_id
     )
-
 
     # lo guarda en la db
     db.add(db_spot)
@@ -61,8 +59,8 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
 )
     return db_spot
 
+
 # Obtener los spots
-# usa la sesion para hablar con la DB
 @router.get("/spots", response_model=list[SpotResponse])
 def get_spots(
     db: Session = Depends(get_db),
@@ -90,21 +88,21 @@ def get_spots(
     return result
 
 
+#elimina un spot
 @router.delete("/spots/{spot_id}")
 def delete_spot(spot_id: int, db: Session = Depends(get_db)):
-    # hacemos una consulta a la tabla y que nos traiga el que coincide con el id
     db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
 
-    # si no lo encontro terminamos la funcion y damos error
     if not db_spot:
         raise HTTPException(status_code=404, detail="Trip not found")
 
-    # eliminamos
     db.delete(db_spot)
     db.commit()
 
     return {"message": "Trip deleted"}
 
+
+#devuelve un spot por id
 @router.get("/spots/{id}", response_model=SpotResponse)
 def get_spot(id: int, db: Session = Depends(get_db)):
     spot = (
@@ -139,21 +137,18 @@ def get_spot(id: int, db: Session = Depends(get_db)):
     }
 
 
-
+# agrega una amenity al spot
 @router.post("/spots/{spot_id}/amenities/{amenity_id}")
 def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db)):
 
-    # validar spot
     spot = db.query(models.SpotDB).filter(models.SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
-    # validar amenity
     amenity = db.query(models.Amenity).filter(models.Amenity.id == amenity_id).first()
     if not amenity:
         raise HTTPException(status_code=404, detail="Amenity not found")
 
-    # evitar duplicados
     existing = db.query(SpotAmenity).filter(
         SpotAmenity.spot_id == spot_id,
         SpotAmenity.amenity_id == amenity_id
@@ -173,12 +168,13 @@ def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db)):
     return {"message": "Amenity agregada"}
 
 
-
+# devuelve los sectores segun el spot
 @router.get("/{spot_id}/sectors", response_model=list[ClimbingSectorResponse])
 def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
     return db.query(ClimbingSector).filter(ClimbingSector.spot_id == spot_id).all()
 
 
+# agrega detalles del camping
 @router.post("/spots/{spot_id}/camping")
 def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db)):
     
@@ -194,15 +190,20 @@ def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = De
     return camping
 
 
+# devuelve las rutas de trekking segun el spot
 @router.get("/spots/{spot_id}/routes", response_model=list[RouteResponse])
 def get_routes_by_spot(spot_id: int, db: Session = Depends(get_db)):
     return db.query(Route).filter(Route.spot_id == spot_id).all()
 
+
+#devuelve los sectores de escalada segun el spot
 @router.get("/spots/{spot_id}/sectors", response_model=list[ClimbingSectorResponse])
 def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
     sectors = db.query(ClimbingSector).filter(ClimbingSector.spot_id == spot_id).all()
     return sectors
 
+
+# devuelve los detalles del kayak segun el spot
 @router.get("/spots/{spot_id}/kayak-detail", response_model=KayakDetailResponse)
 def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
     kayak = db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id).first()
@@ -210,6 +211,8 @@ def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Kayak no encontrado")
     return kayak
 
+
+# edvuelve las escuelas de surf segun el spot
 @router.get("/spots/{spot_id}/surf-school", response_model=SurfSchoolResponse)
 def get_surf_school(spot_id: int, db: Session = Depends(get_db)):
     surf = db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).first()

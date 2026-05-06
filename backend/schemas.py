@@ -24,7 +24,7 @@ class SpotCreate(BaseModel):
     name: str
     description: str
     department: str
-    category_id: int  # 👈 reemplaza activity
+    category_id: int
 
 class SpotResponse(BaseModel):
     id: int
@@ -34,7 +34,7 @@ class SpotResponse(BaseModel):
     lat: float | None = None
     lng: float | None = None
 
-    category: CategoryResponse  # 👈 importante
+    category: CategoryResponse
     camping_detail: CampingDetailResponse | None = None
     amenities: list[AmenityResponse] = []
 
@@ -44,7 +44,7 @@ class SpotResponse(BaseModel):
         result = []
         for item in v:
             if hasattr(item, "amenity"):
-                result.append(item.amenity)  # navega SpotAmenity → Amenity
+                result.append(item.amenity)
             else:
                 result.append(item)
         return result
@@ -74,6 +74,7 @@ class CampingDetailResponse(CampingDetailBase):
         from_attributes = True
 
 
+# -------- AMENITY --------
 class AmenityResponse(BaseModel):
     id: int
     name: str
@@ -85,7 +86,7 @@ class AmenityCreate(BaseModel):
     name: str
     
 
-
+# -------- TREKKING ROUTE --------
 class RouteBase(BaseModel):
     name: str
     distance_km: Optional[float] = None
@@ -116,6 +117,8 @@ class RouteResponse(RouteBase):
     class Config:
         from_attributes = True
 
+
+# -------- CLIMBING SECTOR --------
 class ClimbingSectorBase(BaseModel):
     name: str
     min_grade: Optional[float] = None
@@ -126,7 +129,6 @@ class ClimbingSectorBase(BaseModel):
     restrictions: Optional[str] = None
     
   
-
 class ClimbingSectorCreate(ClimbingSectorBase):
     spot_id: int
 
@@ -137,8 +139,8 @@ class ClimbingSectorResponse(ClimbingSectorBase):
     class Config:
         from_attributes = True
 
-##################################################
 
+# -------- CLIMBING ROUTE --------
 class ClimbingRouteBase(BaseModel):
     name: str
     grade: Optional[str] = None
@@ -146,8 +148,7 @@ class ClimbingRouteBase(BaseModel):
     length: Optional[int] = None
     bolts: Optional[int] = None
     description: Optional[str] = None
-    
-  
+
 
 class ClimbingRouteCreate(ClimbingRouteBase):
     spot_id: int
@@ -160,8 +161,7 @@ class ClimbingRouteResponse(ClimbingRouteBase):
         from_attributes = True
 
 
-###########################################
-
+# -------- KAYAK --------
 class KayakDetail(BaseModel):
     name: str
     water_type: Optional[str] = None   # rio | lago | mar
@@ -183,8 +183,8 @@ class KayakDetailResponse(KayakDetail):
     class Config:
         from_attributes = True
 
-################################################
 
+# -------- SURF --------
 class SurfSchool(BaseModel):
     name: str
     duration: Optional[float] = None            # horas
@@ -203,6 +203,7 @@ class SurfSchoolResponse(SurfSchool):
         from_attributes = True
 
 
+# -------- SPOT IMAGE --------
 class SpotImageResponse(BaseModel):
     id: int
     cloudinary_public_id: str
@@ -213,7 +214,7 @@ class SpotImageResponse(BaseModel):
         from_attributes = True
 
 
-
+# -------- REVIEW --------
 class ReviewUserResponse(BaseModel):
     id: str
     name: str | None = None

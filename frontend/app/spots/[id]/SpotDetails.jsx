@@ -176,7 +176,7 @@ function SpotDetail({ spot }) {
         <div className="flex-1 overflow-y-auto">
           <div style={{ maxWidth: 1152, margin: "0 auto", padding: "36px 24px 48px" }}>
 
-            {/* ── Header ── */}
+            {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>
 
               {/* Título + acciones */}
@@ -197,7 +197,7 @@ function SpotDetail({ spot }) {
                 </div>
               </div>
 
-              {/* Meta row */}
+              {/* Rating */}
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span className="rating-badge">
                   <span className="star">★</span>
@@ -210,7 +210,7 @@ function SpotDetail({ spot }) {
               </div>
             </div>
 
-            {/* ── Imágenes ── */}
+            {/* Imágenes */}
             <div className="fade-up fade-up-2" style={{ marginBottom: 36 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div className="img-zoom img-reveal" style={{ overflow: "hidden", borderRadius: 18, height: 360, position: "relative" }}>
@@ -239,7 +239,7 @@ function SpotDetail({ spot }) {
               </div>
             </div>
 
-            {/* ── Layout principal ── */}
+            {/* Layout principal */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
               {/* Fila superior: descripción + detalles | mapa */}
