@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from database import engine
-import models
 from models import Base
 from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews        
 from fastapi.middleware.cors import CORSMiddleware
-import cloudinary_config
+
 
 # crea la tabla en la db
 Base.metadata.create_all(bind=engine)
