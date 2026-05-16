@@ -69,7 +69,8 @@ def get_spots(
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
-        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity)
+        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
+        joinedload(SpotDB.images)
     )
 
     if department:

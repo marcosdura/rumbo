@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 function TrekkingRoutes({ routes }) {
 
   const difficultyConfig = {
@@ -46,104 +48,145 @@ function TrekkingRoutes({ routes }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         {routes.map(route => {
-          const diff   = difficultyConfig[route.difficulty] || { label: route.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
+          const diff   = difficultyConfig[route.difficulty] || { label: route.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6", dot: "⚪" }
           const signal = signalConfig[route.signal] || signalConfig.mid
 
           return (
-            <div key={route.id} style={{
-              background: "#fff",
-              border: "1px solid #e0ddd6",
-              borderRadius: 16,
-              padding: 20,
-            }}>
+            <Link
+              key={route.id}
+              href={`/trekkingRoute/${route.id}`}
+              style={{ textDecoration: "none" }}
+            >
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e0ddd6",
+                  borderRadius: 16,
+                  padding: 20,
+                  transition: "box-shadow 0.2s, transform 0.2s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,0.09)"
+                  e.currentTarget.style.transform = "translateY(-2px)"
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.boxShadow = "none"
+                  e.currentTarget.style.transform = "translateY(0)"
+                }}
+              >
 
-              {/* Route name */}
-              <h3 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 18, fontWeight: 600,
-                color: "#1b1b19", margin: "0 0 16px",
-              }}>
-                {route.name}
-              </h3>
-
-              {/* Stats grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
-                {[
-                  { val: `${route.distance_km} km`, lbl: "Distancia" },
-                  { val: `${route.duration_hours} h`, lbl: "Duración" },
-                  { val: `↑ ${route.elevation_gain} m`, lbl: "Desnivel +" },
-                  { val: `↓ ${route.elevation_loss} m`, lbl: "Desnivel −" },
-                ].map(({ val, lbl }) => (
-                  <div key={lbl} style={{
-                    background: "#f7f5f0",
-                    border: "1px solid #e0ddd6",
-                    borderRadius: 12,
-                    padding: "10px 6px",
-                    textAlign: "center",
+                {/* Card header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <h3 style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: 18, fontWeight: 600,
+                    color: "#1b1b19", margin: 0,
                   }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>{val}</p>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 0 0" }}>{lbl}</p>
+                    {route.name}
+                  </h3>
+                  <div
+                    className="route-arrow"
+                    style={{
+                      width: 28, height: 28, borderRadius: "50%",
+                      border: "1px solid #e0ddd6", background: "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, color: "#9a9690",
+                      transition: "background 0.2s, color 0.2s, border-color 0.2s",
+                    }}
+                  >
+                    →
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Altitudes */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                {[
-                  { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máx." },
-                  { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mín." },
-                ].map(({ icon, val, lbl }) => (
-                  <div key={lbl} style={{
-                    flex: 1,
-                    background: "#f7f5f0",
-                    border: "1px solid #e0ddd6",
-                    borderRadius: 12,
-                    padding: "8px 12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}>
-                    <span style={{ fontSize: 16 }}>{icon}</span>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{val}</p>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 0 0" }}>{lbl}</p>
+                {/* Stats grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+                  {[
+                    { val: `${route.distance_km} km`, lbl: "Distancia" },
+                    { val: `${route.duration_hours} h`, lbl: "Duración" },
+                    { val: `↑ ${route.elevation_gain} m`, lbl: "Desnivel +" },
+                    { val: `↓ ${route.elevation_loss} m`, lbl: "Desnivel −" },
+                  ].map(({ val, lbl }) => (
+                    <div key={lbl} style={{
+                      background: "#f7f5f0",
+                      border: "1px solid #e0ddd6",
+                      borderRadius: 12,
+                      padding: "10px 6px",
+                      textAlign: "center",
+                    }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>{val}</p>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 0 0" }}>{lbl}</p>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                {/* Altitudes */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  {[
+                    { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máx." },
+                    { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mín." },
+                  ].map(({ icon, val, lbl }) => (
+                    <div key={lbl} style={{
+                      flex: 1,
+                      background: "#f7f5f0",
+                      border: "1px solid #e0ddd6",
+                      borderRadius: 12,
+                      padding: "8px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}>
+                      <span style={{ fontSize: 16 }}>{icon}</span>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{val}</p>
+                        <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 0 0" }}>{lbl}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Badges */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {/* Dificultad */}
+                  <Badge color={diff.color} bg={diff.bg} border={diff.border}>
+                    {diff.dot} {diff.label}
+                  </Badge>
+
+                  {/* Tipo de ruta */}
+                  <Badge {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`)} />
+
+                  {/* Técnico */}
+                  <Badge {...neutralBadge(`🧗 Técnico: ${route.technical_level}`)} />
+
+                  {/* Físico */}
+                  <Badge {...neutralBadge(`💪 Físico: ${route.physical_demand}`)} />
+
+                  {/* Agua */}
+                  <Badge {...boolBadge(route.water_available, "💧 Agua disponible", "💧 Sin agua")} />
+
+                  {/* Camping */}
+                  <Badge {...boolBadge(route.camping_allowed, "⛺ Camping permitido", "⛺ Sin camping")} />
+
+                  {/* Señal */}
+                  <Badge color={signal.color} bg={signal.bg} border={signal.border}>
+                    📶 {signal.label}
+                  </Badge>
+                </div>
+
               </div>
-
-              {/* Badges */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {/* Dificultad */}
-                <Badge color={diff.color} bg={diff.bg} border={diff.border}>
-                  {diff.dot} {diff.label}
-                </Badge>
-
-                {/* Tipo de ruta */}
-                <Badge {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`) } />
-
-                {/* Técnico */}
-                <Badge {...neutralBadge(`🧗 Técnico: ${route.technical_level}`)} />
-
-                {/* Físico */}
-                <Badge {...neutralBadge(`💪 Físico: ${route.physical_demand}`)} />
-
-                {/* Agua */}
-                <Badge {...boolBadge(route.water_available, "💧 Agua disponible", "💧 Sin agua")} />
-
-                {/* Camping */}
-                <Badge {...boolBadge(route.camping_allowed, "⛺ Camping permitido", "⛺ Sin camping")} />
-
-                {/* Señal */}
-                <Badge color={signal.color} bg={signal.bg} border={signal.border}>
-                  📶 {signal.label}
-                </Badge>
-              </div>
-
-            </div>
+            </Link>
           )
         })}
       </div>
+
+      <style>{`
+        a:hover .route-arrow {
+          background: #1b4332 !important;
+          color: #fff !important;
+          border-color: #1b4332 !important;
+        }
+      `}</style>
+
     </div>
   )
 }

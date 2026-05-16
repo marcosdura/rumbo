@@ -14,12 +14,24 @@ import Footer from "../../../components/Footer"
 import { CldImage } from 'next-cloudinary'
 import FavoriteButton from "@/components/FavoriteButton"
 import ReviewsSection from "@/components/ReviewsSection"
+import SpotImages from "../../../components/SpotImages"
+import ShareModal from "@/components/ShareModal"
+
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
   const [sectors, setSectors] = useState([])
   const [kayakDetail, setKayakDetail] = useState(null)
   const [surfSchool, setSurfSchool] = useState(null)
+  const [showShare, setShowShare] = useState(false)
+  const [reviewSummary, setReviewSummary] = useState(null)
+
+useEffect(() => {
+  if (!spot?.id) return
+  fetch(`http://localhost:8000/reviews/${spot.id}/summary`)
+    .then(r => r.json())
+    .then(setReviewSummary)
+}, [spot?.id])
 
   useEffect(() => {
     if (!spot?.id) return
@@ -172,6 +184,7 @@ function SpotDetail({ spot }) {
 
       <Navbar />
 
+      {showShare && <ShareModal name={spot.name} onClose={() => setShowShare(false)} />}
       <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
           <div style={{ maxWidth: 1152, margin: "0 auto", padding: "36px 24px 48px" }}>
@@ -191,9 +204,7 @@ function SpotDetail({ spot }) {
 
                 <div style={{ display: "flex", gap: 8, flexShrink: 0, marginTop: 4 }}>
                   <FavoriteButton spot={spot} variant="detail" />
-                  <button className="action-btn">
-                    🔗 Compartir
-                  </button>
+                  <button className="action-btn" onClick={() => setShowShare(true)}>🔗 Compartir</button>
                 </div>
               </div>
 
@@ -201,8 +212,22 @@ function SpotDetail({ spot }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span className="rating-badge">
                   <span className="star">★</span>
-                  <strong>4.9</strong>
-                  <span className="reviews-link">ver reseñas</span>
+                  <strong>{reviewSummary?.total > 0 ? reviewSummary.average : "—"}</strong>
+                  <span
+                    className="reviews-link"
+                    onClick={() => {
+                      const el = document.getElementById("reviews")
+                      if (!el) return
+                      // si no hay reseñas, scroll al formulario para escribir
+                      const y = el.getBoundingClientRect().top + window.scrollY - 140
+                      window.scrollTo({ top: y, behavior: "smooth" })
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {reviewSummary?.total > 0
+                      ? `${reviewSummary.total} reseña${reviewSummary.total !== 1 ? "s" : ""}`
+                      : "¡Sé el primero en reseñar!"}
+                  </span>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
                 <span className="category-pill">{spot.category?.name || "Sin categoría"}</span>
@@ -212,31 +237,7 @@ function SpotDetail({ spot }) {
 
             {/* Imágenes */}
             <div className="fade-up fade-up-2" style={{ marginBottom: 36 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div className="img-zoom img-reveal" style={{ overflow: "hidden", borderRadius: 18, height: 360, position: "relative" }}>
-                  <CldImage
-                    src={spot.images[0].cloudinary_public_id}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    alt={spot.name}
-                    crop="fill" gravity="auto" loading="eager"
-                    className="object-cover" quality="auto" format="auto" priority
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 8, height: 360 }}>
-                  {spot.images.slice(1).map((img, i) => (
-                    <div key={i} className="img-zoom img-reveal" style={{ overflow: "hidden", borderRadius: 12, position: "relative" }}>
-                      <CldImage
-                        src={img.cloudinary_public_id}
-                        fill sizes="25vw"
-                        alt={`${spot.name} ${i + 2}`}
-                        crop="fill" gravity="auto" loading="eager"
-                        className="object-cover" quality="auto" format="auto" priority
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <SpotImages images={spot.images} name={spot.name} />
             </div>
 
             {/* Layout principal */}
@@ -263,7 +264,7 @@ function SpotDetail({ spot }) {
 
                 {/* Derecha: mapa */}
                 <div style={{ position: "sticky", top: 24, height: "fit-content" }}>
-                  <MapCard />
+                  <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />
                 </div>
               </div>
 
@@ -294,7 +295,9 @@ function SpotDetail({ spot }) {
               )}
 
               {/* Reviews */}
-              <ReviewsSection spotId={spot.id} />
+              <div id="reviews">
+                <ReviewsSection spotId={spot.id} />
+              </div>
             </div>
 
           </div>

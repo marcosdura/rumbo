@@ -3,44 +3,36 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "../../../components/Navbar"
+import FavoriteButton from "@/components/FavoriteButton"
 
-function ClimbingSectorDetails() {
+
+function TrekkingRouteDetails() {
   const { id } = useParams()
   const router = useRouter()
-  const [sector, setSector] = useState<any>(null)
-  const [routes, setRoutes] = useState<any>([])
-
+  const [route, setRoute] = useState(null)
+  
   useEffect(() => {
-    fetch(`http://localhost:8000/sectors/${id}`)
+    fetch(`http://localhost:8000/routes/${id}`)
       .then(res => res.json())
-      .then(data => setSector(data))
+      .then(data => {
+        console.log(data)
+        setRoute(data)})
   }, [id])
 
-  useEffect(() => {
-    fetch(`http://localhost:8000/sectors/${id}/routes`)
-      .then(res => res.json())
-      .then(data => setRoutes(data))
-  }, [id])
+  const difficultyConfig = {
+    "fácil":      { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8", dot: "🟢" },
+    "intermedio": { color: "#78590a", bg: "#fef9e7", border: "#f0d98a", dot: "🟡" },
+    "difícil":    { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0", dot: "🔴" },
+  }
 
-  const gradeConfig = (grade) => {
-    if (!grade) return { color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
-    const g = grade.toLowerCase()
-    if (g.startsWith("v")) {
-      const num = parseInt(g.slice(1))
-      if (num <= 3) return { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" }
-      if (num <= 6) return { color: "#78590a", bg: "#fef9e7", border: "#f0d98a" }
-      if (num <= 9) return { color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a" }
-      return { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" }
-    }
-    const num = parseFloat(g)
-    if (num <= 5) return { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" }
-    if (num <= 6) return { color: "#78590a", bg: "#fef9e7", border: "#f0d98a" }
-    if (num <= 7) return { color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a" }
-    return { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" }
+  const signalConfig = {
+    none: { label: "Sin señal",   color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
+    low:  { label: "Señal baja",  color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
+    mid:  { label: "Señal media", color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
   }
 
   // ─── Loading ───────────────────────────────────────────────────────────────
-  if (!sector) {
+  if (!route) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
         <Navbar />
@@ -60,32 +52,31 @@ function ClimbingSectorDetails() {
     )
   }
 
+  const diff   = difficultyConfig[route.difficulty] || { color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6", dot: "⚪" }
+  const signal = signalConfig[route.signal] || signalConfig.mid
+
+  const boolBadge = (val, trueLabel, falseLabel) => ({
+    label: val ? trueLabel : falseLabel,
+    color: val ? "#1b4332" : "#7c1d1d",
+    bg:    val ? "#e8f5ee" : "#fdf0f0",
+    border: val ? "#b7dfc8" : "#f5c0c0",
+  })
+
+  const neutralBadge = (label) => ({
+    label,
+    color: "#4a443b",
+    bg: "#f7f5f0",
+    border: "#e0ddd6",
+  })
+
   const badges = [
-    {
-      icon: "🪨", label: sector.rock_type,
-      color: "#4a443b", bg: "#f7f5f0", border: "#e0ddd6",
-    },
-    {
-      icon: "🔩",
-      label: sector.bolted ? "Equipado" : "Trad / mixto",
-      color: sector.bolted ? "#1b4332" : "#78590a",
-      bg: sector.bolted ? "#e8f5ee" : "#fef9e7",
-      border: sector.bolted ? "#b7dfc8" : "#f0d98a",
-    },
-    {
-      icon: "☀️",
-      label: sector.shade === "full" ? "Sombra total" : sector.shade === "partial" ? "Semisombra" : "Sol directo",
-      color: sector.shade === "full" ? "#1b4332" : sector.shade === "partial" ? "#2d6a4f" : "#7c4a03",
-      bg: sector.shade === "full" ? "#e8f5ee" : sector.shade === "partial" ? "#f0f7f3" : "#fff4e6",
-      border: sector.shade === "full" ? "#b7dfc8" : sector.shade === "partial" ? "#c0ddd0" : "#f5c97a",
-    },
-    {
-      icon: "💧",
-      label: sector.water_available ? "Agua disponible" : "Sin agua",
-      color: sector.water_available ? "#1b4332" : "#7c1d1d",
-      bg: sector.water_available ? "#e8f5ee" : "#fdf0f0",
-      border: sector.water_available ? "#b7dfc8" : "#f5c0c0",
-    },
+    { ...{ color: diff.color, bg: diff.bg, border: diff.border }, label: `${diff.dot} ${route.difficulty?.charAt(0).toUpperCase() + route.difficulty?.slice(1)}` },
+    { ...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`) },
+    { ...neutralBadge(`🧗 Técnico: ${route.technical_level}`) },
+    { ...neutralBadge(`💪 Físico: ${route.physical_demand}`) },
+    { ...boolBadge(route.water_available, "💧 Agua disponible", "💧 Sin agua") },
+    { ...boolBadge(route.camping_allowed, "⛺ Camping permitido", "⛺ Sin camping") },
+    { color: signal.color, bg: signal.bg, border: signal.border, label: `📶 ${signal.label}` },
   ]
 
   return (
@@ -120,17 +111,6 @@ function ClimbingSectorDetails() {
           transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
         }
         .action-btn:hover { background: #f7f5f0; transform: translateY(-1px); }
-
-        .route-row {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 2fr;
-          gap: 16px;
-          padding: 12px 16px;
-          border-radius: 12px;
-          transition: background 0.15s;
-          align-items: center;
-        }
-        .route-row:hover { background: #f7f5f0; }
       `}</style>
 
       <Navbar />
@@ -140,7 +120,7 @@ function ClimbingSectorDetails() {
 
           {/* Back */}
           <button className="back-btn fade-up fade-up-1" onClick={() => router.back()}>
-            ← Volver
+            ← Volver {route.spot?.name}
           </button>
 
           {/* Header */}
@@ -149,11 +129,11 @@ function ClimbingSectorDetails() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
                 <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
-                  Sector de Escalada
+                  Ruta de Trekking
                 </p>
               </div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
-                {sector.name}
+                {route.name}
               </h1>
             </div>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
@@ -161,13 +141,13 @@ function ClimbingSectorDetails() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats principales */}
           <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
             {[
-              { icon: "📍", val: `${sector.routes_count} rutas`, lbl: "Total rutas" },
-              { icon: "🎯", val: `${sector.min_grade} – ${sector.max_grade}`, lbl: "Graduación" },
-              { icon: "⛰️", val: `${sector.altitude} m`, lbl: "Altitud" },
-              { icon: "🧭", val: sector.orientation, lbl: "Orientación" },
+              { icon: "📏", val: `${route.distance_km} km`,      lbl: "Distancia" },
+              { icon: "⏱️", val: `${route.duration_hours} h`,    lbl: "Duración" },
+              { icon: "↑",  val: `${route.elevation_gain} m`,    lbl: "Desnivel +" },
+              { icon: "↓",  val: `${route.elevation_loss} m`,    lbl: "Desnivel −" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid #e0ddd6",
@@ -177,6 +157,27 @@ function ClimbingSectorDetails() {
                 <p style={{ fontSize: 24, marginBottom: 6 }}>{icon}</p>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{val}</p>
                 <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Altitudes */}
+          <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 20 }}>
+            {[
+              { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máxima" },
+              { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mínima" },
+            ].map(({ icon, val, lbl }) => (
+              <div key={lbl} style={{
+                background: "#fff", border: "1px solid #e0ddd6",
+                borderRadius: 16, padding: "20px 24px",
+                display: "flex", alignItems: "center", gap: 16,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              }}>
+                <span style={{ fontSize: 28 }}>{icon}</span>
+                <div>
+                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 2px" }}>{val}</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -201,77 +202,30 @@ function ClimbingSectorDetails() {
                   fontSize: 12, fontWeight: 600,
                   color: b.color, background: b.bg, border: `1px solid ${b.border}`,
                 }}>
-                  {b.icon} {b.label}
+                  {b.label}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Tabla de rutas */}
-          <div className="fade-up fade-up-4" style={{
-            background: "#fff", border: "1px solid #e0ddd6",
-            borderRadius: 20, padding: "24px 28px",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
-                Rutas — {routes.length} en total
+          {/* Descripción */}
+          {route.description && (
+            <div className="fade-up fade-up-4" style={{
+              background: "#fff", border: "1px solid #e0ddd6",
+              borderRadius: 20, padding: "24px 28px",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                  Descripción
+                </p>
+              </div>
+              <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.7, margin: 0 }}>
+                {route.description}
               </p>
             </div>
-
-            {routes.length === 0 ? (
-              <p style={{ fontSize: 14, color: "#9a9690", textAlign: "center", padding: "32px 0" }}>
-                No hay rutas registradas para este sector.
-              </p>
-            ) : (
-              <div>
-                {/* Header tabla */}
-                <div style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 2fr",
-                  gap: 16, padding: "0 16px 10px",
-                  borderBottom: "1px solid #ede9e1", marginBottom: 4,
-                }}>
-                  {["Nombre", "Grado", "Largo", "Descripción"].map(h => (
-                    <p key={h} style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>
-                      {h}
-                    </p>
-                  ))}
-                </div>
-
-                {/* Filas */}
-                {routes.map((route, i) => {
-                  const gc = gradeConfig(route.grade)
-                  return (
-                    <div key={route.id} className="route-row">
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 11, color: "#d0cdc7", fontFamily: "monospace", width: 20, flexShrink: 0 }}>
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{route.name}</p>
-                      </div>
-                      <div>
-                        <span style={{
-                          display: "inline-block",
-                          padding: "3px 10px", borderRadius: 999,
-                          fontSize: 12, fontWeight: 600,
-                          color: gc.color, background: gc.bg, border: `1px solid ${gc.border}`,
-                        }}>
-                          {route.grade}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>
-                        {route.length ? `${route.length} m` : "—"}
-                      </p>
-                      <p style={{ fontSize: 13, color: "#9a9690", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {route.description || "—"}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          )}
 
         </div>
       </div>
@@ -279,4 +233,4 @@ function ClimbingSectorDetails() {
   )
 }
 
-export default ClimbingSectorDetails
+export default TrekkingRouteDetails

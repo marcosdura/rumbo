@@ -36,19 +36,6 @@ def get_user_reviews(user_id: str, db: Session = Depends(get_db)):
         for r in reviews
     ]
  
-
-# Retorna todas las reviews de un spot, con info del usuario
-@router.get("/{spot_id}", response_model=list[ReviewResponse])
-def get_reviews(spot_id: int, db: Session = Depends(get_db)):
-    reviews = (
-        db.query(Review)
-        .filter(Review.spot_id == spot_id)
-        .order_by(Review.created_at.desc())
-        .all()
-    )
-    return reviews
- 
- 
 # Retorna el rating promedio y cantidad de reviews de un spot
 @router.get("/{spot_id}/summary")
 def get_reviews_summary(spot_id: int, db: Session = Depends(get_db)):
@@ -64,6 +51,17 @@ def get_reviews_summary(spot_id: int, db: Session = Depends(get_db)):
         "average": round(float(result.average), 1) if result.average else None,
         "total": result.total,
     }
+
+# Retorna todas las reviews de un spot, con info del usuario
+@router.get("/{spot_id}", response_model=list[ReviewResponse])
+def get_reviews(spot_id: int, db: Session = Depends(get_db)):
+    reviews = (
+        db.query(Review)
+        .filter(Review.spot_id == spot_id)
+        .order_by(Review.created_at.desc())
+        .all()
+    )
+    return reviews
  
  
 # Crea una review para un spot

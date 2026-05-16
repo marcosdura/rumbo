@@ -1,6 +1,7 @@
 "use client"
 
 import FavoriteButton from "@/components/FavoriteButton"
+import { CldImage } from 'next-cloudinary'
 
 const IMAGES = [
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
@@ -12,6 +13,7 @@ const IMAGES = [
 
 function SpotCard({ spot, index = 0 }) {
   const image = IMAGES[index % IMAGES.length]
+  const mainImage = spot.images?.[0]
 
   return (
     <>
@@ -139,9 +141,23 @@ function SpotCard({ spot, index = 0 }) {
         className="spot-card"
         onClick={() => window.open(`/spots/${spot.id}`, "_blank")}
       >
-        {/* Imagen */}
         <div className="spot-card-img-wrap">
-          <img src={`${image}?w=600&q=80`} loading="lazy" alt={spot.name} />
+          {mainImage ? (
+            <CldImage
+              src={mainImage.cloudinary_public_id}
+              width={600}
+              height={200}
+              crop="fill"
+              gravity="auto"
+              alt={spot.name}
+              loading="lazy"
+              quality="auto"
+              format="auto"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <div style={{ width: "100%", height: "100%", background: "#e0ddd6" }} />
+          )}
           <div className="spot-card-img-overlay" />
           <div
             style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}
@@ -151,10 +167,8 @@ function SpotCard({ spot, index = 0 }) {
           </div>
         </div>
 
-        {/* Body */}
         <div className="spot-card-body">
           <p className="spot-card-name">{spot.name}</p>
-
           <div className="spot-card-footer">
             <div className="spot-card-badges">
               <span className="spot-card-badge-category">

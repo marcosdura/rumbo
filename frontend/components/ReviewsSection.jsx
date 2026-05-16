@@ -77,6 +77,7 @@ export default function ReviewsSection({ spotId }) {
 
   const handleSubmit = async () => {
     if (!rating) return
+    console.log("userId:", userId)
     setSubmitting(true)
     try {
       const res = await fetch(`${API}/reviews/${spotId}`, {
