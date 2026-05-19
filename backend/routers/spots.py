@@ -32,35 +32,36 @@ def home():
 # usa la sesion para hablar con la DB
 @router.post("/spots", response_model=SpotResponse)
 def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
-    
+
     category = db.query(models.Category).filter(models.Category.id == spot.category_id).first()
-    
+
     if not category:
         raise HTTPException(status_code=400, detail="Category not found")
-    
-    # crea una nueva fila en la tabla
+
     db_spot = SpotDB(
         name=spot.name,
         description=spot.description,
         department=spot.department,
-        category_id=spot.category_id
+        category_id=spot.category_id,
+        email=spot.email,
+        instagram=spot.instagram,
+        whatsapp=spot.whatsapp,
+        price=spot.price,
     )
 
-    # lo guarda en la db
     db.add(db_spot)
     db.commit()
     db.refresh(db_spot)
 
     db_spot = (
-    db.query(SpotDB)
-    .options(joinedload(SpotDB.category))
-    .filter(SpotDB.id == db_spot.id)
-    .first()
-)
+        db.query(SpotDB)
+        .options(joinedload(SpotDB.category))
+        .filter(SpotDB.id == db_spot.id)
+        .first()
+    )
     return db_spot
 
 
-# Obtener los spots
 @router.get("/spots", response_model=list[SpotResponse])
 def get_spots(
     db: Session = Depends(get_db),
@@ -89,7 +90,6 @@ def get_spots(
     return result
 
 
-#elimina un spot
 @router.delete("/spots/{spot_id}")
 def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
@@ -103,14 +103,13 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     return {"message": "Trip deleted"}
 
 
-#devuelve un spot por id
 @router.get("/spots/{id}", response_model=SpotResponse)
 def get_spot(id: int, db: Session = Depends(get_db)):
     spot = (
         db.query(SpotDB)
         .options(
             selectinload(SpotDB.category),
-            selectinload(SpotDB.routes), 
+            selectinload(SpotDB.routes),
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
         )
@@ -120,23 +119,26 @@ def get_spot(id: int, db: Session = Depends(get_db)):
 
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    
+
     return {
         "id": spot.id,
         "name": spot.name,
         "description": spot.description,
         "department": spot.department,
-        "lat": spot.lat,       
+        "lat": spot.lat,
         "lng": spot.lng,
+        "email": spot.email,
+        "instagram": spot.instagram,
+        "whatsapp": spot.whatsapp,
+        "price": spot.price,
         "category": spot.category,
         "camping_detail": spot.camping_detail,
         "amenities": [
             sa.amenity for sa in spot.amenities if sa.amenity is not None
         ],
         "routes": spot.routes,
-        "images": spot.images
+        "images": spot.images,
     }
-
 
 # agrega una amenity al spot
 @router.post("/spots/{spot_id}/amenities/{amenity_id}")

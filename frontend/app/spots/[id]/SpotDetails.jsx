@@ -63,7 +63,6 @@ useEffect(() => {
 
         .spot-page { font-family: 'DM Sans', sans-serif; }
 
-        /* Imágenes */
         .img-reveal {
           opacity: 0;
           transform: scale(1.03);
@@ -92,7 +91,6 @@ useEffect(() => {
         }
         .img-zoom:hover img { transform: scale(1.06); }
 
-        /* Header pills */
         .category-pill {
           background: #eae6df;
           border: 1px solid #d0c9bc;
@@ -113,7 +111,6 @@ useEffect(() => {
           border-radius: 999px;
         }
 
-        /* Rating badge */
         .rating-badge {
           display: inline-flex;
           align-items: center;
@@ -131,7 +128,6 @@ useEffect(() => {
           font-weight: 400;
         }
 
-        /* Action buttons */
         .action-btn {
           display: flex;
           align-items: center;
@@ -152,7 +148,6 @@ useEffect(() => {
           transform: translateY(-1px);
         }
 
-        /* Amenities */
         .amenities-card {
           background: #fff;
           border: 1px solid #e0ddd6;
@@ -174,7 +169,6 @@ useEffect(() => {
           text-transform: uppercase; color: #2d6a4f; margin: 0;
         }
 
-        /* Divider between header and images */
         .spot-divider {
           border: none;
           border-top: 1px solid #e0ddd6;
@@ -191,8 +185,6 @@ useEffect(() => {
 
             {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>
-
-              {/* Título + acciones */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                 <h1 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -208,7 +200,6 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Rating */}
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span className="rating-badge">
                   <span className="star">★</span>
@@ -218,7 +209,6 @@ useEffect(() => {
                     onClick={() => {
                       const el = document.getElementById("reviews")
                       if (!el) return
-                      // si no hay reseñas, scroll al formulario para escribir
                       const y = el.getBoundingClientRect().top + window.scrollY - 140
                       window.scrollTo({ top: y, behavior: "smooth" })
                     }}
@@ -243,32 +233,37 @@ useEffect(() => {
             {/* Layout principal */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-              {/* Fila superior: descripción + detalles | mapa */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "stretch" }}>
+              {/* Fila superior: descripción + mapa | detalles y contacto */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: 24, alignItems: "start" }}>
 
-                {/* Izquierda */}
+                {/* Izquierda: descripción + mapa */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   <div className="fade-up fade-up-3">
                     <SpotDescription description={spot.description} />
                   </div>
-                  <div className="fade-up fade-up-4" style={{
+                  <div className="fade-up fade-up-4">
+                    <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />
+                  </div>
+                </div>
+
+                {/* Derecha: detalles y contacto */}
+                <div
+                  className="fade-up fade-up-4"
+                  style={{
+                    position: "sticky",
+                    top: 24,
                     background: "#fff",
                     border: "1px solid #e0ddd6",
                     borderRadius: 20,
                     padding: "24px 28px",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  }}>
-                    <SpotDetails spot={spot} />
-                  </div>
-                </div>
-
-                {/* Derecha: mapa */}
-                <div style={{ position: "sticky", top: 24, height: "fit-content" }}>
-                  <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />
+                  }}
+                >
+                  <SpotDetails spot={spot} />
                 </div>
               </div>
 
-              {/* Fila inferior: contenido dinámico por categoría */}
+              {/* Contenido dinámico por categoría */}
               {spot.category?.name === "Trekking" && routes.length > 0 && (
                 <TrekkingRoutes routes={routes} />
               )}

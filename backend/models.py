@@ -14,6 +14,11 @@ class SpotDB(Base):
     department = Column(String)
     lat = Column(Float, nullable=True)
     lng = Column(Float, nullable=True)
+    price = Column(Integer, nullable=True)
+
+    email = Column(String, nullable=True)
+    instagram = Column(String, nullable=True)
+    whatsapp = Column(String, nullable=True)
     
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="spots")

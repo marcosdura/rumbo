@@ -25,6 +25,11 @@ class SpotCreate(BaseModel):
     description: str
     department: str
     category_id: int
+    email: str | None = None
+    instagram: str | None = None
+    whatsapp: str | None = None
+    price: int | None = None
+
 
 class SpotResponse(BaseModel):
     id: int
@@ -33,6 +38,10 @@ class SpotResponse(BaseModel):
     department: str
     lat: float | None = None
     lng: float | None = None
+    email: str | None = None
+    instagram: str | None = None
+    whatsapp: str | None = None
+    price: int | None = None
 
     category: CategoryResponse
     camping_detail: CampingDetailResponse | None = None
@@ -49,14 +58,11 @@ class SpotResponse(BaseModel):
                 result.append(item)
         return result
 
-    class Config:
-        from_attributes = True
     routes: list[RouteResponse] = []
     images: list[SpotImageResponse] = []
 
     class Config:
         from_attributes = True
-
 
 # -------- CAMPING --------
 class CampingDetailBase(BaseModel):

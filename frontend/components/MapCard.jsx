@@ -67,35 +67,6 @@ function MapCard({ lat, lng, name }) {
           referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
-
-      <button
-        onClick={() => window.open(directionsUrl, "_blank")}
-        style={{
-          marginTop: 14,
-          width: "100%",
-          background: "#1b4332",
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 600,
-          fontFamily: "'DM Sans', sans-serif",
-          letterSpacing: "0.02em",
-          padding: "11px 0",
-          borderRadius: 12,
-          border: "none",
-          cursor: "pointer",
-          transition: "background 0.2s, transform 0.15s",
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = "#2d6a4f"
-          e.currentTarget.style.transform = "translateY(-1px)"
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = "#1b4332"
-          e.currentTarget.style.transform = "translateY(0)"
-        }}
-      >
-        Cómo llegar →
-      </button>
     </div>
   )
 }

@@ -1,19 +1,43 @@
 "use client"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
-const activities = ["Camping","Escalada", "Kayak", "Trekking", "Surf"]
+const activities = ["Camping", "Escalada", "Kayak", "Trekking", "Surf"]
 const departments = [
   "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
   "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",
   "Rivera","Rocha","Salto","San José","Soriano","Tacuarembó","Treinta y Tres"
 ]
 
+function normalize(str) {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
 export default function SearchBar() {
   const [activity, setActivity] = useState("")
+  const [activityInput, setActivityInput] = useState("")
   const [department, setDepartment] = useState("")
+  const [departmentInput, setDepartmentInput] = useState("")
   const [openField, setOpenField] = useState(null)
+  // highlighted index in dropdown (0 = best match / first item)
+  const [highlightedIndex, setHighlightedIndex] = useState(0)
   const router = useRouter()
+  const barRef = useRef(null)
+  const activityInputRef = useRef(null)
+  const departmentInputRef = useRef(null)
+  const searchParams = useSearchParams()
+
+  const filteredActivities = activities.filter((a) =>
+    normalize(a).includes(normalize(activityInput))
+  )
+  const filteredDepartments = departments.filter((d) =>
+    normalize(d).includes(normalize(departmentInput))
+  )
+
+  // Reset highlighted index whenever the filtered list changes
+  useEffect(() => {
+    setHighlightedIndex(0)
+  }, [activityInput, departmentInput, openField])
 
   const handleSearch = () => {
     setOpenField(null)
@@ -21,18 +45,91 @@ export default function SearchBar() {
     router.push(`/search?${params.toString()}`)
   }
 
-  const toggleField = (field) => {
-    setOpenField((prev) => (prev === field ? null : field))
+  const openActivity = () => {
+    // Keep existing value editable; don't wipe it
+    setActivityInput(activity)
+    setOpenField("activity")
+    setTimeout(() => {
+      activityInputRef.current?.focus()
+      activityInputRef.current?.select()
+    }, 0)
+  }
+
+  const openDepartment = () => {
+    setDepartmentInput(department)
+    setOpenField("department")
+    setTimeout(() => {
+      departmentInputRef.current?.focus()
+      departmentInputRef.current?.select()
+    }, 0)
+  }
+
+  const selectActivity = (a) => {
+    setActivity(a)
+    setActivityInput(a)
+    setOpenField(null)
+  }
+
+  const clearActivity = (e) => {
+    e.stopPropagation()
+    setActivity("")
+    setActivityInput("")
+  }
+
+  const selectDepartment = (d) => {
+    setDepartment(d)
+    setDepartmentInput(d)
+    setOpenField(null)
+  }
+
+  const clearDepartment = (e) => {
+    e.stopPropagation()
+    setDepartment("")
+    setDepartmentInput("")
+  }
+
+  // Keyboard handler shared by both inputs
+  const handleKeyDown = (e) => {
+    const isActivity = openField === "activity"
+    const isDepart  = openField === "department"
+    if (!isActivity && !isDepart) return
+
+    const list = isActivity ? filteredActivities : filteredDepartments
+    const select = isActivity ? selectActivity : selectDepartment
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setHighlightedIndex((prev) => Math.min(prev + 1, list.length - 1))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      if (list.length > 0) {
+        select(list[highlightedIndex])
+      }
+    } else if (e.key === "Escape") {
+      setOpenField(null)
+    }
   }
 
   useEffect(() => {
     if (!openField) return
     const handler = (e) => {
-      if (!e.target.closest(".search-bar")) setOpenField(null)
+      if (!barRef.current?.contains(e.target)) setOpenField(null)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [openField])
+
+  useEffect(() => {
+  const a = searchParams.get("activity") ?? ""
+  const d = searchParams.get("department") ?? ""
+  setActivity(a)
+  setActivityInput(a)
+  setDepartment(d)
+  setDepartmentInput(d)
+  }, [searchParams])
 
   return (
     <>
@@ -67,12 +164,8 @@ export default function SearchBar() {
           transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           user-select: none;
         }
-        .search-field:hover {
-          background: #f7f5f0;
-        }
-        .search-field.is-open {
-          background: #f0f7f3;
-        }
+        .search-field:hover { background: #f7f5f0; }
+        .search-field.is-open { background: #f0f7f3; }
 
         .search-field-label {
           font-size: 11px;
@@ -84,13 +177,26 @@ export default function SearchBar() {
           line-height: 1.3;
         }
 
-        .search-field-value {
+        .search-field-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .search-field-input {
+          font-family: 'DM Sans', sans-serif;
           font-size: 13px;
           font-weight: 500;
           color: #1b1b19;
+          background: transparent;
+          border: none;
+          outline: none;
+          width: 100%;
+          min-width: 0;
           line-height: 1.4;
+          cursor: pointer;
         }
-        .search-field-value.placeholder {
+        .search-field-input::placeholder {
           color: #b0aca5;
           font-weight: 400;
         }
@@ -99,7 +205,7 @@ export default function SearchBar() {
           position: absolute;
           left: 0;
           top: calc(100% + 10px);
-          min-width: 190px;
+          min-width: 200px;
           background: #fff;
           border: 1px solid #e0ddd6;
           border-radius: 16px;
@@ -136,10 +242,24 @@ export default function SearchBar() {
           background: #f0f7f3;
           color: #1b4332;
         }
+        /* keyboard highlight (best match / arrow navigation) */
+        .search-dropdown-item.highlighted {
+          background: #dff0e8;
+          color: #1b4332;
+        }
         .search-dropdown-item.selected {
           background: #e8f5ee;
           color: #1b4332;
           font-weight: 600;
+        }
+
+        .search-dropdown-empty {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #b0aca5;
+          padding: 14px 16px;
+          text-align: center;
+          font-style: italic;
         }
 
         .search-btn {
@@ -165,9 +285,7 @@ export default function SearchBar() {
           transform: translateY(-1px);
           box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
         }
-        .search-btn:active {
-          transform: translateY(0);
-        }
+        .search-btn:active { transform: translateY(0); }
 
         .clear-btn {
           display: flex;
@@ -184,46 +302,59 @@ export default function SearchBar() {
           transition: background 0.15s;
           line-height: 1;
         }
-        .clear-btn:hover {
-          background: #9a9690;
-        }
+        .clear-btn:hover { background: #9a9690; }
+
+
       `}</style>
 
-      <div className="search-bar">
+      <div className="search-bar" ref={barRef}>
 
-        {/* Actividad */}
+        {/* ── Actividad ── */}
         <div
           className={`search-field ${openField === "activity" ? "is-open" : ""}`}
-          onClick={() => toggleField("activity")}
+          onClick={openActivity}
         >
           <div className="search-field-label">Actividad</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div className={`search-field-value ${!activity ? "placeholder" : ""}`}>
-              {activity || "¿Qué querés hacer?"}
-            </div>
-            {activity && (
-              <span
-                className="clear-btn"
-                onClick={(e) => { e.stopPropagation(); setActivity("") }}
-              >✕</span>
+          <div className="search-field-row">
+            <input
+              ref={activityInputRef}
+              className="search-field-input"
+              placeholder="¿Qué querés hacer?"
+              value={openField === "activity" ? activityInput : activity}
+              onChange={(e) => setActivityInput(e.target.value)}
+              onFocus={openActivity}
+              onKeyDown={handleKeyDown}
+            />
+            {activity && openField !== "activity" && (
+              <span className="clear-btn" onClick={clearActivity}>✕</span>
             )}
           </div>
 
           {openField === "activity" && (
             <div className="search-dropdown">
               <div className="search-dropdown-content">
-                {activities.map((a) => (
-                  <div
-                    key={a}
-                    className={`search-dropdown-item ${activity === a ? "selected" : ""}`}
-                    onClick={(e) => { e.stopPropagation(); setActivity(a); setOpenField(null) }}
-                  >
-                    {activity === a && (
-                      <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
-                    )}
-                    {a}
+                {filteredActivities.length > 0 ? (
+                  filteredActivities.map((a, i) => (
+                    <div
+                      key={a}
+                      className={`search-dropdown-item
+                        ${activity === a ? "selected" : ""}
+                        ${i === highlightedIndex ? "highlighted" : ""}
+                      `}
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      onMouseDown={(e) => { e.preventDefault(); selectActivity(a) }}
+                    >
+                      {activity === a && (
+                        <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                      )}
+                      {a}
+                    </div>
+                  ))
+                ) : (
+                  <div className="search-dropdown-empty">
+                    Intentá con otra actividad
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -231,39 +362,52 @@ export default function SearchBar() {
 
         <div className="search-divider" />
 
-        {/* Departamento */}
+        {/* ── Departamento ── */}
         <div
           className={`search-field ${openField === "department" ? "is-open" : ""}`}
-          onClick={() => toggleField("department")}
+          onClick={openDepartment}
         >
           <div className="search-field-label">Departamento</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div className={`search-field-value ${!department ? "placeholder" : ""}`}>
-              {department || "¿A dónde vas?"}
-            </div>
-            {department && (
-              <span
-                className="clear-btn"
-                onClick={(e) => { e.stopPropagation(); setDepartment("") }}
-              >✕</span>
+          <div className="search-field-row">
+            <input
+              ref={departmentInputRef}
+              className="search-field-input"
+              placeholder="¿A dónde vas?"
+              value={openField === "department" ? departmentInput : department}
+              onChange={(e) => setDepartmentInput(e.target.value)}
+              onFocus={openDepartment}
+              onKeyDown={handleKeyDown}
+            />
+            {department && openField !== "department" && (
+              <span className="clear-btn" onClick={clearDepartment}>✕</span>
             )}
           </div>
 
           {openField === "department" && (
             <div className="search-dropdown">
               <div className="search-dropdown-content">
-                {departments.map((d) => (
-                  <div
-                    key={d}
-                    className={`search-dropdown-item ${department === d ? "selected" : ""}`}
-                    onClick={(e) => { e.stopPropagation(); setDepartment(d); setOpenField(null) }}
-                  >
-                    {department === d && (
-                      <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
-                    )}
-                    {d}
+                {filteredDepartments.length > 0 ? (
+                  filteredDepartments.map((d, i) => (
+                    <div
+                      key={d}
+                      className={`search-dropdown-item
+                        ${department === d ? "selected" : ""}
+                        ${i === highlightedIndex ? "highlighted" : ""}
+                      `}
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      onMouseDown={(e) => { e.preventDefault(); selectDepartment(d) }}
+                    >
+                      {department === d && (
+                        <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                      )}
+                      {d}
+                    </div>
+                  ))
+                ) : (
+                  <div className="search-dropdown-empty">
+                    Intentá con otro lugar
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}

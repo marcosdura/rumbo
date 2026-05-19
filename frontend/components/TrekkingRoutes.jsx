@@ -46,7 +46,7 @@ function TrekkingRoutes({ routes }) {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
         {routes.map(route => {
           const diff   = difficultyConfig[route.difficulty] || { label: route.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6", dot: "⚪" }
           const signal = signalConfig[route.signal] || signalConfig.mid
@@ -134,10 +134,11 @@ function TrekkingRoutes({ routes }) {
                       padding: "8px 12px",
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: "center",
                       gap: 8,
                     }}>
                       <span style={{ fontSize: 16 }}>{icon}</span>
-                      <div>
+                      <div style={{ textAlign: "center" }}>
                         <p style={{ fontSize: 12, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{val}</p>
                         <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "2px 0 0" }}>{lbl}</p>
                       </div>
