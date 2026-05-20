@@ -17,17 +17,10 @@ def get_db():
 
 @router.post("/", response_model=KayakDetailResponse)
 def create_kayak(kayak: KayakDetailCreate, db: Session = Depends(get_db)):
-
-    existing = db.query(KayakDetail).filter(KayakDetail.spot_id == kayak.spot_id).first()
-    
-    if existing:
-        raise HTTPException(status_code=400, detail="Este spot ya tiene kayak detail")
-
     db_kayak = KayakDetail(**kayak.dict())
     db.add(db_kayak)
     db.commit()
     db.refresh(db_kayak)
-
     return db_kayak
 
 

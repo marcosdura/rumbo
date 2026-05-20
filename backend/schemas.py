@@ -29,6 +29,8 @@ class SpotCreate(BaseModel):
     instagram: str | None = None
     whatsapp: str | None = None
     price: int | None = None
+    season_start: Optional[int] = None  # 1–12
+    season_end:   Optional[int] = None  # 1–12
 
 
 class SpotResponse(BaseModel):
@@ -42,6 +44,8 @@ class SpotResponse(BaseModel):
     instagram: str | None = None
     whatsapp: str | None = None
     price: int | None = None
+    season_start: Optional[int] = None  # 1–12
+    season_end:   Optional[int] = None  # 1–12
 
     category: CategoryResponse
     camping_detail: CampingDetailResponse | None = None
@@ -170,18 +174,17 @@ class ClimbingRouteResponse(ClimbingRouteBase):
 # -------- KAYAK --------
 class KayakDetail(BaseModel):
     name: str
-    water_type: Optional[str] = None   # rio | lago | mar
-    difficulty: Optional[str] = None         # facil | intermedio | dificil
-    duration: Optional[float] = None            # horas
-
-    kayak_type: Optional[str] = None          # travesia | recreativo | rapido
-
+    water_type: Optional[str] = None
+    difficulty: Optional[str] = None
+    duration: Optional[float] = None
+    kayak_type: Optional[str] = None
     rental_available: Optional[bool] = None
-  
+    email: Optional[str] = None
+    whatsapp: Optional[str] = None
+    instagram: Optional[str] = None
 
 class KayakDetailCreate(KayakDetail):
     spot_id: int
-
 
 class KayakDetailResponse(KayakDetail):
     id: int
@@ -196,6 +199,10 @@ class SurfSchool(BaseModel):
     duration: Optional[float] = None            # horas
     class_type: Optional[str] = None          # grupal | privada | intensivo
     equipment_include: Optional[bool] = None
+
+    email: Optional[str] = None
+    whatsapp: Optional[str] = None
+    instagram: Optional[str] = None
 
 
 class SurfSchoolCreate(SurfSchool):

@@ -47,6 +47,8 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
         instagram=spot.instagram,
         whatsapp=spot.whatsapp,
         price=spot.price,
+        season_start=spot.season_start,  # ← falta esto
+        season_end=spot.season_end, 
     )
 
     db.add(db_spot)
@@ -138,6 +140,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         ],
         "routes": spot.routes,
         "images": spot.images,
+        "season_start": spot.season_start,  # ← falta esto
+        "season_end": spot.season_end,
     }
 
 # agrega una amenity al spot
@@ -207,18 +211,15 @@ def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
 
 
 # devuelve los detalles del kayak segun el spot
-@router.get("/spots/{spot_id}/kayak-detail", response_model=KayakDetailResponse)
+@router.get("/spots/{spot_id}/kayak-detail", response_model=list[KayakDetailResponse])
 def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
-    kayak = db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id).first()
-    if not kayak:
+    kayaks = db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id).all()
+    if not kayaks:
         raise HTTPException(status_code=404, detail="Kayak no encontrado")
-    return kayak
+    return kayaks
 
 
 # edvuelve las escuelas de surf segun el spot
-@router.get("/spots/{spot_id}/surf-school", response_model=SurfSchoolResponse)
-def get_surf_school(spot_id: int, db: Session = Depends(get_db)):
-    surf = db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).first()
-    if not surf:
-        raise HTTPException(status_code=404, detail="SurfSchool no encontrada")
-    return surf
+@router.get("/spots/{spot_id}/surf-schools", response_model=list[SurfSchoolResponse])
+def get_surf_schools(spot_id: int, db: Session = Depends(get_db)):
+    return db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).all()

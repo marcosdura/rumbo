@@ -1,5 +1,12 @@
 import { useState } from "react"
 
+const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+  function getSeason(start, end) {
+  if (!start && !end) return "Todo el año"
+  return `${MESES[start - 1]} – ${MESES[end - 1]}`
+  }
+
 function SpotDetails({ spot }) {
   const [copied, setCopied] = useState(false)
 
@@ -10,9 +17,10 @@ function SpotDetails({ spot }) {
   const hasContact = spot.email || spot.whatsapp || spot.instagram;
 
   const rows = [
-    { label: "Departamento", value: spot.department || "—" },
-    { label: "Categoría",    value: spot.category?.name || "—" },
-    { label: "Precio",       value: price },
+  { label: "Departamento", value: spot.department || "—" },
+  { label: "Categoría",    value: spot.category?.name || "—" },
+  { label: "Precio",       value: price },
+  { label: "Temporada",    value: getSeason(spot.season_start, spot.season_end) },
   ];
 
   const DotHeader = () => (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Navbar from "../../../components/Navbar"
 import AmenitiesList from "../../../components/AmenitiesList"
-import MapCard from "../../../components/MapCard"
+import dynamic from "next/dynamic"
 import SpotDescription from "../../../components/SpotDescription"
 import SpotDetails from "../../../components/SpotDetails"
 import TrekkingRoutes from "../../../components/TrekkingRoutes"
@@ -17,12 +17,13 @@ import ReviewsSection from "@/components/ReviewsSection"
 import SpotImages from "../../../components/SpotImages"
 import ShareModal from "@/components/ShareModal"
 
+const MapCard = dynamic(() => import("../../../components/MapCard"), { ssr: false })
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])
   const [sectors, setSectors] = useState([])
-  const [kayakDetail, setKayakDetail] = useState(null)
-  const [surfSchool, setSurfSchool] = useState(null)
+  const [kayakDetails, setKayakDetails] = useState([])
+  const [surfSchools, setSurfSchools] = useState([])
   const [showShare, setShowShare] = useState(false)
   const [reviewSummary, setReviewSummary] = useState(null)
 
@@ -45,13 +46,13 @@ useEffect(() => {
     }
     if (spot.category?.name === "Kayak") {
       fetch(`http://localhost:8000/spots/${spot.id}/kayak-detail`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => { if (data) setKayakDetail(data) })
+        .then(res => res.ok ? res.json() : [])
+        .then(data => { if (data) setKayakDetails(data) })
     }
     if (spot.category?.name === "Surf") {
-      fetch(`http://localhost:8000/spots/${spot.id}/surf-school`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => { if (data) setSurfSchool(data) })
+      fetch(`http://localhost:8000/spots/${spot.id}/surf-schools`)
+        .then(res => res.ok ? res.json() : [])
+        .then(data => { if (data) setSurfSchools(data) })
     }
   }, [spot.id])
 
@@ -282,11 +283,11 @@ useEffect(() => {
                 </div>
               )}
 
-              {spot.category?.name === "Kayak" && kayakDetail && (
-                <KayakDetail kayak={kayakDetail} />
+              {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (
+                <KayakDetail kayaks={kayakDetails} />
               )}
-              {spot.category?.name === "Surf" && surfSchool && (
-                <SurfSchoolDetail surfSchool={surfSchool} />
+              {spot.category?.name === "Surf" && surfSchools.length > 0 && (
+                <SurfSchoolDetail surfSchools={surfSchools} />
               )}
 
               {/* Reviews */}

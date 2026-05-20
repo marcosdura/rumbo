@@ -20,14 +20,18 @@ class SpotDB(Base):
     instagram = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
     
+    # None = abierto todo el año
+    season_start = Column(Integer, nullable=True)  # 1–12
+    season_end   = Column(Integer, nullable=True)  # 1–12
+    
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="spots")
     amenities = relationship("SpotAmenity", back_populates="spot")
     camping_detail = relationship("CampingDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot")
-    kayak_detail = relationship("KayakDetail", uselist=False, back_populates="spot")
-    surf_schools = relationship("SurfSchool", uselist=False, back_populates="spot")
+    kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot")
+    surf_schools = relationship("SurfSchool", uselist=True, back_populates="spot")
     images = relationship("SpotImage", back_populates="spot")
     favorites = relationship("Favorite", back_populates="spot") 
     reviews = relationship("Review", back_populates="spot")
@@ -130,7 +134,7 @@ class KayakDetail(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"))
     spot = relationship("SpotDB", back_populates="kayak_detail")
 
     name = Column(String)
@@ -141,6 +145,10 @@ class KayakDetail(Base):
     kayak_type = Column(String)       # travesia | recreativo | rapido
 
     rental_available = Column(Boolean, default=False)
+
+    email = Column(String, nullable=True)
+    whatsapp = Column(String, nullable=True)
+    instagram = Column(String, nullable=True)
 
 
 class SurfSchool(Base):
@@ -155,6 +163,10 @@ class SurfSchool(Base):
     class_type = Column(String)        # grupal | privada | intensivo
     duration = Column(Float)
     equipment_include = Column(Boolean)
+
+    email = Column(String, nullable=True)
+    whatsapp = Column(String, nullable=True)
+    instagram = Column(String, nullable=True)
 
 
 class User(Base):
