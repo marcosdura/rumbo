@@ -1,11 +1,12 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import Navbar from "@/components/Navbar"
-import Footer from "@/components/Footer"
-import { StarDisplay } from "@/components/StarRating"
+import Navbar from "@/components/layout/Navbar"
+import Footer from "@/components/layout/Footer"
+import { StarDisplay } from "@/components/ui/StarRating"
 import Link from "next/link"
+import Pill from "@/components/ui/Pill"
 
 const API = "http://localhost:8000"
 
@@ -171,15 +172,9 @@ export default function ReviewsPage() {
                 Mis reviews
               </h1>
               {reviews.length > 0 && (
-                <span style={{
-                  fontSize: 12, fontWeight: 600,
-                  padding: "3px 12px", borderRadius: 999,
-                  background: "#1b4332", color: "#d8f3dc",
-                  border: "1px solid #2d6a4f",
-                  letterSpacing: "0.03em", flexShrink: 0,
-                }}>
+                <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
                   {reviews.length} review{reviews.length !== 1 ? "s" : ""}
-                </span>
+                </Pill>
               )}
             </div>
           </div>

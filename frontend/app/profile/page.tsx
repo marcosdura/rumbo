@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import { useSession, signOut } from "next-auth/react"
 import { useState, useEffect } from "react"
-import Navbar from "@/components/Navbar"
+import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { CldImage } from "next-cloudinary"
 

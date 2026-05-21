@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signIn, signOut } from "next-auth/react"
-import SearchBar from "./SearchBar"
+import SearchBar from "@/components/spots/SearchBar"
 import Image from "next/image"
 
 function Avatar({ user, size = 28 }) {

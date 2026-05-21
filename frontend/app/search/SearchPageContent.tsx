@@ -1,12 +1,12 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
-import SpotCard from "../../components/SpotCard"
-import Navbar from "../../components/Navbar"
+import SpotCard from "../../components/spots/SpotCard"
+import Navbar from "../../components/layout/Navbar"
 
-const SpotsMap = dynamic(() => import("../../components/SpotsMap"), { ssr: false })
+const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
 export default function SearchPage() {
   const searchParams = useSearchParams()

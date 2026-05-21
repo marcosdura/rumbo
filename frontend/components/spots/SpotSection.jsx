@@ -1,4 +1,5 @@
-import SpotList from "@/components/SpotList"
+﻿import SpotList from "@/components/spots/SpotList"
+import Pill from "@/components/ui/Pill"
 
 export default function SpotSection({ label, title, count, spots, loading }) {
   return (
@@ -22,16 +23,9 @@ export default function SpotSection({ label, title, count, spots, loading }) {
             {title}
           </h2>
           {count > 0 && (
-            <span style={{
-              fontSize: 12, fontWeight: 600,
-              padding: "3px 12px", borderRadius: 999,
-              background: "#1b4332", color: "#d8f3dc",
-              border: "1px solid #2d6a4f",
-              letterSpacing: "0.03em",
-              flexShrink: 0,
-            }}>
+            <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
               {count}
-            </span>
+            </Pill>
           )}
         </div>
       </div>

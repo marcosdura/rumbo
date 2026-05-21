@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
-import Footer from "@/components/Footer"
+import Footer from "@/components/layout/Footer"
 import { useEffect, useState } from "react"
-import Navbar from "@/components/Navbar"
-import SpotSection from "@/components/SpotSection"
-import SearchBar from "@/components/SearchBar"
+import Navbar from "@/components/layout/Navbar"
+import SpotSection from "@/components/spots/SpotSection"
+import SearchBar from "@/components/spots/SearchBar"
 
 export default function Home() {
   const [spots, setSpots] = useState([])

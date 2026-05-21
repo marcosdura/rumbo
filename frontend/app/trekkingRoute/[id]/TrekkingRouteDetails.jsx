@@ -1,9 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Navbar from "../../../components/Navbar"
-import FavoriteButton from "@/components/FavoriteButton"
+import Navbar from "../../../components/layout/Navbar"
+import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 
 
 function TrekkingRouteDetails() {

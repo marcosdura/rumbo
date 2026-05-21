@@ -1,4 +1,5 @@
-import { useState } from "react"
+﻿import { useState } from "react"
+import Pill from "@/components/ui/Pill"
 
 export default function KayakDetail({ kayaks }) {
   const [copiedId, setCopiedId] = useState(null)
@@ -31,12 +32,13 @@ export default function KayakDetail({ kayaks }) {
 
   return (
     <div style={{
-    background: "#fff",
-    border: "1px solid #e0ddd6",
-    borderRadius: 20,
-    padding: "24px 28px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    fontFamily: "'DM Sans', sans-serif",}}>
+      background: "#fff",
+      border: "1px solid #e0ddd6",
+      borderRadius: 20,
+      padding: "24px 28px",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
@@ -82,52 +84,27 @@ export default function KayakDetail({ kayaks }) {
               {/* Badges */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {kayak.water_type && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: "#f7f5f0",
-                    color: "#4a443b", border: "1px solid #e0ddd6",
-                  }}>
-                    {water.icon} {water.label}
-                  </span>
+                  <Pill variant="neutral">{water.icon} {water.label}</Pill>
                 )}
                 {kayak.difficulty && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: diff.bg,
-                    color: diff.color, border: `1px solid ${diff.border}`,
-                  }}>
+                  <Pill bg={diff.bg} color={diff.color} border={diff.border}>
                     📊 {diff.label}
-                  </span>
+                  </Pill>
                 )}
                 {kayak.duration != null && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: "#f7f5f0",
-                    color: "#4a443b", border: "1px solid #e0ddd6",
-                  }}>
+                  <Pill variant="neutral">
                     ⏱️ {kayak.duration} {kayak.duration === 1 ? "hora" : "horas"}
-                  </span>
+                  </Pill>
                 )}
                 {kayak.kayak_type && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: "#f7f5f0",
-                    color: "#4a443b", border: "1px solid #e0ddd6",
-                  }}>
+                  <Pill variant="neutral">
                     🛶 {kayakTypeLabel[kayak.kayak_type] || kayak.kayak_type}
-                  </span>
+                  </Pill>
                 )}
                 {kayak.rental_available != null && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999,
-                    ...(kayak.rental_available
-                      ? { background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }
-                      : { background: "#f7f5f0", color: "#9a9690", border: "1px solid #e0ddd6" }
-                    ),
-                  }}>
+                  <Pill variant={kayak.rental_available ? "green" : "muted"}>
                     🏪 {kayak.rental_available ? "Alquiler disponible" : "Sin alquiler"}
-                  </span>
+                  </Pill>
                 )}
               </div>
 

@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import Pill from '@/components/ui/Pill';
 import { useEffect, useState, useRef, useMemo } from 'react';
 
 const CATEGORY_EMOJI = {
@@ -130,14 +131,9 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {spot.category?.name && (
-              <span style={{
-                fontSize: 11, fontWeight: 600,
-                padding: '3px 8px', borderRadius: 999,
-                background: '#e8f5ee', color: '#1b4332',
-                border: '1px solid #b7dfc8',
-              }}>
+              <Pill variant="green" style={{ padding: '3px 8px' }}>
                 {CATEGORY_EMOJI[spot.category.name]} {spot.category.name}
-              </span>
+              </Pill>
             )}
             <span style={{
               fontSize: 12, fontWeight: 600,

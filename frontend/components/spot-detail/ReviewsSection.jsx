@@ -1,10 +1,10 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { StarDisplay, StarPicker } from "@/components/StarRating"
-import Toast from "@/components/Toast"
-import AuthModal from "@/components/AuthModal"
+import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
+import Toast from "@/components/ui/Toast"
+import AuthModal from "@/components/layout/AuthModal"
 
 const API = "http://localhost:8000"
 

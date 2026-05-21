@@ -1,4 +1,5 @@
-import { useState } from "react"
+﻿import { useState } from "react"
+import Pill from "@/components/ui/Pill"
 
 export default function SurfSchoolDetail({ surfSchools }) {
   const [copiedId, setCopiedId] = useState(null)
@@ -19,12 +20,13 @@ export default function SurfSchoolDetail({ surfSchools }) {
 
   return (
     <div style={{
-    background: "#fff",
-    border: "1px solid #e0ddd6",
-    borderRadius: 20,
-    padding: "24px 28px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    fontFamily: "'DM Sans', sans-serif",}}>
+      background: "#fff",
+      border: "1px solid #e0ddd6",
+      borderRadius: 20,
+      padding: "24px 28px",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
@@ -71,34 +73,17 @@ export default function SurfSchoolDetail({ surfSchools }) {
               {/* Badges */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {school.class_type && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: "#e8f5ee",
-                    color: "#1b4332", border: "1px solid #b7dfc8",
-                  }}>
-                    {classInfo.icon} {classInfo.label}
-                  </span>
+                  <Pill variant="green">{classInfo.icon} {classInfo.label}</Pill>
                 )}
                 {school.duration != null && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999, background: "#f7f5f0",
-                    color: "#4a443b", border: "1px solid #e0ddd6",
-                  }}>
+                  <Pill variant="neutral">
                     ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
-                  </span>
+                  </Pill>
                 )}
                 {school.equipment_include != null && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px",
-                    borderRadius: 999,
-                    ...(school.equipment_include
-                      ? { background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }
-                      : { background: "#f7f5f0", color: "#9a9690", border: "1px solid #e0ddd6" }
-                    ),
-                  }}>
+                  <Pill variant={school.equipment_include ? "green" : "muted"}>
                     🩳 {school.equipment_include ? "Equipo incluido" : "Sin equipo"}
-                  </span>
+                  </Pill>
                 )}
               </div>
 

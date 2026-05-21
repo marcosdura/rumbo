@@ -1,9 +1,9 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useFavoritesStore } from "@/store/favoritesStore"
-import AuthModal from "@/components/AuthModal"
+import AuthModal from "@/components/layout/AuthModal"
 
 export default function FavoriteButton({ spot, variant = "detail" }) {
   const { data: session } = useSession()

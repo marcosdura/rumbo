@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Navbar from "../../../components/Navbar"
+import Navbar from "../../../components/layout/Navbar"
 
 function ClimbingSectorDetails() {
   const { id } = useParams()

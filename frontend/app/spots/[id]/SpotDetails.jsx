@@ -1,23 +1,23 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
-import Navbar from "../../../components/Navbar"
-import AmenitiesList from "../../../components/AmenitiesList"
+import Navbar from "../../../components/layout/Navbar"
+import AmenitiesList from "../../../components/spot-detail/AmenitiesList"
 import dynamic from "next/dynamic"
-import SpotDescription from "../../../components/SpotDescription"
-import SpotDetails from "../../../components/SpotDetails"
-import TrekkingRoutes from "../../../components/TrekkingRoutes"
-import ClimbingSectorsCards from "../../../components/ClimbingSectorsCards"
-import KayakDetail from "../../../components/KayakDetail"
-import SurfSchoolDetail from "../../../components/SurfSchoolDetail"
-import Footer from "../../../components/Footer"
+import SpotDescription from "../../../components/spot-detail/SpotDescription"
+import SpotDetails from "../../../components/spot-detail/SpotDetails"
+import TrekkingRoutes from "../../../components/spot-detail/TrekkingRoutes"
+import ClimbingSectorsCards from "../../../components/spot-detail/ClimbingSectorsCards"
+import KayakDetail from "../../../components/spot-detail/KayakDetail"
+import SurfSchoolDetail from "../../../components/spot-detail/SurfSchoolDetail"
+import Footer from "../../../components/layout/Footer"
 import { CldImage } from 'next-cloudinary'
-import FavoriteButton from "@/components/FavoriteButton"
-import ReviewsSection from "@/components/ReviewsSection"
-import SpotImages from "../../../components/SpotImages"
-import ShareModal from "@/components/ShareModal"
+import FavoriteButton from "@/components/spot-detail/FavoriteButton"
+import ReviewsSection from "@/components/spot-detail/ReviewsSection"
+import SpotImages from "../../../components/spot-detail/SpotImages"
+import ShareModal from "@/components/spot-detail/ShareModal"
 
-const MapCard = dynamic(() => import("../../../components/MapCard"), { ssr: false })
+const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
 function SpotDetail({ spot }) {
   const [routes, setRoutes] = useState([])

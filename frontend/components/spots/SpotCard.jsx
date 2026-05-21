@@ -1,6 +1,9 @@
-"use client"
+﻿"use client"
 
-import FavoriteButton from "@/components/FavoriteButton"
+import { useState } from "react"
+import FavoriteButton from "@/components/spot-detail/FavoriteButton"
+import CircleArrow from "@/components/ui/CircleArrow"
+import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
 
 const IMAGES = [
@@ -12,6 +15,7 @@ const IMAGES = [
 ]
 
 function SpotCard({ spot, index = 0 }) {
+  const [hovered, setHovered] = useState(false)
   const image = IMAGES[index % IMAGES.length]
   const mainImage = spot.images?.[0]
 
@@ -84,49 +88,6 @@ function SpotCard({ spot, index = 0 }) {
           flex-wrap: wrap;
         }
 
-        .spot-card-badge-category {
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 10px;
-          border-radius: 999px;
-          background: #eae6df;
-          color: #4a443b;
-          border: 1px solid #d0c9bc;
-          letter-spacing: 0.03em;
-        }
-
-        .spot-card-badge-department {
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 10px;
-          border-radius: 999px;
-          background: #1b4332;
-          color: #d8f3dc;
-          border: 1px solid #2d6a4f;
-          letter-spacing: 0.03em;
-        }
-
-        .spot-card-arrow {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          border: 1px solid #e0ddd6;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          color: #9a9690;
-          flex-shrink: 0;
-          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .spot-card:hover .spot-card-arrow {
-          background: #1b4332;
-          border-color: #1b4332;
-          color: #fff;
-          transform: translateX(2px);
-        }
-
         .spot-card-dot {
           display: inline-block;
           width: 6px;
@@ -139,6 +100,8 @@ function SpotCard({ spot, index = 0 }) {
 
       <div
         className="spot-card"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         onClick={() => window.open(`/spots/${spot.id}`, "_blank")}
       >
         <div className="spot-card-img-wrap">
@@ -171,14 +134,10 @@ function SpotCard({ spot, index = 0 }) {
           <p className="spot-card-name">{spot.name}</p>
           <div className="spot-card-footer">
             <div className="spot-card-badges">
-              <span className="spot-card-badge-category">
-                {spot.category?.name || "Sin categoría"}
-              </span>
-              <span className="spot-card-badge-department">
-                {spot.department || "Sin departamento"}
-              </span>
+              <Pill variant="beige">{spot.category?.name || "Sin categoría"}</Pill>
+              <Pill variant="dark-green">{spot.department || "Sin departamento"}</Pill>
             </div>
-            <span className="spot-card-arrow">→</span>
+            <CircleArrow active={hovered} />
           </div>
         </div>
       </div>
