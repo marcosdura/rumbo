@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
@@ -6,17 +6,8 @@ import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
 
-const IMAGES = [
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
-]
-
-function SpotCard({ spot, index = 0 }) {
+function SpotCard({ spot }) {
   const [hovered, setHovered] = useState(false)
-  const image = IMAGES[index % IMAGES.length]
   const mainImage = spot.images?.[0]
 
   return (
@@ -61,9 +52,7 @@ function SpotCard({ spot, index = 0 }) {
           background: linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 55%);
         }
 
-        .spot-card-body {
-          padding: 10px 12px 12px;
-        }
+        .spot-card-body { padding: 10px 12px 12px; }
 
         .spot-card-name {
           font-family: 'Playfair Display', serif;
@@ -71,9 +60,6 @@ function SpotCard({ spot, index = 0 }) {
           font-weight: 600;
           color: #1b1b19;
           margin: 0 0 7px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
 
         .spot-card-footer {
@@ -86,15 +72,13 @@ function SpotCard({ spot, index = 0 }) {
           display: flex;
           gap: 6px;
           flex-wrap: wrap;
+          min-width: 0;
         }
 
-        .spot-card-dot {
-          display: inline-block;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #2d6a4f;
-          flex-shrink: 0;
+        @media (max-width: 480px) {
+          .spot-card-img-wrap { height: 100px; }
+          .spot-card-name     { font-size: 13px; }
+          .spot-card-body     { padding: 8px 10px 10px; }
         }
       `}</style>
 

@@ -17,21 +17,83 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       onMouseEnter={() => href && setHovered(true)}
       onMouseLeave={() => href && setHovered(false)}
     >
-      <h2 style={{
+      <h2 className="spot-section-title" style={{
         fontFamily: "'Playfair Display', serif",
-        fontSize: 30, fontWeight: 600,
+        fontWeight: 600,
         color: hovered ? "#2d6a4f" : "#1b1b19",
         margin: 0, lineHeight: 1.2,
         transition: "color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
       }}>
         {title}
       </h2>
+      {count > 0 && (
+        <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
+          {count}
+        </Pill>
+      )}
       {href && <CircleArrow active={hovered} />}
     </div>
   )
 
   return (
     <section style={{ paddingTop: 24, fontFamily: "'DM Sans', sans-serif" }}>
+
+      <style>{`
+        .spot-section-title { font-size: 30px; }
+
+        /* Scroll container */
+        .spots-scroll-wrap {
+          position: relative;
+        }
+        .spots-scroll-wrap::after {
+          content: '';
+          position: absolute;
+          top: 0; right: -24px; bottom: 0;
+          width: 54px;
+          background: linear-gradient(to right, transparent, #f5f4f0 60%);
+          pointer-events: none;
+        }
+
+        .spots-scroll {
+          display: flex;
+          gap: 14px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 4px;
+        }
+        .spots-scroll::-webkit-scrollbar { display: none; }
+        .spots-scroll { scrollbar-width: none; }
+
+        /* Card width inside scroll */
+        .spots-scroll .spot-card {
+          width: 240px;
+          flex-shrink: 0;
+          scroll-snap-align: start;
+        }
+
+        /* Skeleton width inside scroll */
+        .spots-scroll .spot-skeleton {
+          width: 240px;
+          flex-shrink: 0;
+          scroll-snap-align: start;
+          height: 220px;
+          border-radius: 20px;
+          background: #ede9e1;
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @media (max-width: 480px) {
+          .spots-scroll .spot-card     { width: 200px; }
+          .spots-scroll .spot-skeleton { width: 200px; height: 180px; }
+          .spot-section-title          { font-size: 22px; }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ marginBottom: 10 }}>
@@ -51,29 +113,16 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       {/* Divider */}
       <div style={{ height: 1, background: "#e0ddd6", marginBottom: 12 }} />
 
-      {/* Grid */}
-      {loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{
-              height: 180, borderRadius: 20,
-              background: "#ede9e1",
-              animation: "pulse 1.5s ease-in-out infinite",
-            }} />
-          ))}
+      {/* Scroll gallery */}
+      <div className="spots-scroll-wrap">
+        <div className="spots-scroll">
+          {loading
+            ? [...Array(6)].map((_, i) => <div key={i} className="spot-skeleton" />)
+            : <SpotList spots={spots} />
+          }
         </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
-          <SpotList spots={spots} />
-        </div>
-      )}
+      </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </section>
   )
 }
