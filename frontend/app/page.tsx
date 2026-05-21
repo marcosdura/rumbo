@@ -17,27 +17,30 @@ export default function Home() {
 
   const loading = spots.length === 0
 
-  const lavallejaSpots = spots.filter(s => s.department === "Lavalleja").slice(0, 5)
-  const rochaSpots     = spots.filter(s => s.department === "Rocha").slice(0, 5)
+  const lavallejaSpots = spots.filter(s => s.department === "Lavalleja").slice(0, 6)
+  const rochaSpots     = spots.filter(s => s.department === "Rocha").slice(0, 6)
 
   const sections = [
     {
       label: "Descubrí Uruguay",
       title: "Spots populares del mes",
-      spots: spots.slice(0, 5),
+      spots: spots.slice(0, 6),
       count: spots.length,
+      href: "/search",
     },
     {
       label: "Destacados",
       title: "Spots en Lavalleja",
       spots: lavallejaSpots,
       count: lavallejaSpots.length,
+      href: "/search?department=Lavalleja",
     },
     {
       label: "Destacados",
       title: "Spots en Rocha",
       spots: rochaSpots,
       count: rochaSpots.length,
+      href: "/search?department=Rocha",
     },
   ]
 
@@ -70,6 +73,7 @@ export default function Home() {
               title={section.title}
               count={section.count}
               spots={section.spots}
+              href={section.href}
               loading={loading}
             />
           ))}

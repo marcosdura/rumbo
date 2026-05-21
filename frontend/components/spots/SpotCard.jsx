@@ -41,7 +41,7 @@ function SpotCard({ spot, index = 0 }) {
         }
 
         .spot-card-img-wrap {
-          height: 200px;
+          height: 160px;
           overflow: hidden;
           position: relative;
         }
@@ -62,15 +62,15 @@ function SpotCard({ spot, index = 0 }) {
         }
 
         .spot-card-body {
-          padding: 14px 16px 16px;
+          padding: 10px 12px 12px;
         }
 
         .spot-card-name {
           font-family: 'Playfair Display', serif;
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 600;
           color: #1b1b19;
-          margin: 0 0 10px;
+          margin: 0 0 7px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
