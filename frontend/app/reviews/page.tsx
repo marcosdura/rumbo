@@ -26,23 +26,28 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const userId = session?.user?.id
+  const token = session?.id_token
 
   const loadReviews = async () => {
     try {
-      const res = await fetch(`${API}/reviews/user/${userId}`)
+      const res = await fetch(`${API}/reviews/user/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       if (res.ok) setReviews(await res.json())
     } catch {}
     setLoading(false)
   }
 
   useEffect(() => {
-    if (userId) loadReviews()
-  }, [userId])
+    if (token) loadReviews()
+  }, [token])
 
   const handleDelete = async (reviewId) => {
     try {
-      await fetch(`${API}/reviews/${reviewId}?user_id=${userId}`, { method: "DELETE" })
+      await fetch(`${API}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
       setReviews(prev => prev.filter(r => r.id !== reviewId))
     } catch {}
   }

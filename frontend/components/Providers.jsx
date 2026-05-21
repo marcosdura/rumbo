@@ -8,10 +8,10 @@ function FavoritesLoader() {
   const { loadFavorites } = useFavoritesStore()
 
   useEffect(() => {
-    if (session?.user?.id) {
-      loadFavorites(session.user.id)
+    if (session?.id_token) {
+      loadFavorites(session.id_token)
     }
-  }, [session?.user?.id])
+  }, [session?.id_token])
 
   return null
 }

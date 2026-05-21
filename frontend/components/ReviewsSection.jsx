@@ -59,6 +59,7 @@ export default function ReviewsSection({ spotId }) {
   const [showAuth, setShowAuth] = useState(false)
 
   const userId = session?.user?.id
+  const token = session?.id_token
 
   const loadReviews = async () => {
     try {
@@ -77,13 +78,15 @@ export default function ReviewsSection({ spotId }) {
 
   const handleSubmit = async () => {
     if (!rating) return
-    console.log("userId:", userId)
     setSubmitting(true)
     try {
       const res = await fetch(`${API}/reviews/${spotId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, rating, comment }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating, comment }),
       })
       if (res.ok) {
         setRating(0)
@@ -97,7 +100,10 @@ export default function ReviewsSection({ spotId }) {
 
   const handleDelete = async (reviewId) => {
     try {
-      await fetch(`${API}/reviews/${reviewId}?user_id=${userId}`, { method: "DELETE" })
+      await fetch(`${API}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
       loadReviews()
     } catch {}
   }
@@ -212,7 +218,7 @@ export default function ReviewsSection({ spotId }) {
           {!showForm && (
             <button
               style={s.writeBtn}
-              onClick={() => { if (!userId) { setShowAuth(true); return } setShowForm(true) }}
+              onClick={() => { if (!token) { setShowAuth(true); return } setShowForm(true) }}
               onMouseEnter={e => { e.currentTarget.style.background = "#f0f7f3"; e.currentTarget.style.transform = "translateY(-1px)" }}
               onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)" }}
             >

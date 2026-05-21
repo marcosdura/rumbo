@@ -10,15 +10,15 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const [showAuth, setShowAuth] = useState(false)
 
-  const userId = session?.user?.id
+  const token = session?.id_token
   const active = isFavorite(spot.id)
 
   const toggle = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!userId) { setShowAuth(true); return }
-    if (active) await removeFavorite(spot.id, userId)
-    else        await addFavorite(spot, userId)
+    if (!token) { setShowAuth(true); return }
+    if (active) await removeFavorite(spot.id, token)
+    else        await addFavorite(spot, token)
   }
 
   // variante en los detalles del spot

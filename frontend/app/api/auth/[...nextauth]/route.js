@@ -9,25 +9,24 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
       try {
         await fetch("http://localhost:8000/users/upsert", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id:    user.id,
-            email: user.email,
-            name:  user.name,
-            image: user.image,
-          }),
+          headers: { Authorization: `Bearer ${account.id_token}` },
         })
       } catch (e) {
         console.error("Error guardando usuario:", e)
       }
       return true
     },
+    async jwt({ token, account }) {
+      if (account) token.id_token = account.id_token
+      return token
+    },
     async session({ session, token }) {
       session.user.id = token.sub
+      session.id_token = token.id_token  // ← línea nueva
       return session
     },
   },

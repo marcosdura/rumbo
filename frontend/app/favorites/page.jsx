@@ -13,9 +13,11 @@ export default function FavoritosPage() {
   const { favorites, loading, loadFavorites } = useFavoritesStore()
 
   useEffect(() => {
-    if (session?.user?.id) loadFavorites(session.user.id)
-  }, [session?.user?.id])
+    if (session?.id_token) loadFavorites(session.id_token)
+  }, [session?.id_token])
 
+  console.log("SESSION:", session)
+  
   // cargando
   if (status === "loading" || loading) {
     return (

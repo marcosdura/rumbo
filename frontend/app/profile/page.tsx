@@ -11,15 +11,19 @@ export default function ProfilePage() {
   const [favorites, setFavorites] = useState([])
   const [reviews, setReviews] = useState([])
 
-  useEffect(() => {
-    if (!session?.user?.id) return
-    fetch(`http://localhost:8000/favorites/${session.user.id}`)
-      .then(res => res.json())
-      .then(setFavorites)
-    fetch(`http://localhost:8000/reviews/user/${session.user.id}`)
-      .then(res => res.json())
-      .then(setReviews)
-  }, [session?.user?.id])
+ useEffect(() => {
+  if (!session?.id_token) return
+
+  const headers = { Authorization: `Bearer ${session.id_token}` }
+
+  fetch("http://localhost:8000/favorites", { headers })
+    .then(res => res.json())
+    .then(setFavorites)
+
+  fetch("http://localhost:8000/reviews/user/me", { headers })
+    .then(res => res.json())
+    .then(setReviews)
+}, [session?.id_token])
 
   if (status === "loading") {
     return (

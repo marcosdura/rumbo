@@ -24,11 +24,13 @@ export const useFavoritesStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  // Llama al GET /favorites/{user_id} y guarda en cache
-  loadFavorites: async (userId) => {
+  // Llama al GET /favorites y guarda en cache
+  loadFavorites: async (token) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch(`${API}/favorites/${userId}`)
+      const res = await fetch(`${API}/favorites`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       if (!res.ok) throw new Error("Error al cargar favoritos")
       const data = await res.json()
       saveCache(data)
@@ -40,7 +42,7 @@ export const useFavoritesStore = create((set, get) => ({
   },
 
   // Optimistic: agrega al estado antes de confirmar con el servidor
-  addFavorite: async (spot, userId) => {
+  addFavorite: async (spot, token) => {
     const prev = get().favorites
     const next = [...prev, spot]
     set({ favorites: next })
@@ -49,29 +51,17 @@ export const useFavoritesStore = create((set, get) => ({
     try {
       const res = await fetch(`${API}/favorites/${spot.id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
+        headers: { Authorization: `Bearer ${token}` },
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok && res.status !== 409) throw new Error()
     } catch {
-      // Si ya existe en el servidor, recargamos en vez de revertir
-      const retry = await fetch(`${API}/favorites/${spot.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      }).catch(() => null)
-
-      if (retry?.status === 409) {
-        // El spot ya era favorito, dejamos el estado optimista como está
-      } else {
-        set({ favorites: prev })
-        saveCache(prev)
-      }
+      set({ favorites: prev })
+      saveCache(prev)
     }
   },
 
   // Optimistic: quita del estado antes de confirmar con el servidor
-  removeFavorite: async (spotId, userId) => {
+  removeFavorite: async (spotId, token) => {
     const prev = get().favorites
     const next = prev.filter((f) => f.id !== spotId)
     set({ favorites: next })
@@ -80,8 +70,7 @@ export const useFavoritesStore = create((set, get) => ({
     try {
       const res = await fetch(`${API}/favorites/${spotId}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error()
     } catch {

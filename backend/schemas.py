@@ -238,7 +238,6 @@ class ReviewUserResponse(BaseModel):
  
  
 class ReviewCreate(BaseModel):
-    user_id: str
     rating: int       # 1 a 5
     comment: str | None = None
  
