@@ -1,12 +1,25 @@
 "use client"
 
 import { useSession, signOut } from "next-auth/react"
+import { useState, useEffect } from "react"
 import Navbar from "@/components/Navbar"
-import Footer from "@/components/Footer"
 import Link from "next/link"
+import { CldImage } from "next-cloudinary"
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
+  const [favorites, setFavorites] = useState([])
+  const [reviews, setReviews] = useState([])
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    fetch(`http://localhost:8000/favorites/${session.user.id}`)
+      .then(res => res.json())
+      .then(setFavorites)
+    fetch(`http://localhost:8000/reviews/user/${session.user.id}`)
+      .then(res => res.json())
+      .then(setReviews)
+  }, [session?.user?.id])
 
   if (status === "loading") {
     return (
@@ -63,7 +76,7 @@ export default function ProfilePage() {
     },
     statNumber: {
       fontFamily: "'Playfair Display', serif",
-      fontSize: 32, fontWeight: 600, color: "#1b1b19",
+      fontSize: 28, fontWeight: 600, color: "#1b1b19",
       lineHeight: 1, marginBottom: 4,
     },
     statLabel: {
@@ -91,7 +104,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -100,135 +113,159 @@ export default function ProfilePage() {
         .fade-up-2 { animation-delay: 0.15s; }
         .fade-up-3 { animation-delay: 0.25s; }
         .fade-up-4 { animation-delay: 0.35s; }
+        .fade-up-5 { animation-delay: 0.45s; }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
         .action-link:hover { background: #f7f5f0 !important; }
         .action-btn-danger:hover { background: #fdf0f0 !important; }
+        .fav-thumb:hover { transform: scale(1.03); }
+        .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09) !important; transform: translateY(-2px); }
       `}</style>
 
       <Navbar />
 
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px 64px" }}>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", marginTop: "40px" }}>
+        <div style={{ maxWidth: 1000, width: "100%", margin: "0 auto", padding: "0 24px" }}>
+        {/* Header */}
+         <div className="fade-up fade-up-1" style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              Tu cuenta
+            </p>
+          </div>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+            Perfil
+          </h1>
+        </div>
+            
+        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
+          
+          {/* ── Columna izquierda ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Header */}
-          <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
-                Tu cuenta
-              </p>
+            {/* Card principal */}
+            <div className="fade-up fade-up-2" style={{ ...s.card, padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid #b7dfc8", padding: 3, flexShrink: 0 }}>
+                  {user.image ? (
+                    <img src={user.image} alt={user.name} referrerPolicy="no-referrer"
+                      style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "linear-gradient(135deg, #52b788, #1b4332)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 600, color: "#fff" }}>
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 3px" }}>
+                    {user.name}
+                  </p>
+                  <p style={{ fontSize: 12, color: "#9a9690", margin: 0 }}>
+                    Miembro desde {joinDate}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                {[
+                  { icon: "✉️", label: "Email", value: user.email },
+                  { icon: "🔗", label: "Cuenta conectada", value: "Google" },
+                ].map((row, i, arr) => (
+                  <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #ede9e1" : "none" }}>
+                    <div style={s.infoIcon}>{row.icon}</div>
+                    <div>
+                      <p style={s.infoLabel}>{row.label}</p>
+                      <p style={{ ...s.infoValue, fontSize: 13 }}>{row.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
-              Perfil
-            </h1>
+
+            {/* Acciones */}
+            <div className="fade-up fade-up-3" style={{ ...s.card, padding: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button
+                  className="action-btn-danger"
+                  style={{ ...s.actionBtn, color: "#dc2626", border: "1px solid #f5c0c0", background: "#fdf0f0" }}
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                >
+                  <div style={{ ...s.actionBtnIcon, background: "#fdf0f0", border: "1px solid #f5c0c0" }}>↩</div>
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          {/* Divider */}
-          <div className="fade-up fade-up-1" style={{ height: 1, background: "#e0ddd6", marginBottom: 24 }} />
+          {/* ── Columna derecha ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Card principal */}
-          <div className="fade-up fade-up-2" style={{ ...s.card, padding: "24px 28px", marginBottom: 16 }}>
-
-            {/* Avatar + nombre */}
-            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
-              <div style={{
-                width: 80, height: 80, borderRadius: "50%",
-                border: "3px solid #b7dfc8", padding: 3, flexShrink: 0,
-              }}>
-                {user.image ? (
-                  <img
-                    src={user.image} alt={user.name}
-                    referrerPolicy="no-referrer"
-                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <div style={{
-                    width: "100%", height: "100%", borderRadius: "50%",
-                    background: "linear-gradient(135deg, #52b788, #1b4332)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 26, fontWeight: 600, color: "#fff",
-                  }}>
-                    {initials}
-                  </div>
-                )}
-              </div>
-              <div>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>
-                  {user.name}
-                </p>
-                <p style={{ fontSize: 13, color: "#9a9690", margin: 0 }}>
-                  Miembro desde {joinDate}
-                </p>
-              </div>
-            </div>
-
-            {/* Info rows */}
-            <div>
+            {/* Stats */}
+            <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {[
-                { icon: "✉️", label: "Email", value: user.email },
-                { icon: "🔗", label: "Cuenta conectada", value: "Google" },
-              ].map((row, i, arr) => (
-                <div key={row.label} style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 0",
-                  borderBottom: i < arr.length - 1 ? "1px solid #ede9e1" : "none",
-                }}>
-                  <div style={s.infoIcon}>{row.icon}</div>
-                  <div>
-                    <p style={s.infoLabel}>{row.label}</p>
-                    <p style={s.infoValue}>{row.value}</p>
+                { number: reviews.length.toString(), label: "Reviews", emoji: "💬", href: "/reviews" },
+                { number: favorites.length.toString(), label: "Favoritos", emoji: "❤️", href: "/favorites" },
+              ].map(stat => (
+                <Link key={stat.label} href={stat.href} style={{ textDecoration: "none" }}>
+                  <div className="stat-card" style={{ ...s.card, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "box-shadow 0.2s, transform 0.2s", cursor: "pointer" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f7f5f0", border: "1px solid #e0ddd6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+                        {stat.emoji}
+                      </div>
+                      <div>
+                        <p style={s.statNumber}>{stat.number}</p>
+                        <p style={s.statLabel}>{stat.label}</p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 14, color: "#b0aca5" }}>→</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
-          </div>
 
-          {/* Stats */}
-          <div className="fade-up fade-up-3" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            {[
-              { number: "0", label: "Reviews" },
-              { number: "0", label: "Favoritos" },
-            ].map(stat => (
-              <div key={stat.label} style={{ ...s.card, flex: 1, padding: "18px 16px", textAlign: "center" }}>
-                <p style={s.statNumber}>{stat.number}</p>
-                <p style={s.statLabel}>{stat.label}</p>
+            {/* Preview favoritos */}
+            {favorites.length > 0 && (
+              <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f" }} />
+                    <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                      Últimos favoritos
+                    </p>
+                  </div>
+                  {favorites.length > 3 && (
+                    <Link href="/favorites" style={{ fontSize: 12, color: "#2d6a4f", fontWeight: 600, textDecoration: "none" }}>
+                      Ver todos ({favorites.length}) →
+                    </Link>
+                  )}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {favorites.slice(0, 3).map(spot => {
+                    const main = spot.images?.find(i => i.is_main) || spot.images?.[0]
+                    return (
+                      <Link key={spot.id} href={`/spots/${spot.id}`} style={{ textDecoration: "none" }}>
+                        <div className="fav-thumb" style={{ borderRadius: 12, overflow: "hidden", aspectRatio: "1", background: "#f7f5f0", position: "relative", transition: "transform 0.2s" }}>
+                          {main ? (
+                            <CldImage src={main.cloudinary_public_id} fill style={{ objectFit: "cover" }} alt={spot.name} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🏕️</div>
+                          )}
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 8px 8px", background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}>
+                            <p style={{ fontSize: 11, fontWeight: 600, color: "#fff", margin: 0, lineHeight: 1.2 }}>{spot.name}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
-            ))}
+            )}
+
           </div>
-
-          {/* Acciones */}
-          <div className="fade-up fade-up-4" style={{ ...s.card, padding: 16 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-
-              <Link href="/favorites" className="action-link" style={s.actionBtn}>
-                <div style={s.actionBtnIcon}>❤️</div>
-                <span style={{ flex: 1 }}>Mis favoritos</span>
-                <span style={{ fontSize: 14, color: "#b0aca5" }}>→</span>
-              </Link>
-
-              <Link href="/reviews" className="action-link" style={s.actionBtn}>
-                <div style={s.actionBtnIcon}>💬</div>
-                <span style={{ flex: 1 }}>Mis reviews</span>
-                <span style={{ fontSize: 14, color: "#b0aca5" }}>→</span>
-              </Link>
-
-              <div style={{ height: 1, background: "#ede9e1", margin: "4px 0" }} />
-
-              <button
-                className="action-btn-danger"
-                style={{ ...s.actionBtn, color: "#dc2626", border: "1px solid #f5c0c0", background: "#fdf0f0" }}
-                onClick={() => signOut({ callbackUrl: "/" })}
-              >
-                <div style={{ ...s.actionBtnIcon, background: "#fdf0f0", border: "1px solid #f5c0c0" }}>↩</div>
-                Cerrar sesión
-              </button>
-
-            </div>
-          </div>
-
         </div>
-        <Footer />
+      </div>
       </div>
     </div>
   )
