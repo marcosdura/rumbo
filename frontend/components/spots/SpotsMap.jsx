@@ -70,6 +70,15 @@ const createPillIcon = (categoryName, isActive, isSelected) => {
   })
 }
 
+function ResizeHandler({ trigger }) {
+  const map = useMap()
+  useEffect(() => {
+    const id = setTimeout(() => map.invalidateSize(), 50)
+    return () => clearTimeout(id)
+  }, [trigger, map])
+  return null
+}
+
 function FitBounds({ spots }) {
   const map = useMap()
   const fittedRef = useRef(false)
@@ -148,7 +157,7 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
   )
 }
 
-export default function SpotsMap({ spots, highlightedSpotId }) {
+export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
   const [hoveredSpotId, setHoveredSpotId]   = useState(null)
   const [selectedSpotId, setSelectedSpotId] = useState(null)
 
@@ -199,6 +208,7 @@ export default function SpotsMap({ spots, highlightedSpotId }) {
           attribution='© OpenStreetMap contributors'
         />
 
+        <ResizeHandler trigger={mapExpanded} />
         {validSpots.length > 0 && <FitBounds spots={validSpots} />}
 
         {validSpots.map(spot => (

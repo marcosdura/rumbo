@@ -94,12 +94,26 @@ export default function FavoritosPage() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+
+        .favs-wrapper { max-width: 1152px; margin: 0 auto; padding: 40px 24px 64px; min-height: calc(100vh - 200px); }
+        .favs-title   { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .favs-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+
+        @media (max-width: 768px) {
+          .favs-wrapper { padding: 24px 16px 48px; }
+          .favs-title   { font-size: 26px; }
+          .favs-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+          .favs-grid .spot-card-img-wrap { height: 110px !important; }
+          .favs-grid .spot-card-body     { padding: 7px 9px 9px !important; }
+          .favs-grid .spot-card-name     { font-size: 12px !important; margin-bottom: 4px !important; }
+          .favs-grid .spot-card-badges   { gap: 4px !important; }
+        }
       `}</style>
 
       <Navbar />
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px", minHeight: "calc(100vh - 200px)" }}>
+        <div className="favs-wrapper">
 
           {/* Header */}
           <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
@@ -111,13 +125,7 @@ export default function FavoritosPage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <h1 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 36, fontWeight: 600,
-                color: "#1b1b19", margin: 0, lineHeight: 1.2,
-              }}>
-                Favoritos
-              </h1>
+              <h1 className="favs-title">Favoritos</h1>
               {favorites.length > 0 && (
                 <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
                   {favorites.length} spot{favorites.length !== 1 ? "s" : ""}
@@ -167,11 +175,7 @@ export default function FavoritosPage() {
 
           {/* Grid */}
           {favorites.length > 0 && (
-            <div className="fade-up fade-up-2" style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: 20,
-            }}>
+            <div className="fade-up fade-up-2 favs-grid">
               {favorites.map((spot, index) => (
                 <SpotCard key={spot.id} spot={spot} index={index} />
               ))}

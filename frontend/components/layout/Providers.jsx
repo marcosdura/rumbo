@@ -16,9 +16,9 @@ function FavoritesLoader() {
   return null
 }
 
-export default function Providers({ children }) {
+export default function Providers({ children, session }) {
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <FavoritesLoader />
       {children}
     </SessionProvider>

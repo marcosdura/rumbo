@@ -136,12 +136,24 @@ export default function ReviewsPage() {
           background: #2d6a4f !important;
           transform: translateY(-1px);
         }
+
+        .reviews-wrapper { max-width: 768px; margin: 0 auto; padding: 40px 24px 64px; min-height: calc(100vh - 200px); }
+        .reviews-title   { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .review-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .review-card-meta   { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+        @media (max-width: 640px) {
+          .reviews-wrapper    { padding: 24px 16px 48px; }
+          .reviews-title      { font-size: 26px; }
+          .review-card-header { flex-direction: column; gap: 8px; }
+          .review-card-meta   { flex-direction: row-reverse; justify-content: flex-end; }
+        }
       `}</style>
 
       <Navbar />
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 768, margin: "0 auto", padding: "40px 24px 64px", minHeight: "calc(100vh - 200px)" }}>
+        <div className="reviews-wrapper">
 
           {/* Header */}
           <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
@@ -152,9 +164,7 @@ export default function ReviewsPage() {
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
-                Mis reviews
-              </h1>
+              <h1 className="reviews-title">Mis reviews</h1>
               {reviews.length > 0 && (
                 <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
                   {reviews.length} review{reviews.length !== 1 ? "s" : ""}
@@ -198,8 +208,7 @@ export default function ReviewsPage() {
             <div className="fade-up fade-up-2" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map((review) => (
                 <div key={review.id} className="review-card">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-
+                  <div className="review-card-header">
                     <div>
                       <Link href={`/spots/${review.spot_id}`} className="review-spot-link">
                         {review.spot_name || `Spot #${review.spot_id}`}
@@ -208,8 +217,7 @@ export default function ReviewsPage() {
                         {timeAgo(review.created_at)}
                       </p>
                     </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                    <div className="review-card-meta">
                       <StarDisplay rating={review.rating} size={14} />
                       <button className="delete-btn" onClick={() => handleDelete(review.id)}>
                         Eliminar

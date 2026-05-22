@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
@@ -108,108 +108,136 @@ export default function ReviewsSection({ spotId }) {
     } catch {}
   }
 
-  const s = {
-    wrap: {
-      background: "#fff",
-      border: "1px solid #e0ddd6",
-      borderRadius: 20,
-      padding: "24px 28px",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      fontFamily: "'DM Sans', sans-serif",
-    },
-    sectionLabel: {
-      display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
-    },
-    dot: {
-      width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0,
-    },
-    label: {
-      fontSize: 11, fontWeight: 600, letterSpacing: "0.1em",
-      textTransform: "uppercase", color: "#2d6a4f", margin: 0,
-    },
-    title: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0,
-    },
-    average: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1,
-    },
-    totalText: {
-      fontSize: 12, color: "#9a9690", marginTop: 2,
-    },
-    writeBtn: {
-      display: "flex", alignItems: "center", gap: 6,
-      padding: "9px 18px", borderRadius: 12,
-      border: "1px solid #e0ddd6", background: "#fff",
-      fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-      cursor: "pointer", color: "#1b4332",
-      transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-    },
-    formWrap: {
-      background: "#f7f5f0",
-      border: "1px solid #e0ddd6",
-      borderRadius: 16, padding: 20, marginBottom: 20,
-    },
-    ratingLabel: {
-      fontSize: 12, fontWeight: 600, letterSpacing: "0.08em",
-      textTransform: "uppercase", color: "#2d6a4f", marginBottom: 10,
-    },
-    textarea: {
-      width: "100%", border: "1px solid #e0ddd6", borderRadius: 12,
-      padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
-      color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
-      transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
-    },
-    submitBtn: {
-      padding: "9px 20px", borderRadius: 12, fontSize: 14,
-      fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-      background: "#1b4332", color: "#fff",
-      border: "none", cursor: "pointer",
-      transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-    },
-    cancelBtn: {
-      padding: "9px 16px", borderRadius: 12, fontSize: 14,
-      fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
-      background: "none", color: "#9a9690",
-      border: "1px solid #e0ddd6", cursor: "pointer",
-    },
-    reviewCard: {
-      background: "#fff", border: "1px solid #e0ddd6",
-      borderRadius: 16, padding: "16px 20px",
-    },
-    userName: { fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 },
-    dateText: { fontSize: 11, color: "#9a9690", marginTop: 2 },
-    commentText: { fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 },
-    deleteBtn: {
-      fontSize: 11, color: "#9a9690", background: "none",
-      border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-      transition: "color 0.15s", padding: 0,
-    },
-    emptyWrap: {
-      textAlign: "center", padding: "48px 20px",
-      color: "#9a9690", fontSize: 14,
-    },
-  }
-
   return (
     <>
-      <div style={s.wrap}>
+      <style>{`
+        .reviews-wrap {
+          background: #fff;
+          border: 1px solid #e0ddd6;
+          border-radius: 20px;
+          padding: 24px 28px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          font-family: 'DM Sans', sans-serif;
+        }
+
+        /* Header: título+rating a la izq, botón a la der */
+        .reviews-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .reviews-write-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 9px 18px;
+          border-radius: 12px;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          font-size: 14px;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 500;
+          cursor: pointer;
+          color: #1b4332;
+          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        @media (hover: hover) {
+          .reviews-write-btn:hover {
+            background: #f0f7f3;
+            transform: translateY(-1px);
+          }
+        }
+
+        /* Review card */
+        .review-card {
+          background: #fff;
+          border: 1px solid #e0ddd6;
+          border-radius: 16px;
+          padding: 16px 20px;
+        }
+        .review-card-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .review-card-user {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+        .review-card-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+
+        .reviews-delete-btn {
+          font-size: 11px;
+          color: #9a9690;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          transition: color 0.15s;
+          padding: 0;
+        }
+        @media (hover: hover) {
+          .reviews-delete-btn:hover { color: #dc2626; }
+        }
+
+        /* Form actions */
+        .reviews-form-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+          justify-content: flex-end;
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+          .reviews-wrap { padding: 20px 16px; }
+
+          .reviews-header { flex-direction: column; align-items: stretch; }
+          .reviews-write-btn { justify-content: center; }
+
+          .reviews-form-actions { flex-direction: column-reverse; }
+          .reviews-form-actions button { width: 100%; justify-content: center; }
+        }
+      `}</style>
+
+      <div className="reviews-wrap">
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="reviews-header">
           <div>
-            <div style={s.sectionLabel}>
-              <div style={s.dot} />
-              <span style={s.label}>Reseñas</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                Reseñas
+              </span>
             </div>
-            <p style={s.title}>Reviews</p>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+              Reviews
+            </p>
             {summary?.total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                <span style={s.average}>{summary.average}</span>
+                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1 }}>
+                  {summary.average}
+                </span>
                 <div>
                   <StarDisplay rating={Math.round(summary.average)} />
-                  <p style={s.totalText}>{summary.total} review{summary.total !== 1 ? "s" : ""}</p>
+                  <p style={{ fontSize: 12, color: "#9a9690", marginTop: 2 }}>
+                    {summary.total} review{summary.total !== 1 ? "s" : ""}
+                  </p>
                 </div>
               </div>
             )}
@@ -217,10 +245,8 @@ export default function ReviewsSection({ spotId }) {
 
           {!showForm && (
             <button
-              style={s.writeBtn}
+              className="reviews-write-btn"
               onClick={() => { if (!token) { setShowAuth(true); return } setShowForm(true) }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f0f7f3"; e.currentTarget.style.transform = "translateY(-1px)" }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)" }}
             >
               ✏️ Escribir review
             </button>
@@ -229,11 +255,18 @@ export default function ReviewsSection({ spotId }) {
 
         {/* Formulario */}
         {showForm && (
-          <div style={s.formWrap}>
-            <p style={s.ratingLabel}>Tu rating</p>
+          <div style={{ background: "#f7f5f0", border: "1px solid #e0ddd6", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", marginBottom: 10 }}>
+              Tu rating
+            </p>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
-              style={s.textarea}
+              style={{
+                width: "100%", border: "1px solid #e0ddd6", borderRadius: 12,
+                padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
+                transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
+              }}
               rows={3}
               placeholder="Contá tu experiencia (opcional)..."
               value={comment}
@@ -241,21 +274,28 @@ export default function ReviewsSection({ spotId }) {
               onFocus={e => e.target.style.borderColor = "#2d6a4f"}
               onBlur={e => e.target.style.borderColor = "#e0ddd6"}
             />
-            <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+            <div className="reviews-form-actions">
               <button
-                style={s.cancelBtn}
+                style={{
+                  padding: "9px 16px", borderRadius: 12, fontSize: 14,
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
+                  background: "none", color: "#9a9690", border: "1px solid #e0ddd6", cursor: "pointer",
+                }}
                 onClick={() => { setShowForm(false); setRating(0); setComment("") }}
-                onMouseEnter={e => { e.currentTarget.style.color = "#3d3d3a"; e.currentTarget.style.background = "#f0ede8" }}
-                onMouseLeave={e => { e.currentTarget.style.color = "#9a9690"; e.currentTarget.style.background = "none" }}
               >
                 Cancelar
               </button>
               <button
-                style={{ ...s.submitBtn, opacity: !rating || submitting ? 0.45 : 1, cursor: !rating || submitting ? "not-allowed" : "pointer" }}
+                style={{
+                  padding: "9px 20px", borderRadius: 12, fontSize: 14,
+                  fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+                  background: "#1b4332", color: "#fff", border: "none",
+                  cursor: !rating || submitting ? "not-allowed" : "pointer",
+                  opacity: !rating || submitting ? 0.45 : 1,
+                  transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
                 onClick={handleSubmit}
                 disabled={!rating || submitting}
-                onMouseEnter={e => { if (rating && !submitting) { e.currentTarget.style.background = "#2d6a4f"; e.currentTarget.style.transform = "translateY(-1px)" } }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#1b4332"; e.currentTarget.style.transform = "translateY(0)" }}
               >
                 {submitting ? "Enviando..." : "Publicar review"}
               </button>
@@ -265,32 +305,36 @@ export default function ReviewsSection({ spotId }) {
 
         {/* Lista */}
         {loading ? (
-          <div style={s.emptyWrap}>Cargando...</div>
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "#9a9690", fontSize: 14 }}>
+            Cargando...
+          </div>
         ) : reviews.length === 0 ? (
-          <div style={s.emptyWrap}>
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "#9a9690", fontSize: 14 }}>
             <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>💬</p>
             Todavía no hay reviews. ¡Sé el primero!
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {reviews.map((review) => (
-              <div key={review.id} style={s.reviewCard}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div key={review.id} className="review-card">
+                <div className="review-card-top">
+                  <div className="review-card-user">
                     <Avatar user={review.user} />
                     <div>
-                      <p style={s.userName}>{review.user?.name || "Usuario"}</p>
-                      <p style={s.dateText}>{timeAgo(review.created_at)}</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                        {review.user?.name || "Usuario"}
+                      </p>
+                      <p style={{ fontSize: 11, color: "#9a9690", marginTop: 2 }}>
+                        {timeAgo(review.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div className="review-card-actions">
                     <StarDisplay rating={review.rating} size={14} />
                     {review.user?.id === userId && (
                       <button
-                        style={s.deleteBtn}
+                        className="reviews-delete-btn"
                         onClick={() => handleDelete(review.id)}
-                        onMouseEnter={e => e.currentTarget.style.color = "#dc2626"}
-                        onMouseLeave={e => e.currentTarget.style.color = "#9a9690"}
                       >
                         Eliminar
                       </button>
@@ -298,7 +342,9 @@ export default function ReviewsSection({ spotId }) {
                   </div>
                 </div>
                 {review.comment && (
-                  <p style={s.commentText}>{review.comment}</p>
+                  <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>
+                    {review.comment}
+                  </p>
                 )}
               </div>
             ))}

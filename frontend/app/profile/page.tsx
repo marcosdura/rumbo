@@ -91,7 +91,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -107,12 +107,32 @@ export default function ProfilePage() {
         .action-btn-danger:hover { background: #fdf0f0 !important; }
         .fav-thumb:hover { transform: scale(1.03); }
         .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09) !important; transform: translateY(-2px); }
+
+        .profile-scroll {
+          flex: 1; overflow-y: auto; margin-top: 40px; padding-bottom: 40px;
+        }
+        .profile-wrapper {
+          max-width: 1000px; width: 100%; margin: 0 auto; padding: 0 24px;
+        }
+        .profile-grid {
+          display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start;
+        }
+        .profile-favs-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+          .profile-scroll  { margin-top: 24px; }
+          .profile-wrapper { padding: 0 16px; }
+          .profile-grid    { grid-template-columns: 1fr; }
+          .profile-favs-grid { grid-template-columns: repeat(2, 1fr); }
+        }
       `}</style>
 
       <Navbar />
 
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", marginTop: "40px" }}>
-        <div style={{ maxWidth: 1000, width: "100%", margin: "0 auto", padding: "0 24px" }}>
+      <div className="profile-scroll" style={{ display: "flex", flexDirection: "column" }}>
+        <div className="profile-wrapper">
         {/* Header */}
          <div className="fade-up fade-up-1" style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -126,7 +146,7 @@ export default function ProfilePage() {
           </h1>
         </div>
             
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
+        <div className="profile-grid">
           
           {/* ── Columna izquierda ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -228,7 +248,7 @@ export default function ProfilePage() {
                     </Link>
                   )}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                <div className="profile-favs-grid">
                   {favorites.slice(0, 3).map(spot => {
                     const main = spot.images?.find(i => i.is_main) || spot.images?.[0]
                     return (

@@ -1,4 +1,4 @@
-import { useState } from "react"
+"use client"
 
 const CATEGORIES = [
   {
@@ -68,27 +68,8 @@ const AMENITY_ICONS = {
 }
 
 function AmenityPill({ amenity }) {
-  const [hovered, setHovered] = useState(false)
-
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "6px 12px",
-        borderRadius: 999,
-        background: hovered ? "#eeeae2" : "#f7f5f0",
-        border: `1px solid ${hovered ? "#ccc8bf" : "#e0ddd6"}`,
-        fontFamily: "'DM Sans', sans-serif",
-        transform: hovered ? "scale(1.08)" : "scale(1)",
-        transition: "transform 0.15s ease, background 0.15s ease, border-color 0.15s ease",
-        cursor: "default",
-        userSelect: "none",
-      }}
-    >
+    <div className="amenity-pill">
       <span style={{ fontSize: 15, lineHeight: 1 }}>
         {AMENITY_ICONS[amenity.name] || "✨"}
       </span>
@@ -110,49 +91,67 @@ function AmenitiesList({ amenities }) {
   )
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {categorized.map((cat) => (
-        <div key={cat.id}>
-          <p style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#6b6860",
-            marginBottom: 8,
-            marginTop: 0,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}>
-             {cat.label}
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {cat.items.map((amenity) => (
-              <AmenityPill key={amenity.id} amenity={amenity} />
-            ))}
-          </div>
-        </div>
-      ))}
+    <>
+      <style>{`
+        .amenity-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: #f7f5f0;
+          border: 1px solid #e0ddd6;
+          font-family: 'DM Sans', sans-serif;
+          transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+          cursor: default;
+          user-select: none;
+        }
+        @media (hover: hover) {
+          .amenity-pill:hover {
+            background: #eeeae2;
+            border-color: #ccc8bf;
+            transform: scale(1.08);
+          }
+        }
+        .amenity-cat-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #6b6860;
+          margin: 0 0 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        @media (max-width: 480px) {
+          .amenity-pill { padding: 5px 10px; }
+          .amenity-pill span:last-child { font-size: 12px; }
+          .amenity-cat-label { font-size: 12px; }
+        }
+      `}</style>
 
-      {uncategorized.length > 0 && (
-        <div>
-          <p style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#6b6860",
-            marginBottom: 8,
-            marginTop: 0,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}>
-            ✨ Otros
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {uncategorized.map((amenity) => (
-              <AmenityPill key={amenity.id} amenity={amenity} />
-            ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {categorized.map((cat) => (
+          <div key={cat.id}>
+            <p className="amenity-cat-label">{cat.label}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {cat.items.map((amenity) => (
+                <AmenityPill key={amenity.id} amenity={amenity} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        ))}
+
+        {uncategorized.length > 0 && (
+          <div>
+            <p className="amenity-cat-label">✨ Otros</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {uncategorized.map((amenity) => (
+                <AmenityPill key={amenity.id} amenity={amenity} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

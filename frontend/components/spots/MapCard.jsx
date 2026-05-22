@@ -1,12 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 
-
-
-// fix del icono que rompe Next.js
 const icon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -16,7 +14,14 @@ const icon = L.icon({
 })
 
 function MapCard({ lat, lng, name }) {
-  const position = [lat ?? -34.906, lng ?? -56.164]
+  if (!lat || !lng) return null
+
+  // instanceId changes on every component mount (including HMR), so the wrapper
+  // div always gets a fresh key → Leaflet never finds an existing _leaflet_id
+  const [instanceId] = useState(() => Math.random().toString(36).slice(2, 8))
+  const mapKey = `${instanceId}-${lat}-${lng}`
+
+  const position = [lat, lng]
   const directionsUrl = `https://www.google.com/maps/search/${encodeURIComponent(name)}/@${lat},${lng},13z`
 
   return (
@@ -49,14 +54,16 @@ function MapCard({ lat, lng, name }) {
           font-family: 'DM Sans', sans-serif;
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
+        @media (hover: hover) {
+          .mapcard-btn:hover {
+            background: #2d6a4f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
+          }
+        }
         .mapcard-map-wrap { height: 260px; }
         @media (max-width: 640px) {
-          .mapcard-btn {
-            width: 100%;
-            margin: 12px 0 0;
-            padding: 12px 20px;
-            font-size: 14px;
-          }
+          .mapcard-btn { width: 100%; margin: 12px 0 0; padding: 12px 20px; font-size: 14px; }
           .mapcard-map-wrap { height: 200px; }
         }
       `}</style>
@@ -72,7 +79,12 @@ function MapCard({ lat, lng, name }) {
         </h3>
       </div>
 
-      <div className="mapcard-map-wrap" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e0ddd6" }}>
+      {/* key on the wrapper div forces a full DOM teardown when lat/lng or instance changes */}
+      <div
+        key={mapKey}
+        className="mapcard-map-wrap"
+        style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e0ddd6" }}
+      >
         <MapContainer
           center={position}
           zoom={8}
@@ -94,16 +106,6 @@ function MapCard({ lat, lng, name }) {
         target="_blank"
         rel="noopener noreferrer"
         className="mapcard-btn"
-        onMouseEnter={e => {
-          e.currentTarget.style.background = "#2d6a4f"
-          e.currentTarget.style.transform = "translateY(-1px)"
-          e.currentTarget.style.boxShadow = "0 4px 16px rgba(27, 67, 50, 0.28)"
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = "#1b4332"
-          e.currentTarget.style.transform = "translateY(0)"
-          e.currentTarget.style.boxShadow = "none"
-        }}
       >
         <span>📍</span>
         <span>Abrir en Google Maps</span>

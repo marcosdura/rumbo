@@ -13,9 +13,9 @@ export default function SearchPage() {
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
 
-  const [spots, setSpots]                   = useState([])
+  const [spots, setSpots]                   = useState<any[]>([])
   const [loading, setLoading]               = useState(true)
-  const [highlightedSpotId, setHighlightedSpotId] = useState(null)
+  const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]       = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -121,12 +121,17 @@ export default function SearchPage() {
           .search-list-panel { width: 100%; flex: 3; padding-bottom: 0; }
           .search-map-panel  { width: 100%; flex: 2; padding: 12px; }
           .search-header     { padding: 20px 16px 0; }
-          .search-cards-grid    { grid-template-columns: 1fr; gap: 12px; }
-          .search-skeleton-grid { grid-template-columns: 1fr; }
+          .search-cards-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .search-skeleton-grid { grid-template-columns: 1fr 1fr; }
+          .search-cards-grid .spot-card-img-wrap { height: 100px !important; }
+          .search-cards-grid .spot-card-body     { padding: 7px 9px 9px !important; }
+          .search-cards-grid .spot-card-name     { font-size: 12px !important; margin-bottom: 4px !important; }
+          .search-cards-grid .spot-card-badges   { gap: 4px !important; }
+          .cards-scroll { padding-left: 12px !important; padding-right: 12px !important; }
           .cards-scroll { direction: ltr; }
           .cards-scroll > * { direction: ltr; }
           .cards-scroll::-webkit-scrollbar { width: 3px; }
-          .map-expand-btn { display: flex; }
+          .map-expand-btn { display: flex; top: 24px; right: 24px; }
           .search-map-expanded {
             position: fixed !important;
             inset: 0 !important;
@@ -292,7 +297,7 @@ export default function SearchPage() {
               </div>
             )}
 
-            <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} />
+            <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} />
           </div>
 
           <button className="map-expand-btn" onClick={() => setMapExpanded(v => !v)}>

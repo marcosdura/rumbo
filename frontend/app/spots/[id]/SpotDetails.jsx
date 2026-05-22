@@ -243,6 +243,7 @@ useEffect(() => {
           }
           .spot-right-panel {
             position: static;
+            padding: 20px 16px;
           }
           .amenities-card {
             padding: 18px 16px;
