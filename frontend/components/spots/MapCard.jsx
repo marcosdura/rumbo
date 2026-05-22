@@ -25,11 +25,42 @@ function MapCard({ lat, lng, name }) {
       border: "1px solid #e0ddd6",
       borderRadius: 20,
       padding: "20px",
-      height: "100%",
       display: "flex",
       flexDirection: "column",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
     }}>
+      <style>{`
+        .mapcard-btn {
+          margin: 12px auto 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: #1b4332;
+          border: none;
+          color: #fff;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 10px 20px;
+          border-radius: 999px;
+          cursor: pointer;
+          letter-spacing: 0.03em;
+          text-decoration: none;
+          font-family: 'DM Sans', sans-serif;
+          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .mapcard-map-wrap { height: 260px; }
+        @media (max-width: 640px) {
+          .mapcard-btn {
+            width: 100%;
+            margin: 12px 0 0;
+            padding: 12px 20px;
+            font-size: 14px;
+          }
+          .mapcard-map-wrap { height: 200px; }
+        }
+      `}</style>
+
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
         <h3 style={{
@@ -41,12 +72,12 @@ function MapCard({ lat, lng, name }) {
         </h3>
       </div>
 
-      <div style={{ flex: 1, borderRadius: 14, overflow: "hidden", border: "1px solid #e0ddd6", minHeight: 220 }}>
+      <div className="mapcard-map-wrap" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e0ddd6" }}>
         <MapContainer
           center={position}
           zoom={8}
-          style={{ height: "100%", minHeight: 220, width: "100%" }}
-          scrollWheelZoom={false}
+          style={{ height: "100%", width: "100%" }}
+          scrollWheelZoom={true}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -58,43 +89,25 @@ function MapCard({ lat, lng, name }) {
         </MapContainer>
       </div>
 
-        <a href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            margin: "12px auto 0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            marginTop: 12,
-            background: "#1b4332",
-            border: "none",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            padding: "10px 20px",
-            borderRadius: 999,
-            cursor: "pointer",
-            letterSpacing: "0.03em",
-            textDecoration: "none",
-            fontFamily: "'DM Sans', sans-serif",
-            transition: "all 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = "#2d6a4f"
-            e.currentTarget.style.transform = "translateY(-1px)"
-            e.currentTarget.style.boxShadow = "0 4px 16px rgba(27, 67, 50, 0.28)"
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = "#1b4332"
-            e.currentTarget.style.transform = "translateY(0)"
-            e.currentTarget.style.boxShadow = "none"
-          }}
-        >
-          <span>📍</span>
-          <span>Abrir en Google Maps</span>
-        </a>
+      <a
+        href={directionsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mapcard-btn"
+        onMouseEnter={e => {
+          e.currentTarget.style.background = "#2d6a4f"
+          e.currentTarget.style.transform = "translateY(-1px)"
+          e.currentTarget.style.boxShadow = "0 4px 16px rgba(27, 67, 50, 0.28)"
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = "#1b4332"
+          e.currentTarget.style.transform = "translateY(0)"
+          e.currentTarget.style.boxShadow = "none"
+        }}
+      >
+        <span>📍</span>
+        <span>Abrir en Google Maps</span>
+      </a>
     </div>
   )
 }

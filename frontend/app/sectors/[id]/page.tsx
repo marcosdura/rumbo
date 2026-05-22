@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"
+import LoadingScreen from "@/components/ui/LoadingScreen"
 
 function ClimbingSectorDetails() {
   const { id } = useParams()
@@ -40,25 +41,7 @@ function ClimbingSectorDetails() {
   }
 
   // ─── Loading ───────────────────────────────────────────────────────────────
-  if (!sector) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
-        <Navbar />
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px", width: "100%" }}>
-          <style>{`
-            @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
-          `}</style>
-          <div style={{ height: 32, background: "#ede9e1", borderRadius: 10, width: "30%", marginBottom: 16, animation: "pulse 1.5s infinite" }} />
-          <div style={{ height: 18, background: "#ede9e1", borderRadius: 8, width: "20%", marginBottom: 36, animation: "pulse 1.5s infinite" }} />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} style={{ height: 110, background: "#ede9e1", borderRadius: 16, animation: "pulse 1.5s infinite" }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!sector) return <LoadingScreen />
 
   const badges = [
     {

@@ -6,7 +6,7 @@ import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
 
-function SpotCard({ spot }) {
+function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
   const mainImage = spot.images?.[0]
 
@@ -23,12 +23,17 @@ function SpotCard({ spot }) {
           overflow: hidden;
           cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                      border-color 0.2s;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
         .spot-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+        }
+        .spot-card.highlighted {
+          border-color: #2d6a4f;
+          box-shadow: 0 0 0 2px rgba(45,106,79,0.18), 0 4px 16px rgba(0,0,0,0.08);
         }
 
         .spot-card-img-wrap {
@@ -75,15 +80,28 @@ function SpotCard({ spot }) {
           min-width: 0;
         }
 
+        .dept-pill {
+          min-width: 0;
+          overflow: hidden;
+          flex-shrink: 1;
+        }
+        .dept-pill-text {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: block;
+        }
+
         @media (max-width: 480px) {
-          .spot-card-img-wrap { height: 100px; }
+          .spot-card-img-wrap { height: 120px; }
           .spot-card-name     { font-size: 13px; }
           .spot-card-body     { padding: 8px 10px 10px; }
+          .spot-card-badges   { flex-wrap: nowrap; overflow: hidden; }
         }
       `}</style>
 
       <div
-        className="spot-card"
+        className={`spot-card${isHighlighted ? " highlighted" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={() => window.open(`/spots/${spot.id}`, "_blank")}
@@ -119,7 +137,9 @@ function SpotCard({ spot }) {
           <div className="spot-card-footer">
             <div className="spot-card-badges">
               <Pill variant="beige">{spot.category?.name || "Sin categoría"}</Pill>
-              <Pill variant="dark-green">{spot.department || "Sin departamento"}</Pill>
+              <Pill variant="dark-green" style={{ minWidth: 0, overflow: "hidden", flexShrink: 1 }}>
+                <span className="dept-pill-text">{spot.department || "Sin departamento"}</span>
+              </Pill>
             </div>
             <CircleArrow active={hovered} />
           </div>

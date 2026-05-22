@@ -1,15 +1,42 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 
+async function refreshIdToken(token) {
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id:     process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      grant_type:    "refresh_token",
+      refresh_token: token.refresh_token,
+    }),
+  })
+
+  const refreshed = await res.json()
+  if (!res.ok) throw refreshed
+
+  return {
+    ...token,
+    id_token:     refreshed.id_token,
+    access_token: refreshed.access_token,
+    expires_at:   Math.floor(Date.now() / 1000) + refreshed.expires_in,
+    refresh_token: refreshed.refresh_token ?? token.refresh_token,
+  }
+}
+
 const handler = NextAuth({
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientId:     process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: { access_type: "offline", prompt: "consent" },
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ account }) {
       try {
         await fetch("http://localhost:8000/users/upsert", {
           method: "POST",
@@ -20,13 +47,37 @@ const handler = NextAuth({
       }
       return true
     },
+
     async jwt({ token, account }) {
-      if (account) token.id_token = account.id_token
-      return token
+      // Primer login: guardar todo
+      if (account) {
+        return {
+          ...token,
+          id_token:      account.id_token,
+          access_token:  account.access_token,
+          refresh_token: account.refresh_token,
+          expires_at:    account.expires_at,
+        }
+      }
+
+      // Token todavía válido (con 60s de margen)
+      if (Date.now() < (token.expires_at - 60) * 1000) {
+        return token
+      }
+
+      // Token expirado — renovar
+      try {
+        return await refreshIdToken(token)
+      } catch (e) {
+        console.error("Error renovando token:", e)
+        return { ...token, error: "RefreshTokenError" }
+      }
     },
+
     async session({ session, token }) {
-      session.user.id = token.sub
-      session.id_token = token.id_token  // ← línea nueva
+      session.user.id  = token.sub
+      session.id_token = token.id_token
+      if (token.error) session.error = token.error
       return session
     },
   },

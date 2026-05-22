@@ -1,6 +1,7 @@
 ﻿"use client"
 
-import { useSession, signOut } from "next-auth/react"
+import { useSession, signOut, signIn } from "next-auth/react"
+import LoadingScreen from "@/components/ui/LoadingScreen"
 import { useState, useEffect } from "react"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
@@ -12,42 +13,24 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState([])
 
  useEffect(() => {
+  if ((session as any)?.error === "RefreshTokenError") {
+    signIn("google", {}, { prompt: "select_account" })
+    return
+  }
   if (!session?.id_token) return
 
   const headers = { Authorization: `Bearer ${session.id_token}` }
 
   fetch("http://localhost:8000/favorites", { headers })
     .then(res => res.json())
-    .then(setFavorites)
+    .then(data => setFavorites(Array.isArray(data) ? data : []))
 
   fetch("http://localhost:8000/reviews/user/me", { headers })
     .then(res => res.json())
-    .then(setReviews)
-}, [session?.id_token])
+    .then(data => setReviews(Array.isArray(data) ? data : []))
+}, [session?.id_token, (session as any)?.error])
 
-  if (status === "loading") {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
-        <Navbar />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <style>{`
-            @keyframes bounce {
-              0%, 100% { transform: translateY(0); opacity: 0.35; }
-              50%       { transform: translateY(-8px); opacity: 1; }
-            }
-          `}</style>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f",
-                animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
-              }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (status === "loading") return <LoadingScreen />
 
   if (!session) return null
 

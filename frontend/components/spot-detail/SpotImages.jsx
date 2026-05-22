@@ -49,37 +49,59 @@ function SpotImages({ images = [], name }) {
 
   return (
     <>
+      <style>{`
+        .spot-img-single { height: 350px; }
+        .spot-img-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
+        .spot-img-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
+        .spot-img-grid-4 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 350px; }
+        .spot-img-grid-5 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
+        .spot-img-sub-3 { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; }
+        .spot-img-sub-5 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; }
+        @media (max-width: 640px) {
+          .spot-img-single { height: 240px; }
+          .spot-img-grid-2 { grid-template-columns: 1fr; height: auto; gap: 8px; }
+          .spot-img-grid-2 > * { height: 200px; }
+          .spot-img-grid-3 { grid-template-columns: 1fr; height: auto; gap: 8px; }
+          .spot-img-grid-3 > * { height: 180px; }
+          .spot-img-sub-3 { grid-template-rows: unset; grid-template-columns: 1fr 1fr; }
+          .spot-img-grid-4 { grid-template-columns: 1fr 1fr; height: 280px; }
+          .spot-img-grid-5 { grid-template-columns: 1fr; height: auto; gap: 8px; }
+          .spot-img-grid-5 > *:first-child { height: 220px; }
+          .spot-img-sub-5 { grid-template-columns: 1fr 1fr; grid-template-rows: unset; height: 140px; }
+        }
+      `}</style>
+
       {count === 1 && (
-        <div style={{ height: 350, ...wrapStyle(18) }} onClick={() => open(0)} className="img-reveal img-zoom">
+        <div className="spot-img-single img-reveal img-zoom" style={wrapStyle(18)} onClick={() => open(0)}>
           <CldImage src={images[0].cloudinary_public_id} sizes="100vw" alt={name} {...sharedProps} />
         </div>
       )}
 
       {count === 2 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, height: 350 }}>
+        <div className="spot-img-grid-2">
           {images.map((img, i) => <Img key={i} img={img} index={i} sizes="50vw" borderRadius={18} />)}
         </div>
       )}
 
       {count === 3 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, height: 350 }}>
+        <div className="spot-img-grid-3">
           <Img img={images[0]} index={0} sizes="50vw" borderRadius={18} />
-          <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 8 }}>
+          <div className="spot-img-sub-3">
             {images.slice(1).map((img, i) => <Img key={i} img={img} index={i + 1} sizes="25vw" borderRadius={12} />)}
           </div>
         </div>
       )}
 
       {count === 4 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 8, height: 350 }}>
+        <div className="spot-img-grid-4">
           {images.map((img, i) => <Img key={i} img={img} index={i} sizes="50vw" borderRadius={i === 0 ? 18 : 12} />)}
         </div>
       )}
 
       {count >= 5 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, height: 350 }}>
+        <div className="spot-img-grid-5">
           <Img img={images[0]} index={0} sizes="50vw" borderRadius={18} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 8 }}>
+          <div className="spot-img-sub-5">
             {images.slice(1, 5).map((img, i) => <Img key={i} img={img} index={i + 1} sizes="25vw" borderRadius={12} />)}
           </div>
         </div>

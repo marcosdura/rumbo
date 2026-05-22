@@ -1,8 +1,9 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 import Navbar from "@/components/layout/Navbar"
+import LoadingScreen from "@/components/ui/LoadingScreen"
 import Footer from "@/components/layout/Footer"
 import { StarDisplay } from "@/components/ui/StarRating"
 import Link from "next/link"
@@ -40,8 +41,14 @@ export default function ReviewsPage() {
   }
 
   useEffect(() => {
+    if (status === "loading") return
+    if ((session as any)?.error === "RefreshTokenError") {
+      signIn("google", {}, { prompt: "select_account" })
+      return
+    }
     if (token) loadReviews()
-  }, [token])
+    else setLoading(false)
+  }, [token, status, (session as any)?.error])
 
   const handleDelete = async (reviewId) => {
     try {
@@ -53,30 +60,7 @@ export default function ReviewsPage() {
     } catch {}
   }
 
-  // cargando
-  if (status === "loading" || loading) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
-        <Navbar />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <style>{`
-            @keyframes bounce {
-              0%, 100% { transform: translateY(0); opacity: 0.35; }
-              50%       { transform: translateY(-8px); opacity: 1; }
-            }
-          `}</style>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f",
-                animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
-              }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (status === "loading" || loading) return <LoadingScreen />
 
   // si no esta logueado
   if (!session) {

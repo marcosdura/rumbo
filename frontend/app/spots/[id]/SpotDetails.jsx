@@ -175,6 +175,79 @@ useEffect(() => {
           border-top: 1px solid #e0ddd6;
           margin: 0 0 28px 0;
         }
+
+        .spot-page-inner {
+          max-width: 1152px;
+          margin: 0 auto;
+          padding: 36px 24px 48px;
+        }
+
+        .spot-header-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          margin-bottom: 14px;
+        }
+
+        .spot-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 38px;
+          font-weight: 600;
+          color: #1b1b19;
+          line-height: 1.15;
+          margin: 0;
+          max-width: 680px;
+        }
+
+        .spot-actions {
+          display: flex;
+          gap: 8px;
+          flex-shrink: 0;
+          margin-top: 4px;
+        }
+
+        .spot-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 420px;
+          gap: 24px;
+          align-items: start;
+        }
+
+        .spot-right-panel {
+          position: sticky;
+          top: 24px;
+          background: #fff;
+          border: 1px solid #e0ddd6;
+          border-radius: 20px;
+          padding: 24px 28px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        @media (max-width: 768px) {
+          .spot-page-inner {
+            padding: 20px 16px 40px;
+          }
+          .spot-header-row {
+            flex-direction: column;
+            gap: 12px;
+          }
+          .spot-title {
+            font-size: 26px;
+            max-width: 100%;
+          }
+          .spot-actions {
+            margin-top: 0;
+          }
+          .spot-main-grid {
+            grid-template-columns: 1fr;
+          }
+          .spot-right-panel {
+            position: static;
+          }
+          .amenities-card {
+            padding: 18px 16px;
+          }
+        }
       `}</style>
 
       <Navbar />
@@ -182,20 +255,16 @@ useEffect(() => {
       {showShare && <ShareModal name={spot.name} onClose={() => setShowShare(false)} />}
       <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
-          <div style={{ maxWidth: 1152, margin: "0 auto", padding: "36px 24px 48px" }}>
+          <div className="spot-page-inner">
 
             {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
-                <h1 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: 38, fontWeight: 600, color: "#1b1b19",
-                  lineHeight: 1.15, margin: 0, maxWidth: 680,
-                }}>
+              <div className="spot-header-row">
+                <h1 className="spot-title">
                   {spot.name}
                 </h1>
 
-                <div style={{ display: "flex", gap: 8, flexShrink: 0, marginTop: 4 }}>
+                <div className="spot-actions">
                   <FavoriteButton spot={spot} variant="detail" />
                   <button className="action-btn" onClick={() => setShowShare(true)}>🔗 Compartir</button>
                 </div>
@@ -235,7 +304,7 @@ useEffect(() => {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
               {/* Fila superior: descripción + mapa | detalles y contacto */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: 24, alignItems: "start" }}>
+              <div className="spot-main-grid">
 
                 {/* Izquierda: descripción + mapa */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -248,18 +317,7 @@ useEffect(() => {
                 </div>
 
                 {/* Derecha: detalles y contacto */}
-                <div
-                  className="fade-up fade-up-4"
-                  style={{
-                    position: "sticky",
-                    top: 24,
-                    background: "#fff",
-                    border: "1px solid #e0ddd6",
-                    borderRadius: 20,
-                    padding: "24px 28px",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  }}
-                >
+                <div className="fade-up fade-up-4 spot-right-panel">
                   <SpotDetails spot={spot} />
                 </div>
               </div>

@@ -1,12 +1,79 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import SpotList from "@/components/spots/SpotList"
 import Pill from "@/components/ui/Pill"
 import CircleArrow from "@/components/ui/CircleArrow"
 
+
+function VerTodoCard() {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      className="ver-todo-card"
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      <span className="ver-todo-label">Ver todo</span>
+      <CircleArrow active={hov} />
+    </div>
+  )
+}
+
+function NavArrow({ dir, enabled, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  const on = enabled && hovered
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={!enabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: 28, height: 28,
+        borderRadius: "50%",
+        border: `1px solid ${on ? "#1b4332" : enabled ? "#e0ddd6" : "#ede9e1"}`,
+        background: on ? "#1b4332" : "#fff",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 13,
+        color: on ? "#fff" : enabled ? "#9a9690" : "#d4d0c8",
+        flexShrink: 0,
+        cursor: enabled ? "pointer" : "default",
+        transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+        padding: 0,
+      }}
+    >
+      {dir === "left" ? "←" : "→"}
+    </button>
+  )
+}
+
 export default function SpotSection({ label, title, count, spots, loading, href }) {
   const [hovered, setHovered] = useState(false)
+  const [canLeft, setCanLeft]   = useState(false)
+  const [canRight, setCanRight] = useState(false)
+  const scrollRef = useRef(null)
+
+  const updateArrows = () => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanLeft(el.scrollLeft > 4)
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+  }
+
+  useEffect(() => {
+    updateArrows()
+  }, [spots, loading])
+
+  const scrollBy = (dir) => {
+    const el = scrollRef.current
+    if (!el) return
+    const target = dir > 0 ? el.scrollWidth - el.clientWidth : 0
+    el.scrollTo({ left: target, behavior: "smooth" })
+    if (dir > 0) { setCanRight(false); setCanLeft(true) }
+    else         { setCanLeft(false);  setCanRight(el.scrollWidth > el.clientWidth + 4) }
+  }
 
   const titleRow = (
     <div
@@ -41,38 +108,51 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       <style>{`
         .spot-section-title { font-size: 30px; }
 
-        /* Scroll container */
         .spots-scroll-wrap {
           position: relative;
         }
+        .spots-scroll-wrap::before,
         .spots-scroll-wrap::after {
           content: '';
           position: absolute;
-          top: 0; right: -24px; bottom: 0;
+          top: 0; bottom: 0;
           width: 54px;
-          background: linear-gradient(to right, transparent, #f5f4f0 60%);
           pointer-events: none;
+          transition: opacity 0.3s ease;
+          z-index: 1;
         }
+        .spots-scroll-wrap::after {
+          right: -24px;
+          background: linear-gradient(to right, transparent, #f5f4f0 60%);
+        }
+        .spots-scroll-wrap::before {
+          left: -24px;
+          background: linear-gradient(to left, transparent, #f5f4f0 60%);
+          opacity: 0;
+        }
+        .spots-scroll-wrap.at-end::after  { opacity: 0; }
+        .spots-scroll-wrap.at-end::before { opacity: 1; }
 
         .spots-scroll {
           display: flex;
+          align-items: flex-start;
           gap: 14px;
           overflow-x: auto;
           scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
-          padding-bottom: 4px;
+          padding-top: 8px;
+          margin-top: -8px;
+          padding-bottom: 8px;
         }
         .spots-scroll::-webkit-scrollbar { display: none; }
         .spots-scroll { scrollbar-width: none; }
 
-        /* Card width inside scroll */
         .spots-scroll .spot-card {
           width: 240px;
           flex-shrink: 0;
           scroll-snap-align: start;
         }
 
-        /* Skeleton width inside scroll */
         .spots-scroll .spot-skeleton {
           width: 240px;
           flex-shrink: 0;
@@ -83,10 +163,46 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           animation: pulse 1.5s ease-in-out infinite;
         }
 
+        .ver-todo-card {
+          width: 240px;
+          flex-shrink: 0;
+          scroll-snap-align: start;
+          height: 237px;
+          border-radius: 20px;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          cursor: pointer;
+          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ver-todo-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+        }
+        .ver-todo-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1b1b19;
+        }
+
+        /* Nav arrows — ocultos en mobile */
+        .gallery-nav { display: flex; gap: 6px; }
+        @media (max-width: 768px) {
+          .gallery-nav { display: none; }
+        }
+
         @media (max-width: 480px) {
           .spots-scroll .spot-card     { width: 200px; }
-          .spots-scroll .spot-skeleton { width: 200px; height: 180px; }
+          .spots-scroll .spot-skeleton { width: 200px; height: 200px; }
           .spot-section-title          { font-size: 22px; }
+          .ver-todo-card               { width: 200px; height: 197px; }
         }
 
         @keyframes pulse {
@@ -104,21 +220,37 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           </p>
         </div>
 
-        {href
-          ? <Link href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{titleRow}</Link>
-          : titleRow
-        }
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {href
+            ? <Link href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{titleRow}</Link>
+            : titleRow
+          }
+
+          {!loading && spots.length >= 5 && (
+            <div className="gallery-nav">
+              <NavArrow dir="left"  enabled={canLeft}  onClick={() => scrollBy(-1)} />
+              <NavArrow dir="right" enabled={canRight} onClick={() => scrollBy(1)} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Divider */}
       <div style={{ height: 1, background: "#e0ddd6", marginBottom: 12 }} />
 
       {/* Scroll gallery */}
-      <div className="spots-scroll-wrap">
-        <div className="spots-scroll">
+      <div className={`spots-scroll-wrap${!canRight && canLeft ? " at-end" : ""}`}>
+        <div className="spots-scroll" ref={scrollRef} onScroll={updateArrows}>
           {loading
             ? [...Array(6)].map((_, i) => <div key={i} className="spot-skeleton" />)
-            : <SpotList spots={spots} />
+            : <>
+                <SpotList spots={spots} />
+                {href && spots.length >= 5 && (
+                  <Link href={href} style={{ textDecoration: "none", flexShrink: 0 }}>
+                    <VerTodoCard />
+                  </Link>
+                )}
+              </>
           }
         </div>
       </div>
