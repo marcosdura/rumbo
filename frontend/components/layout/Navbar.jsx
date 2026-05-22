@@ -333,7 +333,7 @@ function Navbar() {
 
         {/* Search dropdown (mobile) */}
         <div className={`navbar-search-dropdown ${searchOpen ? "is-open" : "is-closed"}`}>
-          <SearchBar />
+          <SearchBar onSearch={() => setSearchOpen(false)} />
         </div>
 
         {/* Menu dropdown */}

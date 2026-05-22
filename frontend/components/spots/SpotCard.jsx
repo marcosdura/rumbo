@@ -28,12 +28,12 @@ function SpotCard({ spot, isHighlighted = false }) {
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
         .spot-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
         .spot-card.highlighted {
-          border-color: #2d6a4f;
-          box-shadow: 0 0 0 2px rgba(45,106,79,0.18), 0 4px 16px rgba(0,0,0,0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
 
         .spot-card-img-wrap {

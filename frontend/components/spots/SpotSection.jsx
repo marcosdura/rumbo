@@ -140,9 +140,10 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           overflow-x: auto;
           scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
-          padding-top: 8px;
-          margin-top: -8px;
-          padding-bottom: 8px;
+          padding-top: 16px;
+          margin-top: -16px;
+          padding-bottom: 16px;
+          margin-bottom: -8px;
         }
         .spots-scroll::-webkit-scrollbar { display: none; }
         .spots-scroll { scrollbar-width: none; }
@@ -182,8 +183,8 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
         .ver-todo-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
         .ver-todo-label {
           font-family: 'DM Sans', sans-serif;

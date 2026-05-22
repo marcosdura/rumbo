@@ -13,7 +13,7 @@ function normalize(str) {
   return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
-export default function SearchBar() {
+export default function SearchBar({ onSearch } = {}) {
   const [activity, setActivity] = useState("")
   const [activityInput, setActivityInput] = useState("")
   const [department, setDepartment] = useState("")
@@ -41,6 +41,7 @@ export default function SearchBar() {
 
   const handleSearch = () => {
     setOpenField(null)
+    onSearch?.()
     const params = new URLSearchParams({ activity, department })
     router.push(`/search?${params.toString()}`)
   }
@@ -123,12 +124,13 @@ export default function SearchBar() {
   }, [openField])
 
   useEffect(() => {
-  const a = searchParams.get("activity") ?? ""
-  const d = searchParams.get("department") ?? ""
-  setActivity(a)
-  setActivityInput(a)
-  setDepartment(d)
-  setDepartmentInput(d)
+    const a = searchParams.get("activity") ?? ""
+    const d = searchParams.get("department") ?? ""
+    setActivity(a)
+    setActivityInput(a)
+    setDepartment(d)
+    setDepartmentInput(d)
+    setOpenField(null)
   }, [searchParams])
 
   return (
