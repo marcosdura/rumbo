@@ -9,8 +9,8 @@ import { CldImage } from "next-cloudinary"
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
-  const [favorites, setFavorites] = useState([])
-  const [reviews, setReviews] = useState([])
+  const [favorites, setFavorites] = useState<any[]>([])
+  const [reviews, setReviews] = useState<any[]>([])
 
  useEffect(() => {
   if ((session as any)?.error === "RefreshTokenError") {
