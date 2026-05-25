@@ -26,7 +26,7 @@ export default function Footer() {
         }
 
         .sf-brand-name {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-nunito);
           font-size: 22px;
           font-weight: 600;
           color: #1b1b19;
@@ -168,7 +168,7 @@ export default function Footer() {
               className="object-contain" 
               style={{ borderRadius: 8 }} 
             />
-            <p className="sf-brand-name">Rumbo</p>
+            <p className="sf-brand-name">rumbo</p>
             <p className="sf-brand-desc">
               Descubrí los mejores lugares de Uruguay. Playas, sierras,
               ciudades y rincones únicos para explorar.

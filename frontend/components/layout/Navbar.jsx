@@ -346,7 +346,7 @@ function Navbar() {
           className="object-contain" 
           style={{ borderRadius: 8 }} 
         />
-          Rumbo
+          <span style={{ fontFamily: "var(--font-nunito)", fontWeight: 600 }}>rumbo</span>
         </Link>
 
         {/* Centro: SearchBar (desktop only) */}

@@ -33,41 +33,6 @@ class SpotCreate(BaseModel):
     season_end:   Optional[int] = None  # 1–12
 
 
-class SpotResponse(BaseModel):
-    id: int
-    name: str
-    description: str
-    department: str
-    lat: float | None = None
-    lng: float | None = None
-    email: str | None = None
-    instagram: str | None = None
-    whatsapp: str | None = None
-    price: int | None = None
-    season_start: Optional[int] = None  # 1–12
-    season_end:   Optional[int] = None  # 1–12
-
-    category: CategoryResponse
-    camping_detail: CampingDetailResponse | None = None
-    amenities: list[AmenityResponse] = []
-
-    @field_validator("amenities", mode="before")
-    @classmethod
-    def flatten_amenities(cls, v):
-        result = []
-        for item in v:
-            if hasattr(item, "amenity"):
-                result.append(item.amenity)
-            else:
-                result.append(item)
-        return result
-
-    routes: list[RouteResponse] = []
-    images: list[SpotImageResponse] = []
-
-    class Config:
-        from_attributes = True
-
 # -------- CAMPING --------
 class CampingDetailBase(BaseModel):
     price: float
@@ -94,7 +59,7 @@ class AmenityResponse(BaseModel):
 
 class AmenityCreate(BaseModel):
     name: str
-    
+
 
 # -------- TREKKING ROUTE --------
 class RouteBase(BaseModel):
@@ -137,8 +102,8 @@ class ClimbingSectorBase(BaseModel):
     max_altitude: Optional[int] = None
     routes_number: Optional[int] = None
     restrictions: Optional[str] = None
-    
-  
+
+
 class ClimbingSectorCreate(ClimbingSectorBase):
     spot_id: int
 
@@ -227,27 +192,64 @@ class SpotImageResponse(BaseModel):
         from_attributes = True
 
 
+# -------- SPOT RESPONSE --------
+class SpotResponse(BaseModel):
+    id: int
+    name: str
+    description: str
+    department: str
+    lat: float | None = None
+    lng: float | None = None
+    email: str | None = None
+    instagram: str | None = None
+    whatsapp: str | None = None
+    price: int | None = None
+    season_start: Optional[int] = None  # 1–12
+    season_end:   Optional[int] = None  # 1–12
+
+    category: CategoryResponse
+    camping_detail: CampingDetailResponse | None = None
+    amenities: list[AmenityResponse] = []
+
+    @field_validator("amenities", mode="before")
+    @classmethod
+    def flatten_amenities(cls, v):
+        result = []
+        for item in v:
+            if hasattr(item, "amenity"):
+                result.append(item.amenity)
+            else:
+                result.append(item)
+        return result
+
+    routes: list[RouteResponse] = []
+    images: list[SpotImageResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
 # -------- REVIEW --------
 class ReviewUserResponse(BaseModel):
     id: str
     name: str | None = None
     image: str | None = None
- 
+
     class Config:
         from_attributes = True
- 
- 
+
+
 class ReviewCreate(BaseModel):
     rating: int       # 1 a 5
     comment: str | None = None
- 
- 
+
+
 class ReviewResponse(BaseModel):
     id: int
     rating: int
     comment: str | None = None
     created_at: datetime
     user: ReviewUserResponse
- 
+
     class Config:
         from_attributes = True

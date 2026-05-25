@@ -60,17 +60,17 @@ export default function HeroHeader() {
       <Link href="/" style={{
         display: "flex", alignItems: "center", gap: 10,
         textDecoration: "none",
-        fontFamily: "'Playfair Display', serif", fontWeight: 600, fontSize: 22, color: "#fff",
+        fontFamily: "var(--font-nunito)", fontWeight: 600, fontSize: 22, color: "#fff",
       }}>
-      <Image 
-        src="/RumboLogo.png" 
-        alt="Rumbo logo" 
-        width={36} 
-        height={36} 
-        className="object-contain" 
-        style={{ borderRadius: 8 }} 
-      />        
-      Rumbo
+      <Image
+        src="/RumboLogo.png"
+        alt="Rumbo logo"
+        width={36}
+        height={36}
+        className="object-contain"
+        style={{ borderRadius: 8 }}
+      />
+      rumbo
       </Link>
 
       {/* Right side */}
