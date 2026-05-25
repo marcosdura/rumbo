@@ -433,9 +433,7 @@ function Navbar() {
           <Link href="/" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/") ? "active" : ""}`}>
             <span className="menu-link-icon">🏠</span> Home
           </Link>
-          <Link href="/settings" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/settings") ? "active" : ""}`}>
-            <span className="menu-link-icon">⚙️</span> Settings
-          </Link>
+
           <div className="menu-divider" />
 
           {isLoggedIn ? (
