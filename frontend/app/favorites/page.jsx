@@ -17,8 +17,6 @@ export default function FavoritosPage() {
     if (session?.id_token) loadFavorites(session.id_token)
   }, [session?.id_token])
 
-  console.log("SESSION:", session)
-  
   // cargando
   if (status === "loading" || loading) {
     return (

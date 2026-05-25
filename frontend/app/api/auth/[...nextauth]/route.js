@@ -18,7 +18,7 @@ async function refreshIdToken(token) {
 
   return {
     ...token,
-    id_token:     refreshed.id_token,
+    id_token:     refreshed.id_token ?? token.id_token,
     access_token: refreshed.access_token,
     expires_at:   Math.floor(Date.now() / 1000) + refreshed.expires_in,
     refresh_token: refreshed.refresh_token ?? token.refresh_token,

@@ -13,7 +13,7 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<any[]>([])
 
  useEffect(() => {
-  if ((session as any)?.error === "RefreshTokenError") {
+  if (session?.error === "RefreshTokenError") {
     signIn("google", {}, { prompt: "select_account" })
     return
   }
@@ -28,7 +28,7 @@ export default function ProfilePage() {
   fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers })
     .then(res => res.json())
     .then(data => setReviews(Array.isArray(data) ? data : []))
-}, [session?.id_token, (session as any)?.error])
+}, [session?.id_token, session?.error])
 
   if (status === "loading") return <LoadingScreen />
 

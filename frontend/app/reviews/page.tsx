@@ -42,13 +42,13 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     if (status === "loading") return
-    if ((session as any)?.error === "RefreshTokenError") {
+    if (session?.error === "RefreshTokenError") {
       signIn("google", {}, { prompt: "select_account" })
       return
     }
     if (token) loadReviews()
     else setLoading(false)
-  }, [token, status, (session as any)?.error])
+  }, [token, status, session?.error])
 
   const handleDelete = async (reviewId: any) => {
     try {

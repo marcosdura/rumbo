@@ -1,7 +1,17 @@
 "use client"
-import { SessionProvider, useSession } from "next-auth/react"
+import { SessionProvider, useSession, signIn } from "next-auth/react"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
+
+function SessionErrorHandler() {
+  const { data: session } = useSession()
+  useEffect(() => {
+    if (session?.error === "RefreshTokenError") {
+      signIn("google", {}, { prompt: "select_account" })
+    }
+  }, [session?.error])
+  return null
+}
 
 function FavoritesLoader() {
   const { data: session } = useSession()
@@ -19,6 +29,7 @@ function FavoritesLoader() {
 export default function Providers({ children, session }) {
   return (
     <SessionProvider session={session}>
+      <SessionErrorHandler />
       <FavoritesLoader />
       {children}
     </SessionProvider>
