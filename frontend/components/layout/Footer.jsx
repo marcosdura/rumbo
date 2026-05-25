@@ -160,7 +160,14 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <Image src="/favicon-32x32.png" alt="Rumbo logo" width={36} height={36} className="object-contain" />
+            <Image 
+              src="/RumboLogo.png" 
+              alt="Rumbo logo" 
+              width={36} 
+              height={36} 
+              className="object-contain" 
+              style={{ borderRadius: 8 }} 
+            />
             <p className="sf-brand-name">Rumbo</p>
             <p className="sf-brand-desc">
               Descubrí los mejores lugares de Uruguay. Playas, sierras,

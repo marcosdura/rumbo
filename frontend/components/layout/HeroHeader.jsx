@@ -62,8 +62,15 @@ export default function HeroHeader() {
         textDecoration: "none",
         fontFamily: "'Playfair Display', serif", fontWeight: 600, fontSize: 22, color: "#fff",
       }}>
-        <Image src="/favicon-32x32.png" alt="Rumbo logo" width={36} height={36} style={{ borderRadius: 8 }} />
-        Rumbo
+      <Image 
+        src="/RumboLogo.png" 
+        alt="Rumbo logo" 
+        width={36} 
+        height={36} 
+        className="object-contain" 
+        style={{ borderRadius: 8 }} 
+      />        
+      Rumbo
       </Link>
 
       {/* Right side */}

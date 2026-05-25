@@ -338,7 +338,14 @@ function Navbar() {
             }
           }}
         >
-          <Image src="/favicon-32x32.png" alt="Rumbo logo" width={36} height={36} className="object-contain" style={{ borderRadius: 8 }} />
+        <Image 
+          src="/RumboLogo.png" 
+          alt="Rumbo logo" 
+          width={36} 
+          height={36} 
+          className="object-contain" 
+          style={{ borderRadius: 8 }} 
+        />
           Rumbo
         </Link>
 
