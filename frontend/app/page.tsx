@@ -7,8 +7,10 @@ import HeroHeader from "@/components/layout/HeroHeader"
 import SpotSection from "@/components/spots/SpotSection"
 import SearchBar from "@/components/spots/SearchBar"
 
+type Spot = { id: number; name: string; department: string; [key: string]: unknown }
+
 export default function Home() {
-  const [spots, setSpots] = useState([])
+  const [spots, setSpots] = useState<Spot[]>([])
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/spots")
