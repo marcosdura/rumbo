@@ -13,7 +13,7 @@ function TrekkingRouteDetails() {
   const [route, setRoute] = useState(null)
   
   useEffect(() => {
-    fetch(`http://localhost:8000/routes/${id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/${id}`)
       .then(res => res.json())
       .then(data => {
         console.log(data)

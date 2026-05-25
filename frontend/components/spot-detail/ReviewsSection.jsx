@@ -6,7 +6,7 @@ import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import Toast from "@/components/ui/Toast"
 import AuthModal from "@/components/layout/AuthModal"
 
-const API = "http://localhost:8000"
+const API = process.env.NEXT_PUBLIC_API_URL
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()

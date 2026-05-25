@@ -3,7 +3,7 @@
 
 import { create } from "zustand"
 
-const API = "http://localhost:8000"
+const API = process.env.NEXT_PUBLIC_API_URL
 const CACHE_KEY = "rumbo_favorites"
 
 // ─── Helpers localStorage ─────────────────────────────────────────────────────

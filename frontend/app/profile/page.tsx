@@ -21,11 +21,11 @@ export default function ProfilePage() {
 
   const headers = { Authorization: `Bearer ${session.id_token}` }
 
-  fetch("http://localhost:8000/favorites", { headers })
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers })
     .then(res => res.json())
     .then(data => setFavorites(Array.isArray(data) ? data : []))
 
-  fetch("http://localhost:8000/reviews/user/me", { headers })
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers })
     .then(res => res.json())
     .then(data => setReviews(Array.isArray(data) ? data : []))
 }, [session?.id_token, (session as any)?.error])

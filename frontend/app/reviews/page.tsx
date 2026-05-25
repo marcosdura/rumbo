@@ -9,7 +9,7 @@ import { StarDisplay } from "@/components/ui/StarRating"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 
-const API = "http://localhost:8000"
+const API = process.env.NEXT_PUBLIC_API_URL
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()

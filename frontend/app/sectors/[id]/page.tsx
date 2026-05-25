@@ -12,13 +12,13 @@ function ClimbingSectorDetails() {
   const [routes, setRoutes] = useState<any>([])
 
   useEffect(() => {
-    fetch(`http://localhost:8000/sectors/${id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}`)
       .then(res => res.json())
       .then(data => setSector(data))
   }, [id])
 
   useEffect(() => {
-    fetch(`http://localhost:8000/sectors/${id}/routes`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}/routes`)
       .then(res => res.json())
       .then(data => setRoutes(data))
   }, [id])

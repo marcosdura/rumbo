@@ -38,7 +38,7 @@ export const authOptions = {
   callbacks: {
     async signIn({ account }) {
       try {
-        await fetch("http://localhost:8000/users/upsert", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/upsert`, {
           method: "POST",
           headers: { Authorization: `Bearer ${account.id_token}` },
         })

@@ -29,7 +29,7 @@ function SpotDetail({ spot }) {
 
 useEffect(() => {
   if (!spot?.id) return
-  fetch(`http://localhost:8000/reviews/${spot.id}/summary`)
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${spot.id}/summary`)
     .then(r => r.json())
     .then(setReviewSummary)
 }, [spot?.id])
@@ -37,20 +37,20 @@ useEffect(() => {
   useEffect(() => {
     if (!spot?.id) return
     if (spot.category?.name === "Trekking") {
-      fetch(`http://localhost:8000/spots/${spot.id}/routes`)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/routes`)
         .then(res => res.json()).then(data => setRoutes(data))
     }
     if (spot.category?.name === "Escalada") {
-      fetch(`http://localhost:8000/spots/${spot.id}/sectors`)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/sectors`)
         .then(res => res.json()).then(data => setSectors(data))
     }
     if (spot.category?.name === "Kayak") {
-      fetch(`http://localhost:8000/spots/${spot.id}/kayak-detail`)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/kayak-detail`)
         .then(res => res.ok ? res.json() : [])
         .then(data => { if (data) setKayakDetails(data) })
     }
     if (spot.category?.name === "Surf") {
-      fetch(`http://localhost:8000/spots/${spot.id}/surf-schools`)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/surf-schools`)
         .then(res => res.ok ? res.json() : [])
         .then(data => { if (data) setSurfSchools(data) })
     }
