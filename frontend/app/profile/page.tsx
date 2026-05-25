@@ -79,7 +79,7 @@ export default function ProfilePage() {
       border: "1px solid #e0ddd6",
       background: "#fff",
       color: "#3d3d3a",
-      width: "100%", textAlign: "left",
+      width: "100%", textAlign: "left" as const,
       textDecoration: "none",
     },
     actionBtnIcon: {
@@ -155,8 +155,8 @@ export default function ProfilePage() {
             <div className="fade-up fade-up-2" style={{ ...s.card, padding: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
                 <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid #b7dfc8", padding: 3, flexShrink: 0 }}>
-                  {user.image ? (
-                    <img src={user.image} alt={user.name} referrerPolicy="no-referrer"
+                  {user?.image ? (
+                    <img src={user.image} alt={user?.name ?? ""} referrerPolicy="no-referrer"
                       style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "linear-gradient(135deg, #52b788, #1b4332)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 600, color: "#fff" }}>
@@ -166,7 +166,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 3px" }}>
-                    {user.name}
+                    {user?.name}
                   </p>
                   <p style={{ fontSize: 12, color: "#9a9690", margin: 0 }}>
                     Miembro desde {joinDate}
@@ -176,7 +176,7 @@ export default function ProfilePage() {
 
               <div>
                 {[
-                  { icon: "✉️", label: "Email", value: user.email },
+                  { icon: "✉️", label: "Email", value: user?.email },
                   { icon: "🔗", label: "Cuenta conectada", value: "Google" },
                 ].map((row, i, arr) => (
                   <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #ede9e1" : "none" }}>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="profile-favs-grid">
                   {favorites.slice(0, 3).map(spot => {
-                    const main = spot.images?.find(i => i.is_main) || spot.images?.[0]
+                    const main = spot.images?.find((i: any) => i.is_main) || spot.images?.[0]
                     return (
                       <Link key={spot.id} href={`/spots/${spot.id}`} style={{ textDecoration: "none" }}>
                         <div className="fav-thumb" style={{ borderRadius: 12, overflow: "hidden", aspectRatio: "1", background: "#f7f5f0", position: "relative", transition: "transform 0.2s" }}>

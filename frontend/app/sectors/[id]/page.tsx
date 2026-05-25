@@ -23,7 +23,7 @@ function ClimbingSectorDetails() {
       .then(data => setRoutes(data))
   }, [id])
 
-  const gradeConfig = (grade) => {
+  const gradeConfig = (grade: any) => {
     if (!grade) return { color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
     const g = grade.toLowerCase()
     if (g.startsWith("v")) {
@@ -223,7 +223,7 @@ function ClimbingSectorDetails() {
                 </div>
 
                 {/* Filas */}
-                {routes.map((route, i) => {
+                {routes.map((route: any, i: number) => {
                   const gc = gradeConfig(route.grade)
                   return (
                     <div key={route.id} className="route-row">

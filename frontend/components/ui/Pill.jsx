@@ -10,6 +10,7 @@ const VARIANTS = {
   muted:           { bg: "#f7f5f0", color: "#9a9690", border: "#e0ddd6" },
 }
 
+/** @param {{ variant?: string, bg?: any, color?: any, border?: any, label?: any, style?: any, children?: any }} _ */
 export default function Pill({ variant = "neutral", bg, color, border, label, style, children }) {
   const base = VARIANTS[variant] || VARIANTS.neutral
   return (

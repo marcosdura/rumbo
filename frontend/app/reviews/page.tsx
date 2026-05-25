@@ -11,7 +11,7 @@ import Pill from "@/components/ui/Pill"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()
   const mins = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
@@ -25,7 +25,7 @@ function timeAgo(dateStr) {
 
 export default function ReviewsPage() {
   const { data: session, status } = useSession()
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const token = session?.id_token
@@ -50,7 +50,7 @@ export default function ReviewsPage() {
     else setLoading(false)
   }, [token, status, (session as any)?.error])
 
-  const handleDelete = async (reviewId) => {
+  const handleDelete = async (reviewId: any) => {
     try {
       await fetch(`${API}/reviews/${reviewId}`, {
         method: "DELETE",
