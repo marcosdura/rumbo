@@ -13,7 +13,7 @@ function normalize(str) {
   return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
-export default function SearchBar({ onSearch } = {}) {
+export default function SearchBar({ onSearch, hero = false } = {}) {
   const [activity, setActivity] = useState("")
   const [activityInput, setActivityInput] = useState("")
   const [department, setDepartment] = useState("")
@@ -306,10 +306,51 @@ export default function SearchBar({ onSearch } = {}) {
         }
         .clear-btn:hover { background: #9a9690; }
 
+        /* Hero variant */
+        .search-bar.hero {
+          width: 100%;
+          max-width: 700px;
+          padding: 6px 8px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          border-color: rgba(255,255,255,0.25);
+          text-align: left;
+        }
+        .search-bar.hero .search-field {
+          min-width: 200px;
+          padding: 10px 22px;
+          flex: 1;
+        }
+        .search-bar.hero .search-field-input {
+          font-size: 15px;
+        }
+        .search-bar.hero .search-btn {
+          font-size: 14px;
+          padding: 14px 28px;
+        }
+        @media (max-width: 640px) {
+          .search-bar.hero {
+            flex-direction: column;
+            border-radius: 18px;
+            padding: 8px;
+            align-items: stretch;
+            width: 100%;
+            max-width: 100%;
+          }
+          .search-bar.hero .search-field {
+            min-width: 0;
+            width: 100%;
+            border-radius: 12px;
+          }
+          .search-bar.hero .search-divider { display: none; }
+          .search-bar.hero .search-btn {
+            border-radius: 12px;
+            width: 100%;
+          }
+        }
 
       `}</style>
 
-      <div className="search-bar" ref={barRef}>
+      <div className={`search-bar${hero ? " hero" : ""}`} ref={barRef}>
 
         {/* ── Actividad ── */}
         <div

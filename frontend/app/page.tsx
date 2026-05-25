@@ -3,6 +3,7 @@
 import Footer from "@/components/layout/Footer"
 import { useEffect, useState } from "react"
 import Navbar from "@/components/layout/Navbar"
+import HeroHeader from "@/components/layout/HeroHeader"
 import SpotSection from "@/components/spots/SpotSection"
 import SearchBar from "@/components/spots/SearchBar"
 
@@ -60,12 +61,49 @@ export default function Home() {
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
+      {/* Navbar: fixed en home, oculto hasta que el hero salga del viewport */}
       <Navbar />
 
-      <div style={{ flex: 1, overflowY: "auto", fontFamily: "'DM Sans', sans-serif" }}>
+      {/* Hero — scrollea con la página */}
+      <div id="hero-section" style={{ background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "24px 24px 52px", textAlign: "center" }}>
+        <HeroHeader />
+
+        <p className="fade-up fade-up-1" style={{
+          fontFamily: "'DM Sans', sans-serif",
+          color: "#95d5b2",
+          fontSize: 13,
+          fontWeight: 600,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          marginBottom: 14,
+        }}>Uruguay al natural</p>
+
+        <h1 className="fade-up fade-up-2" style={{
+          fontFamily: "'Playfair Display', serif",
+          color: "#fff",
+          fontSize: "clamp(32px, 5vw, 52px)",
+          fontWeight: 600,
+          lineHeight: 1.15,
+          marginBottom: 12,
+          letterSpacing: "-0.02em",
+        }}>Encontrá tu próxima aventura</h1>
+
+        <p className="fade-up fade-up-2" style={{
+          fontFamily: "'DM Sans', sans-serif",
+          color: "#b7e4c7",
+          fontSize: "clamp(15px, 2vw, 18px)",
+          fontWeight: 300,
+          marginBottom: 40,
+        }}>Camping, Trekking y mucho más...</p>
+
+        <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center" }}>
+          <SearchBar hero />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 64px" }}>
 
-          {/* Secciones */}
           {sections.map((section) => (
             <SpotSection
               key={section.title}

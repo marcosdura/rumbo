@@ -45,11 +45,26 @@ function Avatar({ user, size = 28 }) {
 function Navbar() {
   const [menuOpen,   setMenuOpen]   = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [heroGone,   setHeroGone]   = useState(false)
   const pathname = usePathname()
   const menuRef  = useRef()
   const { data: session, status } = useSession()
   const isLoggedIn = status === "authenticated"
   const isActive = (path) => pathname === path
+  const isHome = pathname === "/"
+
+  useEffect(() => {
+    if (!isHome) { setHeroGone(false); return }
+    setHeroGone(false)
+    const hero = document.getElementById("hero-section")
+    if (!hero) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroGone(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(hero)
+    return () => observer.disconnect()
+  }, [isHome, pathname])
 
   useEffect(() => {
     const handler = (e) => {
@@ -70,10 +85,8 @@ function Navbar() {
 
         .navbar-root {
           font-family: 'DM Sans', sans-serif;
-          background: rgba(245, 244, 240, 0.92);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid #e0ddd6;
+          background: linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
           position: sticky;
           top: 0;
           z-index: 100;
@@ -87,7 +100,7 @@ function Navbar() {
           font-family: 'Playfair Display', serif;
           font-weight: 600;
           font-size: 22px;
-          color: #1b1b19;
+          color: #fff;
           text-decoration: none;
           letter-spacing: -0.01em;
           display: flex;
@@ -110,8 +123,8 @@ function Navbar() {
         .icon-btn {
           width: 36px; height: 36px;
           border-radius: 10px;
-          border: 1px solid #e0ddd6;
-          background: #fff;
+          border: 1px solid rgba(255,255,255,0.18);
+          background: rgba(255,255,255,0.12);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; flex-shrink: 0;
           position: relative; z-index: 1;
@@ -119,13 +132,13 @@ function Navbar() {
                       border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
                       transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .icon-btn:hover { background: #f7f5f0; transform: translateY(-1px); }
+        .icon-btn:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
         .icon-btn.is-active, .icon-btn.is-open {
-          background: #1b4332;
-          border-color: #1b4332;
+          background: rgba(255,255,255,0.25);
+          border-color: rgba(255,255,255,0.35);
         }
         .icon-btn.is-active:hover, .icon-btn.is-open:hover {
-          background: #1b4332;
+          background: rgba(255,255,255,0.3);
           transform: translateY(-1px);
         }
 
@@ -134,7 +147,7 @@ function Navbar() {
           position: absolute;
           width: 14px; height: 1.5px;
           border-radius: 2px;
-          background: #3d3d3a;
+          background: #fff;
           transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
                       opacity  0.25s cubic-bezier(0.22, 1, 0.36, 1),
                       background 0.2s;
@@ -154,12 +167,16 @@ function Navbar() {
         .icon-btn.is-open   .icon-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
         .icon-btn.is-active .icon-line:nth-child(3),
         .icon-btn.is-open   .icon-line:nth-child(3) { transform: rotate(-45deg); }
+        /* Con fondo claro al abrir, las líneas se oscurecen para contrastar */
+        .icon-btn.is-active .icon-line,
+        .icon-btn.is-open   .icon-line { background: #1b4332; }
 
         /* Ícono SVG del botón de búsqueda */
         .search-svg {
           position: absolute;
           transition: opacity 0.2s;
           pointer-events: none;
+          stroke: #fff;
         }
         /* Líneas del botón búsqueda ocultas por defecto (el SVG las cubre) */
         .navbar-search-btn .icon-line { opacity: 0; }
@@ -250,6 +267,30 @@ function Navbar() {
         }
         .avatar-btn:hover { transform: translateY(-1px); opacity: 0.85; }
 
+        /* Botón iniciar sesión — desktop */
+        .signin-nav-btn {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px; font-weight: 600;
+          color: #fff;
+          background: rgba(255,255,255,0.15);
+          border: 1px solid rgba(255,255,255,0.3);
+          padding: 7px 16px;
+          border-radius: 10px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.2s;
+          position: relative; z-index: 1;
+        }
+        .signin-nav-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* Avatar genérico — solo mobile */
+        .signin-avatar-mobile { display: none; }
+
+        @media (max-width: 768px) {
+          .signin-nav-btn        { display: none; }
+          .signin-avatar-mobile  { display: flex; }
+        }
+
         .overlay {
           position: fixed; inset: 0;
           background: rgba(0,0,0,0.12);
@@ -257,6 +298,21 @@ function Navbar() {
           animation: overlayIn 0.2s ease forwards;
         }
         @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ── Home: fixed, oculto sobre el hero, visible cuando el hero sale ── */
+        .navbar-home-fixed {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-6px);
+          transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .navbar-home-fixed.navbar-visible {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0);
+        }
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
@@ -269,7 +325,7 @@ function Navbar() {
         }
       `}</style>
 
-      <nav className="navbar-root">
+      <nav className={`navbar-root${isHome ? ` navbar-home-fixed${heroGone ? " navbar-visible" : ""}` : ""}`}>
 
         {/* Logo */}
         <Link
@@ -282,7 +338,7 @@ function Navbar() {
             }
           }}
         >
-          <Image src="/favicon-32x32.png" alt="Rumbo logo" width={36} height={36} className="object-contain" />
+          <Image src="/favicon-32x32.png" alt="Rumbo logo" width={36} height={36} className="object-contain" style={{ borderRadius: 8 }} />
           Rumbo
         </Link>
 
@@ -308,10 +364,26 @@ function Navbar() {
             </svg>
           </button>
 
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">
               <Avatar user={session.user} size={32} />
             </Link>
+          ) : (
+            <>
+              <button
+                className="signin-nav-btn"
+                onClick={() => signIn("google", {}, { prompt: "select_account" })}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                className="avatar-btn signin-avatar-mobile"
+                onClick={() => signIn("google", {}, { prompt: "select_account" })}
+                aria-label="Iniciar sesión"
+              >
+                <Avatar user={null} size={32} />
+              </button>
+            </>
           )}
 
           {/* Hamburguesa */}
