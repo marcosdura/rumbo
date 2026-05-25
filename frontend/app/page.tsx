@@ -13,7 +13,7 @@ export default function Home() {
   const [spots, setSpots] = useState<Spot[]>([])
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/spots")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`)
       .then(res => res.json())
       .then(data => setSpots(data))
   }, [])

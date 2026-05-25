@@ -41,7 +41,7 @@ export default function SearchPage() {
     const params = new URLSearchParams()
     if (activity)   params.append("activity", activity)
     if (department) params.append("department", department)
-    fetch(`http://127.0.0.1:8000/spots?${params.toString()}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
   }, [activity, department])
