@@ -115,12 +115,13 @@ useEffect(() => {
         .rating-badge {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          font-size: 13px;
+          gap: 8px;
+          font-size: 16px;
           font-weight: 500;
           color: #3d3d3a;
         }
-        .rating-badge .star { color: #2d6a4f; font-size: 14px; }
+        .rating-badge .star { color: #2d6a4f; font-size: 20px; }
+        .rating-badge strong { font-weight: 600; }
         .rating-badge .reviews-link {
           color: #9a9690;
           text-decoration: underline;

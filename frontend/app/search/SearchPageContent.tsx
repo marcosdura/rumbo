@@ -97,29 +97,32 @@ export default function SearchPage() {
         .search-cards-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .search-skeleton-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-        .map-expand-btn {
-          display: none;
-          position: absolute;
-          top: 12px; right: 12px;
-          z-index: 500;
-          align-items: center; gap: 5px;
-          background: #fff;
-          border: 1px solid #e0ddd6;
-          border-radius: 10px;
-          padding: 7px 12px;
-          cursor: pointer;
-          font-size: 13px; font-weight: 600;
-          color: #1b1b19;
+        .mobile-map-btn-wrap { display: none; }
+        .mobile-map-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 10px 18px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 600;
           font-family: 'DM Sans', sans-serif;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+          cursor: pointer;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          color: #1b1b19;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
           transition: background 0.18s;
         }
-        .map-expand-btn:hover { background: #f7f5f0; }
+        .mobile-map-btn:hover { background: #f7f5f0; }
 
         @media (max-width: 768px) {
           .search-layout { flex-direction: column; justify-content: flex-start; }
           .search-list-panel { width: 100%; flex: 3; padding-bottom: 0; }
-          .search-map-panel  { width: 100%; flex: 2; padding: 12px; }
+          .search-map-panel  { display: none; width: 100%; padding: 12px; }
+          .search-map-panel.map-visible-mobile { display: block; flex: 2; }
           .search-header     { padding: 20px 16px 0; }
           .search-cards-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
           .search-skeleton-grid { grid-template-columns: 1fr 1fr; }
@@ -131,23 +134,7 @@ export default function SearchPage() {
           .cards-scroll { direction: ltr; }
           .cards-scroll > * { direction: ltr; }
           .cards-scroll::-webkit-scrollbar { width: 3px; }
-          .map-expand-btn { display: flex; top: 24px; right: 24px; }
-          .search-map-expanded {
-            position: fixed !important;
-            inset: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            padding: 0 !important;
-            z-index: 999 !important;
-            flex: unset !important;
-          }
-          .search-map-expanded .map-inner {
-            border-radius: 0 !important;
-            border: none !important;
-          }
-          .search-map-expanded .map-expand-btn {
-            top: 16px; right: 16px;
-          }
+          .mobile-map-btn-wrap { display: block; padding: 8px 16px 0; }
         }
       `}</style>
 
@@ -210,6 +197,13 @@ export default function SearchPage() {
             )}
 
             <div className="fade-up fade-up-2" style={{ height: 1, background: "#e0ddd6", marginTop: 16 }} />
+          </div>
+
+          {/* Mobile map toggle */}
+          <div className="mobile-map-btn-wrap">
+            <button className="mobile-map-btn" onClick={() => setMapExpanded(v => !v)}>
+              {mapExpanded ? "Ocultar mapa" : "Ver mapa 🗺️"}
+            </button>
           </div>
 
           {/* Cards scrolleables */}
@@ -277,7 +271,7 @@ export default function SearchPage() {
         </div>
 
         {/* Mapa */}
-        <div className={`search-map-panel${mapExpanded ? " search-map-expanded" : ""}`}>
+        <div className={`search-map-panel${mapExpanded ? " map-visible-mobile" : ""}`}>
           <div className="map-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid #e0ddd6", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 
             {!loading && spots.length === 0 && (
@@ -300,9 +294,6 @@ export default function SearchPage() {
             <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} />
           </div>
 
-          <button className="map-expand-btn" onClick={() => setMapExpanded(v => !v)}>
-            {mapExpanded ? <><span>✕</span><span>Cerrar</span></> : <><span>⛶</span><span>Ver mapa</span></>}
-          </button>
         </div>
 
       </div>

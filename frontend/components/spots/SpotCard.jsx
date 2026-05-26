@@ -64,8 +64,18 @@ function SpotCard({ spot, isHighlighted = false }) {
           font-size: 15px;
           font-weight: 600;
           color: #1b1b19;
-          margin: 0 0 7px;
+          margin: 0 0 3px;
         }
+
+        .spot-card-rating {
+          font-size: 13px;
+          color: #7a7669;
+          margin: 0 0 6px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .spot-card-rating .star { color: #2d6a4f; }
 
         .spot-card-footer {
           display: flex;
@@ -134,6 +144,12 @@ function SpotCard({ spot, isHighlighted = false }) {
 
         <div className="spot-card-body">
           <p className="spot-card-name">{spot.name}</p>
+          {spot.review_count > 0 && (
+            <p className="spot-card-rating">
+              <span className="star">★</span>
+              <span>{spot.average_rating} · {spot.review_count} reseña{spot.review_count !== 1 ? "s" : ""}</span>
+            </p>
+          )}
           <div className="spot-card-footer">
             <div className="spot-card-badges">
               <Pill variant="beige">{spot.category?.name || "Sin categoría"}</Pill>

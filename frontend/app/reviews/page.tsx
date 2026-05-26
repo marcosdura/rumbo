@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { useSession, signIn } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import Footer from "@/components/layout/Footer"
@@ -42,13 +42,9 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     if (status === "loading") return
-    if (session?.error === "RefreshTokenError") {
-      signIn("google", {}, { prompt: "select_account" })
-      return
-    }
     if (token) loadReviews()
     else setLoading(false)
-  }, [token, status, session?.error])
+  }, [token, status])
 
   const handleDelete = async (reviewId: any) => {
     try {

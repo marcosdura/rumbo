@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useSession, signOut, signIn } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import { useState, useEffect } from "react"
 import Navbar from "@/components/layout/Navbar"
@@ -13,10 +13,6 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<any[]>([])
 
  useEffect(() => {
-  if (session?.error === "RefreshTokenError") {
-    signIn("google", {}, { prompt: "select_account" })
-    return
-  }
   if (!session?.id_token) return
 
   const headers = { Authorization: `Bearer ${session.id_token}` }
