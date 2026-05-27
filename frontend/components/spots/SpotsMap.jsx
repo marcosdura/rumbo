@@ -79,13 +79,14 @@ function ResizeHandler({ trigger }) {
   return null
 }
 
-function FitBounds({ spots }) {
+function FitBounds({ spots, mapExpanded }) {
   const map = useMap()
   const fittedRef = useRef(false)
   const spotIds = spots.map(s => s.id).join(',')
 
   useEffect(() => { fittedRef.current = false }, [spotIds])
 
+  // Desktop: fit on initial load and when spots change
   useEffect(() => {
     if (spots.length === 0 || fittedRef.current) return
     fittedRef.current = true
@@ -93,6 +94,21 @@ function FitBounds({ spots }) {
     const bounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]))
     map.fitBounds(bounds, { padding: [80, 80], maxZoom: 11 })
   }, [spotIds, map])
+
+  // Mobile fullscreen: re-fit after CSS transition and invalidateSize complete
+  useEffect(() => {
+    if (!mapExpanded || spots.length === 0) return
+    const id = setTimeout(() => {
+      map.invalidateSize()
+      if (spots.length === 1) {
+        map.setView([spots[0].lat, spots[0].lng], 13)
+        return
+      }
+      const bounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]))
+      map.fitBounds(bounds, { padding: [60, 60] })
+    }, 100)
+    return () => clearTimeout(id)
+  }, [mapExpanded, spotIds, map])
 
   return null
 }
@@ -209,7 +225,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
         />
 
         <ResizeHandler trigger={mapExpanded} />
-        {validSpots.length > 0 && <FitBounds spots={validSpots} />}
+        {validSpots.length > 0 && <FitBounds spots={validSpots} mapExpanded={mapExpanded} />}
 
         {validSpots.map(spot => (
           <SpotMarker
