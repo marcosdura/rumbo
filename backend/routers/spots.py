@@ -6,6 +6,7 @@ from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDet
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 from typing import Optional
 from database import engine
 from models import Base
@@ -84,10 +85,29 @@ def get_spots(
 
     spots = query.all()
 
+    spot_ids = [s.id for s in spots]
+    review_aggs = (
+        db.query(
+            models.Review.spot_id,
+            func.avg(models.Review.rating).label("average_rating"),
+            func.count(models.Review.id).label("review_count"),
+        )
+        .filter(models.Review.spot_id.in_(spot_ids))
+        .group_by(models.Review.spot_id)
+        .all()
+    ) if spot_ids else []
+    agg_by_id = {r.spot_id: r for r in review_aggs}
+
     result = []
     for spot in spots:
         amenities = [sa.amenity for sa in spot.amenities if sa.amenity is not None]
-        result.append({**spot.__dict__, "amenities": amenities})
+        agg = agg_by_id.get(spot.id)
+        result.append({
+            **spot.__dict__,
+            "amenities": amenities,
+            "average_rating": round(float(agg.average_rating), 1) if agg else None,
+            "review_count": agg.review_count if agg else 0,
+        })
 
     return result
 

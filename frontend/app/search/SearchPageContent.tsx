@@ -118,11 +118,44 @@ export default function SearchPage() {
         }
         .mobile-map-btn:hover { background: #f7f5f0; }
 
+        .map-close-btn { display: none; }
+
         @media (max-width: 768px) {
           .search-layout { flex-direction: column; justify-content: flex-start; }
           .search-list-panel { width: 100%; flex: 3; padding-bottom: 0; }
           .search-map-panel  { display: none; width: 100%; padding: 12px; }
-          .search-map-panel.map-visible-mobile { display: block; flex: 2; }
+          .search-map-panel.map-visible-mobile {
+            display: block;
+            position: fixed !important;
+            top: 0; left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 1000;
+            padding: 0 !important;
+          }
+          .search-map-panel.map-visible-mobile .map-inner {
+            border-radius: 0 !important;
+            border: none !important;
+          }
+          .map-close-btn {
+            display: flex;
+            position: absolute;
+            top: 12px; right: 12px;
+            z-index: 1001;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid #e0ddd6;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            transition: background 0.18s;
+          }
+          .map-close-btn:hover { background: #f7f5f0; }
           .search-header     { padding: 20px 16px 0; }
           .search-cards-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
           .search-skeleton-grid { grid-template-columns: 1fr 1fr; }
@@ -294,6 +327,9 @@ export default function SearchPage() {
             <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} />
           </div>
 
+          <button className="map-close-btn" onClick={() => setMapExpanded(false)}>
+            ✕ Cerrar mapa
+          </button>
         </div>
 
       </div>
