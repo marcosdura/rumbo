@@ -15,6 +15,11 @@ def get_db():
         db.close()
 
 
+@router.get("/", response_model=list[AmenityResponse])
+def get_amenities(db: Session = Depends(get_db)):
+    return db.query(models.Amenity).all()
+
+
 @router.post("/", response_model=AmenityResponse)
 def create_amenity(amenity: AmenityCreate, db: Session = Depends(get_db)):
 

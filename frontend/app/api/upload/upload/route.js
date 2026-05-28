@@ -12,6 +12,7 @@ export async function POST(request) {
   const file = formData.get('file');
   const publicId = formData.get('public_id');
   const spotId = formData.get('spotId');
+  console.log('public_id recibido:', publicId)
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
