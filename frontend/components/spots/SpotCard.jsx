@@ -8,7 +8,7 @@ import { CldImage } from 'next-cloudinary'
 
 function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
-  const mainImage = spot.images?.[0]
+  const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
   return (
     <>

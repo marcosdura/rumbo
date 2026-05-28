@@ -7,7 +7,7 @@ function AuthErrorHandler() {
   const { data: session } = useSession()
   useEffect(() => {
     if (session?.error === "RefreshTokenError") {
-      signOut({ callbackUrl: "/" })
+      signOut({ redirect: false })
     }
   }, [session])
   return null
