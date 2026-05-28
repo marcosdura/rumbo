@@ -75,7 +75,7 @@ def get_spots(
         joinedload(SpotDB.category),
         joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
         joinedload(SpotDB.images)
-    )
+    ).filter(SpotDB.is_approved == True)
 
     if department:
         query = query.filter(SpotDB.department == department)
@@ -139,7 +139,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         .first()
     )
 
-    if not spot:
+    if not spot or not spot.is_approved:
         raise HTTPException(status_code=404, detail="Spot not found")
 
     return {

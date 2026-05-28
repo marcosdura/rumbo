@@ -19,7 +19,9 @@ class SpotDB(Base):
     email = Column(String, nullable=True)
     instagram = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
-    
+    owner_email = Column(String, nullable=True)
+    is_approved = Column(Boolean, default=False)
+
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12
     season_end   = Column(Integer, nullable=True)  # 1–12
@@ -149,6 +151,8 @@ class KayakDetail(Base):
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
     instagram = Column(String, nullable=True)
+    season_start = Column(Integer, nullable=True)
+    season_end = Column(Integer, nullable=True)
 
 
 class SurfSchool(Base):
@@ -167,6 +171,8 @@ class SurfSchool(Base):
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
     instagram = Column(String, nullable=True)
+    season_start = Column(Integer, nullable=True)
+    season_end = Column(Integer, nullable=True)
 
 
 class User(Base):

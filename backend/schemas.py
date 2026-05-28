@@ -31,6 +31,8 @@ class SpotCreate(BaseModel):
     price: int | None = None
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
+    owner_email: str | None = None
+    is_approved: bool = False
 
 
 # -------- CAMPING --------
@@ -147,6 +149,8 @@ class KayakDetail(BaseModel):
     email: Optional[str] = None
     whatsapp: Optional[str] = None
     instagram: Optional[str] = None
+    season_start: Optional[int] = None
+    season_end: Optional[int] = None
 
 class KayakDetailCreate(KayakDetail):
     spot_id: int
@@ -168,6 +172,8 @@ class SurfSchool(BaseModel):
     email: Optional[str] = None
     whatsapp: Optional[str] = None
     instagram: Optional[str] = None
+    season_start: Optional[int] = None
+    season_end: Optional[int] = None
 
 
 class SurfSchoolCreate(SurfSchool):
@@ -226,6 +232,8 @@ class SpotResponse(BaseModel):
     images: list[SpotImageResponse] = []
     average_rating: float | None = None
     review_count: int = 0
+    owner_email: str | None = None
+    is_approved: bool = False
 
     class Config:
         from_attributes = True
