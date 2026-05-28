@@ -10,17 +10,19 @@ cloudinary.config({
 export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get('file');
+  const publicId = formData.get('public_id');
   const spotId = formData.get('spotId');
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
+  const uploadOptions = publicId
+    ? { public_id: publicId, overwrite: true }
+    : { folder: `spots/${spotId}`, public_id: `spot_${spotId}_main` }
+
   const result = await new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
-      {
-        folder: `spots/${spotId}`, // organiza por spot
-        public_id: `spot_${spotId}_main`, // o un nombre dinámico
-      },
+      uploadOptions,
       (error, result) => {
         if (error) reject(error);
         else resolve(result);

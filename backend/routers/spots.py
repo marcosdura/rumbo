@@ -48,8 +48,12 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
         instagram=spot.instagram,
         whatsapp=spot.whatsapp,
         price=spot.price,
-        season_start=spot.season_start,  # ← falta esto
-        season_end=spot.season_end, 
+        season_start=spot.season_start,
+        season_end=spot.season_end,
+        owner_email=spot.owner_email,
+        is_approved=spot.is_approved,
+        lat=spot.lat,
+        lng=spot.lng,
     )
 
     db.add(db_spot)

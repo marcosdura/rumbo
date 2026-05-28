@@ -33,6 +33,8 @@ class SpotCreate(BaseModel):
     season_end:   Optional[int] = None  # 1–12
     owner_email: str | None = None
     is_approved: bool = False
+    lat: float | None = None
+    lng: float | None = None
 
 
 # -------- CAMPING --------
