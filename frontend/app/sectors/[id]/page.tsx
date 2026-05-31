@@ -108,6 +108,34 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
         }
         .action-btn:hover { background: #f7f5f0; transform: translateY(-1px); }
 
+        @media (max-width: 640px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .page-content {
+            padding: 20px 16px 48px !important;
+          }
+          .spot-title {
+            font-size: 26px !important;
+          }
+          .header-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+          }
+          .route-row {
+            grid-template-columns: 2fr 1fr !important;
+          }
+          .route-col-largo,
+          .route-col-descripcion {
+            display: none !important;
+          }
+          .route-header-largo,
+          .route-header-descripcion {
+            display: none !important;
+          }
+        }
+
         .route-row {
           display: grid;
           grid-template-columns: 2fr 1fr 1fr 2fr;
@@ -123,7 +151,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
       <Navbar />
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px" }}>
+        <div className="page-content" style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px" }}>
 
           {/* Back */}
           <button className="back-btn fade-up fade-up-1" onClick={() => router.back()}>
@@ -131,7 +159,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           </button>
 
           {/* Header */}
-          <div className="fade-up fade-up-1" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
+          <div className="fade-up fade-up-1 header-row" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
@@ -139,7 +167,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                   Sector de Escalada
                 </p>
               </div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+              <h1 className="spot-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
                 {sector.name}
               </h1>
             </div>
@@ -149,7 +177,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           </div>
 
           {/* Stats */}
-          <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
             {[
               { icon: "📍", val: `${sector.routes_count} rutas`, lbl: "Total rutas" },
               { icon: "🎯", val: `${sector.min_grade} – ${sector.max_grade}`, lbl: "Graduación" },
@@ -219,11 +247,10 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                   gap: 16, padding: "0 16px 10px",
                   borderBottom: "1px solid #ede9e1", marginBottom: 4,
                 }}>
-                  {["Nombre", "Grado", "Largo", "Descripción"].map(h => (
-                    <p key={h} style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>
-                      {h}
-                    </p>
-                  ))}
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Nombre</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Grado</p>
+                  <p className="route-header-largo" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Largo</p>
+                  <p className="route-header-descripcion" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Descripción</p>
                 </div>
 
                 {/* Filas */}
@@ -247,10 +274,10 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                           {route.grade}
                         </span>
                       </div>
-                      <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>
+                      <p className="route-col-largo" style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>
                         {route.length ? `${route.length} m` : "—"}
                       </p>
-                      <p style={{ fontSize: 13, color: "#9a9690", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p className="route-col-descripcion" style={{ fontSize: 13, color: "#9a9690", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {route.description || "—"}
                       </p>
                     </div>

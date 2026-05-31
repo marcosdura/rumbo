@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"
 import AmenitiesList from "../../../components/spot-detail/AmenitiesList"
 import dynamic from "next/dynamic"
@@ -26,6 +27,7 @@ function SpotDetail({ spot }) {
   const [surfSchools, setSurfSchools] = useState([])
   const [showShare, setShowShare] = useState(false)
   const [reviewSummary, setReviewSummary] = useState(null)
+  const router = useRouter()
 
 useEffect(() => {
   if (!spot?.id) return
@@ -224,7 +226,22 @@ useEffect(() => {
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
 
+        .mobile-back-btn {
+          display: none;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #9a9690;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0 0 24px 0;
+          font-family: 'DM Sans', sans-serif;
+        }
+
         @media (max-width: 768px) {
+          .mobile-back-btn { display: flex; }
           .spot-page-inner {
             padding: 20px 16px 40px;
           }
@@ -258,6 +275,10 @@ useEffect(() => {
       <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
           <div className="spot-page-inner">
+
+            <button onClick={() => router.back()} className="mobile-back-btn">
+              ← Volver
+            </button>
 
             {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>

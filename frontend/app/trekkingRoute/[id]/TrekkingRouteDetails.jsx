@@ -99,12 +99,35 @@ function TrekkingRouteDetails({ slug: slugProp } = {}) {
           transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
         }
         .action-btn:hover { background: #f7f5f0; transform: translateY(-1px); }
+
+        @media (max-width: 640px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .altitude-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .page-content {
+            padding: 20px 16px 48px !important;
+          }
+          .spot-title {
+            font-size: 26px !important;
+          }
+          .header-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+          }
+          .action-buttons {
+            width: 100%;
+          }
+        }
       `}</style>
 
       <Navbar />
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px" }}>
+        <div className="page-content" style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 64px" }}>
 
           {/* Back */}
           <button className="back-btn fade-up fade-up-1" onClick={() => router.back()}>
@@ -112,7 +135,7 @@ function TrekkingRouteDetails({ slug: slugProp } = {}) {
           </button>
 
           {/* Header */}
-          <div className="fade-up fade-up-1" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
+          <div className="fade-up fade-up-1 header-row" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
@@ -120,17 +143,17 @@ function TrekkingRouteDetails({ slug: slugProp } = {}) {
                   Ruta de Trekking
                 </p>
               </div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+              <h1 className="spot-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
                 {route.name}
               </h1>
             </div>
-            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <div className="action-buttons" style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <button className="action-btn">🔗 Compartir</button>
             </div>
           </div>
 
           {/* Stats principales */}
-          <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
             {[
               { icon: "📏", val: `${route.distance_km} km`,      lbl: "Distancia" },
               { icon: "⏱️", val: `${route.duration_hours} h`,    lbl: "Duración" },
@@ -150,7 +173,7 @@ function TrekkingRouteDetails({ slug: slugProp } = {}) {
           </div>
 
           {/* Altitudes */}
-          <div className="fade-up fade-up-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 20 }}>
+          <div className="fade-up fade-up-2 altitude-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 20 }}>
             {[
               { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máxima" },
               { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mínima" },

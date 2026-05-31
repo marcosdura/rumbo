@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Pill from '@/components/ui/Pill';
 import { useEffect, useState, useRef, useMemo } from 'react';
+import Link from 'next/link';
 
 const CATEGORY_EMOJI = {
   'Camping':    '🏕️',
@@ -114,6 +115,15 @@ function FitBounds({ spots, mapExpanded }) {
 }
 
 function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, onDeselect }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   const icon = useMemo(
     () => createPillIcon(spot.category?.name, isActive, isSelected),
     [spot.category?.name, isActive, isSelected]
@@ -132,8 +142,13 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
       }}
     >
       <Popup>
+        <Link
+          href={`/spots/${spot.slug}`}
+          target={isMobile ? undefined : '_blank'}
+          rel={isMobile ? undefined : 'noopener noreferrer'}
+          style={{ textDecoration: 'none' }}
+        >
         <div
-          onClick={() => window.open(`/spots/${spot.slug}`, '_blank')}
           style={{
             cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",
@@ -168,6 +183,7 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
             </span>
           </div>
         </div>
+        </Link>
       </Popup>
     </Marker>
   )

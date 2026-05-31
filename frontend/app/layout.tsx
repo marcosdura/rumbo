@@ -22,7 +22,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Rumbo — Encontrá tu próxima aventura en Uruguay",
+  title: "Rumbo | Encontrá tu próxima aventura en Uruguay",
   description: "Descubrí los mejores lugares para camping, trekking, escalada, surf y kayak en Uruguay.",
   icons: {
     icon: "/favicon.ico",

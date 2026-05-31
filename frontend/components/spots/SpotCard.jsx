@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
@@ -8,7 +9,15 @@ import { CldImage } from 'next-cloudinary'
 
 function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
 
   return (
     <>
@@ -110,11 +119,16 @@ function SpotCard({ spot, isHighlighted = false }) {
         }
       `}</style>
 
+      <Link
+        href={`/spots/${spot.slug}`}
+        target={isMobile ? undefined : "_blank"}
+        rel={isMobile ? undefined : "noopener noreferrer"}
+        style={{ textDecoration: "none", display: "block" }}
+      >
       <div
         className={`spot-card${isHighlighted ? " highlighted" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        onClick={() => window.open(`/spots/${spot.slug}`, "_blank")}
       >
         <div className="spot-card-img-wrap">
           {mainImage ? (
@@ -161,6 +175,7 @@ function SpotCard({ spot, isHighlighted = false }) {
           </div>
         </div>
       </div>
+      </Link>
     </>
   )
 }
