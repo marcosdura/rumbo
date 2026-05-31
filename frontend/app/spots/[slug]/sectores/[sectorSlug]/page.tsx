@@ -1,3 +1,4 @@
+import React from "react"
 import { Metadata } from "next"
 import ClimbingSectorDetails from "../../../../sectors/[id]/page"
 
@@ -19,5 +20,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SectorPage({ params }: Props) {
   const { sectorSlug } = await params
-  return <ClimbingSectorDetails slug={sectorSlug} />
+  const Details = ClimbingSectorDetails as React.ComponentType<{ slug?: string }>
+  return <Details slug={sectorSlug} />
 }
