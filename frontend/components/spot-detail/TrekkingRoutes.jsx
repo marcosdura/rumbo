@@ -1,7 +1,7 @@
 "use client"
 import RouteCard from "./RouteCard"
 
-function TrekkingRoutes({ routes }) {
+function TrekkingRoutes({ routes, spotSlug }) {
   return (
     <div className="routes-outer" style={{
       background: "#fff",
@@ -153,7 +153,7 @@ function TrekkingRoutes({ routes }) {
       <div className="routes-grid">
         {routes.map(route => (
           <div key={route.id} className="route-card-wrap">
-            <RouteCard route={route} />
+            <RouteCard route={route} spotSlug={spotSlug} />
           </div>
         ))}
         <div className="routes-scroll-end" />

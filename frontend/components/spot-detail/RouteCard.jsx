@@ -24,12 +24,15 @@ const neutralBadge = (label) => ({
   border: "#e0ddd6",
 })
 
-export default function RouteCard({ route }) {
+export default function RouteCard({ route, spotSlug }) {
   const [hovered, setHovered] = useState(false)
   const diff = difficultyConfig[route.difficulty] || { label: route.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6", dot: "⚪" }
+  const href = spotSlug && route.slug
+    ? `/spots/${spotSlug}/rutas/${route.slug}`
+    : `/trekkingRoute/${route.id}`
 
   return (
-    <Link href={`/trekkingRoute/${route.id}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={href} style={{ textDecoration: "none", display: "block" }}>
       <div
         className="route-card"
         onMouseEnter={() => setHovered(true)}

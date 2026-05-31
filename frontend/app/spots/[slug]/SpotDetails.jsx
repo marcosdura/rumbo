@@ -326,11 +326,11 @@ useEffect(() => {
 
               {/* Contenido dinámico por categoría */}
               {spot.category?.name === "Trekking" && routes.length > 0 && (
-                <TrekkingRoutes routes={routes} />
+                <TrekkingRoutes routes={routes} spotSlug={spot.slug} />
               )}
 
               {spot.category?.name === "Escalada" && sectors.length > 0 && (
-                <ClimbingSectorsCards sectors={sectors} />
+                <ClimbingSectorsCards sectors={sectors} spotSlug={spot.slug} />
               )}
 
               {spot.category?.name === "Camping" && spot.amenities?.length > 0 && (

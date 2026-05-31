@@ -1,7 +1,7 @@
 "use client"
 import SectorCard from "./SectorCard"
 
-function ClimbingSectorsCards({ sectors }) {
+function ClimbingSectorsCards({ sectors, spotSlug }) {
   return (
     <div className="sectors-outer" style={{
       background: "#fff",
@@ -139,7 +139,7 @@ function ClimbingSectorsCards({ sectors }) {
       <div className="sectors-grid">
         {sectors.map(sector => (
           <div key={sector.id} className="sector-card-wrap">
-            <SectorCard sector={sector} />
+            <SectorCard sector={sector} spotSlug={spotSlug} />
           </div>
         ))}
         <div className="sectors-scroll-end" />

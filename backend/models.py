@@ -1,6 +1,12 @@
 # Migration — run in Railway Postgres SQL editor:
 # ALTER TABLE spots ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE;
 # UPDATE spots SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
+#
+# ALTER TABLE routes ADD COLUMN IF NOT EXISTS slug VARCHAR;
+# UPDATE routes SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
+#
+# ALTER TABLE climbingsectors ADD COLUMN IF NOT EXISTS slug VARCHAR;
+# UPDATE climbingsectors SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
@@ -106,6 +112,7 @@ class Route(Base):
     water_available = Column(Boolean)
     camping_allowed = Column(Boolean)
     signal = Column(String)            # none / low / medium
+    slug = Column(String, nullable=True, index=True)
 
 
 class ClimbingSector(Base): 
@@ -114,10 +121,11 @@ class ClimbingSector(Base):
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id"))
     
-    name = Column(String) 
+    name = Column(String)
     type = Column(String)
     max_altitude = Column(Integer)
     restrictions = Column(String)
+    slug = Column(String, nullable=True, index=True)
 
     spot = relationship("SpotDB", back_populates="climbing_sectors")
     routes = relationship("ClimbingRoute", back_populates="sector")

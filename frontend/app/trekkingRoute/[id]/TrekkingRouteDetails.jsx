@@ -7,18 +7,23 @@ import LoadingScreen from "@/components/ui/LoadingScreen"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 
 
-function TrekkingRouteDetails() {
-  const { id } = useParams()
+function TrekkingRouteDetails({ slug: slugProp }) {
+  const params = useParams()
+  const id = params?.id
   const router = useRouter()
   const [route, setRoute] = useState(null)
-  
+
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/${id}`)
+    const url = slugProp
+      ? `${process.env.NEXT_PUBLIC_API_URL}/routes/by-slug/${slugProp}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/routes/${id}`
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         console.log(data)
-        setRoute(data)})
-  }, [id])
+        setRoute(data)
+      })
+  }, [slugProp, id])
 
   const difficultyConfig = {
     "fácil":      { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8", dot: "🟢" },

@@ -5,23 +5,27 @@ import { useParams, useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 
-function ClimbingSectorDetails() {
-  const { id } = useParams()
+function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
+  const params = useParams()
+  const id = params?.id
   const router = useRouter()
   const [sector, setSector] = useState<any>(null)
   const [routes, setRoutes] = useState<any>([])
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}`)
-      .then(res => res.json())
-      .then(data => setSector(data))
-  }, [id])
+    if (!slugProp && !id) return
+    const url = slugProp
+      ? `${process.env.NEXT_PUBLIC_API_URL}/sectors/by-slug/${slugProp}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}`
+    fetch(url).then(res => res.json()).then(data => setSector(data))
+  }, [slugProp, id])
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}/routes`)
+    if (!sector?.id) return
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${sector.id}/routes`)
       .then(res => res.json())
       .then(data => setRoutes(data))
-  }, [id])
+  }, [sector?.id])
 
   const gradeConfig = (grade: any) => {
     if (!grade) return { color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }

@@ -4,11 +4,14 @@ import Link from "next/link"
 import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
 
-export default function SectorCard({ sector }) {
+export default function SectorCard({ sector, spotSlug }) {
   const [hovered, setHovered] = useState(false)
+  const href = spotSlug && sector.slug
+    ? `/spots/${spotSlug}/sectores/${sector.slug}`
+    : `/sectors/${sector.id}`
 
   return (
-    <Link href={`/sectors/${sector.id}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={href} style={{ textDecoration: "none", display: "block" }}>
       <div
         className="sector-card"
         onMouseEnter={() => setHovered(true)}

@@ -85,6 +85,7 @@ class RouteBase(BaseModel):
     water_available: Optional[bool] = None
     camping_allowed: Optional[bool] = None
     signal: Optional[str] = None            # none / low / medium
+    slug: str | None = None
 
 
 class RouteCreate(RouteBase):
@@ -107,6 +108,7 @@ class ClimbingSectorBase(BaseModel):
     max_altitude: Optional[int] = None
     routes_number: Optional[int] = None
     restrictions: Optional[str] = None
+    slug: str | None = None
 
 
 class ClimbingSectorCreate(ClimbingSectorBase):
