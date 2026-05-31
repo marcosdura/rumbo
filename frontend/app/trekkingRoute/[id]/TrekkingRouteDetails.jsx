@@ -7,7 +7,7 @@ import LoadingScreen from "@/components/ui/LoadingScreen"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 
 
-function TrekkingRouteDetails({ slug: slugProp }) {
+function TrekkingRouteDetails({ slug: slugProp } = {}) {
   const params = useParams()
   const id = params?.id
   const router = useRouter()
