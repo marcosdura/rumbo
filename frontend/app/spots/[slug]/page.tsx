@@ -1,7 +1,11 @@
 import { Metadata } from "next"
 import SpotDetails from "./SpotDetails"
 
-export async function generateMetadata({ params }): Promise<Metadata> {
+type Props = {
+  params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const spot = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
@@ -30,7 +34,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
   }
 }
 
-export default async function SpotPage({ params }) {
+export default async function SpotPage({ params }: Props) {
   const { slug } = await params
   const spot = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
