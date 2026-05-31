@@ -10,11 +10,27 @@ from sqlalchemy import func
 from typing import Optional
 from database import engine
 from models import Base
+import re
 
 Base.metadata.create_all(bind=engine)
 
 
 router = APIRouter()
+
+
+def generate_slug(name: str) -> str:
+    slug = name.lower().strip()
+    slug = re.sub(r'[áàäâ]', 'a', slug)
+    slug = re.sub(r'[éèëê]', 'e', slug)
+    slug = re.sub(r'[íìïî]', 'i', slug)
+    slug = re.sub(r'[óòöô]', 'o', slug)
+    slug = re.sub(r'[úùüû]', 'u', slug)
+    slug = re.sub(r'[ñ]', 'n', slug)
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s]+', '-', slug)
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
 
 # dependencia DB
 def get_db():
@@ -54,6 +70,7 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
         is_approved=spot.is_approved,
         lat=spot.lat,
         lng=spot.lng,
+        slug=generate_slug(spot.name),
     )
 
     db.add(db_spot)
@@ -127,6 +144,45 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Trip deleted"}
+
+
+@router.get("/spots/by-slug/{slug}", response_model=SpotResponse)
+def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
+    spot = (
+        db.query(SpotDB)
+        .options(
+            selectinload(SpotDB.category),
+            selectinload(SpotDB.routes),
+            selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
+            selectinload(SpotDB.images),
+        )
+        .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
+        .first()
+    )
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    return {
+        "id": spot.id,
+        "name": spot.name,
+        "description": spot.description,
+        "department": spot.department,
+        "lat": spot.lat,
+        "lng": spot.lng,
+        "email": spot.email,
+        "instagram": spot.instagram,
+        "whatsapp": spot.whatsapp,
+        "price": spot.price,
+        "season_start": spot.season_start,
+        "season_end": spot.season_end,
+        "slug": spot.slug,
+        "category": spot.category,
+        "camping_detail": spot.camping_detail,
+        "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
+        "routes": spot.routes,
+        "images": spot.images,
+        "average_rating": None,
+        "review_count": 0,
+    }
 
 
 @router.get("/spots/{id}", response_model=SpotResponse)

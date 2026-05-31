@@ -1,3 +1,7 @@
+# Migration — run in Railway Postgres SQL editor:
+# ALTER TABLE spots ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE;
+# UPDATE spots SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
+
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
 from sqlalchemy.orm import relationship
@@ -21,6 +25,7 @@ class SpotDB(Base):
     whatsapp = Column(String, nullable=True)
     owner_email = Column(String, nullable=True)
     is_approved = Column(Boolean, default=False)
+    slug = Column(String, unique=True, nullable=True, index=True)
 
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12

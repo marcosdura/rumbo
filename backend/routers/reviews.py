@@ -32,6 +32,7 @@ def get_user_reviews(db: Session = Depends(get_db), user: dict = Depends(get_cur
             "id": r.id,
             "spot_id": r.spot_id,
             "spot_name": r.spot.name,
+            "spot_slug": r.spot.slug,
             "rating": r.rating,
             "comment": r.comment,
             "created_at": r.created_at.isoformat(),

@@ -35,6 +35,7 @@ class SpotCreate(BaseModel):
     is_approved: bool = False
     lat: float | None = None
     lng: float | None = None
+    slug: str | None = None
 
 
 # -------- CAMPING --------
@@ -214,6 +215,7 @@ class SpotResponse(BaseModel):
     price: int | None = None
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
+    slug: str | None = None
 
     category: CategoryResponse
     camping_detail: CampingDetailResponse | None = None

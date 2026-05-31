@@ -206,7 +206,7 @@ export default function ReviewsPage() {
                 <div key={review.id} className="review-card">
                   <div className="review-card-header">
                     <div>
-                      <Link href={`/spots/${review.spot_id}`} className="review-spot-link">
+                      <Link href={`/spots/${review.spot_slug || review.spot_id}`} className="review-spot-link">
                         {review.spot_name || `Spot #${review.spot_id}`}
                       </Link>
                       <p style={{ fontSize: 11, color: "#9a9690", marginTop: 3 }}>

@@ -133,7 +133,7 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
     >
       <Popup>
         <div
-          onClick={() => window.open(`/spots/${spot.id}`, '_blank')}
+          onClick={() => window.open(`/spots/${spot.slug}`, '_blank')}
           style={{
             cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",

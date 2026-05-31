@@ -114,7 +114,7 @@ function SpotCard({ spot, isHighlighted = false }) {
         className={`spot-card${isHighlighted ? " highlighted" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        onClick={() => window.open(`/spots/${spot.id}`, "_blank")}
+        onClick={() => window.open(`/spots/${spot.slug}`, "_blank")}
       >
         <div className="spot-card-img-wrap">
           {mainImage ? (
