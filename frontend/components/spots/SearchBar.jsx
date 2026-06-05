@@ -142,8 +142,8 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           font-family: 'DM Sans', sans-serif;
           display: inline-flex;
           align-items: center;
-          background: #fff;
-          border: 1px solid #e0ddd6;
+          background: var(--card-bg);
+          border: 1px solid var(--border);
           border-radius: 999px;
           padding: 5px 6px;
           gap: 4px;
@@ -153,7 +153,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         .search-divider {
           width: 1px;
           height: 24px;
-          background: #e0ddd6;
+          background: var(--border);
           flex-shrink: 0;
         }
 
@@ -166,8 +166,8 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           user-select: none;
         }
-        .search-field:hover { background: #f7f5f0; }
-        .search-field.is-open { background: #f0f7f3; }
+        .search-field:hover { background: var(--hover-bg); }
+        .search-field.is-open { background: var(--active-bg); }
 
         .search-field-label {
           font-size: 11px;
@@ -189,7 +189,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
           font-weight: 500;
-          color: #1b1b19;
+          color: var(--fg);
           background: transparent;
           border: none;
           outline: none;
@@ -208,8 +208,8 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           left: 0;
           top: calc(100% + 10px);
           min-width: 200px;
-          background: #fff;
-          border: 1px solid #e0ddd6;
+          background: var(--card-bg);
+          border: 1px solid var(--border);
           border-radius: 16px;
           box-shadow: 0 8px 28px rgba(0,0,0,0.09);
           z-index: 9999;
@@ -232,7 +232,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
           font-weight: 400;
-          color: #3d3d3a;
+          color: var(--fg-secondary);
           padding: 10px 16px;
           cursor: pointer;
           transition: background 0.13s ease;
@@ -241,24 +241,24 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           gap: 8px;
         }
         .search-dropdown-item:hover {
-          background: #f0f7f3;
-          color: #1b4332;
+          background: var(--active-bg);
+          color: var(--primary-dark);
         }
         /* keyboard highlight (best match / arrow navigation) */
         .search-dropdown-item.highlighted {
-          background: #dff0e8;
-          color: #1b4332;
+          background: var(--active-bg);
+          color: var(--primary-dark);
         }
         .search-dropdown-item.selected {
-          background: #e8f5ee;
-          color: #1b4332;
+          background: var(--pill-green-bg);
+          color: var(--primary-dark);
           font-weight: 600;
         }
 
         .search-dropdown-empty {
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
-          color: #b0aca5;
+          color: var(--fg-muted);
           padding: 14px 16px;
           text-align: center;
           font-style: italic;

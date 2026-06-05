@@ -1,5 +1,6 @@
 "use client"
 import { SessionProvider, useSession, signOut } from "next-auth/react"
+import { ThemeProvider } from "next-themes"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
 
@@ -28,10 +29,12 @@ function FavoritesLoader() {
 
 export default function Providers({ children, session }) {
   return (
-    <SessionProvider session={session}>
-      <AuthErrorHandler />
-      <FavoritesLoader />
-      {children}
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <SessionProvider session={session}>
+        <AuthErrorHandler />
+        <FavoritesLoader />
+        {children}
+      </SessionProvider>
+    </ThemeProvider>
   )
 }

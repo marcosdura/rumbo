@@ -1,8 +1,74 @@
 @import "tailwindcss";
 
+/* ── Tailwind v4: registrar variante dark por clase ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  /* Legado — mantenidos para compatibilidad */
   --background: #f5f4f0;
   --foreground: #1b1b19;
+
+  /* ── Tokens de color (light) ── */
+  --bg:                #f5f4f0;
+  --bg-secondary:      #ffffff;
+  --fg:                #1b1b19;
+  --fg-secondary:      #7a7669;
+  --fg-muted:          #9a9690;
+  --border:            #e0ddd6;
+  --border-subtle:     #ede9e1;
+  --card-bg:           #ffffff;
+  --input-bg:          #ffffff;
+  --hover-bg:          #f7f5f0;
+  --active-bg:         #f0f7f3;
+  --primary:           #2d6a4f;
+  --primary-dark:      #1b4332;
+
+  /* ── Pill variants (light) ── */
+  --pill-neutral-bg:        #f7f5f0;
+  --pill-neutral-fg:        #4a443b;
+  --pill-neutral-border:    #e0ddd6;
+  --pill-beige-bg:          #eae6df;
+  --pill-beige-fg:          #4a443b;
+  --pill-beige-border:      #d0c9bc;
+  --pill-green-bg:          #e8f5ee;
+  --pill-green-fg:          #1b4332;
+  --pill-green-border:      #b7dfc8;
+  --pill-subtle-green-bg:   #f0f7f3;
+  --pill-subtle-green-fg:   #2d6a4f;
+  --pill-subtle-green-border: #c0ddd0;
+}
+
+.dark {
+  --background: #0f1a12;
+  --foreground: #f0ede8;
+
+  --bg:                #0f1a12;
+  --bg-secondary:      #1a2e1e;
+  --fg:                #f0ede8;
+  --fg-secondary:      #a8b5a0;
+  --fg-muted:          #6b7c65;
+  --border:            #2a3e2e;
+  --border-subtle:     #253b29;
+  --card-bg:           #1a2e1e;
+  --input-bg:          #162318;
+  --hover-bg:          #1f3525;
+  --active-bg:         #1e3323;
+  --primary:           #4caf75;
+  --primary-dark:      #3d9b63;
+
+  /* ── Pill variants (dark) ── */
+  --pill-neutral-bg:        #1e3325;
+  --pill-neutral-fg:        #a8b5a0;
+  --pill-neutral-border:    #2a3e2e;
+  --pill-beige-bg:          #222e22;
+  --pill-beige-fg:          #bfb090;
+  --pill-beige-border:      #2e3b2e;
+  --pill-green-bg:          #1a3028;
+  --pill-green-fg:          #6ddb98;
+  --pill-green-border:      #2a4e38;
+  --pill-subtle-green-bg:   #182a1e;
+  --pill-subtle-green-fg:   #4caf75;
+  --pill-subtle-green-border: #2a4a34;
 }
 
 @theme inline {
@@ -13,8 +79,8 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
   font-family: 'DM Sans', Arial, sans-serif;
 }
 

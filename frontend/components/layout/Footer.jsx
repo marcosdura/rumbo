@@ -11,8 +11,8 @@ export default function Footer() {
 
         .sf-footer {
           font-family: 'DM Sans', sans-serif;
-          background: #fff;
-          border-top: 1px solid #e0ddd6;
+          background: var(--bg-secondary);
+          border-top: 1px solid var(--border);
           border-radius: 20px 20px 0 0;
           padding: 40px 40px 24px;
           margin-top: 80px;
@@ -29,13 +29,13 @@ export default function Footer() {
           font-family: var(--font-nunito);
           font-size: 22px;
           font-weight: 600;
-          color: #1b1b19;
+          color: var(--fg);
           margin: 8px 0 8px;
         }
 
         .sf-brand-desc {
           font-size: 13px;
-          color: #9a9690;
+          color: var(--fg-muted);
           line-height: 1.7;
           margin-bottom: 18px;
         }
@@ -45,8 +45,8 @@ export default function Footer() {
         .sf-social-btn {
           width: 34px; height: 34px;
           border-radius: 50%;
-          border: 1px solid #e0ddd6;
-          background: #fff;
+          border: 1px solid var(--border);
+          background: var(--bg-secondary);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
@@ -54,7 +54,7 @@ export default function Footer() {
         }
         .sf-social-btn svg {
           width: 14px; height: 14px;
-          fill: #9a9690;
+          fill: var(--fg-muted);
           transition: fill 0.2s;
         }
         @media (hover: hover) {
@@ -93,7 +93,7 @@ export default function Footer() {
         }
         .sf-col-links a {
           font-size: 13px;
-          color: #7a7669;
+          color: var(--fg-secondary);
           text-decoration: none;
           transition: color 0.15s;
         }
@@ -103,7 +103,7 @@ export default function Footer() {
 
         .sf-divider {
           height: 1px;
-          background: #ede9e1;
+          background: var(--border-subtle);
           margin-bottom: 20px;
         }
 
@@ -117,7 +117,7 @@ export default function Footer() {
 
         .sf-copy {
           font-size: 12px;
-          color: #b0aca5;
+          color: var(--fg-muted);
           display: flex;
           align-items: center;
           gap: 8px;
