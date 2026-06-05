@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from database import engine
 from models import Base
@@ -14,9 +15,14 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+origins = ["http://localhost:3000", "https://rumbo-eight.vercel.app"]
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # permite todos (desarrollo)
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
