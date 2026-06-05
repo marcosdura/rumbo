@@ -228,6 +228,8 @@ export default function AgregarLugar() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=${cat.name}`)
         const data = await res.json()
         setAvailableSpots(data.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
+      } catch {
+        // proceed with empty list if fetch fails
       } finally {
         setLoadingSpots(false)
       }
