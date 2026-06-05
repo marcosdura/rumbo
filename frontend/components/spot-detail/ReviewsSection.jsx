@@ -112,8 +112,8 @@ export default function ReviewsSection({ spotId }) {
     <>
       <style>{`
         .reviews-wrap {
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -135,28 +135,28 @@ export default function ReviewsSection({ spotId }) {
           gap: 6px;
           padding: 9px 18px;
           border-radius: 12px;
-          border: 1px solid var(--border);
-          background: var(--card-bg);
+          border: 1px solid #e0ddd6;
+          background: #fff;
           font-size: 14px;
           font-family: 'DM Sans', sans-serif;
           font-weight: 500;
           cursor: pointer;
-          color: var(--primary);
+          color: #1b4332;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           white-space: nowrap;
           flex-shrink: 0;
         }
         @media (hover: hover) {
           .reviews-write-btn:hover {
-            background: var(--active-bg);
+            background: #f0f7f3;
             transform: translateY(-1px);
           }
         }
 
         /* Review card */
         .review-card {
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 16px;
           padding: 16px 20px;
         }
@@ -225,12 +225,12 @@ export default function ReviewsSection({ spotId }) {
                 Reseñas
               </span>
             </div>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "var(--fg)", margin: 0 }}>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
               Reviews
             </p>
             {summary?.total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "var(--fg)", lineHeight: 1 }}>
+                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1 }}>
                   {summary.average}
                 </span>
                 <div>
@@ -255,16 +255,16 @@ export default function ReviewsSection({ spotId }) {
 
         {/* Formulario */}
         {showForm && (
-          <div style={{ background: "var(--hover-bg)", border: "1px solid var(--border)", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+          <div style={{ background: "#f7f5f0", border: "1px solid #e0ddd6", borderRadius: 16, padding: 20, marginBottom: 20 }}>
             <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", marginBottom: 10 }}>
               Tu rating
             </p>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
               style={{
-                width: "100%", border: "1px solid var(--border)", borderRadius: 12,
+                width: "100%", border: "1px solid #e0ddd6", borderRadius: 12,
                 padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
-                color: "var(--fg)", background: "var(--input-bg)", resize: "none", outline: "none",
+                color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
                 transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
               }}
               rows={3}
@@ -279,7 +279,7 @@ export default function ReviewsSection({ spotId }) {
                 style={{
                   padding: "9px 16px", borderRadius: 12, fontSize: 14,
                   fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
-                  background: "none", color: "var(--fg-muted)", border: "1px solid var(--border)", cursor: "pointer",
+                  background: "none", color: "#9a9690", border: "1px solid #e0ddd6", cursor: "pointer",
                 }}
                 onClick={() => { setShowForm(false); setRating(0); setComment("") }}
               >
@@ -321,7 +321,7 @@ export default function ReviewsSection({ spotId }) {
                   <div className="review-card-user">
                     <Avatar user={review.user} />
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", margin: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
                         {review.user?.name || "Usuario"}
                       </p>
                       <p style={{ fontSize: 11, color: "#9a9690", marginTop: 2 }}>
@@ -342,7 +342,7 @@ export default function ReviewsSection({ spotId }) {
                   </div>
                 </div>
                 {review.comment && (
-                  <p style={{ fontSize: 14, color: "var(--fg-secondary)", lineHeight: 1.65, marginTop: 10 }}>
+                  <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>
                     {review.comment}
                   </p>
                 )}

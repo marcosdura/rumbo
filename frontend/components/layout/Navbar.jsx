@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signIn, signOut } from "next-auth/react"
 import SearchBar from "@/components/spots/SearchBar"
-import ThemeToggle from "@/components/ui/ThemeToggle"
 import Image from "next/image"
 
 function Avatar({ user, size = 28 }) {
@@ -196,8 +195,8 @@ function Navbar() {
           position: absolute;
           top: calc(100% + 10px);
           left: 16px; right: 16px;
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 18px;
           padding: 14px 16px;
           z-index: 200;
@@ -214,8 +213,8 @@ function Navbar() {
           top: calc(100% + 10px);
           right: 24px;
           width: 230px;
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 18px;
           padding: 6px;
           z-index: 200;
@@ -230,23 +229,23 @@ function Navbar() {
           display: flex; align-items: center; gap: 10px;
           padding: 9px 12px; border-radius: 10px;
           text-decoration: none; font-size: 14px; font-weight: 400;
-          color: var(--fg-secondary);
+          color: #3d3d3a;
           transition: background 0.15s, color 0.15s;
           cursor: pointer; border: none; background: none;
           width: 100%; text-align: left;
           font-family: 'DM Sans', sans-serif;
         }
-        .menu-link:hover  { background: var(--hover-bg); color: var(--fg); }
-        .menu-link.active { background: var(--pill-green-bg); color: var(--primary-dark); font-weight: 600; }
+        .menu-link:hover  { background: #f7f5f0; color: #1b1b19; }
+        .menu-link.active { background: #e8f5ee; color: #1b4332; font-weight: 600; }
         .menu-link.danger { color: #dc2626; }
         .menu-link.danger:hover { background: #fdf0f0; color: #b91c1c; }
 
         .menu-link-icon { font-size: 15px; width: 20px; text-align: center; }
-        .menu-divider   { height: 1px; background: var(--border-subtle); margin: 4px 6px; }
+        .menu-divider   { height: 1px; background: #ede9e1; margin: 4px 6px; }
 
         .menu-user-info  { padding: 10px 12px 8px; display: flex; align-items: center; gap: 10px; }
-        .menu-user-name  { font-size: 13px; font-weight: 600; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .menu-user-email { font-size: 11px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+        .menu-user-name  { font-size: 13px; font-weight: 600; color: #1b1b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .menu-user-email { font-size: 11px; color: #9a9690; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
         .signin-btn {
           display: flex; align-items: center; gap: 10px;
@@ -393,8 +392,6 @@ function Navbar() {
               </button>
             </>
           )}
-
-          <ThemeToggle />
 
           {/* Hamburguesa */}
           <button

@@ -28,8 +28,8 @@ export default function AuthModal({ onClose }) {
 
         .auth-modal {
           font-family: 'DM Sans', sans-serif;
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 24px;
           padding: 40px 36px 32px;
           width: 100%;
@@ -49,17 +49,17 @@ export default function AuthModal({ onClose }) {
           top: 14px; right: 14px;
           width: 32px; height: 32px;
           border-radius: 50%;
-          border: 1px solid var(--border);
-          background: var(--card-bg);
+          border: 1px solid #e0ddd6;
+          background: #fff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 14px;
-          color: var(--fg-muted);
+          color: #9a9690;
           transition: background 0.15s, color 0.15s;
         }
-        .auth-close:hover { background: var(--hover-bg); color: var(--fg); }
+        .auth-close:hover { background: #f7f5f0; color: #1b1b19; }
 
         .auth-google-btn {
           width: 100%;
@@ -69,18 +69,18 @@ export default function AuthModal({ onClose }) {
           gap: 10px;
           padding: 13px;
           border-radius: 14px;
-          border: 1px solid var(--border);
-          background: var(--card-bg);
+          border: 1px solid #e0ddd6;
+          background: #fff;
           font-size: 14px;
           font-weight: 600;
           font-family: 'DM Sans', sans-serif;
-          color: var(--fg);
+          color: #1b1b19;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
         .auth-google-btn:hover {
-          background: var(--hover-bg);
+          background: #f7f5f0;
           transform: translateY(-1px);
           box-shadow: 0 4px 14px rgba(0,0,0,0.08);
         }
@@ -107,13 +107,13 @@ export default function AuthModal({ onClose }) {
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
             fontSize: 24, fontWeight: 600,
-            color: "var(--fg)", textAlign: "center", margin: "0 0 10px",
+            color: "#1b1b19", textAlign: "center", margin: "0 0 10px",
           }}>
             Iniciá sesión
           </h2>
 
           <p style={{
-            fontSize: 14, color: "var(--fg-muted)",
+            fontSize: 14, color: "#9a9690",
             textAlign: "center", lineHeight: 1.65,
             margin: "0 0 24px",
           }}>
@@ -121,7 +121,7 @@ export default function AuthModal({ onClose }) {
           </p>
 
           {/* Divider */}
-          <div style={{ height: 1, background: "var(--border-subtle)", marginBottom: 24 }} />
+          <div style={{ height: 1, background: "#ede9e1", marginBottom: 24 }} />
 
           {/* Botón Google */}
           <button
@@ -138,7 +138,7 @@ export default function AuthModal({ onClose }) {
           </button>
 
           <p style={{
-            fontSize: 12, color: "var(--fg-muted)",
+            fontSize: 12, color: "#b0aca5",
             textAlign: "center", marginTop: 16, lineHeight: 1.5,
           }}>
             Tu información está segura y no compartimos tus datos.

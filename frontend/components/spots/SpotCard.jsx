@@ -26,8 +26,8 @@ function SpotCard({ spot, isHighlighted = false }) {
 
         .spot-card {
           font-family: 'DM Sans', sans-serif;
-          background: var(--card-bg);
-          border: 1px solid var(--border);
+          background: #fff;
+          border: 1px solid #e0ddd6;
           border-radius: 20px;
           overflow: hidden;
           cursor: pointer;
@@ -72,13 +72,13 @@ function SpotCard({ spot, isHighlighted = false }) {
           font-family: 'Playfair Display', serif;
           font-size: 15px;
           font-weight: 600;
-          color: var(--fg);
+          color: #1b1b19;
           margin: 0 0 3px;
         }
 
         .spot-card-rating {
           font-size: 13px;
-          color: var(--fg-secondary);
+          color: #7a7669;
           margin: 0 0 6px;
           display: flex;
           align-items: center;
@@ -145,7 +145,7 @@ function SpotCard({ spot, isHighlighted = false }) {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <div style={{ width: "100%", height: "100%", background: "var(--border)" }} />
+            <div style={{ width: "100%", height: "100%", background: "#e0ddd6" }} />
           )}
           <div className="spot-card-img-overlay" />
           <div
