@@ -16,17 +16,10 @@ def get_db():
 
 @router.post("/", response_model=SurfSchoolResponse)
 def create_surfschool(surfschool: SurfSchoolCreate, db: Session = Depends(get_db)):
-
-    existing = db.query(SurfSchool).filter(SurfSchool.spot_id == surfschool.spot_id).first()
-    
-    if existing:
-        raise HTTPException(status_code=400, detail="Este spot ya tiene surf schoool")
-
     db_surfschool = SurfSchool(**surfschool.dict())
     db.add(db_surfschool)
     db.commit()
     db.refresh(db_surfschool)
-
     return db_surfschool
 
 

@@ -263,7 +263,7 @@ export default function AgregarLugar() {
       setSubmitting(true)
       try {
         if (cat === "Surf" && surf.name) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -277,6 +277,7 @@ export default function AgregarLugar() {
               email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
             }),
           })
+          if (!res.ok) throw new Error("Error al guardar la escuelita")
         }
         if (cat === "Kayak") {
           for (const k of kayaks) {
@@ -932,7 +933,6 @@ export default function AgregarLugar() {
                     </div>
                   </div>
                 ))}
-                <button style={s.btnAdd} onClick={() => setKayaks(prev => [...prev, defaultKayak()])}>+ Agregar servicio</button>
               </div>
             )}
 

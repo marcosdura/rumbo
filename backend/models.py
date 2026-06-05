@@ -9,6 +9,8 @@
 # UPDATE climbingsectors SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
 #
 # ALTER TABLE spots ADD COLUMN IF NOT EXISTS owner_phone VARCHAR;
+#
+# ALTER TABLE surf_beach DROP CONSTRAINT IF EXISTS surf_beach_spot_id_key;
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
@@ -176,7 +178,7 @@ class SurfSchool(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"))
     spot = relationship("SpotDB", back_populates="surf_schools")
 
     name = Column(String)
