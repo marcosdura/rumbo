@@ -31,6 +31,24 @@ const CATEGORIES = [
     emoji: "🔧",
     names: ["WiFi", "Seguridad", "Estacionamiento", "Acepta mascotas"],
   },
+  {
+    id: "alojamiento",
+    label: "Alojamiento",
+    emoji: "🛏️",
+    names: ["Cama incluida", "Ropa de cama", "Baño privado", "Calefacción", "Aire acondicionado"],
+  },
+  {
+    id: "comidas-glamp",
+    label: "Comidas & cocina",
+    emoji: "🍽️",
+    names: ["Desayuno incluido", "Cocina equipada", "Parrilla privada"],
+  },
+  {
+    id: "experiencia",
+    label: "Experiencia glamping",
+    emoji: "🌿",
+    names: ["Terraza / deck", "Vista panorámica", "Fogón privado", "Bañera / jacuzzi", "Zona de descanso exterior"],
+  },
 ]
 
 const AMENITY_ICONS = {
@@ -65,6 +83,19 @@ const AMENITY_ICONS = {
   "Zona para fogón":      "🏕️",
   "Tomas para camper/van":"🔌",
   "Área para motorhomes": "🚐",
+  "Cama incluida":              "🛏️",
+  "Ropa de cama":               "🛌",
+  "Baño privado":               "🚿",
+  "Calefacción":                "🌡️",
+  "Aire acondicionado":         "❄️",
+  "Desayuno incluido":          "🥐",
+  "Cocina equipada":            "🍳",
+  "Parrilla privada":           "🔥",
+  "Terraza / deck":             "🌅",
+  "Vista panorámica":           "🏔️",
+  "Fogón privado":              "🔥",
+  "Bañera / jacuzzi":           "🛁",
+  "Zona de descanso exterior":  "🌿",
 }
 
 function AmenityPill({ amenity }) {

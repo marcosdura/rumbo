@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-const activities = ["Camping", "Escalada", "Kayak", "Trekking", "Surf"]
+const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf"]
 const departments = [
   "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
   "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",

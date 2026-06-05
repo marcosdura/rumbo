@@ -27,6 +27,7 @@ type KayakItem = {
 // ---- Constants ----
 const CATEGORIES: Category[] = [
   { id: 1, name: "Camping",  label: "Camping",  emoji: "⛺" },
+  { id: 6, name: "Glamping", label: "Glamping", emoji: "🛖" },
   { id: 2, name: "Trekking", label: "Trekking", emoji: "🥾" },
   { id: 3, name: "Escalada", label: "Escalada", emoji: "🧗" },
   { id: 4, name: "Surf",     label: "Surf",     emoji: "🏄" },
@@ -82,7 +83,53 @@ const AMENITY_ICONS: Record<string, string> = {
   "Acepta mascotas":"🐶","Proveeduría/kiosco":"🛒","Cafetería":"☕",
   "Restaurante/bar":"🍺","Estacionamiento":"🚗","Seguridad":"🔒",
   "Zona para fogón":"🏕️","Tomas para camper/van":"🔌","Área para motorhomes":"🚐",
+  "Cama incluida":             "🛏️",
+  "Ropa de cama":              "🛌",
+  "Baño privado":              "🚿",
+  "Calefacción":               "🌡️",
+  "Aire acondicionado":        "❄️",
+  "Desayuno incluido":         "🥐",
+  "Cocina equipada":           "🍳",
+  "Parrilla privada":          "🔥",
+  "Terraza / deck":            "🌅",
+  "Vista panorámica":          "🏔️",
+  "Fogón privado":             "🔥",
+  "Bañera / jacuzzi":          "🛁",
+  "Zona de descanso exterior": "🌿",
 }
+
+const GLAMPING_AMENITY_CATEGORIES = [
+  {
+    id: "alojamiento",
+    label: "Alojamiento",
+    emoji: "🛏️",
+    names: ["Cama incluida", "Ropa de cama", "Baño privado", "Calefacción", "Aire acondicionado"],
+  },
+  {
+    id: "comidas-glamp",
+    label: "Comidas & cocina",
+    emoji: "🍽️",
+    names: ["Desayuno incluido", "Cocina equipada", "Parrilla privada", "Heladera"],
+  },
+  {
+    id: "experiencia",
+    label: "Experiencia glamping",
+    emoji: "🌿",
+    names: ["Terraza / deck", "Vista panorámica", "Fogón privado", "Bañera / jacuzzi", "Zona de descanso exterior"],
+  },
+  {
+    id: "servicios-glamp",
+    label: "Servicios",
+    emoji: "⚡",
+    names: ["WiFi", "Electricidad", "Agua caliente", "Acepta mascotas", "Estacionamiento"],
+  },
+  {
+    id: "extras-glamp",
+    label: "Extras",
+    emoji: "📷",
+    names: ["Piscina", "Acceso a río/lago/mar"],
+  },
+]
 
 // ---- Helpers ----
 function buildPublicId(category: string, spotName: string, index: number): string {
@@ -151,7 +198,12 @@ export default function AgregarLugar() {
     setKayaks(prev => prev.map((k, idx) => idx === i ? { ...k, season_type: t } : k))
   }
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
+    const files = Array.from(e.target.files ?? []).slice(0, 10)
+    if ((e.target.files?.length ?? 0) > 10) {
+      setError("Podés subir un máximo de 10 imágenes. Se tomaron las primeras 10.")
+    } else {
+      setError(null)
+    }
     setImages(files)
     setPreviews(files.map(f => URL.createObjectURL(f)))
   }
@@ -230,7 +282,7 @@ export default function AgregarLugar() {
       // 4. Category-specific records
       const cat = selectedCat!.name
 
-      if (cat === "Camping" && selectedAmenities.length > 0) {
+      if ((cat === "Camping" || cat === "Glamping") && selectedAmenities.length > 0) {
         const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
         if (amenRes.ok) {
           const all: { id: number; name: string }[] = await amenRes.json()
@@ -458,7 +510,9 @@ export default function AgregarLugar() {
         {step === 3 && (
           <div>
             <h2 style={s.title}>
-              {selectedCat?.name === "Camping" ? "Servicios e instalaciones" : `Datos de ${selectedCat?.label}`}
+              {selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
+                ? "Servicios e instalaciones"
+                : `Datos de ${selectedCat?.label}`}
             </h2>
 
             {/* Camping: Amenities */}
@@ -468,6 +522,46 @@ export default function AgregarLugar() {
                   Seleccioná los servicios disponibles en tu camping. Podés dejar todo sin seleccionar.
                 </p>
                 {AMENITY_CATEGORIES.map(grp => (
+                  <div key={grp.id} style={{ marginBottom: 20 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#7a7669", marginBottom: 8 }}>
+                      {grp.emoji} {grp.label}
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {grp.names.map(name => {
+                        const icon = AMENITY_ICONS[name] ?? ""
+                        const sel = selectedAmenities.includes(name)
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => toggleAmenity(name)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 5,
+                              padding: "6px 12px", borderRadius: 20,
+                              border: `1px solid ${sel ? "#2d6a4f" : "#e0ddd6"}`,
+                              background: sel ? "#2d6a4f" : "#f7f5f0",
+                              color: sel ? "#fff" : "#1b1b19",
+                              fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {icon && <span>{icon}</span>}
+                            <span>{name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Glamping */}
+            {selectedCat?.name === "Glamping" && (
+              <div>
+                <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 20 }}>
+                  Seleccioná los servicios disponibles en tu glamping. Podés dejar todo sin seleccionar.
+                </p>
+                {GLAMPING_AMENITY_CATEGORIES.map(grp => (
                   <div key={grp.id} style={{ marginBottom: 20 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#7a7669", marginBottom: 8 }}>
                       {grp.emoji} {grp.label}
@@ -705,7 +799,7 @@ export default function AgregarLugar() {
           <div>
             <h2 style={s.title}>Imágenes</h2>
             <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
-              La primera imagen será la principal. Mínimo 1 imagen requerida.
+              La primera imagen será la principal. Mínimo 1 imagen requerida, máximo 10.
             </p>
             <div style={s.dropzone} onClick={() => fileRef.current?.click()}>
               <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handleFiles} />

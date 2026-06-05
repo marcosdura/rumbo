@@ -4,7 +4,7 @@ import models
 db = SessionLocal()
 
 # CATEGORÍAS
-categories = ["Camping", "Trekking", "Escalada", "Surf", "Kayak"]
+categories = ["Camping", "Trekking", "Escalada", "Surf", "Kayak", "Glamping"]
 category_map = {}
 for name in categories:
     cat = db.query(models.Category).filter_by(name=name).first()
@@ -24,7 +24,12 @@ amenities_list = [
     "Piscina", "Alquiler de bicis", "Kayak", "WiFi", "Acepta mascotas",
     "Proveeduría/kiosco", "Cafetería", "Restaurante/bar",
     "Estacionamiento", "Seguridad", "Zona para fogón",
-    "Tomas para camper/van", "Área para motorhomes"
+    "Tomas para camper/van", "Área para motorhomes",
+    # Glamping
+    "Cama incluida", "Ropa de cama", "Baño privado", "Calefacción", "Aire acondicionado",
+    "Desayuno incluido", "Cocina equipada", "Parrilla privada",
+    "Terraza / deck", "Vista panorámica", "Fogón privado", "Bañera / jacuzzi",
+    "Zona de descanso exterior",
 ]
 amenity_map = {}
 for name in amenities_list:

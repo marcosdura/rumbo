@@ -364,6 +364,16 @@ useEffect(() => {
                 </div>
               )}
 
+              {spot.category?.name === "Glamping" && spot.amenities?.length > 0 && (
+                <div className="amenities-card">
+                  <div className="amenities-label">
+                    <div className="amenities-dot" />
+                    <p className="amenities-title">Servicios del Glamping</p>
+                  </div>
+                  <AmenitiesList amenities={spot.amenities} />
+                </div>
+              )}
+
               {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (
                 <KayakDetail kayaks={kayakDetails} />
               )}

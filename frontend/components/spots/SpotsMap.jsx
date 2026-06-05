@@ -9,6 +9,7 @@ import Link from 'next/link';
 
 const CATEGORY_EMOJI = {
   'Camping':    '🏕️',
+  'Glamping':   '🛖',
   'Escalada':   '🧗',
   'Senderismo': '🥾',
   'MTB':        '🚵',
