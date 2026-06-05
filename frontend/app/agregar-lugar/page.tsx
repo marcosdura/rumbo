@@ -183,6 +183,10 @@ export default function AgregarLugar() {
   const [error, setError]                         = useState<string | null>(null)
   const [success, setSuccess]                     = useState(false)
   const fileRef                                   = useRef<HTMLInputElement>(null)
+  const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
+  const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
+  const [loadingSpots, setLoadingSpots]           = useState(false)
+  const isService = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -215,7 +219,32 @@ export default function AgregarLugar() {
     )
   }
 
+  async function handleCategorySelect(cat: Category) {
+    setSelectedCat(cat)
+    const isServ = cat.name === "Surf" || cat.name === "Kayak"
+    if (isServ) {
+      setLoadingSpots(true)
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=${cat.name}`)
+        const data = await res.json()
+        setAvailableSpots(data.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name })))
+      } finally {
+        setLoadingSpots(false)
+      }
+    }
+    setStep(2)
+  }
+
   function goToStep3() {
+    if (isService) {
+      if (!selectedSpotId) {
+        setError("Seleccioná un lugar para continuar.")
+        return
+      }
+      setError(null)
+      setStep(3)
+      return
+    }
     const hasContact = basic.owner_contact_type === "email" ? !!basic.owner_email : !!basic.owner_phone
     if (!hasContact || !basic.name || !basic.description || !basic.department) {
       setError("Completá los campos obligatorios.")
@@ -226,6 +255,55 @@ export default function AgregarLugar() {
   }
 
   async function handleSubmit() {
+    const cat = selectedCat!.name
+    if (isService) {
+      setError(null)
+      setSubmitting(true)
+      try {
+        if (cat === "Surf" && surf.name) {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              spot_id: selectedSpotId,
+              name: surf.name,
+              class_type: surf.class_type || null,
+              duration: surf.duration ? parseFloat(surf.duration) : null,
+              equipment_include: surf.equipment_include,
+              season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
+              season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
+              email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+            }),
+          })
+        }
+        if (cat === "Kayak") {
+          for (const k of kayaks) {
+            if (!k.name) continue
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                spot_id: selectedSpotId,
+                name: k.name,
+                water_type: k.water_type || null, difficulty: k.difficulty || null,
+                duration: k.duration ? parseFloat(k.duration) : null,
+                kayak_type: k.kayak_type || null, rental_available: k.rental_available,
+                season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
+                season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
+                email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+              }),
+            })
+          }
+        }
+        setSuccess(true)
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Error inesperado")
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
     if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
     setError(null)
     setSubmitting(true)
@@ -284,8 +362,6 @@ export default function AgregarLugar() {
       }
 
       // 4. Category-specific records
-      const cat = selectedCat!.name
-
       if ((cat === "Camping" || cat === "Glamping") && selectedAmenities.length > 0) {
         const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
         if (amenRes.ok) {
@@ -388,6 +464,7 @@ export default function AgregarLugar() {
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([]); setError(null); setSuccess(false)
+    setSelectedSpotId(null); setAvailableSpots([])
   }
 
   // ---- Fixed header (always shown) ----
@@ -427,7 +504,7 @@ export default function AgregarLugar() {
       <div style={s.container}>
 
         {pageHeader}
-        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 28, textAlign: "center" }}>Paso {step} de 4</p>
+        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 28, textAlign: "center" }}>Paso {step} de {isService ? 3 : 4}</p>
 
         {/* ── Step 1: Category ── */}
         {step === 1 && (
@@ -435,7 +512,7 @@ export default function AgregarLugar() {
             <h2 style={s.title}>¿Qué tipo de lugar es?</h2>
             <div style={s.catGrid}>
               {CATEGORIES.map(cat => (
-                <button key={cat.id} style={s.catCard} onClick={() => { setSelectedCat(cat); setStep(2) }}>
+                <button key={cat.id} style={s.catCard} onClick={() => handleCategorySelect(cat)}>
                   <span style={{ fontSize: 32 }}>{cat.emoji}</span>
                   <span style={{ fontSize: 15, fontWeight: 600, color: "#1b1b19" }}>{cat.label}</span>
                 </button>
@@ -444,8 +521,44 @@ export default function AgregarLugar() {
           </div>
         )}
 
-        {/* ── Step 2: Basic info ── */}
-        {step === 2 && (
+        {/* ── Step 2: Basic info / Service spot selector ── */}
+        {step === 2 && isService && (
+          <div>
+            <h2 style={s.title}>
+              {selectedCat?.name === "Surf" ? "¿En qué playa operás?" : "¿En qué río o laguna operás?"}
+            </h2>
+            <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 20 }}>
+              {selectedCat?.name === "Surf"
+                ? "Seleccioná la playa donde funciona tu escuela de surf."
+                : "Seleccioná el río o laguna donde ofrecés el servicio de kayak."}
+            </p>
+            <div style={s.form}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {loadingSpots ? (
+                  <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando lugares...</p>
+                ) : availableSpots.length === 0 ? (
+                  <p style={{ fontSize: 13, color: "#9a9690" }}>
+                    No hay lugares disponibles aún. Contactanos para agregar el tuyo.
+                  </p>
+                ) : (
+                  <select
+                    style={s.input}
+                    value={selectedSpotId ?? ""}
+                    onChange={e => setSelectedSpotId(Number(e.target.value))}
+                  >
+                    <option value="" disabled>-- Seleccioná un lugar --</option>
+                    {availableSpots.map(sp => (
+                      <option key={sp.id} value={sp.id}>{sp.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+            <NavRow onBack={() => { setStep(1); setSelectedSpotId(null); setAvailableSpots([]) }} onNext={goToStep3} error={error} />
+          </div>
+        )}
+
+        {step === 2 && !isService && (
           <div>
             <h2 style={s.title}>Información básica</h2>
             <div style={s.form}>
@@ -821,7 +934,23 @@ export default function AgregarLugar() {
               </div>
             )}
 
-            <NavRow onBack={() => setStep(2)} onNext={() => setStep(4)} />
+            {isService ? (
+              <>
+                <div style={s.navRow}>
+                  <button style={s.btnSecondary} onClick={() => setStep(2)}>Atrás</button>
+                  <button
+                    style={{ ...s.btnPrimary, opacity: submitting ? 0.7 : 1 }}
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? "Enviando..." : "Enviar"}
+                  </button>
+                </div>
+                {error && <p style={s.errorText}>{error}</p>}
+              </>
+            ) : (
+              <NavRow onBack={() => setStep(2)} onNext={() => setStep(4)} />
+            )}
           </div>
         )}
 
