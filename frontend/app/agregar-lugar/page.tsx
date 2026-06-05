@@ -158,7 +158,9 @@ const defaultKayak = (): KayakItem => ({
   email: "", whatsapp: "", instagram: "",
 })
 const emptyBasic = () => ({
-  owner_email: "", name: "", description: "", department: "",
+  owner_contact_type: "email" as "email" | "phone",
+  owner_email: "", owner_phone: "",
+  name: "", description: "", department: "",
   price: "", season_type: "all_year" as "all_year" | "seasonal",
   season_start: "", season_end: "",
   email: "", whatsapp: "", instagram: "", lat: "", lng: "",
@@ -214,7 +216,8 @@ export default function AgregarLugar() {
   }
 
   function goToStep3() {
-    if (!basic.owner_email || !basic.name || !basic.description || !basic.department) {
+    const hasContact = basic.owner_contact_type === "email" ? !!basic.owner_email : !!basic.owner_phone
+    if (!hasContact || !basic.name || !basic.description || !basic.department) {
       setError("Completá los campos obligatorios.")
       return
     }
@@ -253,7 +256,8 @@ export default function AgregarLugar() {
           description:  basic.description,
           department:   basic.department,
           category_id:  selectedCat!.id,
-          owner_email:  basic.owner_email || null,
+          owner_email:  basic.owner_contact_type === "email" ? (basic.owner_email || null) : null,
+          owner_phone:  basic.owner_contact_type === "phone" ? (basic.owner_phone || null) : null,
           is_approved:  false,
           price:        basic.price ? parseInt(basic.price) : null,
           season_start: seasonStart,
@@ -445,9 +449,36 @@ export default function AgregarLugar() {
           <div>
             <h2 style={s.title}>Información básica</h2>
             <div style={s.form}>
-              <Field label="Tu email de contacto" sublabel="No se mostrará públicamente" required={true}>
-                <input style={s.input} type="email" value={basic.owner_email} onChange={e => upd("owner_email", e.target.value)} />
-              </Field>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
+                  Tu contacto{" "}
+                  <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: "#7a7669", marginTop: 2 }}>No se mostrará públicamente</div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {(["email", "phone"] as const).map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setBasic(prev => ({ ...prev, owner_contact_type: t }))}
+                      style={{
+                        padding: "6px 16px", borderRadius: 20,
+                        border: `1px solid ${basic.owner_contact_type === t ? "#2d6a4f" : "#e0ddd6"}`,
+                        background: basic.owner_contact_type === t ? "#2d6a4f" : "#f7f5f0",
+                        color: basic.owner_contact_type === t ? "#fff" : "#1b1b19",
+                        fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      {t === "email" ? "Email" : "Teléfono"}
+                    </button>
+                  ))}
+                </div>
+                {basic.owner_contact_type === "email" ? (
+                  <input style={s.input} type="email" placeholder="tucorreo@email.com" value={basic.owner_email} onChange={e => upd("owner_email", e.target.value)} />
+                ) : (
+                  <input style={s.input} type="tel" placeholder="Ej: 099123456" value={basic.owner_phone} onChange={e => upd("owner_phone", e.target.value)} />
+                )}
+              </div>
               <Field label="Nombre del lugar" required={true}>
                 <input style={s.input} type="text" value={basic.name} onChange={e => upd("name", e.target.value)} />
               </Field>

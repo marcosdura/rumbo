@@ -7,6 +7,8 @@
 #
 # ALTER TABLE climbingsectors ADD COLUMN IF NOT EXISTS slug VARCHAR;
 # UPDATE climbingsectors SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
+#
+# ALTER TABLE spots ADD COLUMN IF NOT EXISTS owner_phone VARCHAR;
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
@@ -30,6 +32,7 @@ class SpotDB(Base):
     instagram = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
     owner_email = Column(String, nullable=True)
+    owner_phone = Column(String, nullable=True)
     is_approved = Column(Boolean, default=False)
     slug = Column(String, unique=True, nullable=True, index=True)
 

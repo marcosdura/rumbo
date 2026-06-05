@@ -32,6 +32,7 @@ class SpotCreate(BaseModel):
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
     owner_email: str | None = None
+    owner_phone: str | None = None
     is_approved: bool = False
     lat: float | None = None
     lng: float | None = None
@@ -239,6 +240,7 @@ class SpotResponse(BaseModel):
     average_rating: float | None = None
     review_count: int = 0
     owner_email: str | None = None
+    owner_phone: str | None = None
     is_approved: bool = False
 
     class Config:
