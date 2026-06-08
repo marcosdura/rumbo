@@ -1,8 +1,13 @@
-﻿import { useState } from "react"
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
 import Pill from "@/components/ui/Pill"
+import CircleArrow from "@/components/ui/CircleArrow"
 
 export default function SurfSchoolDetail({ surfSchools }) {
   const [copiedId, setCopiedId] = useState(null)
+  const [hoveredId, setHoveredId] = useState(null)
 
   if (!surfSchools?.length) return null
 
@@ -48,6 +53,7 @@ export default function SurfSchoolDetail({ surfSchools }) {
           const whatsappUrl = school.whatsapp ? `https://wa.me/${school.whatsapp.replace(/\D/g, "")}` : null
           const instagramHandle = school.instagram ? school.instagram.replace(/^@/, "") : null
           const instagramUrl = instagramHandle ? `https://instagram.com/${instagramHandle}` : null
+          const isHovered = hoveredId === school.id
 
           return (
             <div
@@ -56,85 +62,115 @@ export default function SurfSchoolDetail({ surfSchools }) {
                 background: "#fff",
                 border: "1px solid #e0ddd6",
                 borderRadius: 20,
-                padding: "22px 24px",
+                overflow: "hidden",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
+                transition: "box-shadow 0.2s",
+                ...(isHovered ? { boxShadow: "0 4px 16px rgba(0,0,0,0.1)" } : {}),
               }}
+              onMouseEnter={() => setHoveredId(school.id)}
+              onMouseLeave={() => setHoveredId(null)}
             >
-              {/* Nombre */}
-              <div>
-                <p style={{ fontSize: 16, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                  🏄 {school.name}
-                </p>
-              </div>
-
-              {/* Badges */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {school.class_type && (
-                  <Pill variant="green">{classInfo.icon} {classInfo.label}</Pill>
-                )}
-                {school.duration != null && (
-                  <Pill variant="neutral">
-                    ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
-                  </Pill>
-                )}
-                {school.equipment_include != null && (
-                  <Pill variant={school.equipment_include ? "green" : "muted"}>
-                    🩳 {school.equipment_include ? "Equipo incluido" : "Sin equipo"}
-                  </Pill>
-                )}
-              </div>
-
-              {/* Contacto */}
-              {hasContact && (
-                <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a9690", margin: 0 }}>
-                    Contacto
-                  </p>
-
-                  {school.email && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
-                        ✉️ Email
-                      </span>
-                      <span
-                        onClick={() => handleCopy(school.email, school.id)}
-                        style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer" }}
-                        title="Copiar email"
-                      >
-                        {copiedId === school.id ? "¡Copiado! ✓" : school.email}
-                      </span>
-                    </div>
-                  )}
-
-                  {school.whatsapp && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
-                        💬 WhatsApp
-                      </span>
-                      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                        {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
-                      </a>
-                    </div>
-                  )}
-
-                  {school.instagram && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
-                        📷 Instagram
-                      </span>
-                      <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                        @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
-                      </a>
-                    </div>
-                  )}
-                </div>
+              {/* Foto de portada */}
+              {school.photo_1 && (
+                <Link href={`/surf/${school.id}`} style={{ display: "block", position: "relative", height: 160, textDecoration: "none", flexShrink: 0 }}>
+                  <img
+                    src={school.photo_1}
+                    alt={school.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 55%)",
+                  }} />
+                  <div style={{ position: "absolute", bottom: 12, right: 12 }}>
+                    <CircleArrow active={isHovered} size={32} />
+                  </div>
+                </Link>
               )}
 
+              {/* Body */}
+              <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+
+                {/* Nombre + CircleArrow si no hay foto */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <p style={{ fontSize: 16, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                    🏄 {school.name}
+                  </p>
+                  {!school.photo_1 && (
+                    <Link href={`/surf/${school.id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
+                      <CircleArrow active={isHovered} size={28} />
+                    </Link>
+                  )}
+                </div>
+
+                {/* Badges */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {school.class_type && (
+                    <Pill variant="green">{classInfo.icon} {classInfo.label}</Pill>
+                  )}
+                  {school.duration != null && (
+                    <Pill variant="neutral">
+                      ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
+                    </Pill>
+                  )}
+                  {school.equipment_include != null && (
+                    <Pill variant={school.equipment_include ? "green" : "muted"}>
+                      🩳 {school.equipment_include ? "Equipo incluido" : "Sin equipo"}
+                    </Pill>
+                  )}
+                </div>
+
+                {/* Contacto */}
+                {hasContact && (
+                  <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a9690", margin: 0 }}>
+                      Contacto
+                    </p>
+
+                    {school.email && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
+                          ✉️ Email
+                        </span>
+                        <span
+                          onClick={() => handleCopy(school.email, school.id)}
+                          style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer" }}
+                          title="Copiar email"
+                        >
+                          {copiedId === school.id ? "¡Copiado! ✓" : school.email}
+                        </span>
+                      </div>
+                    )}
+
+                    {school.whatsapp && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
+                          💬 WhatsApp
+                        </span>
+                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                          {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+
+                    {school.instagram && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: "#7a7669", display: "flex", alignItems: "center", gap: 6 }}>
+                          📷 Instagram
+                        </span>
+                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                          @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </div>
             </div>
           )
         })}

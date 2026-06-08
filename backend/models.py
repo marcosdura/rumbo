@@ -1,4 +1,8 @@
 # Migration — run in Railway Postgres SQL editor:
+# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_1 VARCHAR;
+# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_2 VARCHAR;
+# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_3 VARCHAR;
+#
 # ALTER TABLE spots ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE;
 # UPDATE spots SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
 #
@@ -191,6 +195,17 @@ class SurfSchool(Base):
     instagram = Column(String, nullable=True)
     season_start = Column(Integer, nullable=True)
     season_end = Column(Integer, nullable=True)
+    photo_1 = Column(String, nullable=True)
+    photo_2 = Column(String, nullable=True)
+    photo_3 = Column(String, nullable=True)
+
+    @property
+    def spot_name(self):
+        return self.spot.name if self.spot else None
+
+    @property
+    def spot_department(self):
+        return self.spot.department if self.spot else None
 
 
 class User(Base):

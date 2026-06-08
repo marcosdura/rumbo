@@ -171,15 +171,17 @@ class KayakDetailResponse(KayakDetail):
 # -------- SURF --------
 class SurfSchool(BaseModel):
     name: str
-    duration: Optional[float] = None            # horas
-    class_type: Optional[str] = None          # grupal | privada | intensivo
+    duration: Optional[float] = None
+    class_type: Optional[str] = None
     equipment_include: Optional[bool] = None
-
     email: Optional[str] = None
     whatsapp: Optional[str] = None
     instagram: Optional[str] = None
     season_start: Optional[int] = None
     season_end: Optional[int] = None
+    photo_1: Optional[str] = None
+    photo_2: Optional[str] = None
+    photo_3: Optional[str] = None
 
 
 class SurfSchoolCreate(SurfSchool):
@@ -188,6 +190,9 @@ class SurfSchoolCreate(SurfSchool):
 
 class SurfSchoolResponse(SurfSchool):
     id: int
+    spot_id: Optional[int] = None
+    spot_name: Optional[str] = None
+    spot_department: Optional[str] = None
 
     class Config:
         from_attributes = True

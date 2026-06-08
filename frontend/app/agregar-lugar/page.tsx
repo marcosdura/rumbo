@@ -178,11 +178,16 @@ export default function AgregarLugar() {
   const [kayaks, setKayaks]                       = useState<KayakItem[]>([defaultKayak()])
   const [images, setImages]                       = useState<File[]>([])
   const [previews, setPreviews]                   = useState<string[]>([])
+  const [surfPhotoFiles, setSurfPhotoFiles]       = useState<(File | null)[]>([null, null, null])
+  const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
   const [success, setSuccess]                     = useState(false)
   const fileRef                                   = useRef<HTMLInputElement>(null)
+  const surfPhotoRef1                             = useRef<HTMLInputElement>(null)
+  const surfPhotoRef2                             = useRef<HTMLInputElement>(null)
+  const surfPhotoRef3                             = useRef<HTMLInputElement>(null)
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
@@ -203,6 +208,12 @@ export default function AgregarLugar() {
   function updKayakSeason(i: number, t: "all_year" | "seasonal") {
     setKayaks(prev => prev.map((k, idx) => idx === i ? { ...k, season_type: t } : k))
   }
+  function handleSurfPhoto(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setSurfPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
+    setSurfPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
+  }
+
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []).slice(0, 10)
     if ((e.target.files?.length ?? 0) > 10) {
@@ -263,6 +274,24 @@ export default function AgregarLugar() {
       setSubmitting(true)
       try {
         if (cat === "Surf" && surf.name) {
+          if (!surfPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
+
+          const photoUrls: (string | null)[] = [null, null, null]
+          const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
+          for (let i = 0; i < 3; i++) {
+            const file = surfPhotoFiles[i]
+            if (!file) continue
+            setUploadProgress(`Subiendo ${photoLabels[i]}...`)
+            const fd = new FormData()
+            fd.append("file", file)
+            const safeName = surf.name.trim().replace(/\s+/g, "_")
+            fd.append("public_id", `Surf/${safeName}/${safeName}_photo_${i + 1}`)
+            const uploadRes = await fetch("/api/upload/upload", { method: "POST", body: fd })
+            if (!uploadRes.ok) throw new Error("Error al subir la foto")
+            const uploadData = await uploadRes.json()
+            photoUrls[i] = uploadData.secure_url
+          }
+
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -275,6 +304,7 @@ export default function AgregarLugar() {
               season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
               season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
               email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+              photo_1: photoUrls[0], photo_2: photoUrls[1] ?? null, photo_3: photoUrls[2] ?? null,
             }),
           })
           if (!res.ok) throw new Error("Error al guardar la escuelita")
@@ -303,6 +333,7 @@ export default function AgregarLugar() {
         setError(e instanceof Error ? e.message : "Error inesperado")
       } finally {
         setSubmitting(false)
+        setUploadProgress(null)
       }
       return
     }
@@ -466,7 +497,9 @@ export default function AgregarLugar() {
     setStep(1); setSelectedCat(null); setBasic(emptyBasic())
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
-    setImages([]); setPreviews([]); setError(null); setSuccess(false)
+    setImages([]); setPreviews([])
+    setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
+    setError(null); setSuccess(false)
     setSelectedSpotId(null); setAvailableSpots([])
   }
 
@@ -876,6 +909,51 @@ export default function AgregarLugar() {
                     <div />
                   </div>
                   <Toggle label="Equipo incluido" checked={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
+
+                  {/* Fotos de la escuela */}
+                  <div style={{ borderTop: "1px solid #e0ddd6", paddingTop: 16 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>
+                    <p style={{ fontSize: 12, color: "#9a9690", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
+                    {([
+                      { label: "Foto de portada", req: true,  ref: surfPhotoRef1, i: 0 },
+                      { label: "Foto adicional 2", req: false, ref: surfPhotoRef2, i: 1 },
+                      { label: "Foto adicional 3", req: false, ref: surfPhotoRef3, i: 2 },
+                    ] as { label: string; req: boolean; ref: React.RefObject<HTMLInputElement | null>; i: number }[]).map(({ label, req, ref, i }) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                        <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleSurfPhoto(i, e)} />
+                        {surfPhotoPreviews[i] ? (
+                          <div style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
+                            <img src={surfPhotoPreviews[i]!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSurfPhotoFiles(prev => { const n = [...prev]; n[i] = null; return n })
+                                setSurfPhotoPreviews(prev => { const n = [...prev]; n[i] = null; return n })
+                                if (ref.current) ref.current.value = ""
+                              }}
+                              style={{ position: "absolute", top: 3, right: 3, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", lineHeight: 1 }}
+                            >×</button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => ref.current?.click()}
+                            style={{ width: 88, height: 64, borderRadius: 10, border: "2px dashed #e0ddd6", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#f7f5f0", flexShrink: 0 }}
+                          >
+                            <span style={{ fontSize: 22, color: "#c8c4bc" }}>+</span>
+                          </div>
+                        )}
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{label}</p>
+                          <p style={{ fontSize: 12, color: req ? "#e53e3e" : "#9a9690", margin: "2px 0 0" }}>{req ? "(obligatoria)" : "(opcional)"}</p>
+                          {!surfPhotoPreviews[i] && (
+                            <button type="button" onClick={() => ref.current?.click()} style={{ ...s.btnAdd, marginTop: 6, padding: "4px 12px", fontSize: 12 }}>
+                              Seleccionar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -945,7 +1023,7 @@ export default function AgregarLugar() {
                     onClick={handleSubmit}
                     disabled={submitting}
                   >
-                    {submitting ? "Enviando..." : "Enviar"}
+                    {submitting ? (uploadProgress ?? "Enviando...") : "Enviar"}
                   </button>
                 </div>
                 {error && <p style={s.errorText}>{error}</p>}
