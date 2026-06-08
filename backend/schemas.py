@@ -157,12 +157,18 @@ class KayakDetail(BaseModel):
     instagram: Optional[str] = None
     season_start: Optional[int] = None
     season_end: Optional[int] = None
+    photo_1: Optional[str] = None
+    photo_2: Optional[str] = None
+    photo_3: Optional[str] = None
 
 class KayakDetailCreate(KayakDetail):
     spot_id: int
 
 class KayakDetailResponse(KayakDetail):
     id: int
+    spot_id: Optional[int] = None
+    spot_name: Optional[str] = None
+    spot_department: Optional[str] = None
 
     class Config:
         from_attributes = True

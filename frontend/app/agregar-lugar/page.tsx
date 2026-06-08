@@ -180,6 +180,8 @@ export default function AgregarLugar() {
   const [previews, setPreviews]                   = useState<string[]>([])
   const [surfPhotoFiles, setSurfPhotoFiles]       = useState<(File | null)[]>([null, null, null])
   const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
+  const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
+  const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
@@ -188,6 +190,9 @@ export default function AgregarLugar() {
   const surfPhotoRef1                             = useRef<HTMLInputElement>(null)
   const surfPhotoRef2                             = useRef<HTMLInputElement>(null)
   const surfPhotoRef3                             = useRef<HTMLInputElement>(null)
+  const kayakPhotoRef1                            = useRef<HTMLInputElement>(null)
+  const kayakPhotoRef2                            = useRef<HTMLInputElement>(null)
+  const kayakPhotoRef3                            = useRef<HTMLInputElement>(null)
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
@@ -212,6 +217,11 @@ export default function AgregarLugar() {
     const file = e.target.files?.[0] ?? null
     setSurfPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
     setSurfPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
+  }
+  function handleKayakPhoto(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setKayakPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
+    setKayakPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
   }
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -310,6 +320,24 @@ export default function AgregarLugar() {
           if (!res.ok) throw new Error("Error al guardar la escuelita")
         }
         if (cat === "Kayak") {
+          if (!kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
+
+          const kayakPhotoUrls: (string | null)[] = [null, null, null]
+          const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
+          for (let i = 0; i < 3; i++) {
+            const file = kayakPhotoFiles[i]
+            if (!file) continue
+            setUploadProgress(`Subiendo ${photoLabels[i]}...`)
+            const fd = new FormData()
+            fd.append("file", file)
+            const safeName = kayaks[0]?.name.trim().replace(/\s+/g, "_") || "kayak"
+            fd.append("public_id", `Kayak/${safeName}/${safeName}_photo_${i + 1}`)
+            const uploadRes = await fetch("/api/upload/upload", { method: "POST", body: fd })
+            if (!uploadRes.ok) throw new Error("Error al subir la foto")
+            const uploadData = await uploadRes.json()
+            kayakPhotoUrls[i] = uploadData.url
+          }
+
           for (const k of kayaks) {
             if (!k.name) continue
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
@@ -324,6 +352,7 @@ export default function AgregarLugar() {
                 season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
                 season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
                 email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+                photo_1: kayakPhotoUrls[0], photo_2: kayakPhotoUrls[1] ?? null, photo_3: kayakPhotoUrls[2] ?? null,
               }),
             })
           }
@@ -499,6 +528,7 @@ export default function AgregarLugar() {
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
+    setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
     setError(null); setSuccess(false)
     setSelectedSpotId(null); setAvailableSpots([])
   }
@@ -1008,6 +1038,53 @@ export default function AgregarLugar() {
                         <div />
                       </div>
                       <Toggle label="Alquiler disponible" checked={k.rental_available} onChange={v => updKayak(i, "rental_available", v)} />
+
+                      {/* Fotos del servicio (solo primer item) */}
+                      {i === 0 && (
+                        <div style={{ borderTop: "1px solid #e0ddd6", paddingTop: 16 }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>Fotos del servicio</p>
+                          <p style={{ fontSize: 12, color: "#9a9690", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
+                          {([
+                            { label: "Foto de portada", req: true,  ref: kayakPhotoRef1, idx: 0 },
+                            { label: "Foto adicional 2", req: false, ref: kayakPhotoRef2, idx: 1 },
+                            { label: "Foto adicional 3", req: false, ref: kayakPhotoRef3, idx: 2 },
+                          ] as { label: string; req: boolean; ref: React.RefObject<HTMLInputElement | null>; idx: number }[]).map(({ label, req, ref, idx }) => (
+                            <div key={idx} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                              <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleKayakPhoto(idx, e)} />
+                              {kayakPhotoPreviews[idx] ? (
+                                <div style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
+                                  <img src={kayakPhotoPreviews[idx]!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setKayakPhotoFiles(prev => { const n = [...prev]; n[idx] = null; return n })
+                                      setKayakPhotoPreviews(prev => { const n = [...prev]; n[idx] = null; return n })
+                                      if (ref.current) ref.current.value = ""
+                                    }}
+                                    style={{ position: "absolute", top: 3, right: 3, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", lineHeight: 1 }}
+                                  >×</button>
+                                </div>
+                              ) : (
+                                <div
+                                  onClick={() => ref.current?.click()}
+                                  style={{ width: 88, height: 64, borderRadius: 10, border: "2px dashed #e0ddd6", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#f7f5f0", flexShrink: 0 }}
+                                >
+                                  <span style={{ fontSize: 22, color: "#c8c4bc" }}>+</span>
+                                </div>
+                              )}
+                              <div>
+                                <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{label}</p>
+                                <p style={{ fontSize: 12, color: req ? "#e53e3e" : "#9a9690", margin: "2px 0 0" }}>{req ? "(obligatoria)" : "(opcional)"}</p>
+                                {!kayakPhotoPreviews[idx] && (
+                                  <button type="button" onClick={() => ref.current?.click()} style={{ ...s.btnAdd, marginTop: 6, padding: "4px 12px", fontSize: 12 }}>
+                                    Seleccionar
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -1,0 +1,310 @@
+import { notFound } from "next/navigation"
+import Navbar from "@/components/layout/Navbar"
+import BackButton from "./BackButton"
+import KayakPhotos from "./KayakPhotos"
+import Footer from "@/components/layout/Footer"
+
+type Props = {
+  params: Promise<{ id: string }>
+}
+
+const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
+
+const WATER_TYPE: Record<string, { label: string; icon: string }> = {
+  rio:  { label: "Río",  icon: "🏞️" },
+  lago: { label: "Lago", icon: "🌊" },
+  mar:  { label: "Mar",  icon: "🌊" },
+}
+
+const DIFFICULTY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  facil:      { label: "Fácil",      color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
+  intermedio: { label: "Intermedio", color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
+  dificil:    { label: "Difícil",    color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
+}
+
+const KAYAK_TYPE: Record<string, string> = {
+  travesia:   "Travesía",
+  recreativo: "Recreativo",
+  rapido:     "Aguas Rápidas",
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`)
+  if (!res.ok) return { title: "Kayak | Rumbo" }
+  const kayak = await res.json()
+  return {
+    title: `${kayak.name} | Rumbo`,
+    description: kayak.spot_name
+      ? `Servicio de kayak en ${kayak.spot_name}, ${kayak.spot_department}.`
+      : "Servicio de kayak en Uruguay.",
+  }
+}
+
+export default async function KayakDetailPage({ params }: Props) {
+  const { id } = await params
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`, {
+    cache: "no-store",
+  })
+  if (!res.ok) notFound()
+
+  const kayak = await res.json()
+
+  const waterInfo = kayak.water_type ? WATER_TYPE[kayak.water_type] : null
+  const diffInfo  = kayak.difficulty ? DIFFICULTY_CONFIG[kayak.difficulty] : null
+  const whatsappUrl = kayak.whatsapp
+    ? `https://wa.me/${kayak.whatsapp.replace(/\D/g, "")}`
+    : null
+  const instagramHandle = kayak.instagram ? kayak.instagram.replace(/^@/, "") : null
+  const instagramUrl = instagramHandle ? `https://instagram.com/${instagramHandle}` : null
+  const hasContact = kayak.email || kayak.whatsapp || kayak.instagram
+  const isSeasonal = kayak.season_start && kayak.season_end
+  const photos = [kayak.photo_1, kayak.photo_2, kayak.photo_3].filter(Boolean) as string[]
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+        .kayak-detail-inner {
+          max-width: 1152px;
+          margin: 0 auto;
+          padding: 36px 24px 80px;
+          flex: 1;
+        }
+
+        .kayak-detail-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 24px;
+          align-items: start;
+        }
+
+        .kayak-right-panel {
+          position: sticky;
+          top: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .kayak-card {
+          background: #fff;
+          border: 1px solid #e0ddd6;
+          border-radius: 20px;
+          padding: 24px 28px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .kayak-section-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+        .kayak-section-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0; }
+        .kayak-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #2d6a4f; margin: 0; }
+
+        .kayak-contact-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 0;
+          border-bottom: 1px solid #f0ede7;
+        }
+        .kayak-contact-row:last-child { border-bottom: none; }
+        .kayak-contact-link {
+          font-size: 13px;
+          font-weight: 600;
+          color: #2d6a4f;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: opacity 0.15s;
+        }
+        .kayak-contact-link:hover { opacity: 0.7; }
+
+        @media (max-width: 860px) {
+          .kayak-detail-grid {
+            grid-template-columns: 1fr;
+          }
+          .kayak-right-panel { position: static; }
+          .kayak-detail-inner { padding: 20px 16px 64px; }
+        }
+        @media (max-width: 560px) {
+          .kayak-photo-grid-2, .kayak-photo-grid-3 {
+            grid-template-columns: 1fr;
+            height: auto;
+          }
+          .kayak-photo-grid-2 .kayak-photo-item,
+          .kayak-photo-grid-3 .kayak-photo-item { height: 220px; }
+          .kayak-photo-sub { grid-template-rows: unset; grid-template-columns: 1fr 1fr; }
+          .kayak-photo-sub .kayak-photo-item { height: 140px; }
+        }
+      `}</style>
+
+      <Navbar />
+
+      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className="kayak-detail-inner">
+
+          {/* Back */}
+          <BackButton />
+
+          {/* Title block */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ background: "#eae6df", border: "1px solid #d0c9bc", color: "#4a443b", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                🛶 Kayak
+              </span>
+              {kayak.spot_name && (
+                <span style={{ background: "#f0f7f3", border: "1px solid #b7dfc9", color: "#1b4332", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                  📍 {kayak.spot_name}
+                </span>
+              )}
+              {kayak.spot_department && (
+                <span style={{ background: "#1b4332", color: "#d8f3dc", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                  {kayak.spot_department}
+                </span>
+              )}
+            </div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
+              {kayak.name}
+            </h1>
+          </div>
+
+          <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", marginBottom: 28 }} />
+
+          <div className="kayak-detail-grid">
+
+            {/* Left: photos + temporada */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+              <KayakPhotos photos={photos} name={kayak.name} />
+
+              {isSeasonal && (
+                <div className="kayak-card">
+                  <div className="kayak-section-label">
+                    <div className="kayak-section-dot" />
+                    <p className="kayak-section-title">Temporada</p>
+                  </div>
+                  <p style={{ fontSize: 15, color: "#3a3730", margin: 0 }}>
+                    {MONTHS_FULL[kayak.season_start]} — {MONTHS_FULL[kayak.season_end]}
+                  </p>
+                </div>
+              )}
+
+            </div>
+
+            {/* Right panel */}
+            <div className="kayak-right-panel">
+
+              {/* Info card */}
+              <div className="kayak-card">
+                <div className="kayak-section-label">
+                  <div className="kayak-section-dot" />
+                  <p className="kayak-section-title">Información</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {waterInfo && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de agua</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        {waterInfo.icon} {waterInfo.label}
+                      </span>
+                    </div>
+                  )}
+                  {diffInfo && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Dificultad</span>
+                      <span style={{
+                        fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
+                        color: diffInfo.color, background: diffInfo.bg, border: `1px solid ${diffInfo.border}`,
+                      }}>
+                        {diffInfo.label}
+                      </span>
+                    </div>
+                  )}
+                  {kayak.duration != null && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Duración</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        ⏱️ {kayak.duration} {kayak.duration === 1 ? "hora" : "horas"}
+                      </span>
+                    </div>
+                  )}
+                  {kayak.kayak_type && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de kayak</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        🛶 {KAYAK_TYPE[kayak.kayak_type] || kayak.kayak_type}
+                      </span>
+                    </div>
+                  )}
+                  {kayak.rental_available != null && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Alquiler</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        🏪 {kayak.rental_available ? "Disponible" : "No disponible"}
+                      </span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                      {isSeasonal
+                        ? `${MONTHS_FULL[kayak.season_start]} – ${MONTHS_FULL[kayak.season_end]}`
+                        : "Todo el año"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact card */}
+              {hasContact && (
+                <div className="kayak-card">
+                  <div className="kayak-section-label">
+                    <div className="kayak-section-dot" />
+                    <p className="kayak-section-title">Contacto</p>
+                  </div>
+                  <div>
+                    {kayak.email && (
+                      <div className="kayak-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
+                        <a href={`mailto:${kayak.email}`} className="kayak-contact-link">{kayak.email}</a>
+                      </div>
+                    )}
+                    {kayak.whatsapp && (
+                      <div className="kayak-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
+                        <a href={whatsappUrl!} target="_blank" rel="noopener noreferrer" className="kayak-contact-link">
+                          {kayak.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+                    {kayak.instagram && (
+                      <div className="kayak-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
+                        <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" className="kayak-contact-link">
+                          @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Spacer para que el footer quede lejos cuando hay poca info */}
+          <div style={{ minHeight: "max(0px, calc(100vh - 600px))" }} />
+
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
