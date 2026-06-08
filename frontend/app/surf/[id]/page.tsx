@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
+import BackButton from "./BackButton"
+import SurfPhotos from "./SurfPhotos"
 import Footer from "@/components/layout/Footer"
 import Pill from "@/components/ui/Pill"
 
@@ -92,14 +94,7 @@ export default async function SurfSchoolPage({ params }: Props) {
         .surf-section-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0; }
         .surf-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #2d6a4f; margin: 0; }
 
-        .surf-photo-grid-1 { height: 340px; border-radius: 18px; overflow: hidden; }
-        .surf-photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
-        .surf-photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
-        .surf-photo-sub { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
-        .surf-photo-item { overflow: hidden; border-radius: 14px; position: relative; }
-        .surf-photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        .surf-contact-row {
+.surf-contact-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -157,9 +152,7 @@ export default async function SurfSchoolPage({ params }: Props) {
         <div className="surf-detail-inner">
 
           {/* Back */}
-          <Link href="/" className="back-link">
-            ← Explorar spots
-          </Link>
+          <BackButton />
 
           {/* Title block */}
           <div style={{ marginBottom: 28 }}>
@@ -190,39 +183,8 @@ export default async function SurfSchoolPage({ params }: Props) {
             {/* Left: photos */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-              {/* Foto(s) */}
-              {photos.length > 0 && (
-                <div>
-                  {photos.length === 1 && (
-                    <div className="surf-photo-grid-1">
-                      <img src={photos[0]} alt={school.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
-                  )}
-                  {photos.length === 2 && (
-                    <div className="surf-photo-grid-2">
-                      {photos.map((src, i) => (
-                        <div key={i} className="surf-photo-item">
-                          <img src={src} alt={`${school.name} ${i + 1}`} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {photos.length >= 3 && (
-                    <div className="surf-photo-grid-3">
-                      <div className="surf-photo-item">
-                        <img src={photos[0]} alt={school.name} />
-                      </div>
-                      <div className="surf-photo-sub">
-                        {photos.slice(1, 3).map((src, i) => (
-                          <div key={i} className="surf-photo-item">
-                            <img src={src} alt={`${school.name} ${i + 2}`} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Foto(s) con galería */}
+              <SurfPhotos photos={photos} name={school.name} />
 
               {/* Temporada */}
               {isSeasonal && (
