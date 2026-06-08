@@ -1,17 +1,19 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import Navbar from "@/components/layout/Navbar"
+import Footer from "@/components/layout/Footer"
+import Pill from "@/components/ui/Pill"
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
-const MONTHS = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
 const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
 
-const CLASS_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string }> = {
-  grupal:    { label: "Clase grupal",    icon: "👥", color: "#1b4332", bg: "#d1fae5" },
-  privada:   { label: "Clase privada",   icon: "🧑", color: "#1e3a5f", bg: "#dbeafe" },
-  intensivo: { label: "Clase intensivo", icon: "🔥", color: "#7c2d12", bg: "#fee2e2" },
+const CLASS_CONFIG: Record<string, { label: string; icon: string }> = {
+  grupal:    { label: "Grupal",    icon: "👥" },
+  privada:   { label: "Privada",   icon: "🧑" },
+  intensivo: { label: "Intensivo", icon: "🔥" },
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -22,8 +24,8 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: `${school.name} | Rumbo`,
     description: school.spot_name
-      ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}. Clases de surf en Uruguay.`
-      : "Escuela de surf en Uruguay. Clases, alquiler de equipos y más en Rumbo.",
+      ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}.`
+      : "Escuela de surf en Uruguay.",
   }
 }
 
@@ -42,35 +44,71 @@ export default async function SurfSchoolPage({ params }: Props) {
     : null
   const instagramHandle = school.instagram ? school.instagram.replace(/^@/, "") : null
   const instagramUrl = instagramHandle ? `https://instagram.com/${instagramHandle}` : null
-  const isSeasonal = school.season_start && school.season_end
   const hasContact = school.email || school.whatsapp || school.instagram
-  const extraPhotos = [school.photo_2, school.photo_3].filter(Boolean)
+  const isSeasonal = school.season_start && school.season_end
+  const photos = [school.photo_1, school.photo_2, school.photo_3].filter(Boolean) as string[]
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#f5f4f0", minHeight: "100vh" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        .surf-hero-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
+        .surf-detail-inner {
+          max-width: 1152px;
+          margin: 0 auto;
+          padding: 36px 24px 80px;
+          flex: 1;
         }
 
-        .surf-badge {
-          display: inline-flex;
+        .surf-detail-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 24px;
+          align-items: start;
+        }
+
+        .surf-right-panel {
+          position: sticky;
+          top: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .surf-card {
+          background: #fff;
+          border: 1px solid #e0ddd6;
+          border-radius: 20px;
+          padding: 24px 28px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .surf-section-label {
+          display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 8px 16px;
-          border-radius: 50px;
-          font-size: 13px;
-          font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
+          gap: 8px;
+          margin-bottom: 16px;
         }
+        .surf-section-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0; }
+        .surf-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #2d6a4f; margin: 0; }
 
+        .surf-photo-grid-1 { height: 340px; border-radius: 18px; overflow: hidden; }
+        .surf-photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
+        .surf-photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
+        .surf-photo-sub { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+        .surf-photo-item { overflow: hidden; border-radius: 14px; position: relative; }
+        .surf-photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .surf-contact-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 0;
+          border-bottom: 1px solid #f0ede7;
+        }
+        .surf-contact-row:last-child { border-bottom: none; }
         .surf-contact-link {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 600;
           color: #2d6a4f;
           text-decoration: none;
@@ -79,234 +117,223 @@ export default async function SurfSchoolPage({ params }: Props) {
           gap: 4px;
           transition: opacity 0.15s;
         }
-        .surf-contact-link:hover { opacity: 0.75; }
+        .surf-contact-link:hover { opacity: 0.7; }
 
-        .surf-back-link {
+        .back-link {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 5px;
           font-size: 13px;
           font-weight: 500;
-          color: rgba(255,255,255,0.85);
+          color: #9a9690;
           text-decoration: none;
+          margin-bottom: 24px;
           transition: color 0.15s;
-          padding: 8px 0;
         }
-        .surf-back-link:hover { color: #fff; }
+        .back-link:hover { color: #1b1b19; }
 
-        @media (min-width: 700px) {
-          .surf-content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+        @media (max-width: 860px) {
+          .surf-detail-grid {
+            grid-template-columns: 1fr;
           }
+          .surf-right-panel { position: static; }
+          .surf-detail-inner { padding: 20px 16px 64px; }
         }
-        @media (max-width: 699px) {
-          .surf-content-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        @media (max-width: 560px) {
+          .surf-photo-grid-2, .surf-photo-grid-3 {
+            grid-template-columns: 1fr;
+            height: auto;
           }
+          .surf-photo-grid-2 .surf-photo-item,
+          .surf-photo-grid-3 .surf-photo-item { height: 220px; }
+          .surf-photo-sub { grid-template-rows: unset; grid-template-columns: 1fr 1fr; }
+          .surf-photo-sub .surf-photo-item { height: 140px; }
         }
       `}</style>
 
-      {/* Hero */}
-      <div style={{ position: "relative", width: "100%", height: "clamp(320px, 55vh, 520px)", overflow: "hidden" }}>
-        {school.photo_1 ? (
-          <img src={school.photo_1} alt={school.name} className="surf-hero-img" />
-        ) : (
-          <div style={{ width: "100%", height: "100%", background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 60%, #40916c 100%)" }} />
-        )}
+      <Navbar />
 
-        {/* Gradient overlay */}
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 35%, rgba(0,0,0,0.6) 100%)",
-        }} />
+      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className="surf-detail-inner">
 
-        {/* Back link */}
-        <div style={{ position: "absolute", top: 20, left: 24 }}>
-          <Link href="/" className="surf-back-link">
-            ← Explorar
+          {/* Back */}
+          <Link href="/" className="back-link">
+            ← Explorar spots
           </Link>
-        </div>
 
-        {/* Title block */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 28px 32px" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <p style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#95d5b2", marginBottom: 8,
-            }}>
-              🏄 Escuela de Surf · Uruguay
-              {school.spot_department ? ` · ${school.spot_department}` : ""}
-            </p>
-            <h1 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(28px, 5vw, 44px)",
-              fontWeight: 700,
-              color: "#fff",
-              margin: "0 0 8px",
-              lineHeight: 1.15,
-              textShadow: "0 2px 12px rgba(0,0,0,0.25)",
-            }}>
+          {/* Title block */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ background: "#eae6df", border: "1px solid #d0c9bc", color: "#4a443b", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                🏄 Surf
+              </span>
+              {school.spot_name && (
+                <span style={{ background: "#f0f7f3", border: "1px solid #b7dfc9", color: "#1b4332", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                  📍 {school.spot_name}
+                </span>
+              )}
+              {school.spot_department && (
+                <span style={{ background: "#1b4332", color: "#d8f3dc", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
+                  {school.spot_department}
+                </span>
+              )}
+            </div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
               {school.name}
             </h1>
-            {school.spot_name && (
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", margin: 0 }}>
-                📍 {school.spot_name}
-              </p>
-            )}
           </div>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "36px 20px 80px" }}>
+          <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", marginBottom: 28 }} />
 
-        <div className="surf-content-grid">
+          <div className="surf-detail-grid">
 
-          {/* Left: detalles */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Left: photos */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-            {/* Badges */}
-            <div style={{
-              background: "#fff",
-              borderRadius: 20,
-              border: "1px solid #e0ddd6",
-              padding: "22px 24px",
-            }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9a9690", margin: "0 0 16px" }}>
-                Información de la clase
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                {classInfo && (
-                  <span className="surf-badge" style={{ background: classInfo.bg, color: classInfo.color }}>
-                    {classInfo.icon} {classInfo.label}
-                  </span>
-                )}
-                {school.duration != null && (
-                  <span className="surf-badge" style={{ background: "#f5f4f0", color: "#3a3730" }}>
-                    ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
-                  </span>
-                )}
-                {school.equipment_include != null && (
-                  <span className="surf-badge" style={{
-                    background: school.equipment_include ? "#d1fae5" : "#f5f4f0",
-                    color: school.equipment_include ? "#1b4332" : "#7a7669",
-                  }}>
-                    🩳 {school.equipment_include ? "Equipo incluido" : "Sin equipo"}
-                  </span>
-                )}
-              </div>
+              {/* Foto(s) */}
+              {photos.length > 0 && (
+                <div>
+                  {photos.length === 1 && (
+                    <div className="surf-photo-grid-1">
+                      <img src={photos[0]} alt={school.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )}
+                  {photos.length === 2 && (
+                    <div className="surf-photo-grid-2">
+                      {photos.map((src, i) => (
+                        <div key={i} className="surf-photo-item">
+                          <img src={src} alt={`${school.name} ${i + 1}`} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {photos.length >= 3 && (
+                    <div className="surf-photo-grid-3">
+                      <div className="surf-photo-item">
+                        <img src={photos[0]} alt={school.name} />
+                      </div>
+                      <div className="surf-photo-sub">
+                        {photos.slice(1, 3).map((src, i) => (
+                          <div key={i} className="surf-photo-item">
+                            <img src={src} alt={`${school.name} ${i + 2}`} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Temporada */}
+              {isSeasonal && (
+                <div className="surf-card">
+                  <div className="surf-section-label">
+                    <div className="surf-section-dot" />
+                    <p className="surf-section-title">Temporada</p>
+                  </div>
+                  <p style={{ fontSize: 15, color: "#3a3730", margin: 0 }}>
+                    {MONTHS_FULL[school.season_start]} — {MONTHS_FULL[school.season_end]}
+                  </p>
+                </div>
+              )}
+
             </div>
 
-            {/* Temporada */}
-            {isSeasonal && (
-              <div style={{
-                background: "#fff",
-                borderRadius: 20,
-                border: "1px solid #e0ddd6",
-                padding: "22px 24px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9a9690", margin: "0 0 14px" }}>
-                  Temporada
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ fontSize: 22, fontWeight: 700, color: "#1b4332", margin: 0 }}>{MONTHS[school.season_start]}</p>
-                    <p style={{ fontSize: 11, color: "#9a9690", margin: "2px 0 0" }}>{MONTHS_FULL[school.season_start]}</p>
-                  </div>
-                  <div style={{ height: 1, flex: 1, background: "#e0ddd6" }} />
-                  <div style={{ fontSize: 13, color: "#9a9690" }}>hasta</div>
-                  <div style={{ height: 1, flex: 1, background: "#e0ddd6" }} />
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ fontSize: 22, fontWeight: 700, color: "#1b4332", margin: 0 }}>{MONTHS[school.season_end]}</p>
-                    <p style={{ fontSize: 11, color: "#9a9690", margin: "2px 0 0" }}>{MONTHS_FULL[school.season_end]}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Right panel */}
+            <div className="surf-right-panel">
 
-            {/* Contacto */}
-            {hasContact && (
-              <div style={{
-                background: "linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%)",
-                borderRadius: 20,
-                padding: "22px 24px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#95d5b2", margin: "0 0 16px" }}>
-                  Contacto
-                </p>
+              {/* Info card */}
+              <div className="surf-card">
+                <div className="surf-section-label">
+                  <div className="surf-section-dot" />
+                  <p className="surf-section-title">Información</p>
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {school.email && (
+                  {classInfo && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6 }}>✉️ Email</span>
-                      <a href={`mailto:${school.email}`} className="surf-contact-link" style={{ color: "#95d5b2" }}>
-                        {school.email}
-                      </a>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de clase</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        {classInfo.icon} {classInfo.label}
+                      </span>
                     </div>
                   )}
-                  {school.whatsapp && (
+                  {school.duration != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6 }}>💬 WhatsApp</span>
-                      <a href={whatsappUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link" style={{ color: "#95d5b2" }}>
-                        {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
-                      </a>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Duración</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
+                      </span>
                     </div>
                   )}
-                  {school.instagram && (
+                  {school.equipment_include != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6 }}>📷 Instagram</span>
-                      <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link" style={{ color: "#95d5b2" }}>
-                        @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
-                      </a>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Equipo</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        🩳 {school.equipment_include ? "Incluido" : "No incluido"}
+                      </span>
+                    </div>
+                  )}
+                  {!isSeasonal && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>Todo el año</span>
+                    </div>
+                  )}
+                  {isSeasonal && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
+                        {MONTHS_FULL[school.season_start]} – {MONTHS_FULL[school.season_end]}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-            )}
+
+              {/* Contact card */}
+              {hasContact && (
+                <div className="surf-card">
+                  <div className="surf-section-label">
+                    <div className="surf-section-dot" />
+                    <p className="surf-section-title">Contacto</p>
+                  </div>
+                  <div>
+                    {school.email && (
+                      <div className="surf-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
+                        <a href={`mailto:${school.email}`} className="surf-contact-link">{school.email}</a>
+                      </div>
+                    )}
+                    {school.whatsapp && (
+                      <div className="surf-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
+                        <a href={whatsappUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link">
+                          {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+                    {school.instagram && (
+                      <div className="surf-contact-row">
+                        <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
+                        <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link">
+                          @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
 
-          {/* Right: galería */}
-          {extraPhotos.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9a9690", margin: 0 }}>
-                Galería
-              </p>
-              {extraPhotos.map((src, i) => (
-                <div
-                  key={i}
-                  style={{
-                    borderRadius: 20,
-                    overflow: "hidden",
-                    aspectRatio: "4/3",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  <img
-                    src={src}
-                    alt={`${school.name} — foto ${i + 2}`}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Spacer para que el footer quede lejos cuando hay poca info */}
+          <div style={{ minHeight: "max(0px, calc(100vh - 600px))" }} />
 
         </div>
+      </main>
 
-        {/* Footer note */}
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid #e0ddd6", textAlign: "center" }}>
-          <p style={{ fontSize: 12, color: "#9a9690" }}>
-            Información publicada en{" "}
-            <Link href="/" style={{ color: "#2d6a4f", textDecoration: "none", fontWeight: 600 }}>Rumbo</Link>
-            {" "}— la plataforma de spots outdoor en Uruguay
-          </p>
-        </div>
-
-      </div>
+      <Footer />
     </div>
   )
 }

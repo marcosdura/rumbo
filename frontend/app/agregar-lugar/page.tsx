@@ -289,7 +289,7 @@ export default function AgregarLugar() {
             const uploadRes = await fetch("/api/upload/upload", { method: "POST", body: fd })
             if (!uploadRes.ok) throw new Error("Error al subir la foto")
             const uploadData = await uploadRes.json()
-            photoUrls[i] = uploadData.secure_url
+            photoUrls[i] = uploadData.url
           }
 
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
