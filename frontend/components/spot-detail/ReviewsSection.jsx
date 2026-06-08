@@ -47,7 +47,7 @@ function Avatar({ user, size = 36 }) {
   )
 }
 
-export default function ReviewsSection({ spotId }) {
+export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const { data: session } = useSession()
   const [reviews, setReviews] = useState([])
   const [summary, setSummary] = useState(null)
@@ -61,11 +61,21 @@ export default function ReviewsSection({ spotId }) {
   const userId = session?.user?.id
   const token = session?.id_token
 
+  const baseUrl =
+    entityType === "surf"  ? `${API}/surf-reviews/${spotId}`  :
+    entityType === "kayak" ? `${API}/kayak-reviews/${spotId}` :
+    `${API}/reviews/${spotId}`
+
+  const deleteBase =
+    entityType === "surf"  ? `${API}/surf-reviews`  :
+    entityType === "kayak" ? `${API}/kayak-reviews` :
+    `${API}/reviews`
+
   const loadReviews = async () => {
     try {
       const [revRes, sumRes] = await Promise.all([
-        fetch(`${API}/reviews/${spotId}`),
-        fetch(`${API}/reviews/${spotId}/summary`),
+        fetch(baseUrl),
+        fetch(`${baseUrl}/summary`),
       ])
       const revData = await revRes.json()
       setReviews(Array.isArray(revData) ? revData : [])
@@ -80,7 +90,7 @@ export default function ReviewsSection({ spotId }) {
     if (!rating) return
     setSubmitting(true)
     try {
-      const res = await fetch(`${API}/reviews/${spotId}`, {
+      const res = await fetch(baseUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +110,7 @@ export default function ReviewsSection({ spotId }) {
 
   const handleDelete = async (reviewId) => {
     try {
-      await fetch(`${API}/reviews/${reviewId}`, {
+      await fetch(`${deleteBase}/${reviewId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })

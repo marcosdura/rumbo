@@ -7,6 +7,24 @@
 # ALTER TABLE kayak_details ADD COLUMN IF NOT EXISTS photo_2 VARCHAR;
 # ALTER TABLE kayak_details ADD COLUMN IF NOT EXISTS photo_3 VARCHAR;
 #
+# CREATE TABLE IF NOT EXISTS surf_reviews (
+#   id SERIAL PRIMARY KEY,
+#   surf_beach_id INTEGER NOT NULL REFERENCES surf_beach(id) ON DELETE CASCADE,
+#   user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+#   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+#   comment TEXT,
+#   created_at TIMESTAMP DEFAULT NOW()
+# );
+#
+# CREATE TABLE IF NOT EXISTS kayak_reviews (
+#   id SERIAL PRIMARY KEY,
+#   kayak_details_id INTEGER NOT NULL REFERENCES kayak_details(id) ON DELETE CASCADE,
+#   user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+#   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+#   comment TEXT,
+#   created_at TIMESTAMP DEFAULT NOW()
+# );
+#
 # ALTER TABLE spots ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE;
 # UPDATE spots SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
 #
@@ -232,8 +250,10 @@ class User(Base):
     image    = Column(String, nullable=True)
     created_at        = Column(DateTime, default=datetime.utcnow)
     terms_accepted_at = Column(DateTime, nullable=True)
-    favorites  = relationship("Favorite", back_populates="user")
-    reviews = relationship("Review", back_populates="user")
+    favorites    = relationship("Favorite", back_populates="user")
+    reviews      = relationship("Review", back_populates="user")
+    surf_reviews = relationship("SurfReview", back_populates="user")
+    kayak_reviews = relationship("KayakReview", back_populates="user")
 
 
 
@@ -268,13 +288,41 @@ class Favorite(Base):
 
 class Review(Base):
     __tablename__ = "reviews"
- 
+
     id         = Column(Integer, primary_key=True, index=True)
     spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False)
     user_id    = Column(String, ForeignKey("users.id"), nullable=False)
     rating     = Column(Integer, nullable=False)   # 1 a 5
     comment    = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
- 
+
     spot = relationship("SpotDB", back_populates="reviews")
     user = relationship("User", back_populates="reviews")
+
+
+class SurfReview(Base):
+    __tablename__ = "surf_reviews"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id"), nullable=False)
+    user_id       = Column(String, ForeignKey("users.id"), nullable=False)
+    rating        = Column(Integer, nullable=False)
+    comment       = Column(String, nullable=True)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+    surf_school = relationship("SurfSchool")
+    user        = relationship("User", back_populates="surf_reviews")
+
+
+class KayakReview(Base):
+    __tablename__ = "kayak_reviews"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id"), nullable=False)
+    user_id          = Column(String, ForeignKey("users.id"), nullable=False)
+    rating           = Column(Integer, nullable=False)
+    comment          = Column(String, nullable=True)
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+    kayak_detail = relationship("KayakDetail")
+    user         = relationship("User", back_populates="kayak_reviews")

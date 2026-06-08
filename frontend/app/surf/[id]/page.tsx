@@ -5,6 +5,7 @@ import BackButton from "./BackButton"
 import SurfPhotos from "./SurfPhotos"
 import Footer from "@/components/layout/Footer"
 import Pill from "@/components/ui/Pill"
+import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -287,6 +288,11 @@ export default async function SurfSchoolPage({ params }: Props) {
               )}
 
             </div>
+          </div>
+
+          {/* Reviews */}
+          <div style={{ marginTop: 32 }}>
+            <ReviewsSection spotId={school.id} entityType="surf" />
           </div>
 
           {/* Spacer para que el footer quede lejos cuando hay poca info */}

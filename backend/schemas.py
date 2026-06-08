@@ -295,3 +295,25 @@ class ReviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SurfReviewResponse(BaseModel):
+    id: int
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+    user: ReviewUserResponse
+
+    class Config:
+        from_attributes = True
+
+
+class KayakReviewResponse(BaseModel):
+    id: int
+    rating: int
+    comment: str | None = None
+    created_at: datetime
+    user: ReviewUserResponse
+
+    class Config:
+        from_attributes = True

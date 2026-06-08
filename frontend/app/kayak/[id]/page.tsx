@@ -3,6 +3,7 @@ import Navbar from "@/components/layout/Navbar"
 import BackButton from "./BackButton"
 import KayakPhotos from "./KayakPhotos"
 import Footer from "@/components/layout/Footer"
+import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -296,6 +297,11 @@ export default async function KayakDetailPage({ params }: Props) {
               )}
 
             </div>
+          </div>
+
+          {/* Reviews */}
+          <div style={{ marginTop: 32 }}>
+            <ReviewsSection spotId={kayak.id} entityType="kayak" />
           </div>
 
           {/* Spacer para que el footer quede lejos cuando hay poca info */}
