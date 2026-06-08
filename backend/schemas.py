@@ -247,6 +247,19 @@ class SpotResponse(BaseModel):
         from_attributes = True
 
 
+# -------- USER --------
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str | None = None
+    image: str | None = None
+    created_at: datetime
+    terms_accepted_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
 # -------- REVIEW --------
 class ReviewUserResponse(BaseModel):
     id: str

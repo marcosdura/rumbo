@@ -200,7 +200,8 @@ class User(Base):
     email    = Column(String, unique=True, nullable=False)
     name     = Column(String, nullable=True)
     image    = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at        = Column(DateTime, default=datetime.utcnow)
+    terms_accepted_at = Column(DateTime, nullable=True)
     favorites  = relationship("Favorite", back_populates="user")
     reviews = relationship("Review", back_populates="user")
 

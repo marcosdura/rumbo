@@ -36,28 +36,35 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ account }) {
-      try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/upsert`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${account.id_token}` },
-        })
-      } catch (e) {
-        console.error("Error guardando usuario:", e)
-      }
-      return true
-    },
-
-    async jwt({ token, account }) {
-      // Primer login: guardar todo
+    async jwt({ token, account, trigger, session: updateSession }) {
+      // Primer login: upsert usuario y guardar termsAcceptedAt
       if (account) {
+        let termsAcceptedAt = null
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/upsert`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${account.id_token}` },
+          })
+          if (res.ok) {
+            const user = await res.json()
+            termsAcceptedAt = user.terms_accepted_at ?? null
+          }
+        } catch (e) {
+          console.error("Error guardando usuario:", e)
+        }
         return {
           ...token,
-          id_token:      account.id_token,
-          access_token:  account.access_token,
-          refresh_token: account.refresh_token,
-          expires_at:    account.expires_at,
+          id_token:         account.id_token,
+          access_token:     account.access_token,
+          refresh_token:    account.refresh_token,
+          expires_at:       account.expires_at,
+          termsAcceptedAt,
         }
+      }
+
+      // El usuario acaba de aceptar los términos — actualizar token
+      if (trigger === "update" && updateSession?.termsAcceptedAt) {
+        return { ...token, termsAcceptedAt: updateSession.termsAcceptedAt }
       }
 
       // Token todavía válido (con 60s de margen)
@@ -75,8 +82,9 @@ export const authOptions = {
     },
 
     async session({ session, token }) {
-      session.user.id  = token.sub
-      session.id_token = token.id_token
+      session.user.id      = token.sub
+      session.id_token     = token.id_token
+      session.termsAcceptedAt = token.termsAcceptedAt ?? null
       if (token.error) session.error = token.error
       return session
     },

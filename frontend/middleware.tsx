@@ -1,11 +1,37 @@
-import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
-export default withAuth({
-  pages: {
-    signIn: "/",
-  },
-})
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Rutas que siempre pasan sin verificación
+  if (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/onboarding/") ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next()
+  }
+
+  const token = await getToken({ req: request })
+
+  // Usuario logueado sin términos aceptados → redirigir
+  if (token && !token.termsAcceptedAt) {
+    return NextResponse.redirect(new URL("/onboarding/terms", request.url))
+  }
+
+  // Rutas protegidas sin sesión → redirigir a home
+  if (!token && pathname.startsWith("/profile")) {
+    return NextResponse.redirect(new URL("/", request.url))
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
-  matcher: ["/profile/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 }
