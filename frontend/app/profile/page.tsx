@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react"
 import LoadingScreen from "@/components/ui/LoadingScreen"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { CldImage } from "next-cloudinary"
@@ -11,6 +11,11 @@ export default function ProfilePage() {
   const { data: session, status } = useSession()
   const [favorites, setFavorites] = useState<any[]>([])
   const [reviews, setReviews] = useState<any[]>([])
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [confirmText, setConfirmText] = useState("")
+  const [deleteError, setDeleteError] = useState("")
+  const [deleting, setDeleting] = useState(false)
+  const confirmInputRef = useRef<HTMLInputElement>(null)
 
  useEffect(() => {
   if (!session?.id_token) return
@@ -36,6 +41,35 @@ export default function ProfilePage() {
     : "?"
 
   const joinDate = new Date().toLocaleDateString("es-UY", { month: "long", year: "numeric" })
+
+  async function handleDeleteAccount() {
+    if (confirmText !== "CONFIRMAR") return
+    setDeleting(true)
+    setDeleteError("")
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session?.id_token}` },
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setDeleteError(body.detail ?? "Error al eliminar la cuenta. Intentá de nuevo.")
+        setDeleting(false)
+        return
+      }
+      await signOut({ callbackUrl: "/?cuenta=eliminada" })
+    } catch {
+      setDeleteError("Error de red. Intentá de nuevo.")
+      setDeleting(false)
+    }
+  }
+
+  function openDeleteModal() {
+    setConfirmText("")
+    setDeleteError("")
+    setShowDeleteModal(true)
+    setTimeout(() => confirmInputRef.current?.focus(), 50)
+  }
 
   const s = {
     card: {
@@ -103,6 +137,41 @@ export default function ProfilePage() {
         .action-btn-danger:hover { background: #fdf0f0 !important; }
         .fav-thumb:hover { transform: scale(1.03); }
         .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09) !important; transform: translateY(-2px); }
+
+        .delete-modal-overlay {
+          position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,0.45);
+          display: flex; align-items: center; justify-content: center;
+          padding: 16px;
+        }
+        .delete-modal {
+          background: #f5f4f0; border: 1px solid #e0ddd6; border-radius: 20px;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+          padding: 28px; width: 100%; max-width: 440px;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .delete-confirm-input {
+          width: 100%; box-sizing: border-box;
+          padding: 10px 14px; border-radius: 10px;
+          font-family: 'DM Sans', sans-serif; font-size: 14px;
+          outline: none; background: #fff;
+          transition: border-color 0.15s;
+        }
+        .delete-confirm-input:focus { border-color: #dc2626; }
+        .delete-btn-confirm {
+          padding: 11px 20px; border-radius: 12px; border: none;
+          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+          cursor: pointer; transition: background 0.15s, opacity 0.15s;
+        }
+        .delete-btn-confirm:disabled { cursor: not-allowed; }
+        .delete-btn-cancel {
+          padding: 11px 20px; border-radius: 12px;
+          border: 1px solid #e0ddd6; background: #fff;
+          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+          cursor: pointer; color: #3d3d3a;
+          transition: background 0.15s;
+        }
+        .delete-btn-cancel:hover { background: #f7f5f0; }
 
         .profile-scroll {
           flex: 1; overflow-y: auto; margin-top: 40px; padding-bottom: 40px;
@@ -197,6 +266,14 @@ export default function ProfilePage() {
                   <div style={{ ...s.actionBtnIcon, background: "#fdf0f0", border: "1px solid #f5c0c0" }}>↩</div>
                   Cerrar sesión
                 </button>
+                <button
+                  className="action-btn-danger"
+                  style={{ ...s.actionBtn, color: "#9a1c1c", border: "1px solid #f5c0c0", background: "#fdf0f0", marginTop: 2 }}
+                  onClick={openDeleteModal}
+                >
+                  <div style={{ ...s.actionBtnIcon, background: "#fdf0f0", border: "1px solid #f5c0c0", fontSize: 13 }}>🗑</div>
+                  Eliminar cuenta
+                </button>
               </div>
             </div>
 
@@ -270,6 +347,65 @@ export default function ProfilePage() {
         </div>
       </div>
       </div>
+
+      {showDeleteModal && (
+        <div className="delete-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="delete-modal" onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
+              ¿Eliminar tu cuenta?
+            </h2>
+
+            <p style={{ fontSize: 14, color: "#4a4a46", lineHeight: 1.6, margin: "0 0 16px" }}>
+              Esta acción es permanente y no se puede deshacer. Al eliminar tu cuenta:
+            </p>
+
+            <ul style={{ fontSize: 14, color: "#4a4a46", lineHeight: 1.8, margin: "0 0 20px", paddingLeft: 20 }}>
+              <li>Tu perfil y datos personales serán eliminados</li>
+              <li>Todas tus reviews en spots, escuelas de surf y servicios de kayak serán eliminadas</li>
+              <li>No podrás recuperar esta información</li>
+            </ul>
+
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", marginBottom: 6 }}>
+              Para confirmar, escribí <span style={{ fontWeight: 700, color: "#dc2626" }}>CONFIRMAR</span> en el campo de abajo
+            </label>
+            <input
+              ref={confirmInputRef}
+              type="text"
+              value={confirmText}
+              onChange={e => setConfirmText(e.target.value)}
+              placeholder="CONFIRMAR"
+              className="delete-confirm-input"
+              style={{
+                border: confirmText.length > 0 && confirmText !== "CONFIRMAR"
+                  ? "1px solid #dc2626"
+                  : "1px solid #e0ddd6",
+              }}
+            />
+
+            {deleteError && (
+              <p style={{ fontSize: 13, color: "#dc2626", margin: "8px 0 0" }}>{deleteError}</p>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+              <button className="delete-btn-cancel" onClick={() => setShowDeleteModal(false)}>
+                Cancelar
+              </button>
+              <button
+                className="delete-btn-confirm"
+                disabled={confirmText !== "CONFIRMAR" || deleting}
+                onClick={handleDeleteAccount}
+                style={{
+                  background: confirmText === "CONFIRMAR" ? "#dc2626" : "#d1cdc7",
+                  color: confirmText === "CONFIRMAR" ? "#fff" : "#9a9690",
+                  opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                {deleting ? "Eliminando..." : "Eliminar cuenta definitivamente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI
 from database import engine
 from models import Base
-from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews, surf_reviews, kayak_reviews
+from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews, surf_reviews, kayak_reviews, users
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -41,3 +41,4 @@ app.include_router(favorites.router)
 app.include_router(reviews.router)
 app.include_router(surf_reviews.router)
 app.include_router(kayak_reviews.router)
+app.include_router(users.router)
