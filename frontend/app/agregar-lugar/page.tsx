@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useSession } from "next-auth/react"
 import type { CSSProperties } from "react"
 
 // ---- Types ----
@@ -168,6 +169,9 @@ const emptyBasic = () => ({
 
 // ---- Component ----
 export default function AgregarLugar() {
+  const { data: session } = useSession()
+  const token = session?.id_token
+
   const [step, setStep]                           = useState(1)
   const [selectedCat, setSelectedCat]             = useState<Category | null>(null)
   const [basic, setBasic]                         = useState(emptyBasic())
@@ -304,7 +308,7 @@ export default function AgregarLugar() {
 
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({
               spot_id: selectedSpotId,
               name: surf.name,
@@ -342,7 +346,7 @@ export default function AgregarLugar() {
             if (!k.name) continue
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
               body: JSON.stringify({
                 spot_id: selectedSpotId,
                 name: k.name,
@@ -391,7 +395,7 @@ export default function AgregarLugar() {
       const seasonEnd   = basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null
       const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name:         basic.name,
           description:  basic.description,
@@ -421,7 +425,10 @@ export default function AgregarLugar() {
           is_main: String(i === 0),
           order: String(i),
         })
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${params}`, { method: "POST" })
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${params}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        })
       }
 
       // 4. Category-specific records

@@ -34,11 +34,18 @@ export async function generateMetadata({ params }: Props) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`)
   if (!res.ok) return { title: "Kayak | Rumbo" }
   const kayak = await res.json()
+  const description = kayak.spot_name
+    ? `Servicio de kayak en ${kayak.spot_name}, ${kayak.spot_department}.`
+    : "Servicio de kayak en Uruguay."
   return {
     title: `${kayak.name} | Rumbo`,
-    description: kayak.spot_name
-      ? `Servicio de kayak en ${kayak.spot_name}, ${kayak.spot_department}.`
-      : "Servicio de kayak en Uruguay.",
+    description,
+    openGraph: {
+      title: `${kayak.name} | Rumbo`,
+      description,
+      images: kayak.photo_1 ? [{ url: kayak.photo_1 }] : [],
+      type: "website",
+    },
   }
 }
 

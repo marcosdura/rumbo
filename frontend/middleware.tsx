@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rutas protegidas sin sesión → redirigir a home
-  if (!token && pathname.startsWith("/profile")) {
+  if (!token && (pathname.startsWith("/profile") || pathname.startsWith("/agregar-lugar"))) {
     return NextResponse.redirect(new URL("/", request.url))
   }
 

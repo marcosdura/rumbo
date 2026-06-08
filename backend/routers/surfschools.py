@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from models import SurfSchool
 from schemas import SurfSchoolCreate, SurfSchoolResponse
 from database import SessionLocal
+from auth import get_current_user
+from limiter import limiter
 
 router = APIRouter(prefix="/surfschool", tags=["surfschool"])
 
@@ -15,7 +17,13 @@ def get_db():
 
 
 @router.post("/", response_model=SurfSchoolResponse)
-def create_surfschool(surfschool: SurfSchoolCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+async def create_surfschool(
+    request: Request,
+    surfschool: SurfSchoolCreate,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     db_surfschool = SurfSchool(**surfschool.dict())
     db.add(db_surfschool)
     db.commit()
@@ -24,10 +32,15 @@ def create_surfschool(surfschool: SurfSchoolCreate, db: Session = Depends(get_db
 
 
 
+@router.get("/ids")
+def get_surfschool_ids(db: Session = Depends(get_db)):
+    rows = db.query(SurfSchool.id).all()
+    return [r.id for r in rows]
+
+
 @router.get("/", response_model=list[SurfSchoolResponse])
 def get_surfschools(db: Session = Depends(get_db)):
     return db.query(SurfSchool).all()
-
 
 
 @router.get("/{surfschool_id}", response_model=SurfSchoolResponse)

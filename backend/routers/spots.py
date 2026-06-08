@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import SessionLocal
+from auth import get_current_user
+from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, Route, KayakDetail, SurfSchool
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse
 import models
@@ -48,7 +50,8 @@ def home():
 # Crear un spot
 # usa la sesion para hablar con la DB
 @router.post("/spots", response_model=SpotResponse)
-def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
 
     category = db.query(models.Category).filter(models.Category.id == spot.category_id).first()
 
@@ -84,6 +87,12 @@ def create_spot(spot: SpotCreate, db: Session = Depends(get_db)):
         .first()
     )
     return db_spot
+
+
+@router.get("/spots/ids")
+def get_spot_ids(db: Session = Depends(get_db)):
+    rows = db.query(SpotDB.id, SpotDB.slug).filter(SpotDB.is_approved == True, SpotDB.slug != None).all()
+    return [{"id": r.id, "slug": r.slug} for r in rows]
 
 
 @router.get("/spots", response_model=list[SpotResponse])

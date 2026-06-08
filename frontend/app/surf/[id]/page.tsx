@@ -24,11 +24,18 @@ export async function generateMetadata({ params }: Props) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`)
   if (!res.ok) return { title: "Escuela de Surf | Rumbo" }
   const school = await res.json()
+  const description = school.spot_name
+    ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}.`
+    : "Escuela de surf en Uruguay."
   return {
     title: `${school.name} | Rumbo`,
-    description: school.spot_name
-      ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}.`
-      : "Escuela de surf en Uruguay.",
+    description,
+    openGraph: {
+      title: `${school.name} | Rumbo`,
+      description,
+      images: school.photo_1 ? [{ url: school.photo_1 }] : [],
+      type: "website",
+    },
   }
 }
 
