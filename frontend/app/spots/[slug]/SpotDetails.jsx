@@ -8,6 +8,7 @@ import dynamic from "next/dynamic"
 import SpotDescription from "../../../components/spot-detail/SpotDescription"
 import SpotDetails from "../../../components/spot-detail/SpotDetails"
 import TrekkingRoutes from "../../../components/spot-detail/TrekkingRoutes"
+import TrekkingAmenitiesCard from "../../../components/spot-detail/TrekkingAmenitiesCard"
 import ClimbingSectorsCards from "../../../components/spot-detail/ClimbingSectorsCards"
 import KayakDetail from "../../../components/spot-detail/KayakDetail"
 import SurfSchoolDetail from "../../../components/spot-detail/SurfSchoolDetail"
@@ -346,6 +347,10 @@ useEffect(() => {
               </div>
 
               {/* Contenido dinámico por categoría */}
+              {spot.category?.name === "Trekking" && (
+                <TrekkingAmenitiesCard trekkingDetail={spot.trekking_detail} />
+              )}
+
               {spot.category?.name === "Trekking" && routes.length > 0 && (
                 <TrekkingRoutes routes={routes} spotSlug={spot.slug} />
               )}

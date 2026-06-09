@@ -10,13 +10,6 @@ const difficultyConfig = {
   "difícil":    { label: "Difícil",    color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0", dot: "🔴" },
 }
 
-const boolBadge = (val, trueLabel, falseLabel) => ({
-  label: val ? trueLabel : falseLabel,
-  color: val ? "#1b4332" : "#7c1d1d",
-  bg:    val ? "#e8f5ee" : "#fdf0f0",
-  border: val ? "#b7dfc8" : "#f5c0c0",
-})
-
 const neutralBadge = (label) => ({
   label,
   color: "#4a443b",
@@ -76,9 +69,7 @@ export default function RouteCard({ route, spotSlug }) {
           <Pill bg={diff.bg} color={diff.color} border={diff.border}>
             {diff.dot} {diff.label}
           </Pill>
-          <Pill {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`)} />
-          <Pill {...boolBadge(route.water_available, "💧 Agua", "💧 Sin agua")} />
-          <Pill {...boolBadge(route.camping_allowed, "⛺ Camping", "⛺ Sin camping")} />
+          {route.route_type && <Pill {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`)} />}
         </div>
       </div>
     </Link>

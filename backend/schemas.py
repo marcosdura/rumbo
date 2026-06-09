@@ -83,9 +83,6 @@ class RouteBase(BaseModel):
     technical_level: Optional[str] = None   # bajo / medio / alto
     physical_demand: Optional[str] = None   # bajo / medio / alto
 
-    water_available: Optional[bool] = None
-    camping_allowed: Optional[bool] = None
-    signal: Optional[str] = None            # none / low / medium
     slug: str | None = None
 
 
@@ -215,6 +212,27 @@ class SpotImageResponse(BaseModel):
         from_attributes = True
 
 
+# -------- TREKKING DETAIL --------
+class TrekkingDetailOut(BaseModel):
+    bathrooms:     bool | None = None
+    potable_water: bool | None = None
+    pet_friendly:  bool | None = None
+    kids_friendly: bool | None = None
+    camping:       bool | None = None
+    parking:       bool | None = None
+    fire_pits:     bool | None = None
+    shelter:       bool | None = None
+    accessible:    bool | None = None
+    signal:        bool | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class TrekkingDetailCreate(TrekkingDetailOut):
+    pass
+
+
 # -------- SPOT RESPONSE --------
 class SpotResponse(BaseModel):
     id: int
@@ -232,7 +250,8 @@ class SpotResponse(BaseModel):
     slug: str | None = None
 
     category: CategoryResponse
-    camping_detail: CampingDetailResponse | None = None
+    camping_detail:  CampingDetailResponse | None = None
+    trekking_detail: TrekkingDetailOut     | None = None
     amenities: list[AmenityResponse] = []
 
     @field_validator("amenities", mode="before")

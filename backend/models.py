@@ -1,43 +1,3 @@
-# Migration — run in Railway Postgres SQL editor:
-# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_1 VARCHAR;
-# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_2 VARCHAR;
-# ALTER TABLE surf_beach ADD COLUMN IF NOT EXISTS photo_3 VARCHAR;
-#
-# ALTER TABLE kayak_details ADD COLUMN IF NOT EXISTS photo_1 VARCHAR;
-# ALTER TABLE kayak_details ADD COLUMN IF NOT EXISTS photo_2 VARCHAR;
-# ALTER TABLE kayak_details ADD COLUMN IF NOT EXISTS photo_3 VARCHAR;
-#
-# CREATE TABLE IF NOT EXISTS surf_reviews (
-#   id SERIAL PRIMARY KEY,
-#   surf_beach_id INTEGER NOT NULL REFERENCES surf_beach(id) ON DELETE CASCADE,
-#   user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-#   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-#   comment TEXT,
-#   created_at TIMESTAMP DEFAULT NOW()
-# );
-#
-# CREATE TABLE IF NOT EXISTS kayak_reviews (
-#   id SERIAL PRIMARY KEY,
-#   kayak_details_id INTEGER NOT NULL REFERENCES kayak_details(id) ON DELETE CASCADE,
-#   user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-#   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-#   comment TEXT,
-#   created_at TIMESTAMP DEFAULT NOW()
-# );
-#
-# ALTER TABLE spots ADD COLUMN IF NOT EXISTS slug VARCHAR UNIQUE;
-# UPDATE spots SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
-#
-# ALTER TABLE routes ADD COLUMN IF NOT EXISTS slug VARCHAR;
-# UPDATE routes SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
-#
-# ALTER TABLE climbingsectors ADD COLUMN IF NOT EXISTS slug VARCHAR;
-# UPDATE climbingsectors SET slug = LOWER(REGEXP_REPLACE(REGEXP_REPLACE(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
-#
-# ALTER TABLE spots ADD COLUMN IF NOT EXISTS owner_phone VARCHAR;
-#
-# ALTER TABLE surf_beach DROP CONSTRAINT IF EXISTS surf_beach_spot_id_key;
-
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
 from database import Base
 from sqlalchemy.orm import relationship
@@ -71,7 +31,8 @@ class SpotDB(Base):
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="spots")
     amenities = relationship("SpotAmenity", back_populates="spot")
-    camping_detail = relationship("CampingDetail", uselist=False, back_populates="spot")
+    camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
+    trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot")
     kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot")
@@ -97,6 +58,26 @@ class CampingDetail(Base):
     price = Column(Float)
 
     spot = relationship("SpotDB", back_populates="camping_detail")
+
+class TrekkingDetail(Base):
+    __tablename__ = "trekking_details"
+
+    id        = Column(Integer, primary_key=True)
+    spot_id   = Column(Integer, ForeignKey("spots.id"), unique=True)
+
+    bathrooms     = Column(Boolean, nullable=True)
+    potable_water = Column(Boolean, nullable=True)
+    pet_friendly  = Column(Boolean, nullable=True)
+    kids_friendly = Column(Boolean, nullable=True)
+    camping       = Column(Boolean, nullable=True)
+    parking       = Column(Boolean, nullable=True)
+    fire_pits     = Column(Boolean, nullable=True)
+    shelter       = Column(Boolean, nullable=True)
+    accessible    = Column(Boolean, nullable=True)
+    signal        = Column(Boolean, nullable=True)
+
+    spot = relationship("SpotDB", back_populates="trekking_detail")
+
 
 class Amenity(Base):
     __tablename__ = "amenities"
@@ -140,9 +121,6 @@ class Route(Base):
     technical_level = Column(String)   # bajo / medio / alto
     physical_demand = Column(String)   # bajo / medio / alto
 
-    water_available = Column(Boolean)
-    camping_allowed = Column(Boolean)
-    signal = Column(String)            # none / low / medium
     slug = Column(String, nullable=True, index=True)
 
 

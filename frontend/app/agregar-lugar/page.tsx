@@ -6,6 +6,10 @@ import type { CSSProperties } from "react"
 
 // ---- Types ----
 type Category = { id: number; name: string; label: string; emoji: string }
+type TrekkingFeatureKey =
+  | "bathrooms" | "potable_water" | "pet_friendly" | "kids_friendly"
+  | "camping" | "parking" | "fire_pits" | "shelter" | "accessible" | "signal"
+type TrekkingFeatures = Record<TrekkingFeatureKey, boolean | null>
 type RouteItem = {
   name: string; distance_km: string; duration_hours: string
   elevation_gain: string; elevation_loss: string; max_altitude: string; min_altitude: string
@@ -142,6 +146,24 @@ function buildPublicId(category: string, spotName: string, index: number): strin
   return `${category}/${formatted}/${formatted}${index + 1}`
 }
 
+const TREKKING_FEATURES: { key: TrekkingFeatureKey; label: string; emoji: string }[] = [
+  { key: "bathrooms",     label: "Baños",           emoji: "🚽" },
+  { key: "potable_water", label: "Agua potable",     emoji: "🚰" },
+  { key: "pet_friendly",  label: "Pet friendly",     emoji: "🐶" },
+  { key: "kids_friendly", label: "Apto niños",       emoji: "👶" },
+  { key: "camping",       label: "Camping",          emoji: "⛺" },
+  { key: "parking",       label: "Estacionamiento",  emoji: "🚗" },
+  { key: "fire_pits",     label: "Fogones",          emoji: "🔥" },
+  { key: "shelter",       label: "Refugio",          emoji: "🏠" },
+  { key: "accessible",    label: "Accesible",        emoji: "♿" },
+  { key: "signal",        label: "Señal móvil",      emoji: "📱" },
+]
+
+const defaultTrekkingFeatures = (): TrekkingFeatures => ({
+  bathrooms: null, potable_water: null, pet_friendly: null, kids_friendly: null,
+  camping: null, parking: null, fire_pits: null, shelter: null, accessible: null, signal: null,
+})
+
 const defaultRoute = (): RouteItem => ({
   name: "", distance_km: "", duration_hours: "", elevation_gain: "", elevation_loss: "",
   max_altitude: "", min_altitude: "", difficulty: "", route_type: "",
@@ -176,6 +198,7 @@ export default function AgregarLugar() {
   const [selectedCat, setSelectedCat]             = useState<Category | null>(null)
   const [basic, setBasic]                         = useState(emptyBasic())
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+  const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
   const [surf, setSurf]                           = useState<SurfItem>(defaultSurf())
@@ -467,6 +490,14 @@ export default function AgregarLugar() {
             }),
           })
         }
+        const hasFeatures = Object.values(trekkingFeatures).some(v => v !== null)
+        if (hasFeatures) {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/trekking-detail`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(trekkingFeatures),
+          })
+        }
       }
 
       if (cat === "Escalada") {
@@ -532,6 +563,7 @@ export default function AgregarLugar() {
   function reset() {
     setStep(1); setSelectedCat(null); setBasic(emptyBasic())
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
+    setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
@@ -879,6 +911,25 @@ export default function AgregarLugar() {
                   </div>
                 ))}
                 <button style={s.btnAdd} onClick={() => setRoutes(prev => [...prev, defaultRoute()])}>+ Agregar ruta</button>
+
+                {/* Características del lugar */}
+                <div style={{ ...s.card, marginTop: 8 }}>
+                  <p style={s.cardTitle}>Características del lugar</p>
+                  <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, marginTop: -6 }}>
+                    Indicá si el lugar cuenta con cada característica. Dejá en "No sé" si no tenés la información.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {TREKKING_FEATURES.map(({ key, label, emoji }) => (
+                      <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span style={{ fontSize: 14, color: "#1b1b19" }}>{emoji} {label}</span>
+                        <TriStateToggle
+                          value={trekkingFeatures[key]}
+                          onChange={v => setTrekkingFeatures(prev => ({ ...prev, [key]: v }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1239,6 +1290,37 @@ function SeasonToggle({
           </Field>
         </div>
       )}
+    </div>
+  )
+}
+
+function TriStateToggle({ value, onChange }: { value: boolean | null; onChange: (v: boolean | null) => void }) {
+  const opts: { label: string; v: boolean | null; activeColor: string; activeBg: string }[] = [
+    { label: "Sí",    v: true,  activeColor: "#2d6a4f", activeBg: "#2d6a4f" },
+    { label: "No",    v: false, activeColor: "#dc2626", activeBg: "#dc2626" },
+    { label: "No sé", v: null,  activeColor: "#7a7669", activeBg: "#7a7669" },
+  ]
+  return (
+    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+      {opts.map(opt => {
+        const active = value === opt.v
+        return (
+          <button
+            key={String(opt.v)}
+            type="button"
+            onClick={() => onChange(opt.v)}
+            style={{
+              padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+              cursor: "pointer", fontFamily: "inherit",
+              border: `1px solid ${active ? opt.activeBg : "#e0ddd6"}`,
+              background: active ? opt.activeBg : "#f7f5f0",
+              color: active ? "#fff" : "#9a9690",
+            }}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

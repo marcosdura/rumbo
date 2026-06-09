@@ -19,7 +19,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TrekkingRoutePage({ params }: Props) {
-  const { routeSlug } = await params
-  const Details = TrekkingRouteDetails as React.ComponentType<{ slug?: string }>
-  return <Details slug={routeSlug} />
+  const { slug, routeSlug } = await params
+
+  const spot = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
+  ).then(r => r.json()).catch(() => null)
+
+  const Details = TrekkingRouteDetails as React.ComponentType<{ slug?: string; trekkingDetail?: unknown }>
+  return <Details slug={routeSlug} trekkingDetail={spot?.trekking_detail ?? null} />
 }
