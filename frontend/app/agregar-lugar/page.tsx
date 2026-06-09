@@ -2,7 +2,13 @@
 
 import { useState, useRef } from "react"
 import { useSession } from "next-auth/react"
+import dynamic from "next/dynamic"
 import type { CSSProperties } from "react"
+
+const LocationPicker = dynamic(
+  () => import("@/components/forms/LocationPicker"),
+  { ssr: false }
+)
 
 // ---- Types ----
 type Category = { id: number; name: string; label: string; emoji: string }
@@ -14,7 +20,6 @@ type RouteItem = {
   name: string; distance_km: string; duration_hours: string
   elevation_gain: string; elevation_loss: string; max_altitude: string; min_altitude: string
   difficulty: string; route_type: string; technical_level: string; physical_demand: string
-  water_available: boolean; camping_allowed: boolean; signal: string
 }
 type SectorItem = { name: string; type: string; max_altitude: string; restrictions: string }
 type SurfItem = {
@@ -159,6 +164,11 @@ const TREKKING_FEATURES: { key: TrekkingFeatureKey; label: string; emoji: string
   { key: "signal",        label: "Señal móvil",      emoji: "📱" },
 ]
 
+const REQUIRED_FEATURE_KEYS: TrekkingFeatureKey[] = [
+  "bathrooms", "potable_water", "pet_friendly", "kids_friendly",
+  "camping", "parking", "fire_pits", "shelter", "accessible",
+]
+
 const defaultTrekkingFeatures = (): TrekkingFeatures => ({
   bathrooms: null, potable_water: null, pet_friendly: null, kids_friendly: null,
   camping: null, parking: null, fire_pits: null, shelter: null, accessible: null, signal: null,
@@ -167,7 +177,7 @@ const defaultTrekkingFeatures = (): TrekkingFeatures => ({
 const defaultRoute = (): RouteItem => ({
   name: "", distance_km: "", duration_hours: "", elevation_gain: "", elevation_loss: "",
   max_altitude: "", min_altitude: "", difficulty: "", route_type: "",
-  technical_level: "", physical_demand: "", water_available: false, camping_allowed: false, signal: "",
+  technical_level: "", physical_demand: "",
 })
 const defaultSector = (): SectorItem => ({ name: "", type: "", max_altitude: "", restrictions: "" })
 const defaultSurf = (): SurfItem => ({
@@ -209,6 +219,8 @@ export default function AgregarLugar() {
   const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
   const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
+  const [contactError, setContactError]           = useState<string | null>(null)
+  const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
@@ -223,10 +235,15 @@ export default function AgregarLugar() {
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
-  const isService = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
+  const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
+  const isTrekking = selectedCat?.name === "Trekking"
+  const summaryStep = isService ? 4 : isTrekking ? 6 : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
+    if ((field === "email" || field === "whatsapp" || field === "instagram") && val.trim()) {
+      setContactError(null)
+    }
   }
   function updRoute(i: number, field: string, val: string | boolean) {
     setRoutes(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
@@ -300,8 +317,27 @@ export default function AgregarLugar() {
       setError("Completá los campos obligatorios.")
       return
     }
+    if (!basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
+      setContactError("Ingresá al menos un medio de contacto.")
+      return
+    }
+    setContactError(null)
     setError(null)
     setStep(3)
+  }
+
+  function goToStep4() {
+    if (isTrekking) {
+      const missing = REQUIRED_FEATURE_KEYS.filter(k => trekkingFeatures[k] === null)
+      if (missing.length > 0) {
+        setFeatureErrors(new Set(missing))
+        setError("Completá todas las características obligatorias antes de continuar.")
+        return
+      }
+      setFeatureErrors(new Set())
+    }
+    setError(null)
+    setStep(4)
   }
 
   async function handleSubmit() {
@@ -394,6 +430,7 @@ export default function AgregarLugar() {
       return
     }
 
+    if (!basic.lat || !basic.lng) { setError("La ubicación es obligatoria."); return }
     if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
     setError(null)
     setSubmitting(true)
@@ -485,8 +522,6 @@ export default function AgregarLugar() {
               min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
               difficulty: r.difficulty || null, route_type: r.route_type || null,
               technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
-              water_available: r.water_available, camping_allowed: r.camping_allowed,
-              signal: r.signal || null,
             }),
           })
         }
@@ -568,7 +603,7 @@ export default function AgregarLugar() {
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
-    setError(null); setSuccess(false)
+    setContactError(null); setFeatureErrors(new Set()); setError(null); setSuccess(false)
     setSelectedSpotId(null); setAvailableSpots([])
   }
 
@@ -609,7 +644,7 @@ export default function AgregarLugar() {
       <div style={s.container}>
 
         {pageHeader}
-        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 28, textAlign: "center" }}>Paso {step} de {isService ? 3 : 4}</p>
+        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 28, textAlign: "center" }}>Paso {step} de {summaryStep}</p>
 
         {/* ── Step 1: Category ── */}
         {step === 1 && (
@@ -742,14 +777,17 @@ export default function AgregarLugar() {
                 </Field>
                 <div />
               </div>
-              <div className="form-two-col">
-                <Field label="Latitud" required={false}>
-                  <input style={s.input} type="number" step="any" value={basic.lat} onChange={e => upd("lat", e.target.value)} />
-                </Field>
-                <Field label="Longitud" required={false}>
-                  <input style={s.input} type="number" step="any" value={basic.lng} onChange={e => upd("lng", e.target.value)} />
-                </Field>
-              </div>
+              {contactError && (
+                <p style={{ fontSize: 12, color: "#c0392b", margin: "-6px 0 0" }}>{contactError}</p>
+              )}
+              <LocationPicker
+                lat={basic.lat ? parseFloat(basic.lat) : null}
+                lng={basic.lng ? parseFloat(basic.lng) : null}
+                onLocationSelect={(lat: number, lng: number) => {
+                  upd("lat", String(lat))
+                  upd("lng", String(lng))
+                }}
+              />
             </div>
             <NavRow onBack={() => setStep(1)} onNext={goToStep3} error={error} />
           </div>
@@ -761,6 +799,8 @@ export default function AgregarLugar() {
             <h2 style={s.title}>
               {selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
                 ? "Servicios e instalaciones"
+                : selectedCat?.name === "Trekking"
+                ? "Características del lugar"
                 : `Datos de ${selectedCat?.label}`}
             </h2>
 
@@ -844,90 +884,48 @@ export default function AgregarLugar() {
               </div>
             )}
 
-            {/* Trekking */}
+            {/* Trekking — Step 3: Características del lugar */}
             {selectedCat?.name === "Trekking" && (
               <div>
-                {routes.map((r, i) => (
-                  <div key={i} style={s.card}>
-                    <p style={s.cardTitle}>Ruta {i + 1}</p>
-                    <div style={s.form}>
-                      <Field label="Nombre" required={true}>
-                        <input style={s.input} value={r.name} onChange={e => updRoute(i, "name", e.target.value)} />
-                      </Field>
-                      <div className="form-two-col">
-                        <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" value={r.distance_km} onChange={e => updRoute(i, "distance_km", e.target.value)} /></Field>
-                        <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", e.target.value)} /></Field>
-                      </div>
-                      <div className="form-two-col">
-                        <Field label="Desnivel positivo (m)" required={false}><input style={s.input} type="number" value={r.elevation_gain} onChange={e => updRoute(i, "elevation_gain", e.target.value)} /></Field>
-                        <Field label="Desnivel negativo (m)" required={false}><input style={s.input} type="number" value={r.elevation_loss} onChange={e => updRoute(i, "elevation_loss", e.target.value)} /></Field>
-                      </div>
-                      <div className="form-two-col">
-                        <Field label="Altitud máxima (m)" required={false}><input style={s.input} type="number" value={r.max_altitude} onChange={e => updRoute(i, "max_altitude", e.target.value)} /></Field>
-                        <Field label="Altitud mínima (m)" required={false}><input style={s.input} type="number" value={r.min_altitude} onChange={e => updRoute(i, "min_altitude", e.target.value)} /></Field>
-                      </div>
-                      <div className="form-two-col">
-                        <Field label="Dificultad" required={false}>
-                          <select style={s.input} value={r.difficulty} onChange={e => updRoute(i, "difficulty", e.target.value)}>
-                            <option value="">-</option>
-                            <option value="fácil">Fácil</option><option value="moderado">Moderado</option><option value="difícil">Difícil</option>
-                          </select>
-                        </Field>
-                        <Field label="Tipo de ruta" required={false}>
-                          <select style={s.input} value={r.route_type} onChange={e => updRoute(i, "route_type", e.target.value)}>
-                            <option value="">-</option>
-                            <option value="circular">Circular</option><option value="ida y vuelta">Ida y vuelta</option>
-                          </select>
-                        </Field>
-                      </div>
-                      <div className="form-two-col">
-                        <Field label="Nivel técnico" required={false}>
-                          <select style={s.input} value={r.technical_level} onChange={e => updRoute(i, "technical_level", e.target.value)}>
-                            <option value="">-</option>
-                            <option value="bajo">Bajo</option><option value="medio">Medio</option><option value="alto">Alto</option>
-                          </select>
-                        </Field>
-                        <Field label="Demanda física" required={false}>
-                          <select style={s.input} value={r.physical_demand} onChange={e => updRoute(i, "physical_demand", e.target.value)}>
-                            <option value="">-</option>
-                            <option value="bajo">Baja</option><option value="medio">Media</option><option value="alto">Alta</option>
-                          </select>
-                        </Field>
-                      </div>
-                      <div className="form-two-col">
-                        <Field label="Señal" required={false}>
-                          <select style={s.input} value={r.signal} onChange={e => updRoute(i, "signal", e.target.value)}>
-                            <option value="">-</option>
-                            <option value="none">Sin señal</option><option value="low">Baja</option><option value="medium">Media</option>
-                          </select>
-                        </Field>
-                        <div />
-                      </div>
-                      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                        <Toggle label="Agua disponible" checked={r.water_available} onChange={v => updRoute(i, "water_available", v)} />
-                        <Toggle label="Acampar permitido" checked={r.camping_allowed} onChange={v => updRoute(i, "camping_allowed", v)} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button style={s.btnAdd} onClick={() => setRoutes(prev => [...prev, defaultRoute()])}>+ Agregar ruta</button>
-
-                {/* Características del lugar */}
-                <div style={{ ...s.card, marginTop: 8 }}>
+                <div style={s.card}>
                   <p style={s.cardTitle}>Características del lugar</p>
                   <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, marginTop: -6 }}>
-                    Indicá si el lugar cuenta con cada característica. Dejá en "No sé" si no tenés la información.
+                    Indicá si el lugar cuenta con cada característica. Señal móvil es opcional.
                   </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {TREKKING_FEATURES.map(({ key, label, emoji }) => (
-                      <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <span style={{ fontSize: 14, color: "#1b1b19" }}>{emoji} {label}</span>
-                        <TriStateToggle
-                          value={trekkingFeatures[key]}
-                          onChange={v => setTrekkingFeatures(prev => ({ ...prev, [key]: v }))}
-                        />
-                      </div>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {TREKKING_FEATURES.map(({ key, label, emoji }) => {
+                      const hasError = featureErrors.has(key)
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                            padding: "7px 10px", borderRadius: 10,
+                            background: hasError ? "#fff5f5" : "transparent",
+                            border: hasError ? "1px solid #fecaca" : "1px solid transparent",
+                            transition: "background 0.15s, border-color 0.15s",
+                          }}
+                        >
+                          <span style={{ fontSize: 14, color: hasError ? "#dc2626" : "#1b1b19" }}>
+                            {emoji} {label}
+                            {key !== "signal" && <span style={{ color: "#e53e3e", marginLeft: 3, fontSize: 12 }}>*</span>}
+                          </span>
+                          <TriStateToggle
+                            value={trekkingFeatures[key]}
+                            onChange={v => {
+                              setTrekkingFeatures(prev => ({ ...prev, [key]: v }))
+                              if (v !== null) {
+                                setFeatureErrors(prev => {
+                                  const n = new Set(prev)
+                                  n.delete(key)
+                                  return n
+                                })
+                              }
+                            }}
+                          />
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -1150,27 +1148,74 @@ export default function AgregarLugar() {
             )}
 
             {isService ? (
-              <>
-                <div style={s.navRow}>
-                  <button style={s.btnSecondary} onClick={() => setStep(2)}>Atrás</button>
-                  <button
-                    style={{ ...s.btnPrimary, opacity: submitting ? 0.7 : 1 }}
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                  >
-                    {submitting ? (uploadProgress ?? "Enviando...") : "Enviar"}
-                  </button>
-                </div>
-                {error && <p style={s.errorText}>{error}</p>}
-              </>
+              <NavRow onBack={() => setStep(2)} onNext={() => setStep(4)} error={error} />
             ) : (
-              <NavRow onBack={() => setStep(2)} onNext={() => setStep(4)} />
+              <NavRow onBack={() => setStep(2)} onNext={goToStep4} error={error} />
             )}
           </div>
         )}
 
-        {/* ── Step 4: Images ── */}
-        {step === 4 && (
+        {/* ── Step 4 — Trekking: Rutas ── */}
+        {step === 4 && isTrekking && (
+          <div>
+            <h2 style={s.title}>Rutas</h2>
+            {routes.map((r, i) => (
+              <div key={i} style={s.card}>
+                <p style={s.cardTitle}>Ruta {i + 1}</p>
+                <div style={s.form}>
+                  <Field label="Nombre" required={true}>
+                    <input style={s.input} value={r.name} onChange={e => updRoute(i, "name", e.target.value)} />
+                  </Field>
+                  <div className="form-two-col">
+                    <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" value={r.distance_km} onChange={e => updRoute(i, "distance_km", e.target.value)} /></Field>
+                    <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", e.target.value)} /></Field>
+                  </div>
+                  <div className="form-two-col">
+                    <Field label="Desnivel positivo (m)" required={false}><input style={s.input} type="number" value={r.elevation_gain} onChange={e => updRoute(i, "elevation_gain", e.target.value)} /></Field>
+                    <Field label="Desnivel negativo (m)" required={false}><input style={s.input} type="number" value={r.elevation_loss} onChange={e => updRoute(i, "elevation_loss", e.target.value)} /></Field>
+                  </div>
+                  <div className="form-two-col">
+                    <Field label="Altitud máxima (m)" required={false}><input style={s.input} type="number" value={r.max_altitude} onChange={e => updRoute(i, "max_altitude", e.target.value)} /></Field>
+                    <Field label="Altitud mínima (m)" required={false}><input style={s.input} type="number" value={r.min_altitude} onChange={e => updRoute(i, "min_altitude", e.target.value)} /></Field>
+                  </div>
+                  <div className="form-two-col">
+                    <Field label="Dificultad" required={false}>
+                      <select style={s.input} value={r.difficulty} onChange={e => updRoute(i, "difficulty", e.target.value)}>
+                        <option value="">-</option>
+                        <option value="fácil">Fácil</option><option value="moderado">Moderado</option><option value="difícil">Difícil</option>
+                      </select>
+                    </Field>
+                    <Field label="Tipo de ruta" required={false}>
+                      <select style={s.input} value={r.route_type} onChange={e => updRoute(i, "route_type", e.target.value)}>
+                        <option value="">-</option>
+                        <option value="circular">Circular</option><option value="ida y vuelta">Ida y vuelta</option>
+                      </select>
+                    </Field>
+                  </div>
+                  <div className="form-two-col">
+                    <Field label="Nivel técnico" required={false}>
+                      <select style={s.input} value={r.technical_level} onChange={e => updRoute(i, "technical_level", e.target.value)}>
+                        <option value="">-</option>
+                        <option value="bajo">Bajo</option><option value="medio">Medio</option><option value="alto">Alto</option>
+                      </select>
+                    </Field>
+                    <Field label="Demanda física" required={false}>
+                      <select style={s.input} value={r.physical_demand} onChange={e => updRoute(i, "physical_demand", e.target.value)}>
+                        <option value="">-</option>
+                        <option value="bajo">Baja</option><option value="medio">Media</option><option value="alto">Alta</option>
+                      </select>
+                    </Field>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button style={s.btnAdd} onClick={() => setRoutes(prev => [...prev, defaultRoute()])}>+ Agregar ruta</button>
+            <NavRow onBack={() => setStep(3)} onNext={() => setStep(5)} />
+          </div>
+        )}
+
+        {/* ── Step 4/5: Images ── */}
+        {step === (isTrekking ? 5 : 4) && !isService && (
           <div>
             <h2 style={s.title}>Imágenes</h2>
             <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
@@ -1194,14 +1239,112 @@ export default function AgregarLugar() {
                 ))}
               </div>
             )}
+            <NavRow onBack={() => setStep(isTrekking ? 4 : 3)} onNext={() => setStep(summaryStep)} />
+          </div>
+        )}
+
+        {/* ── Step Summary ── */}
+        {step === summaryStep && (
+          <div>
+            <h2 style={s.title}>Revisá tu lugar</h2>
+
+            {/* General */}
+            <SummaryCard title="Información general" onEdit={() => setStep(isService ? 2 : 2)}>
+              {isService ? (
+                <>
+                  <SummaryRow label="Categoría" value={selectedCat?.label} />
+                  <SummaryRow
+                    label="Lugar"
+                    value={availableSpots.find(sp => sp.id === selectedSpotId)?.name}
+                  />
+                  {selectedCat?.name === "Surf" && surf.name && (
+                    <SummaryRow label="Escuela" value={surf.name} />
+                  )}
+                  {selectedCat?.name === "Kayak" && kayaks[0]?.name && (
+                    <SummaryRow label="Servicio" value={kayaks[0].name} />
+                  )}
+                </>
+              ) : (
+                <>
+                  <SummaryRow label="Nombre" value={basic.name} />
+                  <SummaryRow label="Categoría" value={selectedCat?.label} />
+                  <SummaryRow label="Departamento" value={basic.department} />
+                </>
+              )}
+            </SummaryCard>
+
+            {/* Descripción */}
+            {!isService && basic.description && (
+              <SummaryCard title="Descripción" onEdit={() => setStep(2)}>
+                <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0, lineHeight: 1.6 }}>
+                  {basic.description.length > 120
+                    ? basic.description.slice(0, 120) + "…"
+                    : basic.description}
+                </p>
+              </SummaryCard>
+            )}
+
+            {/* Ubicación */}
+            {!isService && (basic.lat || basic.lng) && (
+              <SummaryCard title="Ubicación" onEdit={() => setStep(2)}>
+                <SummaryRow label="Latitud" value={basic.lat} />
+                <SummaryRow label="Longitud" value={basic.lng} />
+              </SummaryCard>
+            )}
+
+            {/* Contacto */}
+            {!isService && (basic.email || basic.whatsapp || basic.instagram) && (
+              <SummaryCard title="Contacto" onEdit={() => setStep(2)}>
+                {basic.email     && <SummaryRow label="Email"     value={basic.email} />}
+                {basic.whatsapp  && <SummaryRow label="WhatsApp"  value={basic.whatsapp} />}
+                {basic.instagram && <SummaryRow label="Instagram" value={basic.instagram} />}
+              </SummaryCard>
+            )}
+
+            {/* Trekking: características */}
+            {selectedCat?.name === "Trekking" && (
+              <SummaryCard title="Características del lugar" onEdit={() => setStep(3)}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  {TREKKING_FEATURES.map(({ key, label, emoji }) => {
+                    const val = trekkingFeatures[key]
+                    if (val === null) return null
+                    return (
+                      <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: "#3d3d3a" }}>{emoji} {label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: val ? "#2d6a4f" : "#dc2626" }}>
+                          {val ? "✓ Sí" : "✗ No"}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </SummaryCard>
+            )}
+
+            {/* Trekking: rutas */}
+            {selectedCat?.name === "Trekking" && routes.filter(r => r.name).length > 0 && (
+              <SummaryCard title="Rutas" onEdit={() => setStep(3)}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {routes.filter(r => r.name).map((r, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
+                      <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                        {[r.distance_km && `${r.distance_km} km`, r.difficulty].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </SummaryCard>
+            )}
+
             <div style={s.navRow}>
-              <button style={s.btnSecondary} onClick={() => setStep(3)}>Atrás</button>
+              <button style={s.btnSecondary} onClick={() => setStep(isService ? 3 : isTrekking ? 5 : 4)}>Volver</button>
               <button
                 style={{ ...s.btnPrimary, opacity: submitting ? 0.7 : 1 }}
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? (uploadProgress ?? "Enviando...") : "Enviar lugar"}
+                {submitting ? (uploadProgress ?? "Enviando...") : "Confirmar y enviar"}
               </button>
             </div>
             {error && <p style={s.errorText}>{error}</p>}
@@ -1349,6 +1492,55 @@ function NavRow({
       </div>
       {error && <p style={s.errorText}>{error}</p>}
     </>
+  )
+}
+
+function SummaryCard({
+  title, onEdit, children,
+}: {
+  title: string
+  onEdit?: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div style={{
+      background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
+      padding: "16px 20px", marginBottom: 12,
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f" }}>
+            {title}
+          </span>
+        </div>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{
+              background: "none", border: "1px solid #e0ddd6", padding: "3px 10px",
+              fontSize: 12, color: "#7a7669", cursor: "pointer",
+              fontFamily: "inherit", borderRadius: 8,
+            }}
+          >
+            Editar
+          </button>
+        )}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string | undefined }) {
+  if (!value) return null
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
+      <span style={{ fontSize: 12, color: "#9a9690", minWidth: 84, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#1b1b19", fontWeight: 500 }}>{value}</span>
+    </div>
   )
 }
 
