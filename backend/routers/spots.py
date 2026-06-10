@@ -120,6 +120,8 @@ def get_spots(
     climbing_type: Optional[List[str]] = Query(default=None),
     grade_range: Optional[List[str]] = Query(default=None),
     no_restrictions: Optional[bool] = None,
+    amenity_ids: Optional[List[int]] = Query(default=None),
+    price_range: Optional[List[str]] = Query(default=None),
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -280,6 +282,33 @@ def get_spots(
 
     if climbing_joined:
         query = query.distinct()
+
+    is_camping = activity == "Camping"
+
+    if is_camping and amenity_ids:
+        for amenity_id in amenity_ids:
+            query = query.filter(
+                SpotDB.id.in_(
+                    db.query(SpotAmenity.spot_id)
+                    .filter(SpotAmenity.amenity_id == amenity_id)
+                    .scalar_subquery()
+                )
+            )
+
+    if is_camping and price_range:
+        query = query.outerjoin(SpotDB.camping_detail)
+        pr_conds = []
+        for p in price_range:
+            if p == "gratis":
+                pr_conds.append(or_(CampingDetail.price == 0, CampingDetail.price == None))
+            elif p == "bajo":
+                pr_conds.append(and_(CampingDetail.price > 0, CampingDetail.price < 300))
+            elif p == "medio":
+                pr_conds.append(and_(CampingDetail.price >= 300, CampingDetail.price <= 800))
+            elif p == "alto":
+                pr_conds.append(CampingDetail.price > 800)
+        if pr_conds:
+            query = query.filter(or_(*pr_conds))
 
     spots = query.all()
 
