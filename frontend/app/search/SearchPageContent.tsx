@@ -7,6 +7,7 @@ import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
 import FilterDrawer from "../../components/spots/TrekkingFilters"
 import KayakFilterDrawer from "../../components/spots/KayakFilters"
+import SurfFilterDrawer from "../../components/spots/SurfFilters"
 import {
   TrekkingFilterState,
   EMPTY_TREKKING_FILTERS,
@@ -17,6 +18,11 @@ import {
   EMPTY_KAYAK_FILTERS,
   countActiveKayakFilters,
 } from "../../lib/kayak-filters"
+import {
+  SurfFilterState,
+  EMPTY_SURF_FILTERS,
+  countActiveSurfFilters,
+} from "../../lib/surf-filters"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -31,11 +37,13 @@ export default function SearchPage() {
   const [mapExpanded, setMapExpanded]             = useState(false)
   const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
   const [kayakFilters, setKayakFilters]       = useState<KayakFilterState>(EMPTY_KAYAK_FILTERS)
+  const [surfFilters, setSurfFilters]         = useState<SurfFilterState>(EMPTY_SURF_FILTERS)
   const [filterOpen, setFilterOpen]           = useState(false)
 
   useEffect(() => {
     setTrekkingFilters(EMPTY_TREKKING_FILTERS)
     setKayakFilters(EMPTY_KAYAK_FILTERS)
+    setSurfFilters(EMPTY_SURF_FILTERS)
   }, [activity])
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -75,10 +83,16 @@ export default function SearchPage() {
       kayakFilters.durations.forEach(d => params.append("kayak_duration", d))
       if (kayakFilters.rentalAvailable) params.append("rental_available", "true")
     }
+    if (activity === "Surf") {
+      surfFilters.classTypes.forEach(c => params.append("class_type", c))
+      surfFilters.durations.forEach(d => params.append("surf_duration", d))
+      if (surfFilters.equipmentIncluded) params.append("equipment_included", "true")
+      if (surfFilters.hasSurfSchool) params.append("has_surf_school", "true")
+    }
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
-  }, [activity, department, trekkingFilters, kayakFilters])
+  }, [activity, department, trekkingFilters, kayakFilters, surfFilters])
 
   const title = activity && department
     ? `${activity} en ${department}`
@@ -88,7 +102,8 @@ export default function SearchPage() {
 
   const activeFilterCount =
     activity === "Trekking" ? countActiveFilters(trekkingFilters) :
-    activity === "Kayak"    ? countActiveKayakFilters(kayakFilters) : 0
+    activity === "Kayak"    ? countActiveKayakFilters(kayakFilters) :
+    activity === "Surf"     ? countActiveSurfFilters(surfFilters) : 0
   const canFilter = !!activity
 
   return (
@@ -469,6 +484,14 @@ export default function SearchPage() {
           onClose={() => setFilterOpen(false)}
           appliedFilters={kayakFilters}
           onApply={setKayakFilters}
+        />
+      )}
+      {activity === "Surf" && (
+        <SurfFilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={surfFilters}
+          onApply={setSurfFilters}
         />
       )}
     </div>

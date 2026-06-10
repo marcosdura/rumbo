@@ -113,6 +113,10 @@ def get_spots(
     kayak_difficulty: Optional[List[str]] = Query(default=None),
     kayak_duration: Optional[List[str]] = Query(default=None),
     rental_available: Optional[bool] = None,
+    class_type: Optional[List[str]] = Query(default=None),
+    surf_duration: Optional[List[str]] = Query(default=None),
+    equipment_included: Optional[bool] = None,
+    has_surf_school: Optional[bool] = None,
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -206,6 +210,40 @@ def get_spots(
         query = query.filter(KayakDetail.rental_available == rental_available)
 
     if kayak_joined:
+        query = query.distinct()
+
+    is_surf = activity == "Surf"
+    surf_joined = False
+
+    if is_surf and class_type:
+        query = query.outerjoin(SpotDB.surf_schools).filter(SurfSchool.class_type.in_(class_type))
+        surf_joined = True
+
+    if is_surf and surf_duration:
+        if not surf_joined:
+            query = query.outerjoin(SpotDB.surf_schools)
+            surf_joined = True
+        sd_conds = []
+        for d in surf_duration:
+            if d == "corta":   sd_conds.append(SurfSchool.duration < 2)
+            elif d == "media": sd_conds.append(and_(SurfSchool.duration >= 2, SurfSchool.duration <= 5))
+            elif d == "larga": sd_conds.append(SurfSchool.duration > 5)
+        if sd_conds:
+            query = query.filter(or_(*sd_conds))
+
+    if is_surf and equipment_included is not None:
+        if not surf_joined:
+            query = query.outerjoin(SpotDB.surf_schools)
+            surf_joined = True
+        query = query.filter(SurfSchool.equipment_include == equipment_included)
+
+    if is_surf and has_surf_school:
+        if not surf_joined:
+            query = query.outerjoin(SpotDB.surf_schools)
+            surf_joined = True
+        query = query.filter(SurfSchool.id != None)
+
+    if surf_joined:
         query = query.distinct()
 
     spots = query.all()
