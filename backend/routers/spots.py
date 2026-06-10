@@ -117,6 +117,9 @@ def get_spots(
     surf_duration: Optional[List[str]] = Query(default=None),
     equipment_included: Optional[bool] = None,
     has_surf_school: Optional[bool] = None,
+    climbing_type: Optional[List[str]] = Query(default=None),
+    grade_range: Optional[List[str]] = Query(default=None),
+    no_restrictions: Optional[bool] = None,
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -244,6 +247,38 @@ def get_spots(
         query = query.filter(SurfSchool.id != None)
 
     if surf_joined:
+        query = query.distinct()
+
+    is_climbing = activity == "Escalada"
+    climbing_joined = False
+
+    if is_climbing and climbing_type:
+        query = query.outerjoin(SpotDB.climbing_sectors).filter(ClimbingSector.type.in_(climbing_type))
+        climbing_joined = True
+
+    if is_climbing and grade_range:
+        if not climbing_joined:
+            query = query.outerjoin(SpotDB.climbing_sectors)
+            climbing_joined = True
+        query = query.outerjoin(ClimbingSector.routes)
+        gr_conds = []
+        for g in grade_range:
+            if g == "principiante": gr_conds.append(ClimbingRoute.grade <= "5c")
+            elif g == "intermedio": gr_conds.append(and_(ClimbingRoute.grade >= "6a", ClimbingRoute.grade <= "6c+"))
+            elif g == "avanzado":   gr_conds.append(and_(ClimbingRoute.grade >= "7a", ClimbingRoute.grade <= "7c+"))
+            elif g == "experto":    gr_conds.append(ClimbingRoute.grade >= "8a")
+        if gr_conds:
+            query = query.filter(or_(*gr_conds))
+
+    if is_climbing and no_restrictions:
+        if not climbing_joined:
+            query = query.outerjoin(SpotDB.climbing_sectors)
+            climbing_joined = True
+        query = query.filter(
+            or_(ClimbingSector.restrictions == None, ClimbingSector.restrictions == "")
+        )
+
+    if climbing_joined:
         query = query.distinct()
 
     spots = query.all()

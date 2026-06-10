@@ -8,6 +8,7 @@ import Navbar from "../../components/layout/Navbar"
 import FilterDrawer from "../../components/spots/TrekkingFilters"
 import KayakFilterDrawer from "../../components/spots/KayakFilters"
 import SurfFilterDrawer from "../../components/spots/SurfFilters"
+import ClimbingFilterDrawer from "../../components/spots/ClimbingFilters"
 import {
   TrekkingFilterState,
   EMPTY_TREKKING_FILTERS,
@@ -23,6 +24,11 @@ import {
   EMPTY_SURF_FILTERS,
   countActiveSurfFilters,
 } from "../../lib/surf-filters"
+import {
+  ClimbingFilterState,
+  EMPTY_CLIMBING_FILTERS,
+  countActiveClimbingFilters,
+} from "../../lib/climbing-filters"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -37,13 +43,15 @@ export default function SearchPage() {
   const [mapExpanded, setMapExpanded]             = useState(false)
   const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
   const [kayakFilters, setKayakFilters]       = useState<KayakFilterState>(EMPTY_KAYAK_FILTERS)
-  const [surfFilters, setSurfFilters]         = useState<SurfFilterState>(EMPTY_SURF_FILTERS)
-  const [filterOpen, setFilterOpen]           = useState(false)
+  const [surfFilters, setSurfFilters]             = useState<SurfFilterState>(EMPTY_SURF_FILTERS)
+  const [climbingFilters, setClimbingFilters]     = useState<ClimbingFilterState>(EMPTY_CLIMBING_FILTERS)
+  const [filterOpen, setFilterOpen]               = useState(false)
 
   useEffect(() => {
     setTrekkingFilters(EMPTY_TREKKING_FILTERS)
     setKayakFilters(EMPTY_KAYAK_FILTERS)
     setSurfFilters(EMPTY_SURF_FILTERS)
+    setClimbingFilters(EMPTY_CLIMBING_FILTERS)
   }, [activity])
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -89,10 +97,15 @@ export default function SearchPage() {
       if (surfFilters.equipmentIncluded) params.append("equipment_included", "true")
       if (surfFilters.hasSurfSchool) params.append("has_surf_school", "true")
     }
+    if (activity === "Escalada") {
+      climbingFilters.types.forEach(t => params.append("climbing_type", t))
+      climbingFilters.gradeRanges.forEach(g => params.append("grade_range", g))
+      if (climbingFilters.hasRestrictions) params.append("no_restrictions", "true")
+    }
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
-  }, [activity, department, trekkingFilters, kayakFilters, surfFilters])
+  }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters])
 
   const title = activity && department
     ? `${activity} en ${department}`
@@ -101,9 +114,10 @@ export default function SearchPage() {
     : "Todos los spots"
 
   const activeFilterCount =
-    activity === "Trekking" ? countActiveFilters(trekkingFilters) :
-    activity === "Kayak"    ? countActiveKayakFilters(kayakFilters) :
-    activity === "Surf"     ? countActiveSurfFilters(surfFilters) : 0
+    activity === "Trekking"  ? countActiveFilters(trekkingFilters)           :
+    activity === "Kayak"     ? countActiveKayakFilters(kayakFilters)         :
+    activity === "Surf"      ? countActiveSurfFilters(surfFilters)           :
+    activity === "Escalada"  ? countActiveClimbingFilters(climbingFilters)   : 0
   const canFilter = !!activity
 
   return (
@@ -492,6 +506,14 @@ export default function SearchPage() {
           onClose={() => setFilterOpen(false)}
           appliedFilters={surfFilters}
           onApply={setSurfFilters}
+        />
+      )}
+      {activity === "Escalada" && (
+        <ClimbingFilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={climbingFilters}
+          onApply={setClimbingFilters}
         />
       )}
     </div>
