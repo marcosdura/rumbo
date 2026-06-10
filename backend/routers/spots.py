@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
@@ -9,7 +9,7 @@ import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
 from sqlalchemy import func
-from typing import Optional
+from typing import Optional, List
 from database import engine
 from models import Base
 import re
@@ -99,7 +99,15 @@ def get_spot_ids(db: Session = Depends(get_db)):
 def get_spots(
     db: Session = Depends(get_db),
     activity: Optional[str] = None,
-    department: Optional[str] = None
+    department: Optional[str] = None,
+    difficulty: Optional[List[str]] = Query(default=None),
+    duration: Optional[str] = None,
+    parking: Optional[bool] = None,
+    potable_water: Optional[bool] = None,
+    pet_friendly: Optional[bool] = None,
+    kids_friendly: Optional[bool] = None,
+    bathrooms: Optional[bool] = None,
+    camping_amenity: Optional[bool] = None,
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -112,6 +120,41 @@ def get_spots(
 
     if activity:
         query = query.join(SpotDB.category).filter(models.Category.name == activity)
+
+    is_trekking = activity == "Trekking"
+    routes_joined = False
+
+    if is_trekking and difficulty:
+        query = query.join(SpotDB.routes).filter(Route.difficulty.in_(difficulty))
+        routes_joined = True
+
+    if is_trekking and duration:
+        if not routes_joined:
+            query = query.join(SpotDB.routes)
+            routes_joined = True
+        if duration == "corta":
+            query = query.filter(Route.duration_hours < 2)
+        elif duration == "media":
+            query = query.filter(Route.duration_hours >= 2, Route.duration_hours <= 5)
+        elif duration == "larga":
+            query = query.filter(Route.duration_hours > 5)
+
+    if routes_joined:
+        query = query.distinct()
+
+    amenity_filters = {
+        "parking": parking,
+        "potable_water": potable_water,
+        "pet_friendly": pet_friendly,
+        "kids_friendly": kids_friendly,
+        "bathrooms": bathrooms,
+        "fire_pits": camping_amenity,
+    }
+    active_amenity = {k: v for k, v in amenity_filters.items() if v is not None}
+    if is_trekking and active_amenity:
+        query = query.outerjoin(SpotDB.trekking_detail)
+        for field, val in active_amenity.items():
+            query = query.filter(getattr(TrekkingDetail, field) == val)
 
     spots = query.all()
 

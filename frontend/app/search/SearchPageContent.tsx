@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
+import TrekkingFilters, { TrekkingFilterState, EMPTY_TREKKING_FILTERS, hasTrekkingFilters } from "../../components/spots/TrekkingFilters"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -17,6 +18,11 @@ export default function SearchPage() {
   const [loading, setLoading]               = useState(true)
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]       = useState(false)
+  const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
+
+  useEffect(() => {
+    setTrekkingFilters(EMPTY_TREKKING_FILTERS)
+  }, [activity])
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const [atTop, setAtTop]       = useState(true)
@@ -41,10 +47,17 @@ export default function SearchPage() {
     const params = new URLSearchParams()
     if (activity)   params.append("activity", activity)
     if (department) params.append("department", department)
+    if (activity === "Trekking") {
+      trekkingFilters.difficulties.forEach(d => params.append("difficulty", d))
+      if (trekkingFilters.duration) params.append("duration", trekkingFilters.duration)
+      Object.entries(trekkingFilters.amenities).forEach(([k, v]) => {
+        if (v) params.append(k, "true")
+      })
+    }
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
-  }, [activity, department])
+  }, [activity, department, trekkingFilters])
 
   const title = activity && department
     ? `${activity} en ${department}`
@@ -243,6 +256,27 @@ export default function SearchPage() {
 
             <div className="fade-up fade-up-2" style={{ height: 1, background: "#e0ddd6", marginTop: 16 }} />
           </div>
+
+          {/* Filtros contextuales */}
+          {activity === "Trekking" ? (
+            <TrekkingFilters
+              visible={true}
+              filters={trekkingFilters}
+              onChange={next => {
+                setTrekkingFilters(next)
+              }}
+            />
+          ) : (
+            <div style={{
+              padding: "10px 24px 0",
+              fontSize: 12,
+              color: "#b0aca5",
+              fontStyle: "italic",
+              fontFamily: "'DM Sans', sans-serif",
+            }}>
+              Elegí una actividad para ver filtros específicos
+            </div>
+          )}
 
           {/* Mobile map toggle */}
           <div className="mobile-map-btn-wrap">
