@@ -46,7 +46,7 @@ export default function TrekkingAmenitiesCard({ trekkingDetail }) {
               fontSize: 12, fontWeight: 600,
               color: style.color, background: style.bg, border: `1px solid ${style.border}`,
             }}>
-              {emoji} {label}
+              {val ? `${emoji} ${label}` : `No ${label}`}
             </span>
           )
         })}

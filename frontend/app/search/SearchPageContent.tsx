@@ -53,9 +53,17 @@ export default function SearchPage() {
     : "Todos los spots"
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
+    <div className="search-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+        .search-root {
+          height: 100vh;
+          height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          background: #f5f4f0;
+        }
 
         .fade-up   { opacity: 0; transform: translateY(18px); animation: fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
         .fade-up-1 { animation-delay: 0.05s; }
@@ -130,12 +138,16 @@ export default function SearchPage() {
             top: 0; left: 0;
             width: 100vw !important;
             height: 100vh !important;
+            height: 100dvh !important;
             z-index: 1000;
             padding: 0 !important;
           }
           .search-map-panel.map-visible-mobile .map-inner {
             border-radius: 0 !important;
             border: none !important;
+          }
+          .search-map-panel.map-visible-mobile .leaflet-container {
+            border-radius: 0 !important;
           }
           .map-close-btn {
             display: flex;
@@ -213,7 +225,7 @@ export default function SearchPage() {
                     padding: "4px 10px", borderRadius: 999,
                     background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8",
                   }}>
-                    🏃 {activity}
+                    {({ Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶" } as Record<string,string>)[activity] ?? "🏃"} {activity}
                   </span>
                 )}
                 {department && (

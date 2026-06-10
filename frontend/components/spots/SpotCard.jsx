@@ -7,6 +7,11 @@ import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
 
+const CATEGORY_EMOJI = {
+  Camping: "🏕️", Glamping: "🛖", Trekking: "🥾",
+  Escalada: "🧗", Surf: "🏄", Kayak: "🛶",
+}
+
 function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -166,7 +171,9 @@ function SpotCard({ spot, isHighlighted = false }) {
           )}
           <div className="spot-card-footer">
             <div className="spot-card-badges">
-              <Pill variant="beige">{spot.category?.name || "Sin categoría"}</Pill>
+              <Pill variant="beige">
+                {CATEGORY_EMOJI[spot.category?.name] ? `${CATEGORY_EMOJI[spot.category.name]} ${spot.category.name}` : (spot.category?.name || "Sin categoría")}
+              </Pill>
               <Pill variant="dark-green" style={{ minWidth: 0, overflow: "hidden", flexShrink: 1 }}>
                 <span className="dept-pill-text">{spot.department || "Sin departamento"}</span>
               </Pill>

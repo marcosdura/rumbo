@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf"]
+const ACTIVITY_EMOJI = { Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶" }
 const departments = [
   "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
   "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",
@@ -390,7 +391,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
                       {activity === a && (
                         <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
                       )}
-                      {a}
+                      {ACTIVITY_EMOJI[a] ? `${ACTIVITY_EMOJI[a]} ${a}` : a}
                     </div>
                   ))
                 ) : (
