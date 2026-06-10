@@ -109,6 +109,10 @@ def get_spots(
     kids_friendly: Optional[bool] = None,
     bathrooms: Optional[bool] = None,
     camping_amenity: Optional[bool] = None,
+    water_type: Optional[List[str]] = Query(default=None),
+    kayak_difficulty: Optional[List[str]] = Query(default=None),
+    kayak_duration: Optional[List[str]] = Query(default=None),
+    rental_available: Optional[bool] = None,
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -169,6 +173,40 @@ def get_spots(
         query = query.outerjoin(SpotDB.trekking_detail)
         for field, val in active_amenity.items():
             query = query.filter(getattr(TrekkingDetail, field) == val)
+
+    is_kayak = activity == "Kayak"
+    kayak_joined = False
+
+    if is_kayak and water_type:
+        query = query.outerjoin(SpotDB.kayak_detail).filter(KayakDetail.water_type.in_(water_type))
+        kayak_joined = True
+
+    if is_kayak and kayak_difficulty:
+        if not kayak_joined:
+            query = query.outerjoin(SpotDB.kayak_detail)
+            kayak_joined = True
+        query = query.filter(KayakDetail.difficulty.in_(kayak_difficulty))
+
+    if is_kayak and kayak_duration:
+        if not kayak_joined:
+            query = query.outerjoin(SpotDB.kayak_detail)
+            kayak_joined = True
+        kd_conds = []
+        for d in kayak_duration:
+            if d == "corta":   kd_conds.append(KayakDetail.duration < 2)
+            elif d == "media": kd_conds.append(and_(KayakDetail.duration >= 2, KayakDetail.duration <= 5))
+            elif d == "larga": kd_conds.append(KayakDetail.duration > 5)
+        if kd_conds:
+            query = query.filter(or_(*kd_conds))
+
+    if is_kayak and rental_available is not None:
+        if not kayak_joined:
+            query = query.outerjoin(SpotDB.kayak_detail)
+            kayak_joined = True
+        query = query.filter(KayakDetail.rental_available == rental_available)
+
+    if kayak_joined:
+        query = query.distinct()
 
     spots = query.all()
 

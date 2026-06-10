@@ -6,11 +6,17 @@ import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
 import FilterDrawer from "../../components/spots/TrekkingFilters"
+import KayakFilterDrawer from "../../components/spots/KayakFilters"
 import {
   TrekkingFilterState,
   EMPTY_TREKKING_FILTERS,
   countActiveFilters,
 } from "../../lib/trekking-filters"
+import {
+  KayakFilterState,
+  EMPTY_KAYAK_FILTERS,
+  countActiveKayakFilters,
+} from "../../lib/kayak-filters"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -23,11 +29,13 @@ export default function SearchPage() {
   const [loading, setLoading]                     = useState(true)
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]             = useState(false)
-  const [trekkingFilters, setTrekkingFilters]     = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
-  const [filterOpen, setFilterOpen]               = useState(false)
+  const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
+  const [kayakFilters, setKayakFilters]       = useState<KayakFilterState>(EMPTY_KAYAK_FILTERS)
+  const [filterOpen, setFilterOpen]           = useState(false)
 
   useEffect(() => {
     setTrekkingFilters(EMPTY_TREKKING_FILTERS)
+    setKayakFilters(EMPTY_KAYAK_FILTERS)
   }, [activity])
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -61,10 +69,16 @@ export default function SearchPage() {
         if (v) params.append(k, "true")
       })
     }
+    if (activity === "Kayak") {
+      kayakFilters.waterTypes.forEach(w => params.append("water_type", w))
+      kayakFilters.difficulties.forEach(d => params.append("kayak_difficulty", d))
+      kayakFilters.durations.forEach(d => params.append("kayak_duration", d))
+      if (kayakFilters.rentalAvailable) params.append("rental_available", "true")
+    }
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
-  }, [activity, department, trekkingFilters])
+  }, [activity, department, trekkingFilters, kayakFilters])
 
   const title = activity && department
     ? `${activity} en ${department}`
@@ -72,7 +86,9 @@ export default function SearchPage() {
     : department ? `Spots en ${department}`
     : "Todos los spots"
 
-  const activeFilterCount = activity === "Trekking" ? countActiveFilters(trekkingFilters) : 0
+  const activeFilterCount =
+    activity === "Trekking" ? countActiveFilters(trekkingFilters) :
+    activity === "Kayak"    ? countActiveKayakFilters(kayakFilters) : 0
   const canFilter = !!activity
 
   return (
@@ -439,12 +455,22 @@ export default function SearchPage() {
 
       </div>
 
-      <FilterDrawer
-        isOpen={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        appliedFilters={trekkingFilters}
-        onApply={setTrekkingFilters}
-      />
+      {activity === "Trekking" && (
+        <FilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={trekkingFilters}
+          onApply={setTrekkingFilters}
+        />
+      )}
+      {activity === "Kayak" && (
+        <KayakFilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={kayakFilters}
+          onApply={setKayakFilters}
+        />
+      )}
     </div>
   )
 }
