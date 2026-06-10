@@ -19,13 +19,23 @@ interface Props {
 }
 
 export default function FilterDrawer({ isOpen, onClose, appliedFilters, onApply }: Props) {
-  const [pending, setPending] = useState<TrekkingFilterState>(appliedFilters)
+  const [pending, setPending]       = useState<TrekkingFilterState>(appliedFilters)
+  const [visible, setVisible]       = useState(false)
+  const [animatingIn, setAnimatingIn] = useState(false)
 
   useEffect(() => {
-    if (isOpen) setPending(appliedFilters)
+    if (isOpen) {
+      setPending(appliedFilters)
+      setVisible(true)
+      requestAnimationFrame(() => setAnimatingIn(true))
+    } else {
+      setAnimatingIn(false)
+      const timer = setTimeout(() => setVisible(false), 300)
+      return () => clearTimeout(timer)
+    }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!visible) return null
 
   const toggleMulti = <T extends string>(arr: T[], val: T): T[] =>
     arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]
@@ -49,32 +59,21 @@ export default function FilterDrawer({ isOpen, onClose, appliedFilters, onApply 
   return (
     <>
       <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
-          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        @keyframes drawerSlideUp {
-          from { transform: translateY(100%); }
-          to   { transform: translateY(0); }
-        }
-        @keyframes overlayFadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-
         .filter-overlay {
           position: fixed;
           inset: 0;
           background: rgba(0,0,0,0.45);
           z-index: 1000;
-          animation: overlayFadeIn 0.2s ease forwards;
+          opacity: 0;
+          transition: opacity 0.25s ease;
         }
+        .filter-overlay.active { opacity: 1; }
 
         .filter-panel {
           position: fixed;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%) scale(0.95);
           width: 480px;
           max-height: 90vh;
           border-radius: 20px;
@@ -83,8 +82,13 @@ export default function FilterDrawer({ isOpen, onClose, appliedFilters, onApply 
           display: flex;
           flex-direction: column;
           box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          animation: modalFadeIn 0.2s cubic-bezier(0.22,1,0.36,1) forwards;
           font-family: 'DM Sans', sans-serif;
+          opacity: 0;
+          transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22,1,0.36,1);
+        }
+        .filter-panel.active {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
         }
 
         .filter-handle { display: none; }
@@ -223,11 +227,16 @@ export default function FilterDrawer({ isOpen, onClose, appliedFilters, onApply 
             top: auto;
             left: 0;
             bottom: 0;
-            transform: translateY(0);
             width: 100%;
             max-height: 85vh;
             border-radius: 20px 20px 0 0;
-            animation: drawerSlideUp 0.3s ease-out forwards;
+            opacity: 1;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+          }
+          .filter-panel.active {
+            opacity: 1;
+            transform: translateY(0);
           }
           .filter-handle {
             display: block;
@@ -243,9 +252,9 @@ export default function FilterDrawer({ isOpen, onClose, appliedFilters, onApply 
         }
       `}</style>
 
-      <div className="filter-overlay" onClick={onClose} />
+      <div className={`filter-overlay${animatingIn ? " active" : ""}`} onClick={onClose} />
 
-      <div className="filter-panel">
+      <div className={`filter-panel${animatingIn ? " active" : ""}`}>
         <div className="filter-handle" />
 
         <div className="filter-header">

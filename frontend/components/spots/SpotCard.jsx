@@ -120,7 +120,13 @@ function SpotCard({ spot, isHighlighted = false }) {
           .spot-card-img-wrap { height: 120px; }
           .spot-card-name     { font-size: 13px; }
           .spot-card-body     { padding: 8px 10px 10px; }
-          .spot-card-badges   { flex-wrap: nowrap; overflow: hidden; }
+          .spot-card-badges   {
+            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            overflow: hidden;
+          }
         }
       `}</style>
 
