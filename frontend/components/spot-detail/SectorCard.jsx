@@ -6,9 +6,7 @@ import Pill from "@/components/ui/Pill"
 
 export default function SectorCard({ sector, spotSlug }) {
   const [hovered, setHovered] = useState(false)
-  const href = spotSlug && sector.slug
-    ? `/spots/${spotSlug}/sectores/${sector.slug}`
-    : `/sectors/${sector.id}`
+  const href = `/spots/${spotSlug}/sectores/${sector.slug}`
 
   return (
     <Link href={href} style={{ textDecoration: "none", display: "block" }}>

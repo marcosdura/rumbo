@@ -1,6 +1,6 @@
 import React from "react"
 import { Metadata } from "next"
-import ClimbingSectorDetails from "../../../../sectors/[id]/page"
+import ClimbingSectorDetails from "../../../../../components/spot-detail/ClimbingSectorDetails"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>

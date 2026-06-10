@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Navbar from "../../../components/layout/Navbar"
+import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
@@ -10,21 +10,32 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const id = params?.id
   const router = useRouter()
   const [sector, setSector] = useState<any>(null)
-  const [routes, setRoutes] = useState<any>([])
+  const [routes, setRoutes] = useState<any[]>([])
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    if (!slugProp && !id) return
+    if (!slugProp && !id) { setError(true); return }
     const url = slugProp
       ? `${process.env.NEXT_PUBLIC_API_URL}/sectors/by-slug/${slugProp}`
       : `${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}`
-    fetch(url).then(res => res.json()).then(data => setSector(data))
+    fetch(url)
+      .then(res => {
+        if (!res.ok) { setError(true); return null }
+        return res.json()
+      })
+      .then(data => {
+        if (!data || data.detail) { setError(true); return }
+        setSector(data)
+      })
+      .catch(() => setError(true))
   }, [slugProp, id])
 
   useEffect(() => {
     if (!sector?.id) return
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${sector.id}/routes`)
-      .then(res => res.json())
-      .then(data => setRoutes(data))
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setRoutes(Array.isArray(data) ? data : []))
+      .catch(() => setRoutes([]))
   }, [sector?.id])
 
   const gradeConfig = (grade: any) => {
@@ -43,6 +54,32 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
     if (num <= 7) return { color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a" }
     return { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" }
   }
+
+  if (error) return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+      <Navbar />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <p style={{ fontSize: 36, opacity: 0.2 }}>🧗</p>
+        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+          Sector no encontrado
+        </p>
+        <p style={{ fontSize: 14, color: "#9a9690", margin: 0 }}>
+          El sector que buscás no existe o fue eliminado.
+        </p>
+        <button
+          onClick={() => router.back()}
+          style={{
+            marginTop: 8, padding: "10px 20px", borderRadius: 12,
+            border: "1px solid #e0ddd6", background: "#fff",
+            fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+            cursor: "pointer", color: "#3d3d3a",
+          }}
+        >
+          ← Volver
+        </button>
+      </div>
+    </div>
+  )
 
   if (!sector) return <LoadingScreen />
 
