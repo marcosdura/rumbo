@@ -8,7 +8,7 @@ from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDet
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 from typing import Optional, List
 from database import engine
 from models import Base
@@ -101,7 +101,8 @@ def get_spots(
     activity: Optional[str] = None,
     department: Optional[str] = None,
     difficulty: Optional[List[str]] = Query(default=None),
-    duration: Optional[str] = None,
+    duration: Optional[List[str]] = Query(default=None),
+    distance: Optional[List[str]] = Query(default=None),
     parking: Optional[bool] = None,
     potable_water: Optional[bool] = None,
     pet_friendly: Optional[bool] = None,
@@ -132,12 +133,25 @@ def get_spots(
         if not routes_joined:
             query = query.join(SpotDB.routes)
             routes_joined = True
-        if duration == "corta":
-            query = query.filter(Route.duration_hours < 2)
-        elif duration == "media":
-            query = query.filter(Route.duration_hours >= 2, Route.duration_hours <= 5)
-        elif duration == "larga":
-            query = query.filter(Route.duration_hours > 5)
+        dur_conds = []
+        for d in duration:
+            if d == "corta":   dur_conds.append(Route.duration_hours < 2)
+            elif d == "media": dur_conds.append(and_(Route.duration_hours >= 2, Route.duration_hours <= 5))
+            elif d == "larga": dur_conds.append(Route.duration_hours > 5)
+        if dur_conds:
+            query = query.filter(or_(*dur_conds))
+
+    if is_trekking and distance:
+        if not routes_joined:
+            query = query.join(SpotDB.routes)
+            routes_joined = True
+        dist_conds = []
+        for d in distance:
+            if d == "corta":   dist_conds.append(Route.distance_km < 5)
+            elif d == "media": dist_conds.append(and_(Route.distance_km >= 5, Route.distance_km <= 15))
+            elif d == "larga": dist_conds.append(Route.distance_km > 15)
+        if dist_conds:
+            query = query.filter(or_(*dist_conds))
 
     if routes_joined:
         query = query.distinct()

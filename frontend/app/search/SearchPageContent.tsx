@@ -1,11 +1,16 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
-import TrekkingFilters, { TrekkingFilterState, EMPTY_TREKKING_FILTERS, hasTrekkingFilters } from "../../components/spots/TrekkingFilters"
+import FilterDrawer from "../../components/spots/TrekkingFilters"
+import {
+  TrekkingFilterState,
+  EMPTY_TREKKING_FILTERS,
+  countActiveFilters,
+} from "../../lib/trekking-filters"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -14,11 +19,12 @@ export default function SearchPage() {
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
 
-  const [spots, setSpots]                   = useState<any[]>([])
-  const [loading, setLoading]               = useState(true)
+  const [spots, setSpots]                         = useState<any[]>([])
+  const [loading, setLoading]                     = useState(true)
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
-  const [mapExpanded, setMapExpanded]       = useState(false)
-  const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
+  const [mapExpanded, setMapExpanded]             = useState(false)
+  const [trekkingFilters, setTrekkingFilters]     = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
+  const [filterOpen, setFilterOpen]               = useState(false)
 
   useEffect(() => {
     setTrekkingFilters(EMPTY_TREKKING_FILTERS)
@@ -49,7 +55,8 @@ export default function SearchPage() {
     if (department) params.append("department", department)
     if (activity === "Trekking") {
       trekkingFilters.difficulties.forEach(d => params.append("difficulty", d))
-      if (trekkingFilters.duration) params.append("duration", trekkingFilters.duration)
+      trekkingFilters.durations.forEach(d => params.append("duration", d))
+      trekkingFilters.distances.forEach(d => params.append("distance", d))
       Object.entries(trekkingFilters.amenities).forEach(([k, v]) => {
         if (v) params.append(k, "true")
       })
@@ -64,6 +71,9 @@ export default function SearchPage() {
     : activity   ? activity
     : department ? `Spots en ${department}`
     : "Todos los spots"
+
+  const activeFilterCount = activity === "Trekking" ? countActiveFilters(trekkingFilters) : 0
+  const canFilter = !!activity
 
   return (
     <div className="search-root">
@@ -117,6 +127,52 @@ export default function SearchPage() {
         .search-header { padding: 36px 24px 0; flex-shrink: 0; }
         .search-cards-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .search-skeleton-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        .filter-trigger-btn {
+          font-family: 'DM Sans', sans-serif;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 14px;
+          border-radius: 20px;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          color: #3d3d3a;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, color 0.15s;
+          white-space: nowrap;
+          flex-shrink: 0;
+          position: relative;
+        }
+        .filter-trigger-btn:hover {
+          background: #f0f7f3;
+          border-color: #b7dfc8;
+          color: #1b4332;
+        }
+        .filter-trigger-btn.has-filters {
+          background: #e8f5ee;
+          border-color: #2d6a4f;
+          color: #1b4332;
+        }
+        .filter-trigger-icon {
+          display: flex; align-items: center;
+        }
+        .filter-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 5px;
+          border-radius: 999px;
+          background: #2d6a4f;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
 
         .mobile-map-btn-wrap { display: none; }
         .mobile-map-btn {
@@ -213,20 +269,44 @@ export default function SearchPage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
                 {title}
               </h1>
-              {!loading && (
-                <span style={{
-                  fontSize: 12, fontWeight: 600,
-                  padding: "3px 12px", borderRadius: 999,
-                  background: "#1b4332", color: "#d8f3dc",
-                  border: "1px solid #2d6a4f",
-                  letterSpacing: "0.03em", flexShrink: 0,
-                }}>
-                  {spots.length}
-                </span>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                {!loading && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 600,
+                    padding: "3px 12px", borderRadius: 999,
+                    background: "#1b4332", color: "#d8f3dc",
+                    border: "1px solid #2d6a4f",
+                    letterSpacing: "0.03em",
+                  }}>
+                    {spots.length}
+                  </span>
+                )}
+                {canFilter && (
+                  <button
+                    className={`filter-trigger-btn${activeFilterCount > 0 ? " has-filters" : ""}`}
+                    onClick={() => setFilterOpen(true)}
+                  >
+                    <span className="filter-trigger-icon">
+                      {/* sliders icon */}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="4" y1="6" x2="20" y2="6"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="18" x2="20" y2="18"/>
+                        <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/>
+                        <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/>
+                        <circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/>
+                      </svg>
+                    </span>
+                    {activeFilterCount > 0 ? `Filtros · ${activeFilterCount}` : "Filtros"}
+                    {activeFilterCount > 0 && (
+                      <span className="filter-badge">{activeFilterCount}</span>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             {(activity || department) && (
@@ -256,27 +336,6 @@ export default function SearchPage() {
 
             <div className="fade-up fade-up-2" style={{ height: 1, background: "#e0ddd6", marginTop: 16 }} />
           </div>
-
-          {/* Filtros contextuales */}
-          {activity === "Trekking" ? (
-            <TrekkingFilters
-              visible={true}
-              filters={trekkingFilters}
-              onChange={next => {
-                setTrekkingFilters(next)
-              }}
-            />
-          ) : (
-            <div style={{
-              padding: "10px 24px 0",
-              fontSize: 12,
-              color: "#b0aca5",
-              fontStyle: "italic",
-              fontFamily: "'DM Sans', sans-serif",
-            }}>
-              Elegí una actividad para ver filtros específicos
-            </div>
-          )}
 
           {/* Mobile map toggle */}
           <div className="mobile-map-btn-wrap">
@@ -379,6 +438,13 @@ export default function SearchPage() {
         </div>
 
       </div>
+
+      <FilterDrawer
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        appliedFilters={trekkingFilters}
+        onApply={setTrekkingFilters}
+      />
     </div>
   )
 }
