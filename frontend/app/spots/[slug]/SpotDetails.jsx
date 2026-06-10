@@ -320,9 +320,33 @@ useEffect(() => {
             </div>
 
             {/* Imágenes */}
-            <div className="fade-up fade-up-2" style={{ marginBottom: 36 }}>
+            <div className="fade-up fade-up-2" style={{ marginBottom: spot.is_public != null ? 16 : 36 }}>
               <SpotImages images={spot.images} name={spot.name} />
             </div>
+
+            {/* Banner acceso público/privado */}
+            {spot.is_public != null && (
+              <div style={{
+                background: spot.is_public ? "#e8f5ee" : "#fdf0f0",
+                border: `1px solid ${spot.is_public ? "#b7dfc8" : "#f5c0c0"}`,
+                borderRadius: 16,
+                padding: "16px 20px",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                marginBottom: 36,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+                lineHeight: 1.5,
+              }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{spot.is_public ? "✅" : "⚠️"}</span>
+                <span style={{ color: spot.is_public ? "#1b4332" : "#7f1d1d" }}>
+                  {spot.is_public
+                    ? "Lugar de acceso público — Te pedimos que respetes el entorno, cuides la naturaleza y dejes el lugar como lo encontraste."
+                    : "Lugar de acceso privado — Antes de visitar, contactá al lugar para confirmar disponibilidad. Algunos sitios requieren reserva previa o condiciones específicas de acceso. Rumbo no se responsabiliza por el ingreso sin autorización."}
+                </span>
+              </div>
+            )}
 
             {/* Layout principal */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

@@ -294,12 +294,12 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 16px;
-          height: 16px;
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
           background: #d0cdc7;
           color: #fff;
-          font-size: 9px;
+          font-size: 18px;
           cursor: pointer;
           flex-shrink: 0;
           transition: background 0.15s;

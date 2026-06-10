@@ -8,6 +8,18 @@ import {
   EMPTY_CAMPING_FILTERS,
 } from "../../lib/camping-filters"
 
+const AMENITY_ICONS: Record<string, string> = {
+  "Ducha":"🚿","Agua caliente":"🔥","Baños":"🚽","Agua potable":"🚰",
+  "Electricidad":"⚡","Lavadero":"🧼","Parrillero":"🔥","Cocina compartida":"🍳",
+  "Comedor":"🍽️","Heladera":"🧊","Leña disponible":"🪵","Sombra":"🌳",
+  "Mesas y bancos":"🪑","Parcelas delimitadas":"⛺","Acceso a río/lago/mar":"🌊",
+  "Playa":"🏖️","Cancha de fútbol":"⚽","Cancha de Voley":"🏐","Piscina":"🏊",
+  "Alquiler de bicis":"🚴","Kayak":"🛶","WiFi":"🛜","Acepta mascotas":"🐶",
+  "Proveeduría/kiosco":"🛒","Cafetería":"☕","Restaurante/bar":"🍺",
+  "Estacionamiento":"🚗","Seguridad":"🔒","Zona para fogón":"🏕️",
+  "Tomas para camper/van":"🔌","Área para motorhomes":"🚐",
+}
+
 interface Props {
   isOpen:         boolean
   onClose:        () => void
@@ -300,7 +312,7 @@ export default function CampingFilterDrawer({ isOpen, onClose, appliedFilters, o
                     className={`cm-pill${pending.amenityIds.includes(amenity.id) ? " active" : ""}`}
                     onClick={() => toggleAmenity(amenity.id)}
                   >
-                    {amenity.label}
+                    {AMENITY_ICONS[amenity.label] || "✨"} {amenity.label}
                   </button>
                 ))}
               </div>

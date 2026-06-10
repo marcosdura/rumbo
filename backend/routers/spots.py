@@ -74,6 +74,8 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
         lat=spot.lat,
         lng=spot.lng,
         slug=generate_slug(spot.name),
+        is_public=spot.is_public,
+        public_transport=spot.public_transport,
     )
 
     db.add(db_spot)
@@ -390,6 +392,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "images": spot.images,
         "average_rating": None,
         "review_count": 0,
+        "is_public": spot.is_public,
+        "public_transport": spot.public_transport,
     }
 
 
@@ -432,6 +436,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "images": spot.images,
         "season_start": spot.season_start,
         "season_end": spot.season_end,
+        "is_public": spot.is_public,
+        "public_transport": spot.public_transport,
     }
 
 @router.post("/spots/{spot_id}/trekking-detail")

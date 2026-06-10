@@ -27,6 +27,9 @@ class SpotDB(Base):
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12
     season_end   = Column(Integer, nullable=True)  # 1–12
+
+    is_public        = Column(Boolean, nullable=True)  # True=público, False=privado
+    public_transport = Column(String, nullable=True)   # "si" | "no" | "nose"
     
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="spots")

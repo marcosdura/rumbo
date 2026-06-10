@@ -21,7 +21,16 @@ function SpotDetails({ spot }) {
     { label: "Categoría",    value: spot.category?.name || "—" },
     { label: "Precio",       value: price },
     { label: "Temporada",    value: getSeason(spot.season_start, spot.season_end) },
-  ]
+    spot.is_public != null
+      ? { label: "Acceso", value: spot.is_public ? "🏛️ Público" : "🔒 Privado" }
+      : null,
+    spot.public_transport != null
+      ? { label: "Transporte público",
+          value: spot.public_transport === "si"   ? "🚌 Accesible"
+               : spot.public_transport === "no"   ? "🚗 No accesible"
+               : "🤷 Sin información" }
+      : null,
+  ].filter(Boolean)
 
   const whatsappNumber = spot.whatsapp ? spot.whatsapp.replace(/\D/g, "") : ""
   const whatsappUrl = "https://wa.me/" + whatsappNumber

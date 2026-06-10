@@ -37,6 +37,8 @@ class SpotCreate(BaseModel):
     lat: float | None = None
     lng: float | None = None
     slug: str | None = None
+    is_public: Optional[bool] = None
+    public_transport: Optional[str] = None
 
 
 # -------- CAMPING --------
@@ -272,6 +274,8 @@ class SpotResponse(BaseModel):
     owner_email: str | None = None
     owner_phone: str | None = None
     is_approved: bool = False
+    is_public: Optional[bool] = None
+    public_transport: Optional[str] = None
 
     class Config:
         from_attributes = True

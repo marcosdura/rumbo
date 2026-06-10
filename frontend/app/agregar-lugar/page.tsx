@@ -219,6 +219,8 @@ export default function AgregarLugar() {
   const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
   const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
+  const [isPublic, setIsPublic]                   = useState<boolean | null>(null)
+  const [publicTransport, setPublicTransport]     = useState<string | null>(null)
   const [contactError, setContactError]           = useState<string | null>(null)
   const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
   const [submitting, setSubmitting]               = useState(false)
@@ -315,6 +317,10 @@ export default function AgregarLugar() {
     const hasContact = basic.owner_contact_type === "email" ? !!basic.owner_email : !!basic.owner_phone
     if (!hasContact || !basic.name || !basic.description || !basic.department) {
       setError("Completá los campos obligatorios.")
+      return
+    }
+    if (isPublic === null) {
+      setError("Indicá si el lugar es público o privado.")
       return
     }
     if (!basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
@@ -472,6 +478,8 @@ export default function AgregarLugar() {
           instagram:    basic.instagram || null,
           lat:          basic.lat ? parseFloat(basic.lat) : null,
           lng:          basic.lng ? parseFloat(basic.lng) : null,
+          is_public:        isPublic,
+          public_transport: publicTransport,
         }),
       })
       if (!spotRes.ok) throw new Error("Error al crear el lugar")
@@ -605,6 +613,7 @@ export default function AgregarLugar() {
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
     setContactError(null); setFeatureErrors(new Set()); setError(null); setSuccess(false)
     setSelectedSpotId(null); setAvailableSpots([])
+    setIsPublic(null); setPublicTransport(null)
   }
 
   // ---- Fixed header (always shown) ----
@@ -780,6 +789,66 @@ export default function AgregarLugar() {
               {contactError && (
                 <p style={{ fontSize: 12, color: "#c0392b", margin: "-6px 0 0" }}>{contactError}</p>
               )}
+
+              {/* ¿Público o privado? */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
+                  ¿El lugar es público o privado?{" "}
+                  <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {([
+                    { value: true,  label: "🏛️ Público" },
+                    { value: false, label: "🔒 Privado" },
+                  ] as { value: boolean; label: string }[]).map(opt => (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => setIsPublic(opt.value)}
+                      style={{
+                        padding: "6px 16px", borderRadius: 20,
+                        border: `1px solid ${isPublic === opt.value ? "#2d6a4f" : "#e0ddd6"}`,
+                        background: isPublic === opt.value ? "#2d6a4f" : "#f7f5f0",
+                        color: isPublic === opt.value ? "#fff" : "#1b1b19",
+                        fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ¿Accesible en transporte público? */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
+                  ¿Es accesible en transporte público?{" "}
+                  <span style={{ fontSize: 12, color: "#9a9690", fontWeight: 400 }}>(opcional)</span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {([
+                    { value: "si",   label: "✅ Sí" },
+                    { value: "no",   label: "❌ No" },
+                    { value: "nose", label: "🤷 No sé" },
+                  ] as { value: string; label: string }[]).map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPublicTransport(prev => prev === opt.value ? null : opt.value)}
+                      style={{
+                        padding: "6px 16px", borderRadius: 20,
+                        border: `1px solid ${publicTransport === opt.value ? "#2d6a4f" : "#e0ddd6"}`,
+                        background: publicTransport === opt.value ? "#2d6a4f" : "#f7f5f0",
+                        color: publicTransport === opt.value ? "#fff" : "#1b1b19",
+                        fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <LocationPicker
                 lat={basic.lat ? parseFloat(basic.lat) : null}
                 lng={basic.lng ? parseFloat(basic.lng) : null}
