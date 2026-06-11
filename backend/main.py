@@ -15,7 +15,7 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-origins = ["http://localhost:3000", "https://rumbo-eight.vercel.app"]
+origins = ["http://localhost:3000", "https://rumbo-eight.vercel.app", "https://rumboapp.uy", "https://www.rumboapp.uy",]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     origins.append(frontend_url)
