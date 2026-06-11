@@ -1,0 +1,54 @@
+"use client"
+
+import { s } from "../styles"
+import NavRow from "../ui/NavRow"
+import type { Category } from "../types"
+
+export default function StepServicioSpot({
+  selectedCat, availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext,
+}: {
+  selectedCat: Category
+  availableSpots: { id: number; name: string }[]
+  loadingSpots: boolean
+  selectedSpotId: number | null
+  setSelectedSpotId: (id: number) => void
+  error: string | null
+  onBack: () => void
+  onNext: () => void
+}) {
+  return (
+    <div>
+      <h2 style={s.title}>
+        {selectedCat.name === "Surf" ? "¿En qué playa operás?" : "¿En qué río o laguna operás?"}
+      </h2>
+      <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 20 }}>
+        {selectedCat.name === "Surf"
+          ? "Seleccioná la playa donde funciona tu escuela de surf."
+          : "Seleccioná el río o laguna donde ofrecés el servicio de kayak."}
+      </p>
+      <div style={s.form}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loadingSpots ? (
+            <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando lugares...</p>
+          ) : availableSpots.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9a9690" }}>
+              No hay lugares disponibles aún. Contactanos para agregar el tuyo.
+            </p>
+          ) : (
+            <select
+              style={s.input}
+              value={selectedSpotId ?? ""}
+              onChange={e => setSelectedSpotId(Number(e.target.value))}
+            >
+              <option value="" disabled>-- Seleccioná un lugar --</option>
+              {availableSpots.map(sp => (
+                <option key={sp.id} value={sp.id}>{sp.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
+    </div>
+  )
+}
