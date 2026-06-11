@@ -25,7 +25,15 @@ export const metadata: Metadata = {
   title: "Rumbo | Encontrá tu próxima aventura en Uruguay",
   description: "Descubrí los mejores lugares para camping, trekking, escalada, surf y kayak en Uruguay.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: '/favicon-180.png',
+    other: [
+      { rel: 'icon', url: '/favicon-192.png', sizes: '192x192' },
+    ],
   },
   openGraph: {
     title: "Rumbo — Encontrá tu próxima aventura en Uruguay",
