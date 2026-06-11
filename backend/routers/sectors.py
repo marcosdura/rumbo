@@ -1,5 +1,6 @@
 import re
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import ClimbingSector
@@ -40,8 +41,11 @@ def create_sector(sector: ClimbingSectorCreate, db: Session = Depends(get_db)):
     return db_sector
 
 @router.get("/", response_model=list[ClimbingSectorResponse])
-def get_routes(db: Session = Depends(get_db)):
-    return db.query(ClimbingSector).all()
+def get_sectors(spot_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    q = db.query(ClimbingSector)
+    if spot_id is not None:
+        q = q.filter(ClimbingSector.spot_id == spot_id)
+    return q.all()
 
 @router.get("/by-slug/{slug}", response_model=ClimbingSectorResponse)
 def get_sector_by_slug(slug: str, db: Session = Depends(get_db)):

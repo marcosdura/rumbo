@@ -27,6 +27,12 @@ export type KayakItem = {
   email: string; whatsapp: string; instagram: string
 }
 
+export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null
+
+export type ClimbingRouteForm = {
+  name: string; grade: string; type: string; length_m: string; bolts: string; description: string
+}
+
 export type BasicInfo = {
   owner_contact_type: "email" | "phone"
   owner_email: string; owner_phone: string

@@ -4,12 +4,13 @@ import { TREKKING_FEATURES } from "../constants"
 import { s } from "../styles"
 import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem } from "../types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem, ClimbingMode, ClimbingRouteForm, SectorItem } from "../types"
 
 export default function StepResumen({
   selectedCat, isService, isTrekking, basic, trekkingFeatures, routes,
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
   error, onSubmit, onBack, onEditStep,
+  climbingMode, climbingSpotName, climbingSectorName, sectors, climbingRoute,
 }: {
   selectedCat: Category
   isService: boolean
@@ -27,6 +28,11 @@ export default function StepResumen({
   onSubmit: () => void
   onBack: () => void
   onEditStep: (n: number) => void
+  climbingMode?: ClimbingMode
+  climbingSpotName?: string
+  climbingSectorName?: string
+  sectors?: SectorItem[]
+  climbingRoute?: ClimbingRouteForm
 }) {
   return (
     <div>
@@ -112,6 +118,30 @@ export default function StepResumen({
               </div>
             ))}
           </div>
+        </SummaryCard>
+      )}
+
+      {(climbingMode === "new_sector" || climbingMode === "new_route") && (
+        <SummaryCard
+          title={climbingMode === "new_sector" ? "Nuevo sector" : "Nueva ruta"}
+          onEdit={() => onEditStep(2)}
+        >
+          {climbingSpotName && <SummaryRow label="Spot" value={climbingSpotName} />}
+          {climbingMode === "new_sector" && sectors?.[0] && (
+            <>
+              <SummaryRow label="Sector" value={sectors[0].name} />
+              {sectors[0].type && <SummaryRow label="Tipo" value={sectors[0].type} />}
+              {sectors[0].restrictions && <SummaryRow label="Restricciones" value={sectors[0].restrictions} />}
+            </>
+          )}
+          {climbingMode === "new_route" && (
+            <>
+              {climbingSectorName && <SummaryRow label="Sector" value={climbingSectorName} />}
+              {climbingRoute?.name && <SummaryRow label="Ruta" value={climbingRoute.name} />}
+              {climbingRoute?.grade && <SummaryRow label="Grado" value={climbingRoute.grade} />}
+              {climbingRoute?.type && <SummaryRow label="Tipo" value={climbingRoute.type} />}
+            </>
+          )}
         </SummaryCard>
       )}
 

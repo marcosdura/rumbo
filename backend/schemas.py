@@ -168,7 +168,7 @@ class ClimbingRouteBase(BaseModel):
 
 
 class ClimbingRouteCreate(ClimbingRouteBase):
-    spot_id: int
+    sector_id: int
 
 
 class ClimbingRouteResponse(ClimbingRouteBase):

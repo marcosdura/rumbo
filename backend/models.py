@@ -186,6 +186,7 @@ class ClimbingRoute(Base):
 
     name = Column(String)
     grade = Column(String)
+    type = Column(String, nullable=True)
     bolts = Column(Integer)
     length = Column(Float)
     description = Column(String)

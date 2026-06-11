@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import { useState } from "react"
 import type { CSSProperties } from "react"
 import type React from "react"
 import { DEPARTMENTS } from "../constants"
@@ -17,7 +18,7 @@ const LocationPicker = dynamic(
 
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
-  contactError, error, onBack, onNext,
+  contactError, error, onBack, onNext, title = "Información básica",
 }: {
   basic: BasicInfo
   setBasic: React.Dispatch<React.SetStateAction<BasicInfo>>
@@ -30,10 +31,25 @@ export default function StepInfoBasica({
   error: string | null
   onBack: () => void
   onNext: () => void
+  title?: string
 }) {
+  const [emailError, setEmailError] = useState<string | null>(null)
+
+  function isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  function handleEmailBlur() {
+    if (basic.email.trim() && !isValidEmail(basic.email)) {
+      setEmailError("Ingresá un email válido")
+    } else {
+      setEmailError(null)
+    }
+  }
+
   return (
     <div>
-      <h2 style={s.title}>Información básica</h2>
+      <h2 style={s.title}>{title}</h2>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
@@ -98,7 +114,18 @@ export default function StepInfoBasica({
         />
         <div className="form-two-col">
           <Field label="Email del lugar" required={false}>
-            <input style={s.input} type="email" value={basic.email} onChange={e => upd("email", e.target.value)} />
+            <>
+              <input
+                style={s.input}
+                type="email"
+                value={basic.email}
+                onChange={e => { upd("email", e.target.value); if (!e.target.value.trim()) setEmailError(null) }}
+                onBlur={handleEmailBlur}
+              />
+              {emailError && (
+                <p style={{ fontSize: 12, color: "#c0392b", margin: "4px 0 0" }}>{emailError}</p>
+              )}
+            </>
           </Field>
           <Field label="WhatsApp" required={false}>
             <input style={s.input} type="text" placeholder="Ej: 099123456" value={basic.whatsapp} onChange={e => upd("whatsapp", e.target.value)} />
