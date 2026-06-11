@@ -52,7 +52,6 @@ export default function AgregarLugar() {
   const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [isPublic, setIsPublic]                   = useState<boolean | null>(null)
   const [publicTransport, setPublicTransport]     = useState<string | null>(null)
-  const [contactError, setContactError]           = useState<string | null>(null)
   const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
@@ -91,9 +90,6 @@ export default function AgregarLugar() {
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
-    if ((field === "email" || field === "whatsapp" || field === "instagram") && val.trim()) {
-      setContactError(null)
-    }
   }
 
   function toggleAmenity(name: string) {
@@ -169,11 +165,6 @@ export default function AgregarLugar() {
           setError("Indicá si el lugar es público o privado.")
           return
         }
-        if (!basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
-          setContactError("Ingresá al menos un medio de contacto.")
-          return
-        }
-        setContactError(null)
         setError(null)
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
@@ -232,11 +223,6 @@ export default function AgregarLugar() {
       setError("Indicá si el lugar es público o privado.")
       return
     }
-    if (!basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
-      setContactError("Ingresá al menos un medio de contacto.")
-      return
-    }
-    setContactError(null)
     setError(null)
     setStep(3)
   }
@@ -428,7 +414,7 @@ export default function AgregarLugar() {
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
-    setContactError(null); setFeatureErrors(new Set()); setError(null); setSuccess(false)
+    setFeatureErrors(new Set()); setError(null); setSuccess(false)
     setSelectedSpotId(null); setAvailableSpots([])
     setIsPublic(null); setPublicTransport(null)
     setCreatingNewSpot(false); setClimbingMode(null)
@@ -569,7 +555,6 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
-            contactError={contactError}
             error={error}
             onBack={() => setCreatingNewSpot(false)}
             onNext={goToStep3}
@@ -594,7 +579,6 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
-            contactError={contactError}
             error={error}
             onBack={() => setClimbingMode(null)}
             onNext={goToStep3}
@@ -632,7 +616,6 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
-            contactError={contactError}
             error={error}
             onBack={() => setTrekkingMode(null)}
             onNext={goToStep3}
@@ -665,7 +648,6 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
-            contactError={contactError}
             error={error}
             onBack={() => setStep(1)}
             onNext={goToStep3}

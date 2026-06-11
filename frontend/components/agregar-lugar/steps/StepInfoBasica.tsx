@@ -18,7 +18,7 @@ const LocationPicker = dynamic(
 
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
-  contactError, error, onBack, onNext, title = "Información básica",
+  error, onBack, onNext, title = "Información básica",
 }: {
   basic: BasicInfo
   setBasic: React.Dispatch<React.SetStateAction<BasicInfo>>
@@ -27,7 +27,6 @@ export default function StepInfoBasica({
   setIsPublic: (v: boolean | null) => void
   publicTransport: string | null
   setPublicTransport: React.Dispatch<React.SetStateAction<string | null>>
-  contactError: string | null
   error: string | null
   onBack: () => void
   onNext: () => void
@@ -107,9 +106,6 @@ export default function StepInfoBasica({
           </Field>
           <div />
         </div>
-        {contactError && (
-          <p style={{ fontSize: 12, color: "#c0392b", margin: "-6px 0 0" }}>{contactError}</p>
-        )}
 
         {/* ¿Público o privado? */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
