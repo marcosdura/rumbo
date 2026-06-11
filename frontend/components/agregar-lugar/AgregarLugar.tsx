@@ -167,41 +167,7 @@ export default function AgregarLugar() {
           return
         }
         setError(null)
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              name: basic.name,
-              description: basic.description,
-              department: basic.department,
-              category_id: selectedCat!.id,
-              email: basic.email || null,
-              whatsapp: basic.whatsapp || null,
-              instagram: basic.instagram || null,
-              price: basic.price ? parseInt(basic.price) : null,
-              lat: basic.lat ? parseFloat(basic.lat) : null,
-              lng: basic.lng ? parseFloat(basic.lng) : null,
-              owner_email: session?.user?.email ?? null,
-              is_public: isPublic,
-              public_transport: publicTransport,
-              season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
-              season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
-            }),
-          })
-          if (!res.ok) {
-            setError("No se pudo crear el lugar. Intentá de nuevo.")
-            return
-          }
-          const data = await res.json()
-          setSelectedSpotId(data.id)
-          setStep(3)
-        } catch {
-          setError("No se pudo crear el lugar. Intentá de nuevo.")
-        }
+        setStep(3)
         return
       }
       if (!selectedSpotId) {
@@ -233,6 +199,39 @@ export default function AgregarLugar() {
     setError(null)
     setSubmitting(true)
     try {
+      // 1. Crear el spot
+      setUploadProgress("Guardando lugar...")
+      const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: basic.name,
+          description: basic.description,
+          department: basic.department,
+          category_id: selectedCat!.id,
+          email: basic.email || null,
+          whatsapp: basic.whatsapp || null,
+          instagram: basic.instagram || null,
+          price: basic.price ? parseInt(basic.price) : null,
+          lat: basic.lat ? parseFloat(basic.lat) : null,
+          lng: basic.lng ? parseFloat(basic.lng) : null,
+          owner_email: session?.user?.email ?? null,
+          is_approved: false,
+          is_public: isPublic,
+          public_transport: publicTransport,
+          season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
+          season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
+        }),
+      })
+      if (!spotRes.ok) throw new Error("Error al crear el lugar")
+      const spotData = await spotRes.json()
+      const newSpotId = spotData.id
+      setSelectedSpotId(newSpotId)
+
+      // 2. Subir imágenes
       const uploadedIds: string[] = []
       for (let i = 0; i < images.length; i++) {
         setUploadProgress(`Subiendo imágenes... (${i + 1} de ${images.length})`)
@@ -250,14 +249,14 @@ export default function AgregarLugar() {
           is_main: String(i === 0),
           order: String(i),
         })
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${selectedSpotId}?${urlParams}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${newSpotId}?${urlParams}`, {
           method: "POST",
           headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         })
       }
       setStep(4)
-    } catch {
-      setError("Error al subir imágenes. Intentá de nuevo.")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error al crear el lugar o subir imágenes.")
     } finally {
       setSubmitting(false)
       setUploadProgress(null)

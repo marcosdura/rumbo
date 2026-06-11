@@ -20,47 +20,113 @@ export default function StepImagenes({
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, 10)
-    if ((e.target.files?.length ?? 0) > 10) {
-      setError("Podés subir un máximo de 10 imágenes. Se tomaron las primeras 10.")
-    } else {
-      setError(null)
-    }
-    setImages(files)
-    setPreviews(files.map(f => URL.createObjectURL(f)))
+    const incoming = Array.from(e.target.files ?? [])
+    setImages(prev => {
+      const combined = [...prev, ...incoming].slice(0, 10)
+      if (prev.length + incoming.length > 10) {
+        setError("Límite de 10 imágenes. Se tomaron las primeras 10.")
+      } else {
+        setError(null)
+      }
+      setPreviews(combined.map(f => URL.createObjectURL(f)))
+      return combined
+    })
+    e.target.value = ""
+  }
+
+  function removeImage(index: number) {
+    setImages(prev => {
+      const next = prev.filter((_, i) => i !== index)
+      setPreviews(next.map(f => URL.createObjectURL(f)))
+      return next
+    })
+  }
+
+  function makeMain(index: number) {
+    setImages(prev => {
+      const next = [...prev]
+      const [item] = next.splice(index, 1)
+      next.unshift(item)
+      setPreviews(next.map(f => URL.createObjectURL(f)))
+      return next
+    })
   }
 
   return (
     <div>
       <h2 style={s.title}>Imágenes</h2>
       <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
-        La primera imagen será la principal. Mínimo 1 imagen requerida, máximo 10.
+        La primera imagen será la principal. Mínimo 1 requerida, máximo 10.
       </p>
-      <div style={s.dropzone} onClick={() => fileRef.current?.click()}>
-        <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handleFiles} />
-        <span style={{ color: "#7a7669", fontSize: 14 }}>
-          {images.length > 0
-            ? `${images.length} imagen${images.length !== 1 ? "es" : ""} seleccionada${images.length !== 1 ? "s" : ""}`
-            : "Hacé clic para seleccionar imágenes"}
-        </span>
-      </div>
+
+      {images.length < 10 && (
+        <div style={s.dropzone} onClick={() => fileRef.current?.click()}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={handleFiles}
+          />
+          <span style={{ color: "#7a7669", fontSize: 14 }}>
+            {images.length > 0
+              ? `+ Agregar más imágenes (${images.length}/10)`
+              : "Hacé clic para seleccionar imágenes"}
+          </span>
+        </div>
+      )}
+
       {previews.length > 0 && (
         <div style={s.previewGrid}>
           {previews.map((src, i) => (
             <div key={i} style={{ position: "relative", borderRadius: 12, overflow: "hidden" }}>
               <img src={src} alt={`preview ${i}`} style={s.previewImg} />
               {i === 0 && <span style={s.mainBadge}>Principal</span>}
+              {i !== 0 && (
+                <button
+                  type="button"
+                  onClick={() => makeMain(i)}
+                  style={{
+                    position: "absolute", bottom: 4, left: 4,
+                    background: "rgba(0,0,0,0.55)", color: "#fff",
+                    border: "none", borderRadius: 6,
+                    padding: "2px 7px", cursor: "pointer",
+                    fontSize: 10, fontWeight: 600,
+                    fontFamily: "inherit", lineHeight: 1.4,
+                  }}
+                >
+                  Hacer principal
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                style={{
+                  position: "absolute", top: 4, right: 4,
+                  background: "rgba(0,0,0,0.55)", color: "#fff",
+                  border: "none", borderRadius: "50%",
+                  width: 20, height: 20, cursor: "pointer",
+                  fontSize: 13, display: "flex", alignItems: "center",
+                  justifyContent: "center", fontFamily: "inherit", lineHeight: 1,
+                }}
+              >×</button>
             </div>
           ))}
         </div>
       )}
-      <NavRow onBack={onBack} onNext={() => {
-        if (images.length === 0) {
-          setError("Debés subir al menos una imagen para continuar.")
-          return
-        }
-        onNext()
-      }} error={error} />
+
+      <NavRow
+        onBack={onBack}
+        onNext={() => {
+          if (images.length === 0) {
+            setError("Debés subir al menos una imagen para continuar.")
+            return
+          }
+          onNext()
+        }}
+        error={error}
+      />
     </div>
   )
 }
