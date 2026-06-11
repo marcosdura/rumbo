@@ -4,6 +4,7 @@ from database import get_db
 from models import SpotImage, SpotDB
 from auth import get_current_user
 from limiter import limiter
+from typing import Optional
 
 router = APIRouter(prefix="/images", tags=["images"])
 
@@ -16,7 +17,7 @@ async def add_image_to_spot(
     is_main: bool = False,
     order: int = 0,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: Optional[dict] = Depends(get_current_user),
 ):
     # verificar que el spot existe
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()

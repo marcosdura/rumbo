@@ -51,7 +51,7 @@ def home():
 # usa la sesion para hablar con la DB
 @router.post("/spots", response_model=SpotResponse)
 @limiter.limit("10/minute")
-async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(get_db), user: Optional[dict] = Depends(get_current_user)):
 
     category = db.query(models.Category).filter(models.Category.id == spot.category_id).first()
 

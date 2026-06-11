@@ -373,7 +373,7 @@ export default function AgregarLugar() {
 
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
             body: JSON.stringify({
               spot_id: selectedSpotId,
               name: surf.name,
@@ -411,7 +411,7 @@ export default function AgregarLugar() {
             if (!k.name) continue
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
               body: JSON.stringify({
                 spot_id: selectedSpotId,
                 name: k.name,
@@ -461,7 +461,7 @@ export default function AgregarLugar() {
       const seasonEnd   = basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null
       const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           name:         basic.name,
           description:  basic.description,
@@ -495,7 +495,7 @@ export default function AgregarLugar() {
         })
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${params}`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         })
       }
 
@@ -517,7 +517,7 @@ export default function AgregarLugar() {
       if (cat === "Camping") {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({ price: basic.price ? parseFloat(basic.price) : null }),
         })
       }
@@ -525,7 +525,7 @@ export default function AgregarLugar() {
       if (cat === "Glamping") {
         const glampRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({}),
         })
         if (glampRes.ok) {
@@ -552,7 +552,7 @@ export default function AgregarLugar() {
           if (Object.keys(amenityPayload).length > 0) {
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/glamping/${glampingId}/amenities`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
               body: JSON.stringify(amenityPayload),
             })
           }

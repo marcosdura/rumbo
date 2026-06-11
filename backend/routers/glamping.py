@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import GlampingDetail, GlampingAmenity
 from schemas import GlampingDetailCreate, GlampingDetailResponse, GlampingAmenityCreate, GlampingAmenityResponse
+from typing import Optional
 
 router = APIRouter(prefix="/glamping", tags=["glamping"])
 

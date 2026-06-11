@@ -5,6 +5,7 @@ from schemas import KayakDetailCreate, KayakDetailResponse
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
+from typing import Optional
 
 router = APIRouter(prefix="/kayak", tags=["kayak"])
 
@@ -22,7 +23,7 @@ async def create_kayak(
     request: Request,
     kayak: KayakDetailCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: Optional[dict] = Depends(get_current_user),
 ):
     db_kayak = KayakDetail(**kayak.dict())
     db.add(db_kayak)
