@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function TermsPage() {
   const { data: session, update } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [accepted, setAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -23,7 +24,8 @@ export default function TermsPage() {
       if (!res.ok) throw new Error()
       const user = await res.json()
       await update({ termsAcceptedAt: user.terms_accepted_at })
-      router.replace("/")
+      const callbackUrl = searchParams.get("callbackUrl") || "/"
+      router.replace(callbackUrl)
     } catch {
       setError("Hubo un error. Intentá de nuevo.")
       setLoading(false)
