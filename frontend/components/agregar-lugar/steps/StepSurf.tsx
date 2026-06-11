@@ -11,7 +11,7 @@ import type { SurfItem } from "../types"
 
 export default function StepSurf({
   surf, setSurf, surfPhotoFiles, setSurfPhotoFiles, surfPhotoPreviews, setSurfPhotoPreviews,
-  error, onBack, onNext,
+  error, onBack, onNext, optional, onSkip,
 }: {
   surf: SurfItem
   setSurf: React.Dispatch<React.SetStateAction<SurfItem>>
@@ -22,6 +22,8 @@ export default function StepSurf({
   error: string | null
   onBack: () => void
   onNext: () => void
+  optional?: boolean
+  onSkip?: () => void
 }) {
   const ref1 = useRef<HTMLInputElement>(null)
   const ref2 = useRef<HTMLInputElement>(null)
@@ -116,6 +118,17 @@ export default function StepSurf({
           </div>
         </div>
       </div>
+      {optional && onSkip && (
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <button
+            type="button"
+            onClick={onSkip}
+            style={{ background: "none", border: "none", color: "#9a9690", fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
+          >
+            Saltar este paso
+          </button>
+        </div>
+      )}
       <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )

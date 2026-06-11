@@ -7,7 +7,7 @@ import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
   REQUIRED_FEATURE_KEYS,
 } from "./constants"
-import { submitAgregarLugar } from "./submit"
+import { submitAgregarLugar, buildPublicId } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"
@@ -82,8 +82,9 @@ export default function AgregarLugar() {
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
   const summaryStep =
-    isService ? 4
-    : isTrekking && trekkingMode === "new_route" ? 4
+    isService && creatingNewSpot ? 5
+    : isService ? 4
+    : isTrekking && trekkingMode === "new_route" ? 5
     : isTrekking ? 6
     : isEscalada && climbingMode === "new_sector" ? 4
     : 5
@@ -225,6 +226,42 @@ export default function AgregarLugar() {
     }
     setError(null)
     setStep(3)
+  }
+
+  async function handleSpotImagesAndNext() {
+    if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
+    setError(null)
+    setSubmitting(true)
+    try {
+      const uploadedIds: string[] = []
+      for (let i = 0; i < images.length; i++) {
+        setUploadProgress(`Subiendo imágenes... (${i + 1} de ${images.length})`)
+        const fd = new FormData()
+        fd.append("file", images[i])
+        fd.append("public_id", buildPublicId(selectedCat!.name, basic.name, i))
+        const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
+        if (!res.ok) throw new Error("Error al subir imagen")
+        const data = await res.json()
+        uploadedIds.push(data.public_id)
+      }
+      for (let i = 0; i < uploadedIds.length; i++) {
+        const urlParams = new URLSearchParams({
+          cloudinary_public_id: uploadedIds[i],
+          is_main: String(i === 0),
+          order: String(i),
+        })
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${selectedSpotId}?${urlParams}`, {
+          method: "POST",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        })
+      }
+      setStep(4)
+    } catch {
+      setError("Error al subir imágenes. Intentá de nuevo.")
+    } finally {
+      setSubmitting(false)
+      setUploadProgress(null)
+    }
   }
 
   function goToStep4() {
@@ -384,6 +421,7 @@ export default function AgregarLugar() {
     await submitAgregarLugar({
       selectedCat: selectedCat!,
       isService: isService ?? false,
+      creatingNewSpot,
       token,
       basic,
       isPublic,
@@ -721,7 +759,7 @@ export default function AgregarLugar() {
           />
         )}
 
-        {step === 3 && selectedCat?.name === "Surf" && (
+        {step === 3 && selectedCat?.name === "Surf" && !creatingNewSpot && (
           <StepSurf
             surf={surf}
             setSurf={setSurf}
@@ -735,7 +773,7 @@ export default function AgregarLugar() {
           />
         )}
 
-        {step === 3 && selectedCat?.name === "Kayak" && (
+        {step === 3 && selectedCat?.name === "Kayak" && !creatingNewSpot && (
           <StepKayak
             kayaks={kayaks}
             setKayaks={setKayaks}
@@ -746,6 +784,51 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
+          />
+        )}
+
+        {step === 3 && isService && creatingNewSpot && (
+          <StepImagenes
+            images={images}
+            setImages={setImages}
+            previews={previews}
+            setPreviews={setPreviews}
+            setError={setError}
+            error={error}
+            onBack={() => setStep(2)}
+            onNext={handleSpotImagesAndNext}
+          />
+        )}
+
+        {step === 4 && isService && creatingNewSpot && selectedCat?.name === "Surf" && (
+          <StepSurf
+            surf={surf}
+            setSurf={setSurf}
+            surfPhotoFiles={surfPhotoFiles}
+            setSurfPhotoFiles={setSurfPhotoFiles}
+            surfPhotoPreviews={surfPhotoPreviews}
+            setSurfPhotoPreviews={setSurfPhotoPreviews}
+            error={error}
+            optional={true}
+            onBack={() => setStep(3)}
+            onNext={() => setStep(5)}
+            onSkip={() => setStep(5)}
+          />
+        )}
+
+        {step === 4 && isService && creatingNewSpot && selectedCat?.name === "Kayak" && (
+          <StepKayak
+            kayaks={kayaks}
+            setKayaks={setKayaks}
+            kayakPhotoFiles={kayakPhotoFiles}
+            setKayakPhotoFiles={setKayakPhotoFiles}
+            kayakPhotoPreviews={kayakPhotoPreviews}
+            setKayakPhotoPreviews={setKayakPhotoPreviews}
+            error={error}
+            optional={true}
+            onBack={() => setStep(3)}
+            onNext={() => setStep(5)}
+            onSkip={() => setStep(5)}
           />
         )}
 
@@ -800,7 +883,8 @@ export default function AgregarLugar() {
             error={error}
             onSubmit={handleSubmit}
             onBack={() => setStep(
-              isService ? 3
+              isService && creatingNewSpot ? 4
+              : isService ? 3
               : isTrekking && trekkingMode === "new_route" ? 3
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 3

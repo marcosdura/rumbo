@@ -11,7 +11,7 @@ import type { KayakItem } from "../types"
 
 export default function StepKayak({
   kayaks, setKayaks, kayakPhotoFiles, setKayakPhotoFiles, kayakPhotoPreviews, setKayakPhotoPreviews,
-  error, onBack, onNext,
+  error, onBack, onNext, optional, onSkip,
 }: {
   kayaks: KayakItem[]
   setKayaks: React.Dispatch<React.SetStateAction<KayakItem[]>>
@@ -22,6 +22,8 @@ export default function StepKayak({
   error: string | null
   onBack: () => void
   onNext: () => void
+  optional?: boolean
+  onSkip?: () => void
 }) {
   const ref1 = useRef<HTMLInputElement>(null)
   const ref2 = useRef<HTMLInputElement>(null)
@@ -145,6 +147,17 @@ export default function StepKayak({
           </div>
         </div>
       ))}
+      {optional && onSkip && (
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <button
+            type="button"
+            onClick={onSkip}
+            style={{ background: "none", border: "none", color: "#9a9690", fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
+          >
+            Saltar este paso
+          </button>
+        </div>
+      )}
       <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )

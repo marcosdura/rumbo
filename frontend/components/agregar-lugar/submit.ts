@@ -12,6 +12,7 @@ export function buildPublicId(category: string, spotName: string, index: number)
 interface SubmitParams {
   selectedCat: Category
   isService: boolean
+  creatingNewSpot: boolean
   token: string | undefined
   basic: BasicInfo
   isPublic: boolean | null
@@ -35,7 +36,7 @@ interface SubmitParams {
 
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
-    selectedCat, isService, token, basic, isPublic, publicTransport,
+    selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
     selectedAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
@@ -48,7 +49,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setSubmitting(true)
     try {
       if (cat === "Surf" && surf.name) {
-        if (!surfPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
+        if (!creatingNewSpot && !surfPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
 
         const photoUrls: (string | null)[] = [null, null, null]
         const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
@@ -84,7 +85,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!res.ok) throw new Error("Error al guardar la escuelita")
       }
       if (cat === "Kayak") {
-        if (!kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
+        if (!creatingNewSpot && !kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
 
         const kayakPhotoUrls: (string | null)[] = [null, null, null]
         const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
