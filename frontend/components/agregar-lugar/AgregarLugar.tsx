@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
@@ -161,8 +161,7 @@ export default function AgregarLugar() {
           setError("El email del lugar tiene un formato inválido.")
           return
         }
-        const hasContact = basic.owner_contact_type === "email" ? !!basic.owner_email : !!basic.owner_phone
-        if (!hasContact || !basic.name || !basic.description || !basic.department) {
+        if (!basic.name || !basic.description || !basic.department) {
           setError("Completá los campos obligatorios.")
           return
         }
@@ -194,8 +193,7 @@ export default function AgregarLugar() {
               price: basic.price ? parseInt(basic.price) : null,
               lat: basic.lat ? parseFloat(basic.lat) : null,
               lng: basic.lng ? parseFloat(basic.lng) : null,
-              owner_email: basic.owner_contact_type === "email" ? basic.owner_email : null,
-              owner_phone: basic.owner_contact_type === "phone" ? basic.owner_phone : null,
+              owner_email: session?.user?.email ?? null,
               is_public: isPublic,
               public_transport: publicTransport,
               season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
@@ -226,8 +224,7 @@ export default function AgregarLugar() {
       setError("El email del lugar tiene un formato inválido.")
       return
     }
-    const hasContact = basic.owner_contact_type === "email" ? !!basic.owner_email : !!basic.owner_phone
-    if (!hasContact || !basic.name || !basic.description || !basic.department) {
+    if (!basic.name || !basic.description || !basic.department) {
       setError("Completá los campos obligatorios.")
       return
     }
@@ -415,6 +412,7 @@ export default function AgregarLugar() {
       surfPhotoFiles,
       kayakPhotoFiles,
       selectedSpotId,
+      ownerEmail: session?.user?.email ?? null,
       setSubmitting,
       setUploadProgress,
       setError,
@@ -469,6 +467,44 @@ export default function AgregarLugar() {
       </p>
     </div>
   )
+
+  if (!session) {
+    return (
+      <div style={s.page}>
+        <style>{mediaQuery}</style>
+        <div style={{ ...s.container, textAlign: "center", paddingTop: 48 }}>
+          {pageHeader}
+          <div style={{
+            background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
+            padding: "32px 28px", marginTop: 32, boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}>
+            <p style={{ fontSize: 22, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>
+              Necesitás una cuenta para continuar
+            </p>
+            <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 28, lineHeight: 1.6, maxWidth: 380, margin: "0 auto 28px" }}>
+              Guardamos tu email para poder contactarte si necesitamos verificar o completar la información del lugar que enviás.
+            </p>
+            <button
+              onClick={() => signIn("google", { callbackUrl: "/agregar-lugar" })}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                background: "#fff", border: "1px solid #e0ddd6", borderRadius: 12,
+                padding: "12px 24px", fontSize: 15, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit", color: "#1b1b19",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+              }}
+            >
+              Continuar con Google
+            </button>
+            <p style={{ fontSize: 12, color: "#9a9690", marginTop: 20 }}>
+              Al continuar aceptás nuestros{" "}
+              <a href="/legal/terms" style={{ color: "#2d6a4f" }}>Términos y condiciones</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (success) {
     return (

@@ -150,8 +150,6 @@ export const defaultKayak = (): KayakItem => ({
 })
 
 export const emptyBasic = (): BasicInfo => ({
-  owner_contact_type: "email",
-  owner_email: "", owner_phone: "",
   name: "", description: "", department: "",
   price: "", season_type: "all_year",
   season_start: "", season_end: "",

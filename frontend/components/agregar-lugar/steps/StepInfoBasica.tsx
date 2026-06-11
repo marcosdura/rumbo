@@ -51,36 +51,6 @@ export default function StepInfoBasica({
     <div>
       <h2 style={s.title}>{title}</h2>
       <div style={s.form}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
-            Tu contacto{" "}
-            <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
-            <div style={{ fontSize: 11, fontWeight: 400, color: "#7a7669", marginTop: 2 }}>No se mostrará públicamente</div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {(["email", "phone"] as const).map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setBasic(prev => ({ ...prev, owner_contact_type: t }))}
-                style={{
-                  padding: "6px 16px", borderRadius: 20,
-                  border: `1px solid ${basic.owner_contact_type === t ? "#2d6a4f" : "#e0ddd6"}`,
-                  background: basic.owner_contact_type === t ? "#2d6a4f" : "#f7f5f0",
-                  color: basic.owner_contact_type === t ? "#fff" : "#1b1b19",
-                  fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-                }}
-              >
-                {t === "email" ? "Email" : "Teléfono"}
-              </button>
-            ))}
-          </div>
-          {basic.owner_contact_type === "email" ? (
-            <input style={s.input} type="email" placeholder="tucorreo@email.com" value={basic.owner_email} onChange={e => upd("owner_email", e.target.value)} />
-          ) : (
-            <input style={s.input} type="tel" placeholder="Ej: 099123456" value={basic.owner_phone} onChange={e => upd("owner_phone", e.target.value)} />
-          )}
-        </div>
         <Field label="Nombre del lugar" required={true}>
           <input style={s.input} type="text" value={basic.name} onChange={e => upd("name", e.target.value)} />
         </Field>

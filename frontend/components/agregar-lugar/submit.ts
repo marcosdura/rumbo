@@ -26,6 +26,7 @@ interface SubmitParams {
   surfPhotoFiles: (File | null)[]
   kayakPhotoFiles: (File | null)[]
   selectedSpotId: number | null
+  ownerEmail: string | null
   setSubmitting: (v: boolean) => void
   setUploadProgress: (v: string | null) => void
   setError: (v: string | null) => void
@@ -36,7 +37,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, token, basic, isPublic, publicTransport,
     selectedAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
-    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId,
+    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
 
@@ -161,8 +162,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         description:  basic.description,
         department:   basic.department,
         category_id:  selectedCat.id,
-        owner_email:  basic.owner_contact_type === "email" ? (basic.owner_email || null) : null,
-        owner_phone:  basic.owner_contact_type === "phone" ? (basic.owner_phone || null) : null,
+        owner_email:  ownerEmail,
         is_approved:  false,
         price:        basic.price ? parseInt(basic.price) : null,
         season_start: seasonStart,

@@ -36,8 +36,6 @@ export type ClimbingRouteForm = {
 }
 
 export type BasicInfo = {
-  owner_contact_type: "email" | "phone"
-  owner_email: string; owner_phone: string
   name: string; description: string; department: string
   price: string; season_type: "all_year" | "seasonal"
   season_start: string; season_end: string
