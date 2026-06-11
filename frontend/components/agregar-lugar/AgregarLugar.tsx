@@ -197,70 +197,7 @@ export default function AgregarLugar() {
   async function handleSpotImagesAndNext() {
     if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
     setError(null)
-    setSubmitting(true)
-    try {
-      // 1. Crear el spot
-      setUploadProgress("Guardando lugar...")
-      const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          name: basic.name,
-          description: basic.description,
-          department: basic.department,
-          category_id: selectedCat!.id,
-          email: basic.email || null,
-          whatsapp: basic.whatsapp || null,
-          instagram: basic.instagram || null,
-          price: basic.price ? parseInt(basic.price) : null,
-          lat: basic.lat ? parseFloat(basic.lat) : null,
-          lng: basic.lng ? parseFloat(basic.lng) : null,
-          owner_email: session?.user?.email ?? null,
-          is_approved: false,
-          is_public: isPublic,
-          public_transport: publicTransport,
-          season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
-          season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
-        }),
-      })
-      if (!spotRes.ok) throw new Error("Error al crear el lugar")
-      const spotData = await spotRes.json()
-      const newSpotId = spotData.id
-      setSelectedSpotId(newSpotId)
-
-      // 2. Subir imágenes
-      const uploadedIds: string[] = []
-      for (let i = 0; i < images.length; i++) {
-        setUploadProgress(`Subiendo imágenes... (${i + 1} de ${images.length})`)
-        const fd = new FormData()
-        fd.append("file", images[i])
-        fd.append("public_id", buildPublicId(selectedCat!.name, basic.name, i))
-        const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
-        if (!res.ok) throw new Error("Error al subir imagen")
-        const data = await res.json()
-        uploadedIds.push(data.public_id)
-      }
-      for (let i = 0; i < uploadedIds.length; i++) {
-        const urlParams = new URLSearchParams({
-          cloudinary_public_id: uploadedIds[i],
-          is_main: String(i === 0),
-          order: String(i),
-        })
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${newSpotId}?${urlParams}`, {
-          method: "POST",
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        })
-      }
-      setStep(4)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Error al crear el lugar o subir imágenes.")
-    } finally {
-      setSubmitting(false)
-      setUploadProgress(null)
-    }
+    setStep(4)
   }
 
   function goToStep4() {

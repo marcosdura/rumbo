@@ -48,6 +48,67 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setError(null)
     setSubmitting(true)
     try {
+      let spotId = selectedSpotId
+
+      if (creatingNewSpot) {
+        setUploadProgress("Guardando lugar...")
+        const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            name: basic.name,
+            description: basic.description,
+            department: basic.department,
+            category_id: selectedCat.id,
+            email: basic.email || null,
+            whatsapp: basic.whatsapp || null,
+            instagram: basic.instagram || null,
+            price: basic.price ? parseInt(basic.price) : null,
+            lat: basic.lat ? parseFloat(basic.lat) : null,
+            lng: basic.lng ? parseFloat(basic.lng) : null,
+            owner_email: ownerEmail,
+            is_approved: false,
+            is_public: isPublic,
+            public_transport: publicTransport,
+            season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
+            season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
+          }),
+        })
+        if (!spotRes.ok) throw new Error("Error al crear el lugar")
+        const spotData = await spotRes.json()
+        spotId = spotData.id
+
+        setUploadProgress("Subiendo imágenes del lugar...")
+        const uploadResults = await Promise.all(
+          images.map(async (file, i) => {
+            const fd = new FormData()
+            fd.append("file", file)
+            fd.append("public_id", buildPublicId(selectedCat.name, basic.name, i))
+            const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
+            if (!res.ok) throw new Error("Error al subir imagen")
+            const data = await res.json()
+            return { publicId: data.public_id, index: i }
+          })
+        )
+
+        await Promise.all(
+          uploadResults.map(({ publicId, index }) => {
+            const urlParams = new URLSearchParams({
+              cloudinary_public_id: publicId,
+              is_main: String(index === 0),
+              order: String(index),
+            })
+            return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
+              method: "POST",
+              headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            })
+          })
+        )
+      }
+
       if (cat === "Surf" && surf.name) {
         if (!creatingNewSpot && !surfPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
 
@@ -71,7 +132,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
-            spot_id: selectedSpotId,
+            spot_id: spotId,
             name: surf.name,
             class_type: surf.class_type || null,
             duration: surf.duration ? parseFloat(surf.duration) : null,
@@ -109,7 +170,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             method: "POST",
             headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
             body: JSON.stringify({
-              spot_id: selectedSpotId,
+              spot_id: spotId,
               name: k.name,
               water_type: k.water_type || null, difficulty: k.difficulty || null,
               duration: k.duration ? parseFloat(k.duration) : null,
@@ -138,18 +199,19 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   setSubmitting(true)
 
   try {
-    // 1. Upload images
-    const uploadedIds: string[] = []
-    for (let i = 0; i < images.length; i++) {
-      setUploadProgress(`Subiendo imágenes... (${i + 1} de ${images.length})`)
-      const fd = new FormData()
-      fd.append("file", images[i])
-      fd.append("public_id", buildPublicId(selectedCat.name, basic.name, i))
-      const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
-      if (!res.ok) throw new Error("Error al subir imagen")
-      const data = await res.json()
-      uploadedIds.push(data.public_id)
-    }
+    // 1. Upload images en paralelo
+    setUploadProgress("Subiendo imágenes...")
+    const uploadResults = await Promise.all(
+      images.map(async (file, i) => {
+        const fd = new FormData()
+        fd.append("file", file)
+        fd.append("public_id", buildPublicId(selectedCat.name, basic.name, i))
+        const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
+        if (!res.ok) throw new Error("Error al subir imagen")
+        const data = await res.json()
+        return { publicId: data.public_id, index: i }
+      })
+    )
 
     // 2. Create spot
     setUploadProgress("Guardando lugar...")
@@ -181,18 +243,20 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     const spot = await spotRes.json()
     const spotId: number = spot.id
 
-    // 3. Add images
-    for (let i = 0; i < uploadedIds.length; i++) {
-      const urlParams = new URLSearchParams({
-        cloudinary_public_id: uploadedIds[i],
-        is_main: String(i === 0),
-        order: String(i),
+    // 3. Add images en paralelo
+    await Promise.all(
+      uploadResults.map(({ publicId, index }) => {
+        const urlParams = new URLSearchParams({
+          cloudinary_public_id: publicId,
+          is_main: String(index === 0),
+          order: String(index),
+        })
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
+          method: "POST",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        })
       })
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
-        method: "POST",
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      })
-    }
+    )
 
     // 4. Category-specific records
     if (cat === "Camping" && selectedAmenities.length > 0) {
