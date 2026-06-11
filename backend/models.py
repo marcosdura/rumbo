@@ -35,6 +35,7 @@ class SpotDB(Base):
     category = relationship("Category", back_populates="spots")
     amenities = relationship("SpotAmenity", back_populates="spot")
     camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
+    glamping_detail = relationship("GlampingDetail", uselist=False, back_populates="spot")
     trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot")
@@ -52,6 +53,41 @@ class Category(Base):
     name = Column(String, unique=True, index=True)
 
     spots = relationship("SpotDB", back_populates="category")
+
+class GlampingDetail(Base):
+    __tablename__ = "glamping_details"
+
+    id = Column(Integer, primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+
+    accommodation_type = Column(String, nullable=True)   # domo | carpa | cabaña | treehouse | otro
+    capacity = Column(Integer, nullable=True)
+    price_per_night = Column(Float, nullable=True)
+    min_nights = Column(Integer, nullable=True)
+
+    spot = relationship("SpotDB", back_populates="glamping_detail")
+    amenities = relationship("GlampingAmenity", back_populates="glamping", uselist=False)
+
+
+class GlampingAmenity(Base):
+    __tablename__ = "glamping_amenities"
+
+    id = Column(Integer, primary_key=True)
+    glamping_id = Column(Integer, ForeignKey("glamping_details.id"), unique=True)
+
+    private_bathroom   = Column(Boolean, nullable=True)
+    electricity        = Column(Boolean, nullable=True)
+    wifi               = Column(Boolean, nullable=True)
+    breakfast_included = Column(Boolean, nullable=True)
+    pet_friendly       = Column(Boolean, nullable=True)
+    heating            = Column(Boolean, nullable=True)
+    air_conditioning   = Column(Boolean, nullable=True)
+    kitchen            = Column(Boolean, nullable=True)
+    towels_included    = Column(Boolean, nullable=True)
+    parking            = Column(Boolean, nullable=True)
+
+    glamping = relationship("GlampingDetail", back_populates="amenities")
+
 
 class CampingDetail(Base):
     __tablename__ = "camping_details"

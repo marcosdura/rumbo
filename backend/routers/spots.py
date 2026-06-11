@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail
+from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -364,6 +364,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
+            selectinload(SpotDB.glamping_detail),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
         .first()
@@ -386,6 +387,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "slug": spot.slug,
         "category": spot.category,
         "camping_detail": spot.camping_detail,
+        "glamping_detail": spot.glamping_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
         "routes": spot.routes,
@@ -407,6 +409,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
+            selectinload(SpotDB.glamping_detail),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -428,6 +431,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "price": spot.price,
         "category": spot.category,
         "camping_detail": spot.camping_detail,
+        "glamping_detail": spot.glamping_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [
             sa.amenity for sa in spot.amenities if sa.amenity is not None

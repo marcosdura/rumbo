@@ -500,7 +500,7 @@ export default function AgregarLugar() {
       }
 
       // 4. Category-specific records
-      if ((cat === "Camping" || cat === "Glamping") && selectedAmenities.length > 0) {
+      if (cat === "Camping" && selectedAmenities.length > 0) {
         const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
         if (amenRes.ok) {
           const all: { id: number; name: string }[] = await amenRes.json()
@@ -510,6 +510,51 @@ export default function AgregarLugar() {
             if (id) {
               await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, { method: "POST" })
             }
+          }
+        }
+      }
+
+      if (cat === "Camping") {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ price: basic.price ? parseFloat(basic.price) : null }),
+        })
+      }
+
+      if (cat === "Glamping") {
+        const glampRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({}),
+        })
+        if (glampRes.ok) {
+          const glampData = await glampRes.json()
+          const glampingId: number = glampData.id
+
+          const GLAMPING_AMENITY_MAP: Record<string, string> = {
+            "Baño privado":       "private_bathroom",
+            "Electricidad":       "electricity",
+            "WiFi":               "wifi",
+            "Desayuno incluido":  "breakfast_included",
+            "Acepta mascotas":    "pet_friendly",
+            "Calefacción":        "heating",
+            "Aire acondicionado": "air_conditioning",
+            "Cocina equipada":    "kitchen",
+            "Ropa de cama":       "towels_included",
+            "Estacionamiento":    "parking",
+          }
+          const amenityPayload: Record<string, boolean> = {}
+          for (const name of selectedAmenities) {
+            const field = GLAMPING_AMENITY_MAP[name]
+            if (field) amenityPayload[field] = true
+          }
+          if (Object.keys(amenityPayload).length > 0) {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/glamping/${glampingId}/amenities`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify(amenityPayload),
+            })
           }
         }
       }

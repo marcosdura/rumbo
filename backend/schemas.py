@@ -41,6 +41,41 @@ class SpotCreate(BaseModel):
     public_transport: Optional[str] = None
 
 
+# -------- GLAMPING --------
+class GlampingAmenityCreate(BaseModel):
+    private_bathroom:   Optional[bool] = None
+    electricity:        Optional[bool] = None
+    wifi:               Optional[bool] = None
+    breakfast_included: Optional[bool] = None
+    pet_friendly:       Optional[bool] = None
+    heating:            Optional[bool] = None
+    air_conditioning:   Optional[bool] = None
+    kitchen:            Optional[bool] = None
+    towels_included:    Optional[bool] = None
+    parking:            Optional[bool] = None
+
+class GlampingAmenityResponse(GlampingAmenityCreate):
+    id: int
+    glamping_id: int
+
+    class Config:
+        from_attributes = True
+
+class GlampingDetailCreate(BaseModel):
+    accommodation_type: Optional[str]   = None
+    capacity:           Optional[int]   = None
+    price_per_night:    Optional[float] = None
+    min_nights:         Optional[int]   = None
+
+class GlampingDetailResponse(GlampingDetailCreate):
+    id: int
+    spot_id: int
+    amenities: Optional[GlampingAmenityResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
 # -------- CAMPING --------
 class CampingDetailBase(BaseModel):
     price: float
@@ -252,8 +287,9 @@ class SpotResponse(BaseModel):
     slug: str | None = None
 
     category: CategoryResponse
-    camping_detail:  CampingDetailResponse | None = None
-    trekking_detail: TrekkingDetailOut     | None = None
+    camping_detail:   CampingDetailResponse  | None = None
+    glamping_detail:  GlampingDetailResponse | None = None
+    trekking_detail:  TrekkingDetailOut      | None = None
     amenities: list[AmenityResponse] = []
 
     @field_validator("amenities", mode="before")
