@@ -24,9 +24,11 @@ import StepClimbingSpotSelector from "./steps/StepClimbingSpotSelector"
 import StepClimbingSectorForm from "./steps/StepClimbingSectorForm"
 import StepClimbingSectorSelector from "./steps/StepClimbingSectorSelector"
 import StepClimbingRouteForm from "./steps/StepClimbingRouteForm"
+import StepTrekkingMode from "./steps/StepTrekkingMode"
+import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
-  SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm,
+  SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -71,10 +73,21 @@ export default function AgregarLugar() {
     { name: "", grade: "", type: "", length_m: "", bolts: "", description: "" }
   )
 
+  // Trekking mode states
+  const [trekkingMode, setTrekkingMode]                 = useState<TrekkingMode>(null)
+  const [trekkingSpotId, setTrekkingSpotId]             = useState<number | null>(null)
+  const [availableTrekkingSpots, setAvailableTrekkingSpots] = useState<{ id: number; name: string }[]>([])
+  const [loadingTrekkingSpots, setLoadingTrekkingSpots] = useState(false)
+
   const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
-  const summaryStep = isService ? 4 : isTrekking ? 6 : isEscalada && climbingMode === "new_sector" ? 4 : 5
+  const summaryStep =
+    isService ? 4
+    : isTrekking && trekkingMode === "new_route" ? 4
+    : isTrekking ? 6
+    : isEscalada && climbingMode === "new_sector" ? 4
+    : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -109,6 +122,20 @@ export default function AgregarLugar() {
       }
     }
     setStep(2)
+  }
+
+  async function handleTrekkingModeSelect(mode: "new_spot" | "new_route") {
+    setTrekkingMode(mode)
+    if (mode === "new_route") {
+      setLoadingTrekkingSpots(true)
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=Trekking`)
+        const data = await res.json()
+        setAvailableTrekkingSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
+      } catch {} finally {
+        setLoadingTrekkingSpots(false)
+      }
+    }
   }
 
   async function handleClimbingModeSelect(mode: "new_spot" | "new_sector" | "new_route") {
@@ -275,6 +302,43 @@ export default function AgregarLugar() {
   }
 
   async function handleSubmit() {
+    if (isTrekking && trekkingMode === "new_route") {
+      setSubmitting(true)
+      setError(null)
+      try {
+        for (const r of routes) {
+          if (!r.name) continue
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              spot_id: trekkingSpotId,
+              name: r.name,
+              distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
+              duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
+              elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
+              elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
+              max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
+              min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
+              difficulty: r.difficulty || null,
+              route_type: r.route_type || null,
+              technical_level: r.technical_level || null,
+              physical_demand: r.physical_demand || null,
+            }),
+          })
+        }
+        setSuccess(true)
+      } catch {
+        setError("No se pudo guardar la ruta. Intentá de nuevo.")
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
     if (isEscalada && climbingMode === "new_sector") {
       setSubmitting(true)
       setError(null)
@@ -373,10 +437,29 @@ export default function AgregarLugar() {
     setClimbingSpotId(null); setClimbingSectorId(null)
     setAvailableSectors([]); setLoadingSectors(false)
     setClimbingRoute({ name: "", grade: "", type: "", length_m: "", bolts: "", description: "" })
+    setTrekkingMode(null); setTrekkingSpotId(null)
+    setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
   }
 
   const pageHeader = (
     <div style={{ textAlign: "center", marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <a
+          href="/"
+          style={{ fontSize: 13, color: "#7a7669", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+        >
+          ← Volver a Rumbo
+        </a>
+        {step > 1 && (
+          <button
+            type="button"
+            onClick={reset}
+            style={{ background: "none", border: "none", fontSize: 13, color: "#9a9690", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
+          >
+            Empezar de cero
+          </button>
+        )}
+      </div>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 36, height: 36, objectFit: "contain" }} />
         <span style={{ fontSize: 22, fontWeight: 700, color: "#1b1b19" }}>Rumbo</span>
@@ -488,8 +571,49 @@ export default function AgregarLugar() {
           />
         )}
 
+        {/* Trekking: selector de modo */}
+        {step === 2 && isTrekking && trekkingMode === null && (
+          <StepTrekkingMode
+            onSelect={handleTrekkingModeSelect}
+            onBack={() => setStep(1)}
+          />
+        )}
+
+        {/* Trekking new_spot: info básica */}
+        {step === 2 && isTrekking && trekkingMode === "new_spot" && (
+          <StepInfoBasica
+            basic={basic}
+            setBasic={setBasic}
+            upd={upd}
+            isPublic={isPublic}
+            setIsPublic={setIsPublic}
+            publicTransport={publicTransport}
+            setPublicTransport={setPublicTransport}
+            contactError={contactError}
+            error={error}
+            onBack={() => setTrekkingMode(null)}
+            onNext={goToStep3}
+          />
+        )}
+
+        {/* Trekking new_route: selector de spot */}
+        {step === 2 && isTrekking && trekkingMode === "new_route" && (
+          <StepTrekkingSpotSelector
+            availableSpots={availableTrekkingSpots}
+            loadingSpots={loadingTrekkingSpots}
+            selectedSpotId={trekkingSpotId}
+            setSelectedSpotId={setTrekkingSpotId}
+            error={error}
+            onBack={() => { setTrekkingMode(null); setTrekkingSpotId(null) }}
+            onNext={() => {
+              if (!trekkingSpotId) { setError("Seleccioná un spot para continuar."); return }
+              setError(null); setStep(3)
+            }}
+          />
+        )}
+
         {/* Otras categorías: info básica */}
-        {step === 2 && !isService && !isEscalada && (
+        {step === 2 && !isService && !isEscalada && !isTrekking && (
           <StepInfoBasica
             basic={basic}
             setBasic={setBasic}
@@ -516,7 +640,7 @@ export default function AgregarLugar() {
           />
         )}
 
-        {step === 3 && selectedCat?.name === "Trekking" && (
+        {step === 3 && isTrekking && trekkingMode !== "new_route" && (
           <StepTrekkingCaracteristicas
             trekkingFeatures={trekkingFeatures}
             setTrekkingFeatures={setTrekkingFeatures}
@@ -525,6 +649,15 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}
+          />
+        )}
+
+        {step === 3 && isTrekking && trekkingMode === "new_route" && (
+          <StepRutas
+            routes={routes}
+            setRoutes={setRoutes}
+            onBack={() => setStep(2)}
+            onNext={() => setStep(summaryStep)}
           />
         )}
 
@@ -591,7 +724,7 @@ export default function AgregarLugar() {
           />
         )}
 
-        {step === 4 && isTrekking && (
+        {step === 4 && isTrekking && trekkingMode !== "new_route" && (
           <StepRutas
             routes={routes}
             setRoutes={setRoutes}
@@ -643,6 +776,7 @@ export default function AgregarLugar() {
             onSubmit={handleSubmit}
             onBack={() => setStep(
               isService ? 3
+              : isTrekking && trekkingMode === "new_route" ? 3
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 3
               : 4

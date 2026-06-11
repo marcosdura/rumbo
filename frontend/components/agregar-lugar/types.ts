@@ -29,6 +29,8 @@ export type KayakItem = {
 
 export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null
 
+export type TrekkingMode = "new_spot" | "new_route" | null
+
 export type ClimbingRouteForm = {
   name: string; grade: string; type: string; length_m: string; bolts: string; description: string
 }

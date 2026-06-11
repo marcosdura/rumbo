@@ -54,7 +54,13 @@ export default function StepImagenes({
           ))}
         </div>
       )}
-      <NavRow onBack={onBack} onNext={onNext} />
+      <NavRow onBack={onBack} onNext={() => {
+        if (images.length === 0) {
+          setError("Debés subir al menos una imagen para continuar.")
+          return
+        }
+        onNext()
+      }} error={error} />
     </div>
   )
 }
