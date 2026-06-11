@@ -19,7 +19,9 @@ export async function middleware(request: NextRequest) {
 
   // Usuario logueado sin términos aceptados → redirigir
   if (token && !token.termsAcceptedAt) {
-    return NextResponse.redirect(new URL("/onboarding/terms", request.url))
+    return NextResponse.redirect(
+  new URL(`/onboarding/terms?callbackUrl=${encodeURIComponent(pathname)}`, request.url)
+)
   }
 
   // Rutas protegidas sin sesión → redirigir a home
