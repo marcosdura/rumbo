@@ -24,6 +24,13 @@ export async function middleware(request: NextRequest) {
 )
   }
 
+  // Admin: solo el email autorizado
+  if (pathname.startsWith("/admin")) {
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (!token) return NextResponse.redirect(new URL("/", request.url))
+    if (token.email !== adminEmail) return NextResponse.redirect(new URL("/", request.url))
+  }
+
   // Rutas protegidas sin sesión → redirigir a home
   if (!token && pathname.startsWith("/profile")) {    return NextResponse.redirect(new URL("/", request.url))
   }

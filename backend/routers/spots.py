@@ -532,3 +532,55 @@ def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
 @router.get("/spots/{spot_id}/surf-schools", response_model=list[SurfSchoolResponse])
 def get_surf_schools(spot_id: int, db: Session = Depends(get_db)):
     return db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).all()
+
+
+@router.get("/admin/spots")
+def get_all_spots_admin(db: Session = Depends(get_db)):
+    spots = (
+        db.query(SpotDB)
+        .options(
+            joinedload(SpotDB.category),
+            joinedload(SpotDB.images),
+        )
+        .order_by(SpotDB.is_approved.asc(), SpotDB.id.desc())
+        .all()
+    )
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "department": s.department,
+            "is_approved": s.is_approved,
+            "category": s.category,
+            "images": s.images,
+            "owner_email": s.owner_email,
+            "created_at": None,
+        }
+        for s in spots
+    ]
+
+
+@router.patch("/admin/spots/{spot_id}/approve")
+def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    spot.is_approved = approved
+    if approved and not spot.slug:
+        spot.slug = generate_slug(spot.name)
+    db.commit()
+    return {"id": spot.id, "is_approved": spot.is_approved}
+
+
+@router.patch("/admin/spots/{spot_id}")
+def edit_spot_admin(spot_id: int, data: dict, db: Session = Depends(get_db)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    allowed = ["name", "description", "department", "email", "whatsapp", "instagram", "price", "lat", "lng", "is_public", "public_transport"]
+    for field, value in data.items():
+        if field in allowed:
+            setattr(spot, field, value)
+    db.commit()
+    db.refresh(spot)
+    return {"id": spot.id, "name": spot.name}
