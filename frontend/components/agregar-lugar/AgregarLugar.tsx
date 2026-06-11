@@ -440,11 +440,16 @@ export default function AgregarLugar() {
   }
 
   const pageHeader = (
-    <div style={{ textAlign: "center", marginBottom: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+    <div style={{
+      background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)",
+      borderRadius: 20,
+      padding: "24px 28px",
+      marginBottom: 28,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <a
           href="/"
-          style={{ fontSize: 13, color: "#7a7669", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+          style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
         >
           ← Volver a Rumbo
         </a>
@@ -452,18 +457,21 @@ export default function AgregarLugar() {
           <button
             type="button"
             onClick={reset}
-            style={{ background: "none", border: "none", fontSize: 13, color: "#9a9690", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
+            style={{ background: "none", border: "none", fontSize: 13, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
           >
             Empezar de cero
           </button>
         )}
       </div>
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-        <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 36, height: 36, objectFit: "contain" }} />
-        <span style={{ fontSize: 22, fontWeight: 700, color: "#1b1b19" }}>Rumbo</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, justifyContent: "center" }}>
+        <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8 }} />
+        <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "var(--font-nunito)" }}>rumbo</span>
       </div>
-      <p style={{ fontSize: 13, color: "#7a7669", maxWidth: 480, margin: "0 auto", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", maxWidth: 480, margin: "0 auto", lineHeight: 1.5, textAlign: "center" }}>
         Completá este formulario para agregar tu lugar a la plataforma. Revisaremos la información antes de publicarlo.
+      </p>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 12, textAlign: "center", marginBottom: 0 }}>
+        Paso {step} de {summaryStep}
       </p>
     </div>
   )
@@ -530,7 +538,6 @@ export default function AgregarLugar() {
       <style>{mediaQuery}</style>
       <div style={s.container}>
         {pageHeader}
-        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 28, textAlign: "center" }}>Paso {step} de {summaryStep}</p>
 
         {step === 1 && (
           <StepCategoria onSelect={handleCategorySelect} />
