@@ -320,7 +320,7 @@ useEffect(() => {
             </div>
 
             {/* Imágenes */}
-            <div className="fade-up fade-up-2" style={{ marginBottom: spot.is_public != null ? 16 : 36 }}>
+            <div className="fade-up fade-up-2" style={{ marginBottom: spot.is_public != null ? 12 : 36 }}>
               <SpotImages images={spot.images} name={spot.name} />
             </div>
 
@@ -329,21 +329,21 @@ useEffect(() => {
               <div style={{
                 background: spot.is_public ? "#e8f5ee" : "#fdf0f0",
                 border: `1px solid ${spot.is_public ? "#b7dfc8" : "#f5c0c0"}`,
-                borderRadius: 16,
-                padding: "16px 20px",
+                borderRadius: 12,
+                padding: "10px 14px",
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-                marginBottom: 36,
+                fontSize: 12,
+                marginBottom: 24,
                 display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
-                lineHeight: 1.5,
+                alignItems: "center",
+                gap: 8,
+                lineHeight: 1.4,
               }}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>{spot.is_public ? "✅" : "⚠️"}</span>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{spot.is_public ? "✅" : "⚠️"}</span>
                 <span style={{ color: spot.is_public ? "#1b4332" : "#7f1d1d" }}>
                   {spot.is_public
                     ? "Lugar de acceso público — Te pedimos que respetes el entorno, cuides la naturaleza y dejes el lugar como lo encontraste."
-                    : "Lugar de acceso privado — Antes de visitar, contactá al lugar para confirmar disponibilidad. Algunos sitios requieren reserva previa o condiciones específicas de acceso. Rumbo no se responsabiliza por el ingreso sin autorización."}
+                    : "Lugar de acceso privado — Antes de visitar, contactá al lugar para confirmar disponibilidad y condiciones de acceso."}
                 </span>
               </div>
             )}
