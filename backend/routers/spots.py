@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse
 import models
 from sqlalchemy.orm import joinedload
@@ -584,3 +584,23 @@ def edit_spot_admin(spot_id: int, data: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(spot)
     return {"id": spot.id, "name": spot.name}
+
+
+@router.patch("/admin/spots/{spot_id}/main-image")
+def set_main_image(spot_id: int, data: dict, db: Session = Depends(get_db)):
+    public_id = data.get("cloudinary_public_id")
+    images = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).all()
+    for img in images:
+        img.is_main = (img.cloudinary_public_id == public_id)
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/admin/images/{public_id:path}")
+def delete_image(public_id: str, db: Session = Depends(get_db)):
+    img = db.query(SpotImage).filter(SpotImage.cloudinary_public_id == public_id).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+    db.delete(img)
+    db.commit()
+    return {"ok": True}

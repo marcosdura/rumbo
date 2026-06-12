@@ -1,6 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
+
+const CATEGORY_EMOJIS = {
+  "Camping":  "⛺",
+  "Glamping": "🛖",
+  "Trekking": "🥾",
+  "Escalada": "🧗",
+  "Surf":     "🏄",
+  "Kayak":    "🛶",
+}
 import { useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"
 import AmenitiesList from "../../../components/spot-detail/AmenitiesList"
@@ -314,7 +323,10 @@ useEffect(() => {
                   </span>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
-                <span className="category-pill">{spot.category?.name || "Sin categoría"}</span>
+                <span className="category-pill">
+                  {CATEGORY_EMOJIS[spot.category?.name] && `${CATEGORY_EMOJIS[spot.category.name]} `}
+                  {spot.category?.name || "Sin categoría"}
+                </span>
                 <span className="department-pill">{spot.department || "Sin departamento"}</span>
               </div>
             </div>
