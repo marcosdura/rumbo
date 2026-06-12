@@ -1,16 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useSession } from "next-auth/react"
 
 type AdminSpot = {
   id: number
   name: string
+  description?: string
   department: string
   is_approved: boolean
   owner_email: string | null
   category: { name: string } | null
   images: { cloudinary_public_id: string; is_main: boolean; order: number }[]
+  review_count?: number
 }
 
 type AdminMode = "spots" | "fotos"
@@ -25,6 +27,14 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
   const [photoLoading, setPhotoLoading] = useState(false)
+  const [searchSpots, setSearchSpots] = useState("")
+  const [searchPhotos, setSearchPhotos] = useState("")
+  const [sortBy, setSortBy] = useState<"name" | "category" | "department">("name")
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const photoUploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots`, {
@@ -45,7 +55,7 @@ export default function AdminPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("¿Eliminar este spot?")) return
+    if (deleteConfirmText !== "CONFIRMAR") return
     setActionLoading(id)
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${id}`, {
       method: "DELETE",
@@ -53,6 +63,8 @@ export default function AdminPage() {
     })
     setSpots(prev => prev.filter(s => s.id !== id))
     setActionLoading(null)
+    setDeleteConfirmId(null)
+    setDeleteConfirmText("")
   }
 
   async function handleSetMainPhoto(spotId: number, publicId: string) {
@@ -93,6 +105,19 @@ export default function AdminPage() {
   const filtered = spots.filter(s =>
     filter === "all" ? true : filter === "pending" ? !s.is_approved : s.is_approved
   )
+  const displayed = filtered
+    .filter(s =>
+      s.name.toLowerCase().includes(searchSpots.toLowerCase()) ||
+      s.department?.toLowerCase().includes(searchSpots.toLowerCase()) ||
+      s.category?.name?.toLowerCase().includes(searchSpots.toLowerCase()) ||
+      s.owner_email?.toLowerCase().includes(searchSpots.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name)
+      if (sortBy === "category") return (a.category?.name ?? "").localeCompare(b.category?.name ?? "")
+      if (sortBy === "department") return (a.department ?? "").localeCompare(b.department ?? "")
+      return 0
+    })
   const selectedSpot = spots.find(s => s.id === photoSpotId) ?? null
 
   return (
@@ -163,13 +188,47 @@ export default function AdminPage() {
               ))}
             </div>
 
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+              <input
+                type="text"
+                placeholder="Buscar por nombre, categoría, departamento..."
+                value={searchSpots}
+                onChange={e => setSearchSpots(e.target.value)}
+                style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+              />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as "name" | "category" | "department")}
+                style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+              >
+                <option value="name">Ordenar por nombre</option>
+                <option value="category">Ordenar por categoría</option>
+                <option value="department">Ordenar por departamento</option>
+              </select>
+            </div>
+
+            {filter === "pending" && displayed.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+                <button
+                  onClick={async () => {
+                    for (const s of displayed) {
+                      await handleApprove(s.id, true)
+                    }
+                  }}
+                  style={{ padding: "7px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none" }}
+                >
+                  Aprobar todos ({displayed.length})
+                </button>
+              </div>
+            )}
+
             {loading ? (
               <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
-            ) : filtered.length === 0 ? (
+            ) : displayed.length === 0 ? (
               <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta categoría.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {filtered.map(spot => {
+                {displayed.map(spot => {
                   const mainImage = spot.images?.find(i => i.is_main) || spot.images?.[0]
                   return (
                     <div key={spot.id} className="spot-row">
@@ -198,8 +257,20 @@ export default function AdminPage() {
                         </div>
                         <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
                           {spot.category?.name} · {spot.department}
-                          {spot.owner_email && ` · ${spot.owner_email}`}
                         </p>
+                        <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 11, color: "#9a9690" }}>
+                            📷 {spot.images?.length ?? 0} foto{spot.images?.length !== 1 ? "s" : ""}
+                          </span>
+                          <span style={{ fontSize: 11, color: "#9a9690" }}>
+                            ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
+                          </span>
+                          {spot.owner_email && (
+                            <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
+                              ✉️ {spot.owner_email}
+                            </a>
+                          )}
+                        </div>
                       </div>
 
                       <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -218,7 +289,21 @@ export default function AdminPage() {
                           className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                           Ver
                         </a>
-                        <button onClick={() => handleDelete(spot.id)} disabled={actionLoading === spot.id}
+                        <button
+                          onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.id}`)}
+                          className="action-btn-sm"
+                          style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
+                        >
+                          🔗
+                        </button>
+                        <button
+                          onClick={() => setEditingSpot({ id: spot.id, name: spot.name, description: spot.description ?? "" })}
+                          className="action-btn-sm"
+                          style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
+                        >
+                          ✏️
+                        </button>
+                        <button onClick={() => { setDeleteConfirmId(spot.id); setDeleteConfirmText("") }} disabled={actionLoading === spot.id}
                           className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                           Eliminar
                         </button>
@@ -234,20 +319,86 @@ export default function AdminPage() {
         {mode === "fotos" && (
           <div>
             <div style={{ marginBottom: 16 }}>
+              <input
+                type="text"
+                placeholder="Buscar spot..."
+                value={searchPhotos}
+                onChange={e => setSearchPhotos(e.target.value)}
+                style={{ width: "100%", maxWidth: 400, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8, display: "block" }}
+              />
               <select
                 style={{ padding: "9px 12px", borderRadius: 12, border: "1px solid #e0ddd6", fontSize: 14, background: "#fff", fontFamily: "inherit", width: "100%", maxWidth: 400 }}
                 value={photoSpotId ?? ""}
                 onChange={e => setPhotoSpotId(Number(e.target.value) || null)}
               >
                 <option value="">— Seleccioná un spot —</option>
-                {spots.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.category?.name})</option>
-                ))}
+                {spots
+                  .filter(s => s.name.toLowerCase().includes(searchPhotos.toLowerCase()))
+                  .map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.category?.name})</option>
+                  ))}
               </select>
             </div>
 
             {selectedSpot && (
               <div>
+                <div style={{ marginBottom: 16 }}>
+                  <input
+                    ref={photoUploadRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: "none" }}
+                    onChange={async (e) => {
+                      if (!selectedSpot) return
+                      const files = Array.from(e.target.files ?? [])
+                      if (!files.length) return
+                      setUploadingPhotos(true)
+                      try {
+                        const results = await Promise.all(files.map(async (file, i) => {
+                          const fd = new FormData()
+                          fd.append("file", file)
+                          const safeName = selectedSpot.name.trim().replace(/\s+/g, "_")
+                          const ts = Date.now()
+                          fd.append("public_id", `${selectedSpot.category?.name ?? "Spot"}/${safeName}/${safeName}_${ts}_${i + 1}`)
+                          const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
+                          if (!res.ok) throw new Error("Error al subir")
+                          return await res.json()
+                        }))
+
+                        await Promise.all(results.map((data, i) => {
+                          const params = new URLSearchParams({
+                            cloudinary_public_id: data.public_id,
+                            is_main: "false",
+                            order: String((selectedSpot.images?.length ?? 0) + i),
+                          })
+                          return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${selectedSpot.id}?${params}`, {
+                            method: "POST",
+                            headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                          })
+                        }))
+
+                        const updated = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots`, {
+                          headers: token ? { Authorization: `Bearer ${token}` } : {},
+                        }).then(r => r.json())
+                        setSpots(updated)
+                      } catch {
+                        alert("Error al subir fotos")
+                      } finally {
+                        setUploadingPhotos(false)
+                        if (photoUploadRef.current) photoUploadRef.current.value = ""
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => photoUploadRef.current?.click()}
+                    disabled={uploadingPhotos}
+                    style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none", opacity: uploadingPhotos ? 0.6 : 1 }}
+                  >
+                    {uploadingPhotos ? "Subiendo..." : "+ Agregar fotos"}
+                  </button>
+                </div>
+
                 <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 12 }}>
                   {selectedSpot.images.length} foto{selectedSpot.images.length !== 1 ? "s" : ""} · La primera es la principal
                 </p>
@@ -291,6 +442,92 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {deleteConfirmId !== null && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+        }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: "28px 32px", maxWidth: 400, width: "90%", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>¿Eliminar este spot?</p>
+            <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 20, lineHeight: 1.5 }}>
+              Esta acción no se puede deshacer. Escribí <strong>CONFIRMAR</strong> para continuar.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder="CONFIRMAR"
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", marginBottom: 16, boxSizing: "border-box" }}
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => { setDeleteConfirmId(null); setDeleteConfirmText("") }}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirmId)}
+                disabled={deleteConfirmText !== "CONFIRMAR" || actionLoading === deleteConfirmId}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: deleteConfirmText === "CONFIRMAR" ? "#dc2626" : "#f0ede8", color: deleteConfirmText === "CONFIRMAR" ? "#fff" : "#b0ac9e", fontSize: 13, fontWeight: 600, cursor: deleteConfirmText === "CONFIRMAR" ? "pointer" : "not-allowed", fontFamily: "inherit" }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingSpot !== null && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: "28px 32px", maxWidth: 480, width: "90%", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", marginBottom: 20 }}>Editar spot</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#7a7669", marginBottom: 4 }}>Nombre</p>
+                <input
+                  value={editingSpot.name}
+                  onChange={e => setEditingSpot(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" }}
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#7a7669", marginBottom: 4 }}>Descripción</p>
+                <textarea
+                  value={editingSpot.description}
+                  onChange={e => setEditingSpot(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  rows={4}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+                />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => setEditingSpot(null)}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  if (!editingSpot) return
+                  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${editingSpot.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                    body: JSON.stringify({ name: editingSpot.name, description: editingSpot.description }),
+                  })
+                  setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
+                  setEditingSpot(null)
+                }}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#2d6a4f", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

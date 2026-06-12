@@ -545,16 +545,25 @@ def get_all_spots_admin(db: Session = Depends(get_db)):
         .order_by(SpotDB.is_approved.asc(), SpotDB.id.desc())
         .all()
     )
+    spot_ids = [s.id for s in spots]
+    review_counts = dict(
+        db.query(models.Review.spot_id, func.count(models.Review.id))
+        .filter(models.Review.spot_id.in_(spot_ids))
+        .group_by(models.Review.spot_id)
+        .all()
+    ) if spot_ids else {}
     return [
         {
             "id": s.id,
             "name": s.name,
+            "description": s.description,
             "department": s.department,
             "is_approved": s.is_approved,
             "category": s.category,
             "images": s.images,
             "owner_email": s.owner_email,
             "created_at": None,
+            "review_count": review_counts.get(s.id, 0),
         }
         for s in spots
     ]
