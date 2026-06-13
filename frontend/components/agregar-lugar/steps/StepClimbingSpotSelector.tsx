@@ -4,7 +4,7 @@ import { s } from "../styles"
 import NavRow from "../ui/NavRow"
 
 export default function StepClimbingSpotSelector({
-  availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext, stepLabel,
+  availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext,
 }: {
   availableSpots: { id: number; name: string }[]
   loadingSpots: boolean
@@ -13,11 +13,9 @@ export default function StepClimbingSpotSelector({
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Seleccioná el spot de escalada</h2>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -39,7 +37,7 @@ export default function StepClimbingSpotSelector({
           )}
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )
 }

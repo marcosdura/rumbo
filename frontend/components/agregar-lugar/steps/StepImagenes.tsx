@@ -6,7 +6,7 @@ import { s } from "../styles"
 import NavRow from "../ui/NavRow"
 
 export default function StepImagenes({
-  images, setImages, previews, setPreviews, setError, error, onBack, onNext, stepLabel,
+  images, setImages, previews, setPreviews, setError, error, onBack, onNext,
 }: {
   images: File[]
   setImages: React.Dispatch<React.SetStateAction<File[]>>
@@ -16,7 +16,6 @@ export default function StepImagenes({
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -55,7 +54,6 @@ export default function StepImagenes({
 
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Imágenes</h2>
       <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
         La primera imagen será la principal. Mínimo 1 requerida, máximo 10.
@@ -128,7 +126,6 @@ export default function StepImagenes({
           onNext()
         }}
         error={error}
-        stepLabel={stepLabel}
       />
     </div>
   )

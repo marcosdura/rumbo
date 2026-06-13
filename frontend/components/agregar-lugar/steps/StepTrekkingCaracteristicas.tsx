@@ -8,7 +8,7 @@ import NavRow from "../ui/NavRow"
 import type { TrekkingFeatures, TrekkingFeatureKey } from "../types"
 
 export default function StepTrekkingCaracteristicas({
-  trekkingFeatures, setTrekkingFeatures, featureErrors, setFeatureErrors, error, onBack, onNext, stepLabel,
+  trekkingFeatures, setTrekkingFeatures, featureErrors, setFeatureErrors, error, onBack, onNext,
 }: {
   trekkingFeatures: TrekkingFeatures
   setTrekkingFeatures: React.Dispatch<React.SetStateAction<TrekkingFeatures>>
@@ -17,11 +17,9 @@ export default function StepTrekkingCaracteristicas({
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Características del lugar</h2>
       <div style={s.card}>
         <p style={s.cardTitle}>Características del lugar</p>
@@ -64,7 +62,7 @@ export default function StepTrekkingCaracteristicas({
           })}
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )
 }

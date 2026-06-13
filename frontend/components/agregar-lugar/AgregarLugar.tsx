@@ -435,6 +435,9 @@ export default function AgregarLugar() {
       <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", maxWidth: 480, margin: "0 auto", lineHeight: 1.5, textAlign: "center" }}>
         Completá este formulario para agregar tu lugar a la plataforma. Revisaremos la información antes de publicarlo.
       </p>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 12, textAlign: "center", marginBottom: 0 }}>
+        Paso {step} de {summaryStep}
+      </p>
     </div>
   )
 
@@ -517,7 +520,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => { setStep(1); setSelectedSpotId(null); setAvailableSpots([]) }}
             onNext={goToStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -535,7 +537,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setCreatingNewSpot(false)}
             onNext={goToStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -560,7 +561,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setClimbingMode(null)}
             onNext={goToStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -574,7 +574,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => { setClimbingMode(null); setClimbingSpotId(null) }}
             onNext={goToClimbingStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -583,7 +582,6 @@ export default function AgregarLugar() {
           <StepTrekkingMode
             onSelect={handleTrekkingModeSelect}
             onBack={() => setStep(1)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -600,7 +598,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setTrekkingMode(null)}
             onNext={goToStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -617,7 +614,6 @@ export default function AgregarLugar() {
               if (!trekkingSpotId) { setError("Seleccioná un spot para continuar."); return }
               setError(null); setStep(3)
             }}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -634,7 +630,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(1)}
             onNext={goToStep3}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -646,7 +641,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -659,7 +653,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -669,7 +662,6 @@ export default function AgregarLugar() {
             setRoutes={setRoutes}
             onBack={() => setStep(2)}
             onNext={() => setStep(summaryStep)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -681,7 +673,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -693,7 +684,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -707,7 +697,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => { setStep(2); setClimbingSectorId(null); setAvailableSectors([]) }}
             onNext={goToClimbingStep4}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -722,7 +711,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -737,7 +725,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -751,7 +738,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(2)}
             onNext={handleSpotImagesAndNext}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -768,7 +754,6 @@ export default function AgregarLugar() {
             onBack={() => setStep(3)}
             onNext={() => setStep(5)}
             onSkip={() => setStep(5)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -785,7 +770,6 @@ export default function AgregarLugar() {
             onBack={() => setStep(3)}
             onNext={() => setStep(5)}
             onSkip={() => setStep(5)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -795,7 +779,6 @@ export default function AgregarLugar() {
             setRoutes={setRoutes}
             onBack={() => setStep(3)}
             onNext={() => setStep(5)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -807,7 +790,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(3)}
             onNext={goToClimbingStep5}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 
@@ -822,7 +804,6 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(isTrekking ? 4 : 3)}
             onNext={() => setStep(summaryStep)}
-            stepLabel={`Paso ${step} de ${summaryStep}`}
           />
         )}
 

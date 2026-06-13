@@ -4,7 +4,7 @@ import { s } from "../styles"
 import NavRow from "../ui/NavRow"
 
 export default function StepClimbingSectorSelector({
-  availableSectors, loadingSectors, selectedSectorId, setSelectedSectorId, error, onBack, onNext, stepLabel,
+  availableSectors, loadingSectors, selectedSectorId, setSelectedSectorId, error, onBack, onNext,
 }: {
   availableSectors: { id: number; name: string }[]
   loadingSectors: boolean
@@ -13,11 +13,9 @@ export default function StepClimbingSectorSelector({
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Seleccioná el sector</h2>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -39,7 +37,7 @@ export default function StepClimbingSectorSelector({
           )}
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )
 }

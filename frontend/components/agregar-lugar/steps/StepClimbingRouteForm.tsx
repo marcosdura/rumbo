@@ -7,14 +7,13 @@ import NavRow from "../ui/NavRow"
 import type { ClimbingRouteForm } from "../types"
 
 export default function StepClimbingRouteForm({
-  route, setRoute, error, onBack, onNext, stepLabel,
+  route, setRoute, error, onBack, onNext,
 }: {
   route: ClimbingRouteForm
   setRoute: React.Dispatch<React.SetStateAction<ClimbingRouteForm>>
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   function upd(field: string, val: string) {
     setRoute(prev => ({ ...prev, [field]: val }))
@@ -22,7 +21,6 @@ export default function StepClimbingRouteForm({
 
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Datos de la ruta</h2>
       <div style={s.card}>
         <div style={s.form}>
@@ -55,7 +53,7 @@ export default function StepClimbingRouteForm({
           </Field>
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )
 }
