@@ -23,6 +23,7 @@ export default function StepClimbingSectorForm({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Datos del sector</h2>
       <div style={s.card}>
         <div style={s.form}>

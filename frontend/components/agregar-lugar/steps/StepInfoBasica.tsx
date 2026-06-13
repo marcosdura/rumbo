@@ -49,6 +49,7 @@ export default function StepInfoBasica({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>{title}</h2>
       <div style={s.form}>
         <Field label="Nombre del lugar" required={true}>

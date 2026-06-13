@@ -17,6 +17,7 @@ export default function StepTrekkingSpotSelector({
 }) {
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>¿A qué spot querés agregar la ruta?</h2>
       <div style={s.form}>
         {loadingSpots ? (

@@ -20,6 +20,7 @@ export default function StepAmenities({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={{ fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 20 }}>
         Servicios e instalaciones
       </h2>

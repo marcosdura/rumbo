@@ -21,6 +21,7 @@ export default function StepTrekkingCaracteristicas({
 }) {
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Características del lugar</h2>
       <div style={s.card}>
         <p style={s.cardTitle}>Características del lugar</p>

@@ -55,6 +55,7 @@ export default function StepImagenes({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Imágenes</h2>
       <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
         La primera imagen será la principal. Mínimo 1 requerida, máximo 10.

@@ -39,6 +39,7 @@ export default function StepSurf({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Datos de Surf</h2>
       <div style={s.card}>
         <div style={s.form}>

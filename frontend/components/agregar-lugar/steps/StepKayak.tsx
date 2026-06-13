@@ -45,6 +45,7 @@ export default function StepKayak({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Datos de Kayak</h2>
       {kayaks.map((k, i) => (
         <div key={i} style={s.card}>

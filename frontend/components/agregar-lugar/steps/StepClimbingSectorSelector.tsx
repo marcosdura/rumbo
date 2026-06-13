@@ -17,6 +17,7 @@ export default function StepClimbingSectorSelector({
 }) {
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Seleccioná el sector</h2>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

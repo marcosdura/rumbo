@@ -21,6 +21,7 @@ export default function StepServicioSpot({
 }) {
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>
         {selectedCat.name === "Surf" ? "¿En qué playa operás?" : "¿En qué río o laguna operás?"}
       </h2>

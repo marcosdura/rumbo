@@ -23,6 +23,7 @@ export default function StepEscalada({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Datos de Escalada</h2>
       {sectors.map((sec, i) => (
         <div key={i} style={s.card}>

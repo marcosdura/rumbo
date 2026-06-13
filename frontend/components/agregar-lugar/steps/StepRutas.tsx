@@ -22,6 +22,7 @@ export default function StepRutas({
 
   return (
     <div>
+      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Rutas</h2>
       {routes.map((r, i) => (
         <div key={i} style={s.card}>
