@@ -8,12 +8,13 @@ import NavRow from "../ui/NavRow"
 import type { RouteItem } from "../types"
 
 export default function StepRutas({
-  routes, setRoutes, onBack, onNext,
+  routes, setRoutes, onBack, onNext, stepLabel,
 }: {
   routes: RouteItem[]
   setRoutes: React.Dispatch<React.SetStateAction<RouteItem[]>>
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   function updRoute(i: number, field: string, val: string) {
     setRoutes(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
@@ -80,7 +81,7 @@ export default function StepRutas({
         </div>
       ))}
       <button style={s.btnAdd} onClick={() => setRoutes(prev => [...prev, defaultRoute()])}>+ Agregar ruta</button>
-      <NavRow onBack={onBack} onNext={onNext} />
+      <NavRow onBack={onBack} onNext={onNext} stepLabel={stepLabel} />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import NavRow from "../ui/NavRow"
 import type { Category } from "../types"
 
 export default function StepAmenities({
-  selectedCat, selectedAmenities, toggleAmenity, error, onBack, onNext,
+  selectedCat, selectedAmenities, toggleAmenity, error, onBack, onNext, stepLabel,
 }: {
   selectedCat: Category
   selectedAmenities: string[]
@@ -13,6 +13,7 @@ export default function StepAmenities({
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   const isGlamping = selectedCat.name === "Glamping"
   const categories = isGlamping ? GLAMPING_AMENITY_CATEGORIES : AMENITY_CATEGORIES
@@ -56,7 +57,7 @@ export default function StepAmenities({
           </div>
         </div>
       ))}
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

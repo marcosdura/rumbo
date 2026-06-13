@@ -4,10 +4,11 @@ import NavRow from "../ui/NavRow"
 import { s } from "../styles"
 
 export default function StepTrekkingMode({
-  onSelect, onBack,
+  onSelect, onBack, stepLabel,
 }: {
   onSelect: (mode: "new_spot" | "new_route") => void
   onBack: () => void
+  stepLabel?: string
 }) {
   return (
     <div>
@@ -36,7 +37,7 @@ export default function StepTrekkingMode({
           </button>
         ))}
       </div>
-      <NavRow onBack={onBack} />
+      <NavRow onBack={onBack} stepLabel={stepLabel} />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import type { Category } from "../types"
 
 export default function StepServicioSpot({
   selectedCat, availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId,
-  setCreatingNewSpot, error, onBack, onNext,
+  setCreatingNewSpot, error, onBack, onNext, stepLabel,
 }: {
   selectedCat: Category
   availableSpots: { id: number; name: string }[]
@@ -17,6 +17,7 @@ export default function StepServicioSpot({
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   return (
     <div>
@@ -57,7 +58,7 @@ export default function StepServicioSpot({
           </button>
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

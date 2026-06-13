@@ -11,7 +11,7 @@ import type { KayakItem } from "../types"
 
 export default function StepKayak({
   kayaks, setKayaks, kayakPhotoFiles, setKayakPhotoFiles, kayakPhotoPreviews, setKayakPhotoPreviews,
-  error, onBack, onNext, optional, onSkip,
+  error, onBack, onNext, optional, onSkip, stepLabel,
 }: {
   kayaks: KayakItem[]
   setKayaks: React.Dispatch<React.SetStateAction<KayakItem[]>>
@@ -24,6 +24,7 @@ export default function StepKayak({
   onNext: () => void
   optional?: boolean
   onSkip?: () => void
+  stepLabel?: string
 }) {
   const ref1 = useRef<HTMLInputElement>(null)
   const ref2 = useRef<HTMLInputElement>(null)
@@ -158,7 +159,7 @@ export default function StepKayak({
           </button>
         </div>
       )}
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

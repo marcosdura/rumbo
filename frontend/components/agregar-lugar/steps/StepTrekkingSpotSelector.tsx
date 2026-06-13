@@ -4,7 +4,7 @@ import NavRow from "../ui/NavRow"
 import { s } from "../styles"
 
 export default function StepTrekkingSpotSelector({
-  availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext,
+  availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext, stepLabel,
 }: {
   availableSpots: { id: number; name: string }[]
   loadingSpots: boolean
@@ -13,6 +13,7 @@ export default function StepTrekkingSpotSelector({
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   return (
     <div>
@@ -35,7 +36,7 @@ export default function StepTrekkingSpotSelector({
           </select>
         )}
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

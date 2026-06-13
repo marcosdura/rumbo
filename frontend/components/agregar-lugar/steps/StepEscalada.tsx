@@ -8,13 +8,14 @@ import NavRow from "../ui/NavRow"
 import type { SectorItem } from "../types"
 
 export default function StepEscalada({
-  sectors, setSectors, error, onBack, onNext,
+  sectors, setSectors, error, onBack, onNext, stepLabel,
 }: {
   sectors: SectorItem[]
   setSectors: React.Dispatch<React.SetStateAction<SectorItem[]>>
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   function updSector(i: number, field: string, val: string) {
     setSectors(prev => prev.map((sec, idx) => idx === i ? { ...sec, [field]: val } : sec))
@@ -50,7 +51,7 @@ export default function StepEscalada({
         </div>
       ))}
       <button style={s.btnAdd} onClick={() => setSectors(prev => [...prev, defaultSector()])}>+ Agregar sector</button>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

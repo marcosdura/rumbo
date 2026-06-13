@@ -4,7 +4,7 @@ import { s } from "../styles"
 import NavRow from "../ui/NavRow"
 
 export default function StepClimbingSectorSelector({
-  availableSectors, loadingSectors, selectedSectorId, setSelectedSectorId, error, onBack, onNext,
+  availableSectors, loadingSectors, selectedSectorId, setSelectedSectorId, error, onBack, onNext, stepLabel,
 }: {
   availableSectors: { id: number; name: string }[]
   loadingSectors: boolean
@@ -13,6 +13,7 @@ export default function StepClimbingSectorSelector({
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   return (
     <div>
@@ -37,7 +38,7 @@ export default function StepClimbingSectorSelector({
           )}
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

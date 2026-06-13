@@ -6,7 +6,7 @@ import { s } from "../styles"
 import NavRow from "../ui/NavRow"
 
 export default function StepImagenes({
-  images, setImages, previews, setPreviews, setError, error, onBack, onNext,
+  images, setImages, previews, setPreviews, setError, error, onBack, onNext, stepLabel,
 }: {
   images: File[]
   setImages: React.Dispatch<React.SetStateAction<File[]>>
@@ -16,6 +16,7 @@ export default function StepImagenes({
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -126,6 +127,7 @@ export default function StepImagenes({
           onNext()
         }}
         error={error}
+        stepLabel={stepLabel}
       />
     </div>
   )

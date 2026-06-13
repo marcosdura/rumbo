@@ -18,7 +18,7 @@ const LocationPicker = dynamic(
 
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
-  error, onBack, onNext, title = "Información básica",
+  error, onBack, onNext, title = "Información básica", stepLabel,
 }: {
   basic: BasicInfo
   setBasic: React.Dispatch<React.SetStateAction<BasicInfo>>
@@ -31,6 +31,7 @@ export default function StepInfoBasica({
   onBack: () => void
   onNext: () => void
   title?: string
+  stepLabel?: string
 }) {
   const [emailError, setEmailError] = useState<string | null>(null)
 
@@ -175,7 +176,7 @@ export default function StepInfoBasica({
           }}
         />
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }

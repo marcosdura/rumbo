@@ -7,13 +7,14 @@ import NavRow from "../ui/NavRow"
 import type { SectorItem } from "../types"
 
 export default function StepClimbingSectorForm({
-  sectors, setSectors, error, onBack, onNext,
+  sectors, setSectors, error, onBack, onNext, stepLabel,
 }: {
   sectors: SectorItem[]
   setSectors: React.Dispatch<React.SetStateAction<SectorItem[]>>
   error: string | null
   onBack: () => void
   onNext: () => void
+  stepLabel?: string
 }) {
   const sec = sectors[0]
   function upd(field: string, val: string) {
@@ -46,7 +47,7 @@ export default function StepClimbingSectorForm({
           </Field>
         </div>
       </div>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} stepLabel={stepLabel} />
     </div>
   )
 }
