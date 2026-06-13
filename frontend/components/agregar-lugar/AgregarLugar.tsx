@@ -417,12 +417,7 @@ export default function AgregarLugar() {
       marginBottom: 28,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <a
-          href="/"
-          style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
-        >
-          ← Volver a Rumbo
-        </a>
+
         {step > 1 && (
           <button
             type="button"
