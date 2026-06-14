@@ -131,51 +131,26 @@ export default function StepImagenes({
                   }}
                 >×</button>
               </div>
-              {i === 0 && (
-                <>
-                  <FocalPointPicker
-                    imageUrl={src}
-                    focalX={focalPoints[0]?.x ?? 0.5}
-                    focalY={focalPoints[0]?.y ?? 0.5}
-                    onChange={(x, y) => setFocalPoints(prev => {
-                      const next = [...prev]
-                      next[0] = { x, y }
-                      return next
-                    })}
-                  />
-                  <div style={{ marginTop: 8 }}>
-                    <p style={{
-                      fontSize: 11,
-                      color: "#7a7669",
-                      marginBottom: 6,
-                      fontFamily: "'DM Sans', sans-serif",
-                    }}>
-                      Así se vería en la card:
-                    </p>
-                    <div style={{
-                      width: "100%",
-                      height: 120,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      border: "1px solid #e0ddd6",
-                    }}>
-                      <img
-                        src={src}
-                        alt="preview card"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          objectPosition: `${(focalPoints[0]?.x ?? 0.5) * 100}% ${(focalPoints[0]?.y ?? 0.5) * 100}%`,
-                          display: "block",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {previews.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <p style={{ fontSize: 12, color: "#7a7669", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            Ajustá el punto focal de la imagen principal:
+          </p>
+          <FocalPointPicker
+            imageUrl={previews[0]}
+            focalX={focalPoints[0]?.x ?? 0.5}
+            focalY={focalPoints[0]?.y ?? 0.5}
+            onChange={(x, y) => setFocalPoints(prev => {
+              const next = [...prev]
+              next[0] = { x, y }
+              return next
+            })}
+          />
         </div>
       )}
 

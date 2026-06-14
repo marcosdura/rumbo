@@ -151,10 +151,12 @@ function SpotCard({ spot, isHighlighted = false }) {
                 src={mainImage.cloudinary_public_id}
                 width={600}
                 height={200}
+                crop="fill"
                 alt={spot.name}
                 loading="lazy"
                 quality="auto"
                 format="auto"
+                sizes="(max-width: 640px) 100vw, 50vw"
                 style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition }}
               />
             )
