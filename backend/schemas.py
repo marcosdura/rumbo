@@ -244,8 +244,6 @@ class SpotImageResponse(BaseModel):
     cloudinary_public_id: str
     is_main: bool
     order: int
-    focal_x: Optional[float] = 0.5
-    focal_y: Optional[float] = 0.5
 
     class Config:
         from_attributes = True
