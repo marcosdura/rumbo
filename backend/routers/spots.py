@@ -393,7 +393,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "trekking_detail": spot.trekking_detail,
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
         "routes": spot.routes,
-        "images": spot.images,
+        "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "average_rating": None,
         "review_count": 0,
         "is_public": spot.is_public,
@@ -439,7 +439,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             sa.amenity for sa in spot.amenities if sa.amenity is not None
         ],
         "routes": spot.routes,
-        "images": spot.images,
+        "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "is_public": spot.is_public,
