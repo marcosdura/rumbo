@@ -5,6 +5,7 @@ from auth import get_current_user
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse
+import cloudinary.uploader
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -346,9 +347,15 @@ def get_spots(
 @router.delete("/spots/{spot_id}")
 def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-
     if not db_spot:
         raise HTTPException(status_code=404, detail="Spot not found")
+
+    images = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).all()
+    for img in images:
+        try:
+            cloudinary.uploader.destroy(img.cloudinary_public_id)
+        except Exception:
+            pass
 
     db.execute(text("DELETE FROM spots WHERE id = :id"), {"id": spot_id})
     db.commit()
