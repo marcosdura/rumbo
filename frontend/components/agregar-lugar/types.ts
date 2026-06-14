@@ -35,6 +35,8 @@ export type ClimbingRouteForm = {
   name: string; grade: string; type: string; length_m: string; bolts: string; description: string
 }
 
+export type FocalPoint = { x: number; y: number }
+
 export type BasicInfo = {
   name: string; description: string; department: string
   price: string; season_type: "all_year" | "seasonal"

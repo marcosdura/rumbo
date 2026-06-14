@@ -283,6 +283,8 @@ class SpotImage(Base):
     cloudinary_public_id = Column(String)
     is_main = Column(Boolean, default=False)
     order = Column(Integer, default=0)
+    focal_x = Column(Float, default=0.5, nullable=True)
+    focal_y = Column(Float, default=0.5, nullable=True)
 
     spot = relationship("SpotDB", back_populates="images")
 

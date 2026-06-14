@@ -28,7 +28,7 @@ import StepTrekkingMode from "./steps/StepTrekkingMode"
 import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
-  SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
+  SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode, FocalPoint,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -50,6 +50,7 @@ export default function AgregarLugar() {
   const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
   const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
+  const [focalPoints, setFocalPoints]               = useState<FocalPoint[]>([])
   const [isPublic, setIsPublic]                   = useState<boolean | null>(null)
   const [publicTransport, setPublicTransport]     = useState<string | null>(null)
   const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
@@ -379,6 +380,7 @@ export default function AgregarLugar() {
       surf,
       kayaks,
       images,
+      focalPoints,
       surfPhotoFiles,
       kayakPhotoFiles,
       selectedSpotId,
@@ -395,7 +397,7 @@ export default function AgregarLugar() {
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
-    setImages([]); setPreviews([])
+    setImages([]); setPreviews([]); setFocalPoints([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
     setFeatureErrors(new Set()); setError(null); setSuccess(false)
@@ -734,6 +736,8 @@ export default function AgregarLugar() {
             setImages={setImages}
             previews={previews}
             setPreviews={setPreviews}
+            focalPoints={focalPoints}
+            setFocalPoints={setFocalPoints}
             setError={setError}
             error={error}
             onBack={() => setStep(2)}
@@ -800,6 +804,8 @@ export default function AgregarLugar() {
             setImages={setImages}
             previews={previews}
             setPreviews={setPreviews}
+            focalPoints={focalPoints}
+            setFocalPoints={setFocalPoints}
             setError={setError}
             error={error}
             onBack={() => setStep(isTrekking ? 4 : 3)}
