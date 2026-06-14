@@ -184,6 +184,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           display: flex;
           align-items: center;
           gap: 6px;
+          position: relative;
         }
 
         .search-field-input {
@@ -198,6 +199,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           min-width: 0;
           line-height: 1.4;
           cursor: pointer;
+          padding-right: 26px;
         }
         .search-field-input::placeholder {
           color: #b0aca5;
@@ -291,15 +293,19 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         .search-btn:active { transform: translateY(0); }
 
         .clear-btn {
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 22px;
-          height: 22px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           background: #d0cdc7;
           color: #fff;
-          font-size: 18px;
+          font-size: 13px;
           cursor: pointer;
           flex-shrink: 0;
           transition: background 0.15s;

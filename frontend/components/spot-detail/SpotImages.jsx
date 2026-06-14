@@ -102,7 +102,48 @@ function SpotImages({ images = [], name }) {
         <div className="spot-img-grid-5">
           <Img img={images[0]} index={0} sizes="50vw" borderRadius={18} />
           <div className="spot-img-sub-5">
-            {images.slice(1, 5).map((img, i) => <Img key={i} img={img} index={i + 1} sizes="25vw" borderRadius={12} />)}
+            {images.slice(1, 5).map((img, i) => {
+              const isLast = i === 3
+              const extra = images.length - 5
+              const showOverlay = isLast && extra > 0
+
+              return (
+                <div
+                  key={i}
+                  style={{ position: "relative", overflow: "hidden", borderRadius: 12, cursor: "pointer" }}
+                  className="img-reveal img-zoom"
+                  onClick={() => open(i + 1)}
+                >
+                  <CldImage
+                    src={img.cloudinary_public_id}
+                    sizes="25vw"
+                    alt={`${name} ${i + 2}`}
+                    {...sharedProps}
+                  />
+                  {showOverlay && (
+                    <div style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "rgba(0,0,0,0.45)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 12,
+                    }}>
+                      <span style={{
+                        color: "#fff",
+                        fontSize: 26,
+                        fontWeight: 700,
+                        fontFamily: "'DM Sans', sans-serif",
+                        letterSpacing: "-0.02em",
+                      }}>
+                        +{extra}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
