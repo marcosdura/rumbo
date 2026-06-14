@@ -14,6 +14,7 @@ from database import engine
 from models import Base
 import re
 from sqlalchemy import text
+import cloudinary.uploader
 
 
 Base.metadata.create_all(bind=engine)
@@ -346,9 +347,15 @@ def get_spots(
 @router.delete("/spots/{spot_id}")
 def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-
     if not db_spot:
         raise HTTPException(status_code=404, detail="Spot not found")
+
+    images = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).all()
+    for img in images:
+        try:
+            cloudinary.uploader.destroy(img.cloudinary_public_id)
+        except Exception:
+            pass
 
     db.execute(text("DELETE FROM spots WHERE id = :id"), {"id": spot_id})
     db.commit()
