@@ -13,6 +13,8 @@ from typing import Optional, List
 from database import engine
 from models import Base
 import re
+from sqlalchemy import text
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -346,12 +348,12 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
 
     if not db_spot:
-        raise HTTPException(status_code=404, detail="Trip not found")
+        raise HTTPException(status_code=404, detail="Spot not found")
 
-    db.delete(db_spot)
+    db.execute(text("DELETE FROM spots WHERE id = :id"), {"id": spot_id})
     db.commit()
 
-    return {"message": "Trip deleted"}
+    return {"message": "Spot deleted"}
 
 
 @router.get("/spots/by-slug/{slug}", response_model=SpotResponse)
