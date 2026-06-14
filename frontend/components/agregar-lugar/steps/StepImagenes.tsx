@@ -4,23 +4,18 @@ import { useRef } from "react"
 import type React from "react"
 import { s } from "../styles"
 import NavRow from "../ui/NavRow"
-import FocalPointPicker from "../../ui/FocalPointPicker"
 
 export default function StepImagenes({
-  images, setImages, previews, setPreviews, focalPoints, setFocalPoints,
-  setError, error, onBack, onNext, stepLabel,
+  images, setImages, previews, setPreviews, setError, error, onBack, onNext,
 }: {
   images: File[]
   setImages: React.Dispatch<React.SetStateAction<File[]>>
   previews: string[]
   setPreviews: React.Dispatch<React.SetStateAction<string[]>>
-  focalPoints: { x: number; y: number }[]
-  setFocalPoints: React.Dispatch<React.SetStateAction<{ x: number; y: number }[]>>
   setError: (v: string | null) => void
   error: string | null
   onBack: () => void
   onNext: () => void
-  stepLabel?: string
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -34,11 +29,6 @@ export default function StepImagenes({
         setError(null)
       }
       setPreviews(combined.map(f => URL.createObjectURL(f)))
-      setFocalPoints(prevFP => {
-        const next = [...prevFP]
-        while (next.length < combined.length) next.push({ x: 0.5, y: 0.5 })
-        return next.slice(0, combined.length)
-      })
       return combined
     })
     e.target.value = ""
@@ -50,7 +40,6 @@ export default function StepImagenes({
       setPreviews(next.map(f => URL.createObjectURL(f)))
       return next
     })
-    setFocalPoints(prev => prev.filter((_, i) => i !== index))
   }
 
   function makeMain(index: number) {
@@ -61,17 +50,10 @@ export default function StepImagenes({
       setPreviews(next.map(f => URL.createObjectURL(f)))
       return next
     })
-    setFocalPoints(prev => {
-      const next = [...prev]
-      const [item] = next.splice(index, 1)
-      next.unshift(item)
-      return next
-    })
   }
 
   return (
     <div>
-      <NavRow onBack={onBack} onNext={onNext} error={null} stepLabel={stepLabel} />
       <h2 style={s.title}>Imágenes</h2>
       <p style={{ color: "#7a7669", fontSize: 14, marginBottom: 16 }}>
         La primera imagen será la principal. Mínimo 1 requerida, máximo 10.
@@ -98,59 +80,39 @@ export default function StepImagenes({
       {previews.length > 0 && (
         <div style={s.previewGrid}>
           {previews.map((src, i) => (
-            <div key={i}>
-              <div style={{ position: "relative", borderRadius: 12, overflow: "hidden" }}>
-                <img src={src} alt={`preview ${i}`} style={s.previewImg} />
-                {i === 0 && <span style={s.mainBadge}>Principal</span>}
-                {i !== 0 && (
-                  <button
-                    type="button"
-                    onClick={() => makeMain(i)}
-                    style={{
-                      position: "absolute", bottom: 4, left: 4,
-                      background: "rgba(0,0,0,0.55)", color: "#fff",
-                      border: "none", borderRadius: 6,
-                      padding: "2px 7px", cursor: "pointer",
-                      fontSize: 10, fontWeight: 600,
-                      fontFamily: "inherit", lineHeight: 1.4,
-                    }}
-                  >
-                    Hacer principal
-                  </button>
-                )}
+            <div key={i} style={{ position: "relative", borderRadius: 12, overflow: "hidden" }}>
+              <img src={src} alt={`preview ${i}`} style={s.previewImg} />
+              {i === 0 && <span style={s.mainBadge}>Principal</span>}
+              {i !== 0 && (
                 <button
                   type="button"
-                  onClick={() => removeImage(i)}
+                  onClick={() => makeMain(i)}
                   style={{
-                    position: "absolute", top: 4, right: 4,
+                    position: "absolute", bottom: 4, left: 4,
                     background: "rgba(0,0,0,0.55)", color: "#fff",
-                    border: "none", borderRadius: "50%",
-                    width: 20, height: 20, cursor: "pointer",
-                    fontSize: 13, display: "flex", alignItems: "center",
-                    justifyContent: "center", fontFamily: "inherit", lineHeight: 1,
+                    border: "none", borderRadius: 6,
+                    padding: "2px 7px", cursor: "pointer",
+                    fontSize: 10, fontWeight: 600,
+                    fontFamily: "inherit", lineHeight: 1.4,
                   }}
-                >×</button>
-              </div>
+                >
+                  Hacer principal
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                style={{
+                  position: "absolute", top: 4, right: 4,
+                  background: "rgba(0,0,0,0.55)", color: "#fff",
+                  border: "none", borderRadius: "50%",
+                  width: 20, height: 20, cursor: "pointer",
+                  fontSize: 13, display: "flex", alignItems: "center",
+                  justifyContent: "center", fontFamily: "inherit", lineHeight: 1,
+                }}
+              >×</button>
             </div>
           ))}
-        </div>
-      )}
-
-      {previews.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <p style={{ fontSize: 12, color: "#7a7669", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
-            Ajustá el punto focal de la imagen principal:
-          </p>
-          <FocalPointPicker
-            imageUrl={previews[0]}
-            focalX={focalPoints[0]?.x ?? 0.5}
-            focalY={focalPoints[0]?.y ?? 0.5}
-            onChange={(x, y) => setFocalPoints(prev => {
-              const next = [...prev]
-              next[0] = { x, y }
-              return next
-            })}
-          />
         </div>
       )}
 
@@ -164,7 +126,6 @@ export default function StepImagenes({
           onNext()
         }}
         error={error}
-        stepLabel={stepLabel}
       />
     </div>
   )

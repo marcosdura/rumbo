@@ -142,27 +142,20 @@ function SpotCard({ spot, isHighlighted = false }) {
         onMouseLeave={() => setHovered(false)}
       >
         <div className="spot-card-img-wrap">
-          {mainImage ? (() => {
-            const focalX = mainImage.focal_x ?? 0.5
-            const focalY = mainImage.focal_y ?? 0.5
-            return (
-              <CldImage
-                src={mainImage.cloudinary_public_id}
-                width={600}
-                height={200}
-                crop="fill"
-                gravity="xy_center"
-                x={Math.round(focalX * 100)}
-                y={Math.round(focalY * 100)}
-                alt={spot.name}
-                loading="lazy"
-                quality="auto"
-                format="auto"
-                sizes="(max-width: 640px) 100vw, 50vw"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            )
-          })() : (
+          {mainImage ? (
+            <CldImage
+              src={mainImage.cloudinary_public_id}
+              width={600}
+              height={200}
+              crop="fill"
+              gravity="auto"
+              alt={spot.name}
+              loading="lazy"
+              quality="auto"
+              format="auto"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
             <div style={{ width: "100%", height: "100%", background: "#e0ddd6" }} />
           )}
           <div className="spot-card-img-overlay" />

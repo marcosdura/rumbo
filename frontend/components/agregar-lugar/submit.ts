@@ -24,7 +24,6 @@ interface SubmitParams {
   surf: SurfItem
   kayaks: KayakItem[]
   images: File[]
-  focalPoints: { x: number; y: number }[]
   surfPhotoFiles: (File | null)[]
   kayakPhotoFiles: (File | null)[]
   selectedSpotId: number | null
@@ -39,7 +38,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
     selectedAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
-    images, focalPoints, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
+    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
 
@@ -101,8 +100,6 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
               cloudinary_public_id: publicId,
               is_main: String(index === 0),
               order: String(index),
-              focal_x: String(focalPoints[index]?.x ?? 0.5),
-              focal_y: String(focalPoints[index]?.y ?? 0.5),
             })
             return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
               method: "POST",
@@ -253,8 +250,6 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           cloudinary_public_id: publicId,
           is_main: String(index === 0),
           order: String(index),
-          focal_x: String(focalPoints[index]?.x ?? 0.5),
-          focal_y: String(focalPoints[index]?.y ?? 0.5),
         })
         return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
           method: "POST",
