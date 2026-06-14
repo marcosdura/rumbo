@@ -145,19 +145,21 @@ function SpotCard({ spot, isHighlighted = false }) {
           {mainImage ? (() => {
             const focalX = mainImage.focal_x ?? 0.5
             const focalY = mainImage.focal_y ?? 0.5
-            const objectPosition = `${focalX * 100}% ${focalY * 100}%`
             return (
               <CldImage
                 src={mainImage.cloudinary_public_id}
                 width={600}
                 height={200}
                 crop="fill"
+                gravity="xy_center"
+                x={Math.round(focalX * 100)}
+                y={Math.round(focalY * 100)}
                 alt={spot.name}
                 loading="lazy"
                 quality="auto"
                 format="auto"
                 sizes="(max-width: 640px) 100vw, 50vw"
-                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition }}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             )
           })() : (
