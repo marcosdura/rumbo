@@ -33,6 +33,7 @@ class SpotDB(Base):
     
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship("Category", back_populates="spots")
+    spot_categories = relationship("SpotCategory", uselist=True, back_populates="spot")
     amenities = relationship("SpotAmenity", back_populates="spot")
     camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
     glamping_detail = relationship("GlampingDetail", uselist=False, back_populates="spot")
@@ -42,7 +43,7 @@ class SpotDB(Base):
     kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot")
     surf_schools = relationship("SurfSchool", uselist=True, back_populates="spot")
     images = relationship("SpotImage", back_populates="spot")
-    favorites = relationship("Favorite", back_populates="spot") 
+    favorites = relationship("Favorite", back_populates="spot")
     reviews = relationship("Review", back_populates="spot")
 
 
@@ -53,6 +54,18 @@ class Category(Base):
     name = Column(String, unique=True, index=True)
 
     spots = relationship("SpotDB", back_populates="category")
+    spot_categories = relationship("SpotCategory", uselist=True, back_populates="category")
+
+
+class SpotCategory(Base):
+    __tablename__ = "spot_categories"
+
+    spot_id     = Column(Integer, ForeignKey("spots.id"), primary_key=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), primary_key=True)
+    is_primary  = Column(Boolean, default=False)
+
+    spot     = relationship("SpotDB", back_populates="spot_categories")
+    category = relationship("Category", back_populates="spot_categories")
 
 class GlampingDetail(Base):
     __tablename__ = "glamping_details"
