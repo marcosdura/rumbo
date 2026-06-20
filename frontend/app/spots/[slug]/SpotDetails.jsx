@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react"
 
 const CATEGORY_EMOJIS = {
-  "Camping":  "⛺",
-  "Glamping": "🛖",
-  "Trekking": "🥾",
-  "Escalada": "🧗",
-  "Surf":     "🏄",
-  "Kayak":    "🛶",
+  "Camping":   "⛺",
+  "Glamping":  "🛖",
+  "Trekking":  "🥾",
+  "Escalada":  "🧗",
+  "Surf":      "🏄",
+  "Kayak":     "🛶",
+  "Motorhome": "🚐",
 }
 import { useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"

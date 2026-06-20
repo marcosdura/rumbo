@@ -17,34 +17,48 @@ const SURFACE_LABELS: Record<string, string> = {
 
 export default function MotorhomeCard({ motorhomeDetail }: MotorhomeDetailProps) {
   const d = motorhomeDetail
-  const rows: { label: string; value: string }[] = []
+  const rows: { label: string; value: string; emoji: string }[] = []
 
-  if (d.capacity)     rows.push({ label: "Capacidad", value: `${d.capacity} motorhome(s)` })
-  if (d.surface_type) rows.push({ label: "Superficie", value: SURFACE_LABELS[d.surface_type] ?? d.surface_type })
-  if (d.has_water)         rows.push({ label: "Agua", value: "Disponible" })
-  if (d.has_electricity)   rows.push({ label: "Electricidad", value: "Disponible" })
-  if (d.has_dump_station)  rows.push({ label: "Dump station", value: "Disponible" })
-  if (d.max_stay_nights)   rows.push({ label: "Estadía máxima", value: `${d.max_stay_nights} noches` })
+  if (d.capacity)         rows.push({ emoji: "🚐", label: "Capacidad", value: `${d.capacity} motorhome(s)` })
+  if (d.surface_type)     rows.push({ emoji: "🪨", label: "Superficie", value: SURFACE_LABELS[d.surface_type] ?? d.surface_type })
+  if (d.has_water)        rows.push({ emoji: "💧", label: "Agua", value: "Disponible" })
+  if (d.has_electricity)  rows.push({ emoji: "⚡", label: "Electricidad", value: "Disponible" })
+  if (d.has_dump_station) rows.push({ emoji: "🚽", label: "Dump station", value: "Disponible" })
+  if (d.max_stay_nights)  rows.push({ emoji: "🌙", label: "Estadía máxima", value: `${d.max_stay_nights} noches` })
 
   if (rows.length === 0) return null
 
   return (
     <div className="amenities-card">
+      <style>{`
+        .motorhome-cell {
+          background: #f7f5f0;
+          border: 1px solid #e0ddd6;
+          border-radius: 12px;
+          padding: 10px 14px;
+          min-width: 140px;
+          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        @media (hover: hover) {
+          .motorhome-cell:hover {
+            background: #f0f7f3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+          }
+        }
+      `}</style>
       <div className="amenities-label">
         <div className="amenities-dot" />
         <p className="amenities-title">🚐 Acepta motorhomes</p>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {rows.map(r => (
-          <div key={r.label} style={{
-            background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-            padding: "10px 14px", minWidth: 140,
-          }}>
-            <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div key={r.label} className="motorhome-cell">
+            <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>
               {r.label}
             </p>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-              {r.value}
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+              <span>{r.emoji}</span> {r.value}
             </p>
           </div>
         ))}
