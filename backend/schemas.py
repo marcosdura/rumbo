@@ -287,6 +287,7 @@ class SpotResponse(BaseModel):
     slug: str | None = None
 
     category: CategoryResponse
+    categories: list[CategoryResponse] = []
     camping_detail:   CampingDetailResponse  | None = None
     glamping_detail:  GlampingDetailResponse | None = None
     trekking_detail:  TrekkingDetailOut      | None = None

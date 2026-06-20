@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse
 import models
 from sqlalchemy.orm import joinedload
@@ -374,6 +374,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
             selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
         .first()
@@ -395,6 +396,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "season_end": spot.season_end,
         "slug": spot.slug,
         "category": spot.category,
+        "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
         "trekking_detail": spot.trekking_detail,
@@ -419,6 +421,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
             selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -439,6 +442,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "whatsapp": spot.whatsapp,
         "price": spot.price,
         "category": spot.category,
+        "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
         "trekking_detail": spot.trekking_detail,
