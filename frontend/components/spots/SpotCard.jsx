@@ -9,12 +9,13 @@ import { CldImage } from 'next-cloudinary'
 
 const CATEGORY_EMOJI = {
   Camping: "🏕️", Glamping: "🛖", Trekking: "🥾",
-  Escalada: "🧗", Surf: "🏄", Kayak: "🛶",
+  Escalada: "🧗", Surf: "🏄", Kayak: "🛶", Motorhome: "🚐",
 }
 
 function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [showExtraCategories, setShowExtraCategories] = useState(false)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
   useEffect(() => {
@@ -23,6 +24,10 @@ function SpotCard({ spot, isHighlighted = false }) {
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
   }, [])
+
+  const categories = spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
+  const primaryCategory = categories[0]
+  const extraCategories = categories.slice(1)
 
   return (
     <>
@@ -187,8 +192,27 @@ function SpotCard({ spot, isHighlighted = false }) {
           <div className="spot-card-footer">
             <div className="spot-card-badges">
               <Pill variant="beige">
-                {CATEGORY_EMOJI[spot.category?.name] ? `${CATEGORY_EMOJI[spot.category.name]} ${spot.category.name}` : (spot.category?.name || "Sin categoría")}
+                {CATEGORY_EMOJI[primaryCategory?.name] ? `${CATEGORY_EMOJI[primaryCategory.name]} ${primaryCategory.name}` : (primaryCategory?.name || "Sin categoría")}
               </Pill>
+              {extraCategories.length > 0 && (
+                <div
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => setShowExtraCategories(true)}
+                  onMouseLeave={() => setShowExtraCategories(false)}
+                >
+                  <Pill variant="beige">+{extraCategories.length}</Pill>
+                  {showExtraCategories && (
+                    <div style={{
+                      position: "absolute", bottom: "calc(100% + 6px)", left: 0,
+                      background: "#1b1b19", color: "#fff", borderRadius: 10,
+                      padding: "6px 10px", fontSize: 12, whiteSpace: "nowrap",
+                      zIndex: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+                    }}>
+                      {extraCategories.map(c => `${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()).join(" · ")}
+                    </div>
+                  )}
+                </div>
+              )}
               <Pill variant="dark-green" style={{ minWidth: 0, overflow: "hidden", flexShrink: 1 }}>
                 <span className="dept-pill-text">{spot.department || "Sin departamento"}</span>
               </Pill>

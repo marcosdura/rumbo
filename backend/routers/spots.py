@@ -348,9 +348,12 @@ def get_spots(
     for spot in spots:
         amenities = [sa.amenity for sa in spot.amenities if sa.amenity is not None]
         agg = agg_by_id.get(spot.id)
+        sorted_spot_categories = sorted(spot.spot_categories, key=lambda sc: not sc.is_primary)
+        categories = [sc.category for sc in sorted_spot_categories]
         result.append({
             **spot.__dict__,
             "amenities": amenities,
+            "categories": categories,
             "average_rating": round(float(agg.average_rating), 1) if agg else None,
             "review_count": agg.review_count if agg else 0,
         })
