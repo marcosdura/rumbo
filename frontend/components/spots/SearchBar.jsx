@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf"]
-const ACTIVITY_EMOJI = { Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶" }
+const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf", "Motorhome"]
+const ACTIVITY_EMOJI = { Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶", Motorhome:"🚐" }
 const departments = [
   "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
   "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",
