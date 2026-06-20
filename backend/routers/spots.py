@@ -85,6 +85,14 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
     db.commit()
     db.refresh(db_spot)
 
+    db_spot_category = SpotCategory(
+        spot_id=db_spot.id,
+        category_id=spot.category_id,
+        is_primary=True,
+    )
+    db.add(db_spot_category)
+    db.commit()
+
     db_spot = (
         db.query(SpotDB)
         .options(joinedload(SpotDB.category))
