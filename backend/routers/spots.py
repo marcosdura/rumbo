@@ -138,7 +138,13 @@ def get_spots(
         query = query.filter(SpotDB.department == department)
 
     if activity:
-        query = query.join(SpotDB.category).filter(models.Category.name == activity)
+        activity_list = [a.strip() for a in activity.split(",") if a.strip()]
+        query = (
+            query.join(SpotDB.spot_categories)
+            .join(SpotCategory.category)
+            .filter(models.Category.name.in_(activity_list))
+            .distinct()
+        )
 
     is_trekking = activity == "Trekking"
     routes_joined = False
