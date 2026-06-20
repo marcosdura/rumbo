@@ -1,4 +1,4 @@
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem } from "./types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem } from "./types"
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
   const formatted = spotName
@@ -18,6 +18,8 @@ interface SubmitParams {
   isPublic: boolean | null
   publicTransport: string | null
   selectedAmenities: string[]
+  additionalCategories: string[]
+  motorhomeDetail: MotorhomeDetailItem
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   sectors: SectorItem[]
@@ -37,7 +39,7 @@ interface SubmitParams {
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
+    selectedAmenities, additionalCategories, motorhomeDetail, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
@@ -315,6 +317,28 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             body: JSON.stringify(amenityPayload),
           })
         }
+      }
+    }
+
+    if ((cat === "Camping" || cat === "Glamping") && additionalCategories.includes("Motorhome")) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            category: "Motorhome",
+            motorhome_detail: {
+              capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
+              surface_type: motorhomeDetail.surface_type || null,
+              has_water: motorhomeDetail.has_water,
+              has_electricity: motorhomeDetail.has_electricity,
+              has_dump_station: motorhomeDetail.has_dump_station,
+              max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
+            },
+          }),
+        })
+      } catch {
+        // no bloquea el submit si falla el alta de la categoría adicional
       }
     }
 

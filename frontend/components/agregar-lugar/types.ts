@@ -42,3 +42,12 @@ export type BasicInfo = {
   email: string; whatsapp: string; instagram: string
   lat: string; lng: string
 }
+
+export type MotorhomeDetailItem = {
+  capacity: string
+  surface_type: string
+  has_water: boolean
+  has_electricity: boolean
+  has_dump_station: boolean
+  max_stay_nights: string
+}

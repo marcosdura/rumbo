@@ -5,7 +5,7 @@ import { useSession, signIn } from "next-auth/react"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
-  REQUIRED_FEATURE_KEYS,
+  REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail,
 } from "./constants"
 import { submitAgregarLugar, buildPublicId } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
@@ -26,9 +26,11 @@ import StepClimbingSectorSelector from "./steps/StepClimbingSectorSelector"
 import StepClimbingRouteForm from "./steps/StepClimbingRouteForm"
 import StepTrekkingMode from "./steps/StepTrekkingMode"
 import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
+import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
+  MotorhomeDetailItem,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -39,6 +41,8 @@ export default function AgregarLugar() {
   const [selectedCat, setSelectedCat]             = useState<Category | null>(null)
   const [basic, setBasic]                         = useState<BasicInfo>(emptyBasic())
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+  const [additionalCategories, setAdditionalCategories] = useState<string[]>([])
+  const [motorhomeDetail, setMotorhomeDetail]     = useState<MotorhomeDetailItem>(defaultMotorhomeDetail())
   const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
@@ -91,13 +95,14 @@ export default function AgregarLugar() {
   const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
+  const isCampingOrGlamping = selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
   const summaryStep =
     isService && creatingNewSpot ? 5
     : isService ? 4
     : isTrekking && trekkingMode === "new_route" ? 5
     : isTrekking ? 6
     : isEscalada && climbingMode === "new_sector" ? 4
-    : 5
+    : isCampingOrGlamping ? 6 : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -373,6 +378,8 @@ export default function AgregarLugar() {
       isPublic,
       publicTransport,
       selectedAmenities,
+      additionalCategories,
+      motorhomeDetail,
       trekkingFeatures,
       routes,
       sectors,
@@ -393,6 +400,7 @@ export default function AgregarLugar() {
   function reset() {
     setStep(1); setSelectedCat(null); setBasic(emptyBasic())
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
+    setAdditionalCategories([]); setMotorhomeDetail(defaultMotorhomeDetail())
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
@@ -803,6 +811,18 @@ export default function AgregarLugar() {
             setError={setError}
             error={error}
             onBack={() => setStep(isTrekking ? 4 : 3)}
+            onNext={() => setStep(isCampingOrGlamping ? 5 : summaryStep)}
+          />
+        )}
+
+        {step === 5 && isCampingOrGlamping && (
+          <StepCategoriasAdicionales
+            additionalCategories={additionalCategories}
+            setAdditionalCategories={setAdditionalCategories}
+            motorhomeDetail={motorhomeDetail}
+            setMotorhomeDetail={setMotorhomeDetail}
+            error={error}
+            onBack={() => setStep(4)}
             onNext={() => setStep(summaryStep)}
           />
         )}
@@ -866,7 +886,7 @@ export default function AgregarLugar() {
               : isTrekking && trekkingMode === "new_route" ? 3
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 3
-              : 4
+              : isCampingOrGlamping ? 5 : 4
             )}
             onEditStep={setStep}
             climbingMode={climbingMode}
