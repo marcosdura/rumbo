@@ -27,6 +27,7 @@ import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import SpotImages from "../../../components/spot-detail/SpotImages"
 import ShareModal from "@/components/spot-detail/ShareModal"
+import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
@@ -323,10 +324,19 @@ useEffect(() => {
                   </span>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
-                <span className="category-pill">
-                  {CATEGORY_EMOJIS[spot.category?.name] && `${CATEGORY_EMOJIS[spot.category.name]} `}
-                  {spot.category?.name || "Sin categoría"}
-                </span>
+                {spot.categories && spot.categories.length > 0 ? (
+                  spot.categories.map((cat) => (
+                    <span key={cat.id} className="category-pill">
+                      {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}
+                      {cat.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="category-pill">
+                    {CATEGORY_EMOJIS[spot.category?.name] && `${CATEGORY_EMOJIS[spot.category.name]} `}
+                    {spot.category?.name || "Sin categoría"}
+                  </span>
+                )}
                 <span className="department-pill">{spot.department || "Sin departamento"}</span>
               </div>
             </div>
@@ -413,6 +423,10 @@ useEffect(() => {
                   </div>
                   <AmenitiesList amenities={spot.amenities} />
                 </div>
+              )}
+
+              {spot.motorhome_detail && (
+                <MotorhomeCard motorhomeDetail={spot.motorhome_detail} />
               )}
 
               {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (

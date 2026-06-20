@@ -270,6 +270,23 @@ class TrekkingDetailCreate(TrekkingDetailOut):
     pass
 
 
+# -------- MOTORHOME DETAIL --------
+class MotorhomeDetailCreate(BaseModel):
+    capacity: Optional[int] = None
+    surface_type: Optional[str] = None
+    has_water: Optional[bool] = None
+    has_electricity: Optional[bool] = None
+    has_dump_station: Optional[bool] = None
+    max_stay_nights: Optional[int] = None
+
+class MotorhomeDetailResponse(MotorhomeDetailCreate):
+    id: int
+    spot_id: int
+
+    class Config:
+        from_attributes = True
+
+
 # -------- SPOT RESPONSE --------
 class SpotResponse(BaseModel):
     id: int
@@ -290,6 +307,7 @@ class SpotResponse(BaseModel):
     categories: list[CategoryResponse] = []
     camping_detail:   CampingDetailResponse  | None = None
     glamping_detail:  GlampingDetailResponse | None = None
+    motorhome_detail: MotorhomeDetailResponse | None = None
     trekking_detail:  TrekkingDetailOut      | None = None
     amenities: list[AmenityResponse] = []
 
@@ -374,23 +392,6 @@ class KayakReviewResponse(BaseModel):
     comment: str | None = None
     created_at: datetime
     user: ReviewUserResponse
-
-    class Config:
-        from_attributes = True
-
-
-# -------- MOTORHOME DETAIL --------
-class MotorhomeDetailCreate(BaseModel):
-    capacity: Optional[int] = None
-    surface_type: Optional[str] = None
-    has_water: Optional[bool] = None
-    has_electricity: Optional[bool] = None
-    has_dump_station: Optional[bool] = None
-    max_stay_nights: Optional[int] = None
-
-class MotorhomeDetailResponse(MotorhomeDetailCreate):
-    id: int
-    spot_id: int
 
     class Config:
         from_attributes = True

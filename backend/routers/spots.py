@@ -388,6 +388,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
             selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
@@ -413,6 +414,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
+        "motorhome_detail": spot.motorhome_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
         "routes": spot.routes,
@@ -435,6 +437,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
             selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
         .filter(SpotDB.id == id)
@@ -459,6 +462,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
+        "motorhome_detail": spot.motorhome_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [
             sa.amenity for sa in spot.amenities if sa.amenity is not None
