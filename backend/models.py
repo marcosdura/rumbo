@@ -38,6 +38,7 @@ class SpotDB(Base):
     camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
     glamping_detail = relationship("GlampingDetail", uselist=False, back_populates="spot")
     trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot")
+    motorhome_detail = relationship("MotorhomeDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot")
     kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot")
@@ -110,6 +111,22 @@ class CampingDetail(Base):
     price = Column(Float)
 
     spot = relationship("SpotDB", back_populates="camping_detail")
+
+
+class MotorhomeDetail(Base):
+    __tablename__ = "motorhome_details"
+
+    id = Column(Integer, primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+
+    capacity         = Column(Integer, nullable=True)
+    surface_type     = Column(String, nullable=True)
+    has_water        = Column(Boolean, nullable=True)
+    has_electricity  = Column(Boolean, nullable=True)
+    has_dump_station = Column(Boolean, nullable=True)
+    max_stay_nights  = Column(Integer, nullable=True)
+
+    spot = relationship("SpotDB", back_populates="motorhome_detail")
 
 class TrekkingDetail(Base):
     __tablename__ = "trekking_details"
