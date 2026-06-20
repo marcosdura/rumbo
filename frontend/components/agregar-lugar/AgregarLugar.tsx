@@ -27,6 +27,7 @@ import StepClimbingRouteForm from "./steps/StepClimbingRouteForm"
 import StepTrekkingMode from "./steps/StepTrekkingMode"
 import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
+import StepMotorhomeDetalle from "./steps/StepMotorhomeDetalle"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
@@ -96,6 +97,7 @@ export default function AgregarLugar() {
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
   const isCampingOrGlamping = selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
+  const isMotorhome = selectedCat?.name === "Motorhome"
   const summaryStep =
     isService && creatingNewSpot ? 5
     : isService ? 4
@@ -638,6 +640,16 @@ export default function AgregarLugar() {
             error={error}
             onBack={() => setStep(1)}
             onNext={goToStep3}
+          />
+        )}
+
+        {step === 3 && isMotorhome && (
+          <StepMotorhomeDetalle
+            motorhomeDetail={motorhomeDetail}
+            setMotorhomeDetail={setMotorhomeDetail}
+            error={error}
+            onBack={() => setStep(2)}
+            onNext={() => setStep(4)}
           />
         )}
 

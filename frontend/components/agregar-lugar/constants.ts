@@ -7,6 +7,7 @@ export const CATEGORIES: Category[] = [
   { id: 3, name: "Escalada", label: "Escalada", emoji: "🧗" },
   { id: 4, name: "Surf",     label: "Surf",     emoji: "🏄" },
   { id: 5, name: "Kayak",    label: "Kayak",    emoji: "🛶" },
+  { id: 8, name: "Motorhome", label: "Motorhome", emoji: "🚐" },
 ]
 
 export const DEPARTMENTS = [

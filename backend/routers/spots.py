@@ -4,7 +4,7 @@ from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest
+from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -570,6 +570,23 @@ def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = De
     db.refresh(camping)
 
     return camping
+
+
+@router.post("/spots/{spot_id}/motorhome")
+def add_motorhome_detail(spot_id: int, data: MotorhomeDetailCreate, db: Session = Depends(get_db)):
+    detail = MotorhomeDetail(
+        spot_id=spot_id,
+        capacity=data.capacity,
+        surface_type=data.surface_type,
+        has_water=data.has_water,
+        has_electricity=data.has_electricity,
+        has_dump_station=data.has_dump_station,
+        max_stay_nights=data.max_stay_nights,
+    )
+    db.add(detail)
+    db.commit()
+    db.refresh(detail)
+    return detail
 
 
 # devuelve las rutas de trekking segun el spot

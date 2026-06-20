@@ -387,6 +387,21 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       }
     }
 
+    if (cat === "Motorhome") {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/motorhome`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
+          surface_type: motorhomeDetail.surface_type || null,
+          has_water: motorhomeDetail.has_water,
+          has_electricity: motorhomeDetail.has_electricity,
+          has_dump_station: motorhomeDetail.has_dump_station,
+          max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
+        }),
+      })
+    }
+
     if (cat === "Surf" && surf.name) {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
         method: "POST",
