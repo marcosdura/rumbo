@@ -1,35 +1,54 @@
 "use client"
 
-import type { MotorhomeDetailItem } from "../types"
+import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "../types"
 
 interface Props {
+  primaryCategoryName: string
   additionalCategories: string[]
   setAdditionalCategories: (v: string[]) => void
   motorhomeDetail: MotorhomeDetailItem
   setMotorhomeDetail: (v: MotorhomeDetailItem) => void
+  campingDetail: CampingDetailItem
+  setCampingDetail: (v: CampingDetailItem) => void
+  glampingDetail: GlampingDetailItem
+  setGlampingDetail: (v: GlampingDetailItem) => void
   error: string | null
   onBack: () => void
   onNext: () => void
 }
 
 export default function StepCategoriasAdicionales({
+  primaryCategoryName,
   additionalCategories, setAdditionalCategories,
   motorhomeDetail, setMotorhomeDetail,
+  campingDetail, setCampingDetail,
+  glampingDetail, setGlampingDetail,
   error, onBack, onNext,
 }: Props) {
   const acceptsMotorhome = additionalCategories.includes("Motorhome")
+  const acceptsCamping = additionalCategories.includes("Camping")
+  const acceptsGlamping = additionalCategories.includes("Glamping")
 
-  function toggleMotorhome() {
+  function toggle(category: string) {
     setAdditionalCategories(
-      acceptsMotorhome
-        ? additionalCategories.filter(c => c !== "Motorhome")
-        : [...additionalCategories, "Motorhome"]
+      additionalCategories.includes(category)
+        ? additionalCategories.filter(c => c !== category)
+        : [...additionalCategories, category]
     )
   }
 
   function updMotorhome(field: keyof MotorhomeDetailItem, val: string | boolean) {
     setMotorhomeDetail({ ...motorhomeDetail, [field]: val })
   }
+  function updCamping(field: keyof CampingDetailItem, val: string) {
+    setCampingDetail({ ...campingDetail, [field]: val })
+  }
+  function updGlamping(field: keyof GlampingDetailItem, val: string) {
+    setGlampingDetail({ ...glampingDetail, [field]: val })
+  }
+
+  const offerGlamping = primaryCategoryName === "Camping"
+  const offerCamping = primaryCategoryName === "Glamping"
 
   return (
     <div style={{
@@ -43,61 +62,150 @@ export default function StepCategoriasAdicionales({
         Opcional. Si tu lugar tiene otras características, marcalas acá.
       </p>
 
-      <label style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
-        cursor: "pointer", marginBottom: acceptsMotorhome ? 16 : 0,
-      }}>
-        <input type="checkbox" checked={acceptsMotorhome} onChange={toggleMotorhome} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🚐 Acepta motorhomes</span>
-      </label>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-      {acceptsMotorhome && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "16px 0 0 4px" }}>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (cantidad de motorhomes)</label>
-            <input
-              type="number" value={motorhomeDetail.capacity}
-              onChange={e => updMotorhome("capacity", e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de superficie</label>
-            <select
-              value={motorhomeDetail.surface_type}
-              onChange={e => updMotorhome("surface_type", e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-            >
-              <option value="">Seleccioná...</option>
-              <option value="cesped">Césped</option>
-              <option value="ripio">Ripio</option>
-              <option value="asfalto">Asfalto</option>
-              <option value="tierra">Tierra</option>
-            </select>
-          </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-            <input type="checkbox" checked={motorhomeDetail.has_water} onChange={e => updMotorhome("has_water", e.target.checked)} />
-            Tiene agua
+        {/* Motorhome */}
+        <div>
+          <label style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
+            cursor: "pointer",
+          }}>
+            <input type="checkbox" checked={acceptsMotorhome} onChange={() => toggle("Motorhome")} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🚐 Acepta motorhomes</span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-            <input type="checkbox" checked={motorhomeDetail.has_electricity} onChange={e => updMotorhome("has_electricity", e.target.checked)} />
-            Tiene electricidad
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-            <input type="checkbox" checked={motorhomeDetail.has_dump_station} onChange={e => updMotorhome("has_dump_station", e.target.checked)} />
-            Tiene dump station
-          </label>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Noches máximas permitidas</label>
-            <input
-              type="number" value={motorhomeDetail.max_stay_nights}
-              onChange={e => updMotorhome("max_stay_nights", e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-            />
-          </div>
+          {acceptsMotorhome && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (cantidad de motorhomes)</label>
+                <input
+                  type="number" value={motorhomeDetail.capacity}
+                  onChange={e => updMotorhome("capacity", e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de superficie</label>
+                <select
+                  value={motorhomeDetail.surface_type}
+                  onChange={e => updMotorhome("surface_type", e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                >
+                  <option value="">Seleccioná...</option>
+                  <option value="cesped">Césped</option>
+                  <option value="ripio">Ripio</option>
+                  <option value="asfalto">Asfalto</option>
+                  <option value="tierra">Tierra</option>
+                </select>
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                <input type="checkbox" checked={motorhomeDetail.has_water} onChange={e => updMotorhome("has_water", e.target.checked)} />
+                Tiene agua
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                <input type="checkbox" checked={motorhomeDetail.has_electricity} onChange={e => updMotorhome("has_electricity", e.target.checked)} />
+                Tiene electricidad
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                <input type="checkbox" checked={motorhomeDetail.has_dump_station} onChange={e => updMotorhome("has_dump_station", e.target.checked)} />
+                Tiene dump station
+              </label>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Noches máximas permitidas</label>
+                <input
+                  type="number" value={motorhomeDetail.max_stay_nights}
+                  onChange={e => updMotorhome("max_stay_nights", e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                />
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Glamping (solo si la categoría principal es Camping) */}
+        {offerGlamping && (
+          <div>
+            <label style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
+              cursor: "pointer",
+            }}>
+              <input type="checkbox" checked={acceptsGlamping} onChange={() => toggle("Glamping")} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🛖 También tiene cabañas/domos (glamping)</span>
+            </label>
+            {acceptsGlamping && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de alojamiento</label>
+                  <select
+                    value={glampingDetail.accommodation_type}
+                    onChange={e => updGlamping("accommodation_type", e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  >
+                    <option value="">Seleccioná...</option>
+                    <option value="domo">Domo</option>
+                    <option value="carpa">Carpa equipada</option>
+                    <option value="cabaña">Cabaña</option>
+                    <option value="treehouse">Treehouse</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (personas)</label>
+                  <input
+                    type="number" value={glampingDetail.capacity}
+                    onChange={e => updGlamping("capacity", e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche</label>
+                  <input
+                    type="number" value={glampingDetail.price_per_night}
+                    onChange={e => updGlamping("price_per_night", e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Mínimo de noches</label>
+                  <input
+                    type="number" value={glampingDetail.min_nights}
+                    onChange={e => updGlamping("min_nights", e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Camping (solo si la categoría principal es Glamping) */}
+        {offerCamping && (
+          <div>
+            <label style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
+              cursor: "pointer",
+            }}>
+              <input type="checkbox" checked={acceptsCamping} onChange={() => toggle("Camping")} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>⛺ También permite acampar</span>
+            </label>
+            {acceptsCamping && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche (camping)</label>
+                  <input
+                    type="number" value={campingDetail.price}
+                    onChange={e => updCamping("price", e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
 
       {error && <p style={{ color: "#b91c1c", fontSize: 13, marginTop: 16 }}>{error}</p>}
 

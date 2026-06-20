@@ -5,7 +5,7 @@ import { useSession, signIn } from "next-auth/react"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
-  REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail,
+  REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
 } from "./constants"
 import { submitAgregarLugar, buildPublicId } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
@@ -31,7 +31,7 @@ import StepMotorhomeDetalle from "./steps/StepMotorhomeDetalle"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
-  MotorhomeDetailItem,
+  MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -44,6 +44,8 @@ export default function AgregarLugar() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [additionalCategories, setAdditionalCategories] = useState<string[]>([])
   const [motorhomeDetail, setMotorhomeDetail]     = useState<MotorhomeDetailItem>(defaultMotorhomeDetail())
+  const [campingDetail, setCampingDetail]         = useState<CampingDetailItem>(defaultCampingDetail())
+  const [glampingDetail, setGlampingDetail]       = useState<GlampingDetailItem>(defaultGlampingDetail())
   const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
@@ -382,6 +384,8 @@ export default function AgregarLugar() {
       selectedAmenities,
       additionalCategories,
       motorhomeDetail,
+      campingDetail,
+      glampingDetail,
       trekkingFeatures,
       routes,
       sectors,
@@ -403,6 +407,7 @@ export default function AgregarLugar() {
     setStep(1); setSelectedCat(null); setBasic(emptyBasic())
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setAdditionalCategories([]); setMotorhomeDetail(defaultMotorhomeDetail())
+    setCampingDetail(defaultCampingDetail()); setGlampingDetail(defaultGlampingDetail())
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
@@ -829,10 +834,15 @@ export default function AgregarLugar() {
 
         {step === 5 && isCampingOrGlamping && (
           <StepCategoriasAdicionales
+            primaryCategoryName={selectedCat?.name ?? ""}
             additionalCategories={additionalCategories}
             setAdditionalCategories={setAdditionalCategories}
             motorhomeDetail={motorhomeDetail}
             setMotorhomeDetail={setMotorhomeDetail}
+            campingDetail={campingDetail}
+            setCampingDetail={setCampingDetail}
+            glampingDetail={glampingDetail}
+            setGlampingDetail={setGlampingDetail}
             error={error}
             onBack={() => setStep(4)}
             onNext={() => setStep(summaryStep)}

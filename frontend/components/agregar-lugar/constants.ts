@@ -1,4 +1,4 @@
-import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem } from "./types"
+import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "./types"
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: "Camping",  label: "Camping",  emoji: "⛺" },
@@ -160,4 +160,12 @@ export const emptyBasic = (): BasicInfo => ({
 export const defaultMotorhomeDetail = (): MotorhomeDetailItem => ({
   capacity: "", surface_type: "", has_water: false,
   has_electricity: false, has_dump_station: false, max_stay_nights: "",
+})
+
+export const defaultCampingDetail = (): CampingDetailItem => ({
+  price: "",
+})
+
+export const defaultGlampingDetail = (): GlampingDetailItem => ({
+  accommodation_type: "", capacity: "", price_per_night: "", min_nights: "",
 })

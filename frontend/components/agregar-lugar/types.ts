@@ -51,3 +51,14 @@ export type MotorhomeDetailItem = {
   has_dump_station: boolean
   max_stay_nights: string
 }
+
+export type CampingDetailItem = {
+  price: string
+}
+
+export type GlampingDetailItem = {
+  accommodation_type: string
+  capacity: string
+  price_per_night: string
+  min_nights: string
+}
