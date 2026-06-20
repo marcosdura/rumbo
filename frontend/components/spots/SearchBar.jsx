@@ -313,6 +313,28 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
         .clear-btn:hover { background: #9a9690; }
 
+        .motorhome-chip {
+          font-family: 'DM Sans', sans-serif;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 10px;
+          padding: 7px 16px;
+          border-radius: 999px;
+          border: 1px solid #e0ddd6;
+          background: #fff;
+          color: #1b1b19;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .motorhome-chip:hover {
+          background: #f0f7f3;
+          border-color: #b7dfc8;
+          color: #1b4332;
+        }
+
         /* Hero variant */
         .search-bar.hero {
           width: 100%;
@@ -470,6 +492,13 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         </button>
 
       </div>
+
+      <button
+        className="motorhome-chip"
+        onClick={() => router.push("/search?motorhomes=true")}
+      >
+        🚐 Acepta motorhomes
+      </button>
     </>
   )
 }

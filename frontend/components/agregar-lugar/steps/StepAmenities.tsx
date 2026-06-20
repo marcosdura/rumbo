@@ -2,14 +2,17 @@
 
 import { AMENITY_CATEGORIES, AMENITY_ICONS, GLAMPING_AMENITY_CATEGORIES } from "../constants"
 import NavRow from "../ui/NavRow"
-import type { Category } from "../types"
+import MotorhomeFields from "../../ui/MotorhomeFields"
+import type { Category, MotorhomeAmenities } from "../types"
 
 export default function StepAmenities({
-  selectedCat, selectedAmenities, toggleAmenity, error, onBack, onNext,
+  selectedCat, selectedAmenities, toggleAmenity, motorhome, setMotorhome, error, onBack, onNext,
 }: {
   selectedCat: Category
   selectedAmenities: string[]
   toggleAmenity: (name: string) => void
+  motorhome: MotorhomeAmenities
+  setMotorhome: (next: MotorhomeAmenities) => void
   error: string | null
   onBack: () => void
   onNext: () => void
@@ -56,6 +59,7 @@ export default function StepAmenities({
           </div>
         </div>
       ))}
+      <MotorhomeFields value={motorhome} onChange={setMotorhome} />
       <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )

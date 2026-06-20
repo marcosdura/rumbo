@@ -42,3 +42,13 @@ export type BasicInfo = {
   email: string; whatsapp: string; instagram: string
   lat: string; lng: string
 }
+
+export type MotorhomeAmenities = {
+  acceptsMotorhomes: boolean
+  motorhomeCapacity?: string
+  motorhomeSurfaceType?: "ripio" | "asfalto" | "tierra" | ""
+  motorhomeHasWater?: boolean
+  motorhomeHasElectricity?: boolean
+  motorhomeHasDumpStation?: boolean
+  motorhomeMaxStayNights?: string
+}

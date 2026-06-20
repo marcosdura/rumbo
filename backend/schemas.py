@@ -61,7 +61,18 @@ class GlampingAmenityResponse(GlampingAmenityCreate):
     class Config:
         from_attributes = True
 
-class GlampingDetailCreate(BaseModel):
+# -------- MOTORHOME --------
+class MotorhomeAmenities(BaseModel):
+    accepts_motorhomes:         bool           = False
+    motorhome_capacity:         Optional[int]  = None
+    motorhome_surface_type:     Optional[str]  = None
+    motorhome_has_water:        Optional[bool] = None
+    motorhome_has_electricity:  Optional[bool] = None
+    motorhome_has_dump_station: Optional[bool] = None
+    motorhome_max_stay_nights:  Optional[int]  = None
+
+
+class GlampingDetailCreate(MotorhomeAmenities):
     accommodation_type: Optional[str]   = None
     capacity:           Optional[int]   = None
     price_per_night:    Optional[float] = None
@@ -77,7 +88,7 @@ class GlampingDetailResponse(GlampingDetailCreate):
 
 
 # -------- CAMPING --------
-class CampingDetailBase(BaseModel):
+class CampingDetailBase(MotorhomeAmenities):
     price: float
 
 

@@ -42,6 +42,7 @@ export default function SearchPage() {
   const searchParams = useSearchParams()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
+  const motorhomes = searchParams.get("motorhomes") === "true"
 
   const [spots, setSpots]                         = useState<any[]>([])
   const [loading, setLoading]                     = useState(true)
@@ -83,7 +84,8 @@ export default function SearchPage() {
   useEffect(() => {
     setLoading(true)
     const params = new URLSearchParams()
-    if (activity)   params.append("activity", activity)
+    if (motorhomes) params.append("motorhomes", "true")
+    if (activity && !motorhomes) params.append("activity", activity)
     if (department) params.append("department", department)
     if (activity === "Trekking") {
       trekkingFilters.difficulties.forEach(d => params.append("difficulty", d))
@@ -117,9 +119,11 @@ export default function SearchPage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
       .then(data => { setSpots(data); setLoading(false) })
-  }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters])
+  }, [activity, department, motorhomes, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters])
 
-  const title = activity && department
+  const title = motorhomes
+    ? "Lugares que aceptan motorhomes"
+    : activity && department
     ? `${activity} en ${department}`
     : activity   ? activity
     : department ? `Spots en ${department}`
@@ -131,7 +135,7 @@ export default function SearchPage() {
     activity === "Surf"      ? countActiveSurfFilters(surfFilters)           :
     activity === "Escalada"  ? countActiveClimbingFilters(climbingFilters)   :
     activity === "Camping"   ? countActiveCampingFilters(campingFilters)     : 0
-  const canFilter = !!activity
+  const canFilter = !!activity && !motorhomes
 
   return (
     <div className="search-root">
@@ -367,9 +371,19 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {(activity || department) && (
+            {(activity || department || motorhomes) && (
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                {activity && (
+                {motorhomes && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 11, fontWeight: 600,
+                    padding: "4px 10px", borderRadius: 999,
+                    background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8",
+                  }}>
+                    🚐 Motorhomes
+                  </span>
+                )}
+                {!motorhomes && activity && (
                   <span style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 11, fontWeight: 600,

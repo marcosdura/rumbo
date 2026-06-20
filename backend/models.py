@@ -65,6 +65,14 @@ class GlampingDetail(Base):
     price_per_night = Column(Float, nullable=True)
     min_nights = Column(Integer, nullable=True)
 
+    accepts_motorhomes         = Column(Boolean, nullable=False, default=False)
+    motorhome_capacity         = Column(Integer, nullable=True)
+    motorhome_surface_type     = Column(String, nullable=True)
+    motorhome_has_water        = Column(Boolean, nullable=True)
+    motorhome_has_electricity  = Column(Boolean, nullable=True)
+    motorhome_has_dump_station = Column(Boolean, nullable=True)
+    motorhome_max_stay_nights  = Column(Integer, nullable=True)
+
     spot = relationship("SpotDB", back_populates="glamping_detail")
     amenities = relationship("GlampingAmenity", back_populates="glamping", uselist=False)
 
@@ -95,6 +103,14 @@ class CampingDetail(Base):
     id = Column(Integer, primary_key=True)
     spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
     price = Column(Float)
+
+    accepts_motorhomes         = Column(Boolean, nullable=False, default=False)
+    motorhome_capacity         = Column(Integer, nullable=True)
+    motorhome_surface_type     = Column(String, nullable=True)
+    motorhome_has_water        = Column(Boolean, nullable=True)
+    motorhome_has_electricity  = Column(Boolean, nullable=True)
+    motorhome_has_dump_station = Column(Boolean, nullable=True)
+    motorhome_max_stay_nights  = Column(Integer, nullable=True)
 
     spot = relationship("SpotDB", back_populates="camping_detail")
 
