@@ -406,7 +406,7 @@ useEffect(() => {
                 <ClimbingSectorsCards sectors={sectors} spotSlug={spot.slug} />
               )}
 
-              {spot.category?.name === "Camping" && spot.amenities?.length > 0 && (
+              {spot.camping_detail && spot.amenities?.length > 0 && (
                 <div className="amenities-card">
                   <div className="amenities-label">
                     <div className="amenities-dot" />
@@ -416,7 +416,7 @@ useEffect(() => {
                 </div>
               )}
 
-              {spot.category?.name === "Glamping" && spot.amenities?.length > 0 && (
+              {spot.glamping_detail && spot.amenities?.length > 0 && (
                 <div className="amenities-card">
                   <div className="amenities-label">
                     <div className="amenities-dot" />
