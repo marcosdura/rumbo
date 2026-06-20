@@ -5,7 +5,7 @@ const CATEGORIES = [
     id: "esenciales",
     label: "Esenciales",
     emoji: "⚡",
-    names: ["Ducha", "Agua caliente", "Baños", "Agua potable", "Electricidad", "Tomas para camper/van"],
+    names: ["Ducha", "Agua caliente", "Baños", "Agua potable", "Electricidad", "Tomas para camper/van", "Área para motorhomes"],
   },
   {
     id: "cocina",
@@ -82,6 +82,7 @@ const AMENITY_ICONS = {
   "Seguridad":            "🔒",
   "Zona para fogón":      "🏕️",
   "Tomas para camper/van":"🔌",
+  "Área para motorhomes": "🚐",
   "Cama incluida":              "🛏️",
   "Ropa de cama":               "🛌",
   "Baño privado":               "🚿",

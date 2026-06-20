@@ -79,13 +79,6 @@ class GlampingDetailResponse(GlampingDetailCreate):
 # -------- CAMPING --------
 class CampingDetailBase(BaseModel):
     price: float
-    accepts_motorhomes: bool = False
-    motorhome_capacity: Optional[int] = None
-    motorhome_surface_type: Optional[str] = None
-    motorhome_has_water: Optional[bool] = None
-    motorhome_has_electricity: Optional[bool] = None
-    motorhome_has_dump_station: Optional[bool] = None
-    motorhome_max_stay_nights: Optional[int] = None
 
 
 class CampingDetailCreate(CampingDetailBase):

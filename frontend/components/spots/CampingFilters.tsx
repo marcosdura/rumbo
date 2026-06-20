@@ -17,7 +17,7 @@ const AMENITY_ICONS: Record<string, string> = {
   "Alquiler de bicis":"🚴","Kayak":"🛶","WiFi":"🛜","Acepta mascotas":"🐶",
   "Proveeduría/kiosco":"🛒","Cafetería":"☕","Restaurante/bar":"🍺",
   "Estacionamiento":"🚗","Seguridad":"🔒","Zona para fogón":"🏕️",
-  "Tomas para camper/van":"🔌",
+  "Tomas para camper/van":"🔌","Área para motorhomes":"🚐",
 }
 
 interface Props {
