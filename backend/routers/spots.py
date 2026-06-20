@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail
+from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -501,6 +501,38 @@ def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Amenity agregada"}
+
+
+@router.post("/spots/{spot_id}/categories")
+def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    category = db.query(models.Category).filter(models.Category.name == data.category).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    existing_relation = db.query(SpotCategory).filter(
+        SpotCategory.spot_id == spot_id,
+        SpotCategory.category_id == category.id
+    ).first()
+    if existing_relation:
+        raise HTTPException(status_code=400, detail="Spot already has this category")
+
+    new_relation = SpotCategory(spot_id=spot_id, category_id=category.id, is_primary=False)
+    db.add(new_relation)
+
+    if data.category == "Motorhome" and data.motorhome_detail:
+        existing_detail = db.query(MotorhomeDetail).filter(MotorhomeDetail.spot_id == spot_id).first()
+        if existing_detail:
+            raise HTTPException(status_code=400, detail="Spot already has motorhome details")
+        detail = MotorhomeDetail(spot_id=spot_id, **data.motorhome_detail.dict())
+        db.add(detail)
+
+    db.commit()
+
+    return {"message": "Category added successfully"}
 
 
 # devuelve los sectores segun el spot

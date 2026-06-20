@@ -377,3 +377,26 @@ class KayakReviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# -------- MOTORHOME DETAIL --------
+class MotorhomeDetailCreate(BaseModel):
+    capacity: Optional[int] = None
+    surface_type: Optional[str] = None
+    has_water: Optional[bool] = None
+    has_electricity: Optional[bool] = None
+    has_dump_station: Optional[bool] = None
+    max_stay_nights: Optional[int] = None
+
+class MotorhomeDetailResponse(MotorhomeDetailCreate):
+    id: int
+    spot_id: int
+
+    class Config:
+        from_attributes = True
+
+
+# -------- SPOT CATEGORY --------
+class SpotCategoryAddRequest(BaseModel):
+    category: str
+    motorhome_detail: Optional[MotorhomeDetailCreate] = None
