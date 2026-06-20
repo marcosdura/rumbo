@@ -1,4 +1,4 @@
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem } from "./types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "./types"
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
   const formatted = spotName
@@ -20,6 +20,8 @@ interface SubmitParams {
   selectedAmenities: string[]
   additionalCategories: string[]
   motorhomeDetail: MotorhomeDetailItem
+  campingDetail: CampingDetailItem
+  glampingDetail: GlampingDetailItem
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   sectors: SectorItem[]
@@ -39,7 +41,7 @@ interface SubmitParams {
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, additionalCategories, motorhomeDetail, trekkingFeatures, routes, sectors, surf, kayaks,
+    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
@@ -339,6 +341,43 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         })
       } catch {
         // no bloquea el submit si falla el alta de la categoría adicional
+      }
+    }
+
+    if (cat === "Camping" && additionalCategories.includes("Glamping")) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            category: "Glamping",
+            glamping_detail: {
+              accommodation_type: glampingDetail.accommodation_type || null,
+              capacity: glampingDetail.capacity ? parseInt(glampingDetail.capacity) : null,
+              price_per_night: glampingDetail.price_per_night ? parseFloat(glampingDetail.price_per_night) : null,
+              min_nights: glampingDetail.min_nights ? parseInt(glampingDetail.min_nights) : null,
+            },
+          }),
+        })
+      } catch {
+        // No bloquear el éxito de la creación del spot si esto falla
+      }
+    }
+
+    if (cat === "Glamping" && additionalCategories.includes("Camping")) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            category: "Camping",
+            camping_detail: {
+              price: campingDetail.price ? parseFloat(campingDetail.price) : null,
+            },
+          }),
+        })
+      } catch {
+        // No bloquear el éxito de la creación del spot si esto falla
       }
     }
 
