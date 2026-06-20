@@ -96,6 +96,14 @@ class CampingDetail(Base):
     spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
     price = Column(Float)
 
+    accepts_motorhomes = Column(Boolean, default=False, nullable=False)
+    motorhome_capacity = Column(Integer, nullable=True)
+    motorhome_surface_type = Column(String, nullable=True)
+    motorhome_has_water = Column(Boolean, nullable=True)
+    motorhome_has_electricity = Column(Boolean, nullable=True)
+    motorhome_has_dump_station = Column(Boolean, nullable=True)
+    motorhome_max_stay_nights = Column(Integer, nullable=True)
+
     spot = relationship("SpotDB", back_populates="camping_detail")
 
 class TrekkingDetail(Base):

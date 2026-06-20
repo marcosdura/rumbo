@@ -40,7 +40,6 @@ export const CAMPING_AMENITY_GROUPS = [
       { id: 28, label: "Seguridad" },
       { id: 23, label: "Acepta mascotas" },
       { id: 30, label: "Tomas para camper/van" },
-      { id: 31, label: "Área para motorhomes" },
     ],
   },
 ] as const

@@ -27,7 +27,7 @@ export const MONTHS = [
 export const AMENITY_CATEGORIES = [
   {
     id: "esenciales", label: "Esenciales", emoji: "⚡",
-    names: ["Ducha","Agua caliente","Baños","Agua potable","Electricidad","Tomas para camper/van","Área para motorhomes"],
+    names: ["Ducha","Agua caliente","Baños","Agua potable","Electricidad","Tomas para camper/van"],
   },
   {
     id: "cocina", label: "Cocina & comida", emoji: "🍽️",
@@ -57,7 +57,7 @@ export const AMENITY_ICONS: Record<string, string> = {
   "Alquiler de bicis":"🚴","Kayak":"🛶","WiFi":"🛜",
   "Acepta mascotas":"🐶","Proveeduría/kiosco":"🛒","Cafetería":"☕",
   "Restaurante/bar":"🍺","Estacionamiento":"🚗","Seguridad":"🔒",
-  "Zona para fogón":"🏕️","Tomas para camper/van":"🔌","Área para motorhomes":"🚐",
+  "Zona para fogón":"🏕️","Tomas para camper/van":"🔌",
   "Cama incluida":             "🛏️",
   "Ropa de cama":              "🛌",
   "Baño privado":              "🚿",
