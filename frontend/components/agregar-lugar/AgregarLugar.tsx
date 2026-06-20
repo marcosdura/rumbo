@@ -5,7 +5,7 @@ import { useSession, signIn } from "next-auth/react"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
-  REQUIRED_FEATURE_KEYS, defaultMotorhomeAmenities,
+  REQUIRED_FEATURE_KEYS,
 } from "./constants"
 import { submitAgregarLugar, buildPublicId } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
@@ -29,7 +29,6 @@ import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
-  MotorhomeAmenities,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -40,7 +39,6 @@ export default function AgregarLugar() {
   const [selectedCat, setSelectedCat]             = useState<Category | null>(null)
   const [basic, setBasic]                         = useState<BasicInfo>(emptyBasic())
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
-  const [motorhome, setMotorhome]                 = useState<MotorhomeAmenities>(defaultMotorhomeAmenities())
   const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
@@ -375,7 +373,6 @@ export default function AgregarLugar() {
       isPublic,
       publicTransport,
       selectedAmenities,
-      motorhome,
       trekkingFeatures,
       routes,
       sectors,
@@ -395,8 +392,7 @@ export default function AgregarLugar() {
 
   function reset() {
     setStep(1); setSelectedCat(null); setBasic(emptyBasic())
-    setSelectedAmenities([]); setMotorhome(defaultMotorhomeAmenities())
-    setRoutes([defaultRoute()]); setSectors([defaultSector()])
+    setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
@@ -642,8 +638,6 @@ export default function AgregarLugar() {
             selectedCat={selectedCat!}
             selectedAmenities={selectedAmenities}
             toggleAmenity={toggleAmenity}
-            motorhome={motorhome}
-            setMotorhome={setMotorhome}
             error={error}
             onBack={() => setStep(2)}
             onNext={goToStep4}

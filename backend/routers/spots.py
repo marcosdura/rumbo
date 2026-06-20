@@ -127,26 +127,17 @@ def get_spots(
     no_restrictions: Optional[bool] = None,
     amenity_ids: Optional[List[int]] = Query(default=None),
     price_range: Optional[List[str]] = Query(default=None),
-    motorhomes: Optional[bool] = None,
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
         joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
-        joinedload(SpotDB.images),
-        joinedload(SpotDB.camping_detail),
-        joinedload(SpotDB.glamping_detail),
+        joinedload(SpotDB.images)
     ).filter(SpotDB.is_approved == True)
 
     if department:
         query = query.filter(SpotDB.department == department)
 
-    if motorhomes:
-        query = (
-            query.outerjoin(SpotDB.camping_detail)
-            .outerjoin(SpotDB.glamping_detail)
-            .filter(or_(CampingDetail.accepts_motorhomes == True, GlampingDetail.accepts_motorhomes == True))
-        )
-    elif activity:
+    if activity:
         query = query.join(SpotDB.category).filter(models.Category.name == activity)
 
     is_trekking = activity == "Trekking"

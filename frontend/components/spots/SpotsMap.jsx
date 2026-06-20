@@ -22,7 +22,7 @@ const CATEGORY_EMOJI = {
   'Trekking':   '🥾',
 }
 
-const createPillIcon = (categoryName, isActive, isSelected, acceptsMotorhomes) => {
+const createPillIcon = (categoryName, isActive, isSelected) => {
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
   const label = categoryName || 'Spot'
 
@@ -41,49 +41,28 @@ const createPillIcon = (categoryName, isActive, isSelected, acceptsMotorhomes) =
   const scale   = isActive || isSelected ? 'scale(1.08)' : 'scale(1)'
   const weight  = isSelected ? '600' : '500'
 
-  const motorhomeBadge = acceptsMotorhomes ? `
-        <div style="
-          position: absolute;
-          top: -6px;
-          right: -6px;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #2d6a4f;
-          border: 1.5px solid #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-        ">🚐</div>
-  ` : ''
-
   return L.divIcon({
     html: `
-      <div style="position: relative; display: inline-flex;">
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          background: ${bg};
-          border: 1.5px solid ${border};
-          border-radius: 999px;
-          padding: 5px 11px;
-          font-size: 12px;
-          font-weight: ${weight};
-          color: ${color};
-          white-space: nowrap;
-          box-shadow: ${shadow};
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transform: ${scale};
-          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-        ">
-          <span style="font-size:14px;line-height:1">${emoji}</span>
-          ${label}
-        </div>
-        ${motorhomeBadge}
+      <div style="
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: ${bg};
+        border: 1.5px solid ${border};
+        border-radius: 999px;
+        padding: 5px 11px;
+        font-size: 12px;
+        font-weight: ${weight};
+        color: ${color};
+        white-space: nowrap;
+        box-shadow: ${shadow};
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        transform: ${scale};
+        transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      ">
+        <span style="font-size:14px;line-height:1">${emoji}</span>
+        ${label}
       </div>
     `,
     className: '',
@@ -146,11 +125,9 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  const acceptsMotorhomes = !!(spot.camping_detail?.accepts_motorhomes || spot.glamping_detail?.accepts_motorhomes)
-
   const icon = useMemo(
-    () => createPillIcon(spot.category?.name, isActive, isSelected, acceptsMotorhomes),
-    [spot.category?.name, isActive, isSelected, acceptsMotorhomes]
+    () => createPillIcon(spot.category?.name, isActive, isSelected),
+    [spot.category?.name, isActive, isSelected]
   )
 
   return (

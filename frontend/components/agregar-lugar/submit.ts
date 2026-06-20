@@ -1,16 +1,4 @@
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeAmenities } from "./types"
-
-function motorhomePayload(m: MotorhomeAmenities) {
-  return {
-    accepts_motorhomes: m.acceptsMotorhomes,
-    motorhome_capacity: m.acceptsMotorhomes && m.motorhomeCapacity ? parseInt(m.motorhomeCapacity) : null,
-    motorhome_surface_type: m.acceptsMotorhomes ? (m.motorhomeSurfaceType || null) : null,
-    motorhome_has_water: m.acceptsMotorhomes ? (m.motorhomeHasWater ?? null) : null,
-    motorhome_has_electricity: m.acceptsMotorhomes ? (m.motorhomeHasElectricity ?? null) : null,
-    motorhome_has_dump_station: m.acceptsMotorhomes ? (m.motorhomeHasDumpStation ?? null) : null,
-    motorhome_max_stay_nights: m.acceptsMotorhomes && m.motorhomeMaxStayNights ? parseInt(m.motorhomeMaxStayNights) : null,
-  }
-}
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem } from "./types"
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
   const formatted = spotName
@@ -30,7 +18,6 @@ interface SubmitParams {
   isPublic: boolean | null
   publicTransport: string | null
   selectedAmenities: string[]
-  motorhome: MotorhomeAmenities
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   sectors: SectorItem[]
@@ -50,7 +37,7 @@ interface SubmitParams {
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, motorhome, trekkingFeatures, routes, sectors, surf, kayaks,
+    selectedAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
@@ -290,10 +277,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          price: basic.price ? parseFloat(basic.price) : null,
-          ...motorhomePayload(motorhome),
-        }),
+        body: JSON.stringify({ price: basic.price ? parseFloat(basic.price) : null }),
       })
     }
 
@@ -301,7 +285,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       const glampRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify(motorhomePayload(motorhome)),
+        body: JSON.stringify({}),
       })
       if (glampRes.ok) {
         const glampData = await glampRes.json()
