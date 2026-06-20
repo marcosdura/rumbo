@@ -545,6 +545,26 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
         detail = MotorhomeDetail(spot_id=spot_id, **data.motorhome_detail.dict())
         db.add(detail)
 
+    elif data.category == "Camping" and data.camping_detail:
+        existing_camping = db.query(CampingDetail).filter(CampingDetail.spot_id == spot_id).first()
+        if existing_camping:
+            raise HTTPException(status_code=400, detail="Spot already has camping details")
+        camping = CampingDetail(spot_id=spot_id, price=data.camping_detail.price)
+        db.add(camping)
+
+    elif data.category == "Glamping" and data.glamping_detail:
+        existing_glamping = db.query(GlampingDetail).filter(GlampingDetail.spot_id == spot_id).first()
+        if existing_glamping:
+            raise HTTPException(status_code=400, detail="Spot already has glamping details")
+        glamping = GlampingDetail(
+            spot_id=spot_id,
+            accommodation_type=data.glamping_detail.accommodation_type,
+            capacity=data.glamping_detail.capacity,
+            price_per_night=data.glamping_detail.price_per_night,
+            min_nights=data.glamping_detail.min_nights,
+        )
+        db.add(glamping)
+
     db.commit()
 
     return {"message": "Category added successfully"}

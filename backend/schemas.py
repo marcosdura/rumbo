@@ -401,3 +401,5 @@ class KayakReviewResponse(BaseModel):
 class SpotCategoryAddRequest(BaseModel):
     category: str
     motorhome_detail: Optional[MotorhomeDetailCreate] = None
+    camping_detail: Optional[CampingDetailCreate] = None
+    glamping_detail: Optional[GlampingDetailCreate] = None
