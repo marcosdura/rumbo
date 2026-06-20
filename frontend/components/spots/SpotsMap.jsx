@@ -20,9 +20,10 @@ const CATEGORY_EMOJI = {
   'Ciclismo':   '🚴',
   'Fotografía': '📷',
   'Trekking':   '🥾',
+  'Motorhome':  '🚐',
 }
 
-const createPillIcon = (categoryName, isActive, isSelected) => {
+const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => {
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
   const label = categoryName || 'Spot'
 
@@ -41,28 +42,51 @@ const createPillIcon = (categoryName, isActive, isSelected) => {
   const scale   = isActive || isSelected ? 'scale(1.08)' : 'scale(1)'
   const weight  = isSelected ? '600' : '500'
 
+  const visibleExtras = (extraCategories || []).slice(0, 2)
+  const badgesHtml = visibleExtras.map((catName, i) => `
+    <div style="
+      position: absolute;
+      top: -6px;
+      right: ${-6 + i * 16}px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1.5px solid #e0ddd6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: ${10 - i};
+    ">${CATEGORY_EMOJI[catName] || '📍'}</div>
+  `).join('')
+
   return L.divIcon({
     html: `
-      <div style="
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        background: ${bg};
-        border: 1.5px solid ${border};
-        border-radius: 999px;
-        padding: 5px 11px;
-        font-size: 12px;
-        font-weight: ${weight};
-        color: ${color};
-        white-space: nowrap;
-        box-shadow: ${shadow};
-        font-family: 'DM Sans', sans-serif;
-        cursor: pointer;
-        transform: ${scale};
-        transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-      ">
-        <span style="font-size:14px;line-height:1">${emoji}</span>
-        ${label}
+      <div style="position: relative; display: inline-block;">
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: ${bg};
+          border: 1.5px solid ${border};
+          border-radius: 999px;
+          padding: 5px 11px;
+          font-size: 12px;
+          font-weight: ${weight};
+          color: ${color};
+          white-space: nowrap;
+          box-shadow: ${shadow};
+          font-family: 'DM Sans', sans-serif;
+          cursor: pointer;
+          transform: ${scale};
+          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        ">
+          <span style="font-size:14px;line-height:1">${emoji}</span>
+          ${label}
+        </div>
+        ${badgesHtml}
       </div>
     `,
     className: '',
@@ -125,9 +149,13 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  const categories = spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
+  const primaryCategoryName = categories[0]?.name ?? spot.category?.name
+  const extraCategoryNames = categories.slice(1).map(c => c.name)
+
   const icon = useMemo(
-    () => createPillIcon(spot.category?.name, isActive, isSelected),
-    [spot.category?.name, isActive, isSelected]
+    () => createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected),
+    [primaryCategoryName, extraCategoryNames.join(','), isActive, isSelected]
   )
 
   return (
@@ -171,11 +199,13 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
             {spot.department}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {spot.category?.name && (
-              <Pill variant="green" style={{ padding: '3px 8px' }}>
-                {CATEGORY_EMOJI[spot.category.name]} {spot.category.name}
-              </Pill>
-            )}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {categories.map(cat => (
+                <Pill key={cat.id ?? cat.name} variant="green" style={{ padding: '3px 8px' }}>
+                  {CATEGORY_EMOJI[cat.name]} {cat.name}
+                </Pill>
+              ))}
+            </div>
             <span style={{
               fontSize: 12, fontWeight: 600,
               color: '#2d6a4f', marginLeft: 'auto',
