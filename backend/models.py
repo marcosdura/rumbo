@@ -36,7 +36,8 @@ class SpotDB(Base):
     spot_categories = relationship("SpotCategory", uselist=True, back_populates="spot")
     amenities = relationship("SpotAmenity", back_populates="spot")
     camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
-    glamping_detail = relationship("GlampingDetail", uselist=False, back_populates="spot")
+    glamping_detail = relationship("GlampingDetail", uselist=True, back_populates="spot")
+    glamping_amenities = relationship("GlampingAmenity", uselist=False, back_populates="spot")
     trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot")
     motorhome_detail = relationship("MotorhomeDetail", uselist=False, back_populates="spot")
     routes = relationship("Route", back_populates="spot")
@@ -72,7 +73,7 @@ class GlampingDetail(Base):
     __tablename__ = "glamping_details"
 
     id = Column(Integer, primary_key=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"))
 
     accommodation_type = Column(String, nullable=True)   # domo | carpa | cabaña | treehouse | otro
     capacity = Column(Integer, nullable=True)
@@ -80,7 +81,6 @@ class GlampingDetail(Base):
     min_nights = Column(Integer, nullable=True)
 
     spot = relationship("SpotDB", back_populates="glamping_detail")
-    amenities = relationship("GlampingAmenity", back_populates="glamping", uselist=False)
 
 
 class GlampingAmenity(Base):
@@ -88,6 +88,7 @@ class GlampingAmenity(Base):
 
     id = Column(Integer, primary_key=True)
     glamping_id = Column(Integer, ForeignKey("glamping_details.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
 
     private_bathroom   = Column(Boolean, nullable=True)
     electricity        = Column(Boolean, nullable=True)
@@ -100,7 +101,7 @@ class GlampingAmenity(Base):
     towels_included    = Column(Boolean, nullable=True)
     parking            = Column(Boolean, nullable=True)
 
-    glamping = relationship("GlampingDetail", back_populates="amenities")
+    spot = relationship("SpotDB", back_populates="glamping_amenities")
 
 
 class CampingDetail(Base):
