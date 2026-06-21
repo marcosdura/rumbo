@@ -29,6 +29,7 @@ import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import SpotImages from "../../../components/spot-detail/SpotImages"
 import ShareModal from "@/components/spot-detail/ShareModal"
 import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
+import GlampingAmenitiesList from "../../../components/spot-detail/GlampingAmenitiesList"
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
@@ -416,13 +417,13 @@ useEffect(() => {
                 </div>
               )}
 
-              {spot.glamping_detail && spot.amenities?.length > 0 && (
+              {spot.glamping_detail?.amenities && (
                 <div className="amenities-card">
                   <div className="amenities-label">
                     <div className="amenities-dot" />
                     <p className="amenities-title">Servicios del Glamping</p>
                   </div>
-                  <AmenitiesList amenities={spot.amenities} />
+                  <GlampingAmenitiesList amenities={spot.glamping_detail.amenities} />
                 </div>
               )}
 
