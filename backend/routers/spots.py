@@ -390,7 +390,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
-            selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.glamping_detail).selectinload(GlampingDetail.amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
@@ -439,7 +439,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
-            selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.glamping_detail).selectinload(GlampingDetail.amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
