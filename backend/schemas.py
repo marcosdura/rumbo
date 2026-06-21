@@ -78,7 +78,7 @@ class GlampingDetailResponse(GlampingDetailCreate):
 
 # -------- CAMPING --------
 class CampingDetailBase(BaseModel):
-    price: float
+    price: Optional[float] = None
 
 
 class CampingDetailCreate(CampingDetailBase):

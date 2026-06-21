@@ -281,11 +281,12 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     if (cat === "Camping") {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
+      const campingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ price: basic.price ? parseFloat(basic.price) : null }),
       })
+      if (!campingRes.ok) throw new Error("Error al guardar los datos del camping")
     }
 
     if (cat === "Glamping") {
