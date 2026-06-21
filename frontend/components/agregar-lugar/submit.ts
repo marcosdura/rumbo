@@ -22,6 +22,8 @@ interface SubmitParams {
   motorhomeDetail: MotorhomeDetailItem
   campingDetail: CampingDetailItem
   glampingDetail: GlampingDetailItem
+  selectedGlampingAmenities: string[]
+  selectedCampingAmenities: string[]
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   sectors: SectorItem[]
@@ -41,7 +43,8 @@ interface SubmitParams {
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, trekkingFeatures, routes, sectors, surf, kayaks,
+    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail,
+    selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
@@ -357,6 +360,26 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
               price_per_night: glampingDetail.price_per_night ? parseFloat(glampingDetail.price_per_night) : null,
               min_nights: glampingDetail.min_nights ? parseInt(glampingDetail.min_nights) : null,
             },
+            glamping_amenities: (() => {
+              const GLAMPING_AMENITY_MAP: Record<string, string> = {
+                "Baño privado": "private_bathroom",
+                "Electricidad": "electricity",
+                "WiFi": "wifi",
+                "Desayuno incluido": "breakfast_included",
+                "Acepta mascotas": "pet_friendly",
+                "Calefacción": "heating",
+                "Aire acondicionado": "air_conditioning",
+                "Cocina equipada": "kitchen",
+                "Ropa de cama": "towels_included",
+                "Estacionamiento": "parking",
+              }
+              const payload: Record<string, boolean> = {}
+              for (const name of selectedGlampingAmenities) {
+                const field = GLAMPING_AMENITY_MAP[name]
+                if (field) payload[field] = true
+              }
+              return Object.keys(payload).length > 0 ? payload : null
+            })(),
           }),
         })
       } catch {
@@ -376,6 +399,24 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             },
           }),
         })
+      } catch {
+        // No bloquear el éxito de la creación del spot si esto falla
+      }
+    }
+
+    if (cat === "Glamping" && additionalCategories.includes("Camping") && selectedCampingAmenities.length > 0) {
+      try {
+        const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
+        if (amenRes.ok) {
+          const all: { id: number; name: string }[] = await amenRes.json()
+          const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
+          for (const name of selectedCampingAmenities) {
+            const id = nameToId[name]
+            if (id) {
+              await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, { method: "POST" })
+            }
+          }
+        }
       } catch {
         // No bloquear el éxito de la creación del spot si esto falla
       }

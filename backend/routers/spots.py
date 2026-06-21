@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate
 import models
 from sqlalchemy.orm import joinedload
@@ -564,6 +564,14 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
             min_nights=data.glamping_detail.min_nights,
         )
         db.add(glamping)
+        db.flush()
+
+        if data.glamping_amenities:
+            amenity_row = GlampingAmenity(
+                glamping_id=glamping.id,
+                **data.glamping_amenities.dict(),
+            )
+            db.add(amenity_row)
 
     db.commit()
 

@@ -1,6 +1,7 @@
 "use client"
 
 import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "../types"
+import { GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, AMENITY_ICONS } from "../constants"
 
 interface Props {
   primaryCategoryName: string
@@ -12,6 +13,10 @@ interface Props {
   setCampingDetail: (v: CampingDetailItem) => void
   glampingDetail: GlampingDetailItem
   setGlampingDetail: (v: GlampingDetailItem) => void
+  selectedGlampingAmenities: string[]
+  setSelectedGlampingAmenities: (v: string[]) => void
+  selectedCampingAmenities: string[]
+  setSelectedCampingAmenities: (v: string[]) => void
   error: string | null
   onBack: () => void
   onNext: () => void
@@ -23,6 +28,8 @@ export default function StepCategoriasAdicionales({
   motorhomeDetail, setMotorhomeDetail,
   campingDetail, setCampingDetail,
   glampingDetail, setGlampingDetail,
+  selectedGlampingAmenities, setSelectedGlampingAmenities,
+  selectedCampingAmenities, setSelectedCampingAmenities,
   error, onBack, onNext,
 }: Props) {
   const acceptsMotorhome = additionalCategories.includes("Motorhome")
@@ -34,6 +41,21 @@ export default function StepCategoriasAdicionales({
       additionalCategories.includes(category)
         ? additionalCategories.filter(c => c !== category)
         : [...additionalCategories, category]
+    )
+  }
+
+  function toggleGlampingAmenity(name: string) {
+    setSelectedGlampingAmenities(
+      selectedGlampingAmenities.includes(name)
+        ? selectedGlampingAmenities.filter(n => n !== name)
+        : [...selectedGlampingAmenities, name]
+    )
+  }
+  function toggleCampingAmenity(name: string) {
+    setSelectedCampingAmenities(
+      selectedCampingAmenities.includes(name)
+        ? selectedCampingAmenities.filter(n => n !== name)
+        : [...selectedCampingAmenities, name]
     )
   }
 
@@ -174,6 +196,37 @@ export default function StepCategoriasAdicionales({
                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
                   />
                 </div>
+
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a", marginBottom: 8 }}>Amenities del glamping</p>
+                  {GLAMPING_AMENITY_CATEGORIES.map(cat => (
+                    <div key={cat.id} style={{ marginBottom: 10 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
+                        {cat.emoji} {cat.label}
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {cat.names.map(name => (
+                          <label
+                            key={name}
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                              border: `1px solid ${selectedGlampingAmenities.includes(name) ? "#2d6a4f" : "#e0ddd6"}`,
+                              background: selectedGlampingAmenities.includes(name) ? "#e8f5ee" : "#fff",
+                              borderRadius: 999, padding: "5px 10px", fontSize: 12, cursor: "pointer",
+                            }}
+                          >
+                            <input
+                              type="checkbox" checked={selectedGlampingAmenities.includes(name)}
+                              onChange={() => toggleGlampingAmenity(name)}
+                              style={{ display: "none" }}
+                            />
+                            {AMENITY_ICONS[name] ?? ""} {name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -199,6 +252,37 @@ export default function StepCategoriasAdicionales({
                     onChange={e => updCamping("price", e.target.value)}
                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
                   />
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a", marginBottom: 8 }}>Amenities del camping</p>
+                  {AMENITY_CATEGORIES.map(cat => (
+                    <div key={cat.id} style={{ marginBottom: 10 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
+                        {cat.emoji} {cat.label}
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {cat.names.map(name => (
+                          <label
+                            key={name}
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                              border: `1px solid ${selectedCampingAmenities.includes(name) ? "#2d6a4f" : "#e0ddd6"}`,
+                              background: selectedCampingAmenities.includes(name) ? "#e8f5ee" : "#fff",
+                              borderRadius: 999, padding: "5px 10px", fontSize: 12, cursor: "pointer",
+                            }}
+                          >
+                            <input
+                              type="checkbox" checked={selectedCampingAmenities.includes(name)}
+                              onChange={() => toggleCampingAmenity(name)}
+                              style={{ display: "none" }}
+                            />
+                            {AMENITY_ICONS[name] ?? ""} {name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

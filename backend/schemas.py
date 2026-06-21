@@ -403,3 +403,4 @@ class SpotCategoryAddRequest(BaseModel):
     motorhome_detail: Optional[MotorhomeDetailCreate] = None
     camping_detail: Optional[CampingDetailCreate] = None
     glamping_detail: Optional[GlampingDetailCreate] = None
+    glamping_amenities: Optional[GlampingAmenityCreate] = None

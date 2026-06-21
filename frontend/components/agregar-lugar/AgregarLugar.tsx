@@ -46,6 +46,8 @@ export default function AgregarLugar() {
   const [motorhomeDetail, setMotorhomeDetail]     = useState<MotorhomeDetailItem>(defaultMotorhomeDetail())
   const [campingDetail, setCampingDetail]         = useState<CampingDetailItem>(defaultCampingDetail())
   const [glampingDetail, setGlampingDetail]       = useState<GlampingDetailItem>(defaultGlampingDetail())
+  const [selectedGlampingAmenities, setSelectedGlampingAmenities] = useState<string[]>([])
+  const [selectedCampingAmenities, setSelectedCampingAmenities]   = useState<string[]>([])
   const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
@@ -386,6 +388,8 @@ export default function AgregarLugar() {
       motorhomeDetail,
       campingDetail,
       glampingDetail,
+      selectedGlampingAmenities,
+      selectedCampingAmenities,
       trekkingFeatures,
       routes,
       sectors,
@@ -408,6 +412,7 @@ export default function AgregarLugar() {
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setAdditionalCategories([]); setMotorhomeDetail(defaultMotorhomeDetail())
     setCampingDetail(defaultCampingDetail()); setGlampingDetail(defaultGlampingDetail())
+    setSelectedGlampingAmenities([]); setSelectedCampingAmenities([])
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
     setImages([]); setPreviews([])
@@ -843,6 +848,10 @@ export default function AgregarLugar() {
             setCampingDetail={setCampingDetail}
             glampingDetail={glampingDetail}
             setGlampingDetail={setGlampingDetail}
+            selectedGlampingAmenities={selectedGlampingAmenities}
+            setSelectedGlampingAmenities={setSelectedGlampingAmenities}
+            selectedCampingAmenities={selectedCampingAmenities}
+            setSelectedCampingAmenities={setSelectedCampingAmenities}
             error={error}
             onBack={() => setStep(4)}
             onNext={() => setStep(summaryStep)}
