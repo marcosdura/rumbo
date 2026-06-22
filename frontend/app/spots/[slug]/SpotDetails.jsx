@@ -434,68 +434,86 @@ useEffect(() => {
                 </div>
               )}
 
-              {spot.glamping_detail && (
+              {spot.glamping_detail && spot.glamping_detail.length > 0 && (
                 <div className="amenities-card">
                   <div className="amenities-label">
                     <div className="amenities-dot" />
                     <p className="amenities-title">🛖 Información del Glamping</p>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: spot.glamping_detail.amenities ? 18 : 0 }}>
-                    {spot.glamping_detail.accommodation_type && (
-                      <div style={{
-                        background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                        padding: "10px 14px", minWidth: 140,
-                      }}>
-                        <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          Tipo de alojamiento
-                        </p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0, textTransform: "capitalize" }}>
-                          {spot.glamping_detail.accommodation_type}
-                        </p>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: spot.glamping_amenities ? 18 : 0 }}>
+                    {spot.glamping_detail.map((unit, index) => (
+                      <div key={unit.id ?? index}>
+                        {spot.glamping_detail.length > 1 && (
+                          <p style={{ fontSize: 12, fontWeight: 700, color: "#2d6a4f", margin: "0 0 8px" }}>
+                            {unit.accommodation_type
+                              ? unit.accommodation_type.charAt(0).toUpperCase() + unit.accommodation_type.slice(1)
+                              : `Tipo ${index + 1}`}
+                          </p>
+                        )}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                          {unit.accommodation_type && spot.glamping_detail.length === 1 && (
+                            <div style={{
+                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
+                              padding: "10px 14px", minWidth: 140,
+                            }}>
+                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                Tipo de alojamiento
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0, textTransform: "capitalize" }}>
+                                {unit.accommodation_type}
+                              </p>
+                            </div>
+                          )}
+                          {unit.capacity != null && (
+                            <div style={{
+                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
+                              padding: "10px 14px", minWidth: 140,
+                            }}>
+                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                Capacidad
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                                {unit.capacity} persona{unit.capacity !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                          )}
+                          {unit.price_per_night != null && (
+                            <div style={{
+                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
+                              padding: "10px 14px", minWidth: 140,
+                            }}>
+                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                Precio por noche
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                                ${unit.price_per_night}
+                              </p>
+                            </div>
+                          )}
+                          {unit.min_nights != null && (
+                            <div style={{
+                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
+                              padding: "10px 14px", minWidth: 140,
+                            }}>
+                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                Mínimo de noches
+                              </p>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                                {unit.min_nights} noche{unit.min_nights !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {spot.glamping_detail.length > 1 && index < spot.glamping_detail.length - 1 && (
+                          <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", margin: "14px 0 0" }} />
+                        )}
                       </div>
-                    )}
-                    {spot.glamping_detail.capacity != null && (
-                      <div style={{
-                        background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                        padding: "10px 14px", minWidth: 140,
-                      }}>
-                        <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          Capacidad
-                        </p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                          {spot.glamping_detail.capacity} persona{spot.glamping_detail.capacity !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
-                    {spot.glamping_detail.price_per_night != null && (
-                      <div style={{
-                        background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                        padding: "10px 14px", minWidth: 140,
-                      }}>
-                        <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          Precio por noche
-                        </p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                          ${spot.glamping_detail.price_per_night}
-                        </p>
-                      </div>
-                    )}
-                    {spot.glamping_detail.min_nights != null && (
-                      <div style={{
-                        background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                        padding: "10px 14px", minWidth: 140,
-                      }}>
-                        <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          Mínimo de noches
-                        </p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                          {spot.glamping_detail.min_nights} noche{spot.glamping_detail.min_nights !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                  {spot.glamping_detail.amenities && (
-                    <GlampingAmenitiesList amenities={spot.glamping_detail.amenities} />
+
+                  {spot.glamping_amenities && (
+                    <GlampingAmenitiesList amenities={spot.glamping_amenities} />
                   )}
                 </div>
               )}

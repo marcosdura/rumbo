@@ -139,7 +139,9 @@ def get_spots(
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
         joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
-        joinedload(SpotDB.images)
+        joinedload(SpotDB.images),
+        selectinload(SpotDB.glamping_detail),
+        selectinload(SpotDB.glamping_amenities),
     ).filter(SpotDB.is_approved == True)
 
     if department:
@@ -354,6 +356,8 @@ def get_spots(
             **spot.__dict__,
             "amenities": amenities,
             "categories": categories,
+            "glamping_detail": spot.glamping_detail,
+            "glamping_amenities": spot.glamping_amenities,
             "average_rating": round(float(agg.average_rating), 1) if agg else None,
             "review_count": agg.review_count if agg else 0,
         })
@@ -390,7 +394,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
-            selectinload(SpotDB.glamping_detail).selectinload(GlampingDetail.amenities),
+            selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
@@ -417,6 +422,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
+        "glamping_amenities": spot.glamping_amenities,
         "motorhome_detail": spot.motorhome_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
@@ -439,7 +445,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
-            selectinload(SpotDB.glamping_detail).selectinload(GlampingDetail.amenities),
+            selectinload(SpotDB.glamping_detail),
+            selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
         )
@@ -465,6 +472,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
+        "glamping_amenities": spot.glamping_amenities,
         "motorhome_detail": spot.motorhome_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [
@@ -532,11 +540,12 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
         SpotCategory.spot_id == spot_id,
         SpotCategory.category_id == category.id
     ).first()
-    if existing_relation:
+    if existing_relation and data.category != "Glamping":
         raise HTTPException(status_code=400, detail="Spot already has this category")
 
-    new_relation = SpotCategory(spot_id=spot_id, category_id=category.id, is_primary=False)
-    db.add(new_relation)
+    if not existing_relation:
+        new_relation = SpotCategory(spot_id=spot_id, category_id=category.id, is_primary=False)
+        db.add(new_relation)
 
     if data.category == "Motorhome" and data.motorhome_detail:
         existing_detail = db.query(MotorhomeDetail).filter(MotorhomeDetail.spot_id == spot_id).first()
@@ -553,9 +562,6 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
         db.add(camping)
 
     elif data.category == "Glamping" and data.glamping_detail:
-        existing_glamping = db.query(GlampingDetail).filter(GlampingDetail.spot_id == spot_id).first()
-        if existing_glamping:
-            raise HTTPException(status_code=400, detail="Spot already has glamping details")
         glamping = GlampingDetail(
             spot_id=spot_id,
             accommodation_type=data.glamping_detail.accommodation_type,
@@ -564,14 +570,15 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
             min_nights=data.glamping_detail.min_nights,
         )
         db.add(glamping)
-        db.flush()
 
         if data.glamping_amenities:
-            amenity_row = GlampingAmenity(
-                glamping_id=glamping.id,
-                **data.glamping_amenities.dict(),
-            )
-            db.add(amenity_row)
+            existing_amenities = db.query(GlampingAmenity).filter(GlampingAmenity.spot_id == spot_id).first()
+            if not existing_amenities:
+                amenity_row = GlampingAmenity(
+                    spot_id=spot_id,
+                    **data.glamping_amenities.dict(),
+                )
+                db.add(amenity_row)
 
     db.commit()
 

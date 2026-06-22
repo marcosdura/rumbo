@@ -169,3 +169,16 @@ export const defaultCampingDetail = (): CampingDetailItem => ({
 export const defaultGlampingDetail = (): GlampingDetailItem => ({
   accommodation_type: "", capacity: "", price_per_night: "", min_nights: "",
 })
+
+export const GLAMPING_AMENITY_MAP: Record<string, string> = {
+  "Baño privado": "private_bathroom",
+  "Electricidad": "electricity",
+  "WiFi": "wifi",
+  "Desayuno incluido": "breakfast_included",
+  "Acepta mascotas": "pet_friendly",
+  "Calefacción": "heating",
+  "Aire acondicionado": "air_conditioning",
+  "Cocina equipada": "kitchen",
+  "Ropa de cama": "towels_included",
+  "Estacionamiento": "parking",
+}

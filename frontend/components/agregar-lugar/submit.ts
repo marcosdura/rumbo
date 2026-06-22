@@ -1,4 +1,5 @@
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "./types"
+import { GLAMPING_AMENITY_MAP } from "./constants"
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
   const formatted = spotName
@@ -22,6 +23,7 @@ interface SubmitParams {
   motorhomeDetail: MotorhomeDetailItem
   campingDetail: CampingDetailItem
   glampingDetail: GlampingDetailItem
+  glampingUnits: GlampingDetailItem[]
   selectedGlampingAmenities: string[]
   selectedCampingAmenities: string[]
   trekkingFeatures: TrekkingFeatures
@@ -43,7 +45,7 @@ interface SubmitParams {
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail,
+    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, glampingUnits,
     selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
@@ -290,39 +292,31 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     if (cat === "Glamping") {
-      const glampRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({}),
-      })
-      if (glampRes.ok) {
-        const glampData = await glampRes.json()
-        const glampingId: number = glampData.id
+      for (const unit of glampingUnits) {
+        if (!unit.accommodation_type && !unit.capacity && !unit.price_per_night && !unit.min_nights) continue
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            accommodation_type: unit.accommodation_type || null,
+            capacity: unit.capacity ? parseInt(unit.capacity) : null,
+            price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
+            min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
+          }),
+        })
+      }
 
-        const GLAMPING_AMENITY_MAP: Record<string, string> = {
-          "Baño privado":       "private_bathroom",
-          "Electricidad":       "electricity",
-          "WiFi":               "wifi",
-          "Desayuno incluido":  "breakfast_included",
-          "Acepta mascotas":    "pet_friendly",
-          "Calefacción":        "heating",
-          "Aire acondicionado": "air_conditioning",
-          "Cocina equipada":    "kitchen",
-          "Ropa de cama":       "towels_included",
-          "Estacionamiento":    "parking",
-        }
-        const amenityPayload: Record<string, boolean> = {}
-        for (const name of selectedAmenities) {
-          const field = GLAMPING_AMENITY_MAP[name]
-          if (field) amenityPayload[field] = true
-        }
-        if (Object.keys(amenityPayload).length > 0) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/glamping/${glampingId}/amenities`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            body: JSON.stringify(amenityPayload),
-          })
-        }
+      const amenityPayload: Record<string, boolean> = {}
+      for (const name of selectedAmenities) {
+        const field = GLAMPING_AMENITY_MAP[name]
+        if (field) amenityPayload[field] = true
+      }
+      if (Object.keys(amenityPayload).length > 0) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/amenities`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify(amenityPayload),
+        })
       }
     }
 
@@ -349,42 +343,32 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     if (cat === "Camping" && additionalCategories.includes("Glamping")) {
-      try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            category: "Glamping",
-            glamping_detail: {
-              accommodation_type: glampingDetail.accommodation_type || null,
-              capacity: glampingDetail.capacity ? parseInt(glampingDetail.capacity) : null,
-              price_per_night: glampingDetail.price_per_night ? parseFloat(glampingDetail.price_per_night) : null,
-              min_nights: glampingDetail.min_nights ? parseInt(glampingDetail.min_nights) : null,
-            },
-            glamping_amenities: (() => {
-              const GLAMPING_AMENITY_MAP: Record<string, string> = {
-                "Baño privado": "private_bathroom",
-                "Electricidad": "electricity",
-                "WiFi": "wifi",
-                "Desayuno incluido": "breakfast_included",
-                "Acepta mascotas": "pet_friendly",
-                "Calefacción": "heating",
-                "Aire acondicionado": "air_conditioning",
-                "Cocina equipada": "kitchen",
-                "Ropa de cama": "towels_included",
-                "Estacionamiento": "parking",
-              }
-              const payload: Record<string, boolean> = {}
-              for (const name of selectedGlampingAmenities) {
-                const field = GLAMPING_AMENITY_MAP[name]
-                if (field) payload[field] = true
-              }
-              return Object.keys(payload).length > 0 ? payload : null
-            })(),
-          }),
-        })
-      } catch {
-        // No bloquear el éxito de la creación del spot si esto falla
+      const amenityPayload: Record<string, boolean> = {}
+      for (const name of selectedGlampingAmenities) {
+        const field = GLAMPING_AMENITY_MAP[name]
+        if (field) amenityPayload[field] = true
+      }
+
+      for (let i = 0; i < glampingUnits.length; i++) {
+        const unit = glampingUnits[i]
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            body: JSON.stringify({
+              category: "Glamping",
+              glamping_detail: {
+                accommodation_type: unit.accommodation_type || null,
+                capacity: unit.capacity ? parseInt(unit.capacity) : null,
+                price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
+                min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
+              },
+              glamping_amenities: i === 0 && Object.keys(amenityPayload).length > 0 ? amenityPayload : null,
+            }),
+          })
+        } catch {
+          // No bloquear el éxito de la creación del spot si esto falla
+        }
       }
     }
 

@@ -28,6 +28,7 @@ import StepTrekkingMode from "./steps/StepTrekkingMode"
 import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
 import StepMotorhomeDetalle from "./steps/StepMotorhomeDetalle"
+import StepGlampingUnidades from "./steps/StepGlampingUnidades"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
@@ -46,6 +47,7 @@ export default function AgregarLugar() {
   const [motorhomeDetail, setMotorhomeDetail]     = useState<MotorhomeDetailItem>(defaultMotorhomeDetail())
   const [campingDetail, setCampingDetail]         = useState<CampingDetailItem>(defaultCampingDetail())
   const [glampingDetail, setGlampingDetail]       = useState<GlampingDetailItem>(defaultGlampingDetail())
+  const [glampingUnits, setGlampingUnits]         = useState<GlampingDetailItem[]>([defaultGlampingDetail()])
   const [selectedGlampingAmenities, setSelectedGlampingAmenities] = useState<string[]>([])
   const [selectedCampingAmenities, setSelectedCampingAmenities]   = useState<string[]>([])
   const [trekkingFeatures, setTrekkingFeatures]   = useState<TrekkingFeatures>(defaultTrekkingFeatures())
@@ -102,13 +104,15 @@ export default function AgregarLugar() {
   const isEscalada = selectedCat?.name === "Escalada"
   const isCampingOrGlamping = selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
   const isMotorhome = selectedCat?.name === "Motorhome"
+  const isGlamping = selectedCat?.name === "Glamping"
+  const glampingStepOffset = isGlamping ? 1 : 0
   const summaryStep =
     isService && creatingNewSpot ? 5
     : isService ? 4
     : isTrekking && trekkingMode === "new_route" ? 5
     : isTrekking ? 6
     : isEscalada && climbingMode === "new_sector" ? 4
-    : isCampingOrGlamping ? 6 : 5
+    : isCampingOrGlamping ? 6 + glampingStepOffset : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -390,6 +394,7 @@ export default function AgregarLugar() {
       glampingDetail,
       selectedGlampingAmenities,
       selectedCampingAmenities,
+      glampingUnits,
       trekkingFeatures,
       routes,
       sectors,
@@ -412,6 +417,7 @@ export default function AgregarLugar() {
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setAdditionalCategories([]); setMotorhomeDetail(defaultMotorhomeDetail())
     setCampingDetail(defaultCampingDetail()); setGlampingDetail(defaultGlampingDetail())
+    setGlampingUnits([defaultGlampingDetail()])
     setSelectedGlampingAmenities([]); setSelectedCampingAmenities([])
     setTrekkingFeatures(defaultTrekkingFeatures())
     setSurf(defaultSurf()); setKayaks([defaultKayak()])
@@ -663,14 +669,24 @@ export default function AgregarLugar() {
           />
         )}
 
-        {step === 3 && (selectedCat?.name === "Camping" || selectedCat?.name === "Glamping") && (
+        {step === 3 && isGlamping && (
+          <StepGlampingUnidades
+            glampingUnits={glampingUnits}
+            setGlampingUnits={setGlampingUnits}
+            error={error}
+            onBack={() => setStep(2)}
+            onNext={() => setStep(4)}
+          />
+        )}
+
+        {((step === 3 && selectedCat?.name === "Camping") || (step === 4 && selectedCat?.name === "Glamping")) && (
           <StepAmenities
             selectedCat={selectedCat!}
             selectedAmenities={selectedAmenities}
             toggleAmenity={toggleAmenity}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={goToStep4}
+            onBack={() => setStep(isGlamping ? 3 : 2)}
+            onNext={() => setStep(isGlamping ? 5 : 4)}
           />
         )}
 
@@ -824,7 +840,7 @@ export default function AgregarLugar() {
         )}
 
         {/* Imágenes: no aplica para escalada new_sector/new_route */}
-        {step === (isTrekking ? 5 : 4) && !isService && (!isEscalada || climbingMode === "new_spot") && (
+        {step === (isTrekking ? 5 : 4 + glampingStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
           <StepImagenes
             images={images}
             setImages={setImages}
@@ -832,12 +848,12 @@ export default function AgregarLugar() {
             setPreviews={setPreviews}
             setError={setError}
             error={error}
-            onBack={() => setStep(isTrekking ? 4 : 3)}
-            onNext={() => setStep(isCampingOrGlamping ? 5 : summaryStep)}
+            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset)}
+            onNext={() => setStep(isCampingOrGlamping ? 5 + glampingStepOffset : summaryStep)}
           />
         )}
 
-        {step === 5 && isCampingOrGlamping && (
+        {step === 5 + glampingStepOffset && isCampingOrGlamping && (
           <StepCategoriasAdicionales
             primaryCategoryName={selectedCat?.name ?? ""}
             additionalCategories={additionalCategories}
@@ -846,14 +862,14 @@ export default function AgregarLugar() {
             setMotorhomeDetail={setMotorhomeDetail}
             campingDetail={campingDetail}
             setCampingDetail={setCampingDetail}
-            glampingDetail={glampingDetail}
-            setGlampingDetail={setGlampingDetail}
+            glampingUnits={glampingUnits}
+            setGlampingUnits={setGlampingUnits}
             selectedGlampingAmenities={selectedGlampingAmenities}
             setSelectedGlampingAmenities={setSelectedGlampingAmenities}
             selectedCampingAmenities={selectedCampingAmenities}
             setSelectedCampingAmenities={setSelectedCampingAmenities}
             error={error}
-            onBack={() => setStep(4)}
+            onBack={() => setStep(4 + glampingStepOffset)}
             onNext={() => setStep(summaryStep)}
           />
         )}
@@ -917,7 +933,7 @@ export default function AgregarLugar() {
               : isTrekking && trekkingMode === "new_route" ? 3
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 3
-              : isCampingOrGlamping ? 5 : 4
+              : isCampingOrGlamping ? 5 + glampingStepOffset : 4
             )}
             onEditStep={setStep}
             climbingMode={climbingMode}

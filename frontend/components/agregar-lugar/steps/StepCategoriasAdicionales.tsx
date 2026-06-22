@@ -11,8 +11,8 @@ interface Props {
   setMotorhomeDetail: (v: MotorhomeDetailItem) => void
   campingDetail: CampingDetailItem
   setCampingDetail: (v: CampingDetailItem) => void
-  glampingDetail: GlampingDetailItem
-  setGlampingDetail: (v: GlampingDetailItem) => void
+  glampingUnits: GlampingDetailItem[]
+  setGlampingUnits: (v: GlampingDetailItem[]) => void
   selectedGlampingAmenities: string[]
   setSelectedGlampingAmenities: (v: string[]) => void
   selectedCampingAmenities: string[]
@@ -27,7 +27,7 @@ export default function StepCategoriasAdicionales({
   additionalCategories, setAdditionalCategories,
   motorhomeDetail, setMotorhomeDetail,
   campingDetail, setCampingDetail,
-  glampingDetail, setGlampingDetail,
+  glampingUnits, setGlampingUnits,
   selectedGlampingAmenities, setSelectedGlampingAmenities,
   selectedCampingAmenities, setSelectedCampingAmenities,
   error, onBack, onNext,
@@ -65,8 +65,16 @@ export default function StepCategoriasAdicionales({
   function updCamping(field: keyof CampingDetailItem, val: string) {
     setCampingDetail({ ...campingDetail, [field]: val })
   }
-  function updGlamping(field: keyof GlampingDetailItem, val: string) {
-    setGlampingDetail({ ...glampingDetail, [field]: val })
+  function updGlampingUnit(index: number, field: keyof GlampingDetailItem, val: string) {
+    const next = [...glampingUnits]
+    next[index] = { ...next[index], [field]: val }
+    setGlampingUnits(next)
+  }
+  function addGlampingUnit() {
+    setGlampingUnits([...glampingUnits, { accommodation_type: "", capacity: "", price_per_night: "", min_nights: "" }])
+  }
+  function removeGlampingUnit(index: number) {
+    setGlampingUnits(glampingUnits.filter((_, i) => i !== index))
   }
 
   const offerGlamping = primaryCategoryName === "Camping"
@@ -157,45 +165,77 @@ export default function StepCategoriasAdicionales({
             </label>
             {acceptsGlamping && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de alojamiento</label>
-                  <select
-                    value={glampingDetail.accommodation_type}
-                    onChange={e => updGlamping("accommodation_type", e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                  >
-                    <option value="">Seleccioná...</option>
-                    <option value="domo">Domo</option>
-                    <option value="carpa">Carpa equipada</option>
-                    <option value="cabaña">Cabaña</option>
-                    <option value="treehouse">Treehouse</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (personas)</label>
-                  <input
-                    type="number" value={glampingDetail.capacity}
-                    onChange={e => updGlamping("capacity", e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche</label>
-                  <input
-                    type="number" value={glampingDetail.price_per_night}
-                    onChange={e => updGlamping("price_per_night", e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Mínimo de noches</label>
-                  <input
-                    type="number" value={glampingDetail.min_nights}
-                    onChange={e => updGlamping("min_nights", e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                  />
-                </div>
+                {glampingUnits.map((unit, index) => (
+                  <div key={index} style={{
+                    border: "1px solid #e0ddd6", borderRadius: 12, padding: "12px", position: "relative",
+                    display: "flex", flexDirection: "column", gap: 12, marginBottom: 8,
+                  }}>
+                    {glampingUnits.length > 1 && (
+                      <button
+                        onClick={() => removeGlampingUnit(index)}
+                        style={{
+                          position: "absolute", top: 8, right: 8,
+                          background: "none", border: "none", color: "#9a9690",
+                          cursor: "pointer", fontSize: 15, lineHeight: 1,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#2d6a4f", margin: 0 }}>
+                      Tipo {index + 1}
+                    </p>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de alojamiento</label>
+                      <select
+                        value={unit.accommodation_type}
+                        onChange={e => updGlampingUnit(index, "accommodation_type", e.target.value)}
+                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                      >
+                        <option value="">Seleccioná...</option>
+                        <option value="domo">Domo</option>
+                        <option value="carpa">Carpa equipada</option>
+                        <option value="cabaña">Cabaña</option>
+                        <option value="treehouse">Treehouse</option>
+                        <option value="otro">Otro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (personas)</label>
+                      <input
+                        type="number" value={unit.capacity}
+                        onChange={e => updGlampingUnit(index, "capacity", e.target.value)}
+                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche</label>
+                      <input
+                        type="number" value={unit.price_per_night}
+                        onChange={e => updGlampingUnit(index, "price_per_night", e.target.value)}
+                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Mínimo de noches</label>
+                      <input
+                        type="number" value={unit.min_nights}
+                        onChange={e => updGlampingUnit(index, "min_nights", e.target.value)}
+                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={addGlampingUnit}
+                  style={{
+                    background: "none", border: "1px dashed #2d6a4f", color: "#2d6a4f",
+                    borderRadius: 12, padding: "8px 14px", cursor: "pointer",
+                    fontFamily: "inherit", fontWeight: 600, fontSize: 12, marginBottom: 8,
+                  }}
+                >
+                  + Agregar otro tipo de alojamiento
+                </button>
 
                 <div style={{ marginTop: 8 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a", marginBottom: 8 }}>Amenities del glamping</p>

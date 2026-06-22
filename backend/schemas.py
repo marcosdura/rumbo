@@ -56,7 +56,7 @@ class GlampingAmenityCreate(BaseModel):
 
 class GlampingAmenityResponse(GlampingAmenityCreate):
     id: int
-    glamping_id: int
+    spot_id: int
 
     class Config:
         from_attributes = True
@@ -70,7 +70,6 @@ class GlampingDetailCreate(BaseModel):
 class GlampingDetailResponse(GlampingDetailCreate):
     id: int
     spot_id: int
-    amenities: Optional[GlampingAmenityResponse] = None
 
     class Config:
         from_attributes = True
@@ -306,7 +305,8 @@ class SpotResponse(BaseModel):
     category: CategoryResponse
     categories: list[CategoryResponse] = []
     camping_detail:   CampingDetailResponse  | None = None
-    glamping_detail:  GlampingDetailResponse | None = None
+    glamping_detail:  list[GlampingDetailResponse] = []
+    glamping_amenities: GlampingAmenityResponse | None = None
     motorhome_detail: MotorhomeDetailResponse | None = None
     trekking_detail:  TrekkingDetailOut      | None = None
     amenities: list[AmenityResponse] = []

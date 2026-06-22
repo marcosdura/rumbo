@@ -18,9 +18,6 @@ def get_db():
 
 @router.post("/spots/{spot_id}/glamping", response_model=GlampingDetailResponse)
 def add_glamping_detail(spot_id: int, data: GlampingDetailCreate, db: Session = Depends(get_db)):
-    existing = db.query(GlampingDetail).filter(GlampingDetail.spot_id == spot_id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Glamping detail ya existe para este spot")
     detail = GlampingDetail(spot_id=spot_id, **data.dict())
     db.add(detail)
     db.commit()
@@ -28,29 +25,37 @@ def add_glamping_detail(spot_id: int, data: GlampingDetailCreate, db: Session = 
     return detail
 
 
-@router.get("/spots/{spot_id}/glamping", response_model=GlampingDetailResponse)
+@router.get("/spots/{spot_id}/glamping", response_model=list[GlampingDetailResponse])
 def get_glamping_detail(spot_id: int, db: Session = Depends(get_db)):
-    detail = db.query(GlampingDetail).filter(GlampingDetail.spot_id == spot_id).first()
+    details = db.query(GlampingDetail).filter(GlampingDetail.spot_id == spot_id).all()
+    return details
+
+
+@router.delete("/glamping/{glamping_id}")
+def delete_glamping_detail(glamping_id: int, db: Session = Depends(get_db)):
+    detail = db.query(GlampingDetail).filter(GlampingDetail.id == glamping_id).first()
     if not detail:
         raise HTTPException(status_code=404, detail="Glamping detail no encontrado")
-    return detail
+    db.delete(detail)
+    db.commit()
+    return {"message": "Unidad de glamping eliminada"}
 
 
-@router.post("/glamping/{glamping_id}/amenities", response_model=GlampingAmenityResponse)
-def add_glamping_amenities(glamping_id: int, data: GlampingAmenityCreate, db: Session = Depends(get_db)):
-    existing = db.query(GlampingAmenity).filter(GlampingAmenity.glamping_id == glamping_id).first()
+@router.post("/spots/{spot_id}/amenities", response_model=GlampingAmenityResponse)
+def add_glamping_amenities(spot_id: int, data: GlampingAmenityCreate, db: Session = Depends(get_db)):
+    existing = db.query(GlampingAmenity).filter(GlampingAmenity.spot_id == spot_id).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Amenities ya existen para este glamping")
-    amenities = GlampingAmenity(glamping_id=glamping_id, **data.dict())
+        raise HTTPException(status_code=400, detail="Amenities ya existen para este spot")
+    amenities = GlampingAmenity(spot_id=spot_id, **data.dict())
     db.add(amenities)
     db.commit()
     db.refresh(amenities)
     return amenities
 
 
-@router.put("/glamping/{glamping_id}/amenities", response_model=GlampingAmenityResponse)
-def update_glamping_amenities(glamping_id: int, data: GlampingAmenityCreate, db: Session = Depends(get_db)):
-    amenities = db.query(GlampingAmenity).filter(GlampingAmenity.glamping_id == glamping_id).first()
+@router.put("/spots/{spot_id}/amenities", response_model=GlampingAmenityResponse)
+def update_glamping_amenities(spot_id: int, data: GlampingAmenityCreate, db: Session = Depends(get_db)):
+    amenities = db.query(GlampingAmenity).filter(GlampingAmenity.spot_id == spot_id).first()
     if not amenities:
         raise HTTPException(status_code=404, detail="Amenities no encontradas")
     for field, value in data.dict(exclude_unset=True).items():
@@ -60,9 +65,9 @@ def update_glamping_amenities(glamping_id: int, data: GlampingAmenityCreate, db:
     return amenities
 
 
-@router.get("/glamping/{glamping_id}/amenities", response_model=GlampingAmenityResponse)
-def get_glamping_amenities(glamping_id: int, db: Session = Depends(get_db)):
-    amenities = db.query(GlampingAmenity).filter(GlampingAmenity.glamping_id == glamping_id).first()
+@router.get("/spots/{spot_id}/amenities", response_model=GlampingAmenityResponse)
+def get_glamping_amenities(spot_id: int, db: Session = Depends(get_db)):
+    amenities = db.query(GlampingAmenity).filter(GlampingAmenity.spot_id == spot_id).first()
     if not amenities:
         raise HTTPException(status_code=404, detail="Amenities no encontradas")
     return amenities
