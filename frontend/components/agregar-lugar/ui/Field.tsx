@@ -1,14 +1,16 @@
 export default function Field({
-  label, sublabel, required, children,
+  label, sublabel, required, hasError, errorText, children,
 }: {
   label: string
   sublabel?: string
   required: boolean
+  hasError?: boolean
+  errorText?: string
   children: React.ReactNode
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
+      <div style={{ fontSize: 13, fontWeight: 500, color: hasError ? "#e53e3e" : "#1b1b19" }}>
         {label}{" "}
         {required
           ? <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
@@ -19,6 +21,9 @@ export default function Field({
         )}
       </div>
       {children}
+      {hasError && errorText && (
+        <p style={{ fontSize: 12, color: "#e53e3e", margin: "2px 0 0" }}>{errorText}</p>
+      )}
     </div>
   )
 }

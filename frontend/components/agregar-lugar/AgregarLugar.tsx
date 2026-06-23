@@ -179,18 +179,6 @@ export default function AgregarLugar() {
   async function goToStep3() {
     if (isService) {
       if (creatingNewSpot) {
-        if (basic.email.trim() && !isValidEmail(basic.email)) {
-          setError("El email del lugar tiene un formato inválido.")
-          return
-        }
-        if (!basic.name || !basic.description || !basic.department) {
-          setError("Completá los campos obligatorios.")
-          return
-        }
-        if (isPublic === null) {
-          setError("Indicá si el lugar es público o privado.")
-          return
-        }
         setError(null)
         setStep(3)
         return
@@ -201,18 +189,6 @@ export default function AgregarLugar() {
       }
       setError(null)
       setStep(3)
-      return
-    }
-    if (basic.email.trim() && !isValidEmail(basic.email)) {
-      setError("El email del lugar tiene un formato inválido.")
-      return
-    }
-    if (!basic.name || !basic.description || !basic.department) {
-      setError("Completá los campos obligatorios.")
-      return
-    }
-    if (isPublic === null) {
-      setError("Indicá si el lugar es público o privado.")
       return
     }
     setError(null)

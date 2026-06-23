@@ -108,6 +108,12 @@ def get_spot_ids(db: Session = Depends(get_db)):
     return [{"id": r.id, "slug": r.slug} for r in rows]
 
 
+@router.get("/spots/check-name")
+def check_spot_name(name: str, db: Session = Depends(get_db)):
+    existing = db.query(SpotDB).filter(func.lower(SpotDB.name) == func.lower(name)).first()
+    return {"exists": existing is not None}
+
+
 @router.get("/spots", response_model=list[SpotResponse])
 def get_spots(
     db: Session = Depends(get_db),
