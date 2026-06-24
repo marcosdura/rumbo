@@ -84,32 +84,15 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   if (!sector) return <LoadingScreen />
 
   const badges = [
-    {
-      icon: "🪨", label: sector.rock_type,
-      color: "#4a443b", bg: "#f7f5f0", border: "#e0ddd6",
+    sector.type && {
+      icon: "🧗", label: sector.type,
+      color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8",
     },
-    {
-      icon: "🔩",
-      label: sector.bolted ? "Equipado" : "Trad / mixto",
-      color: sector.bolted ? "#1b4332" : "#78590a",
-      bg: sector.bolted ? "#e8f5ee" : "#fef9e7",
-      border: sector.bolted ? "#b7dfc8" : "#f0d98a",
+    sector.restrictions && {
+      icon: "⚠️", label: sector.restrictions,
+      color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a",
     },
-    {
-      icon: "☀️",
-      label: sector.shade === "full" ? "Sombra total" : sector.shade === "partial" ? "Semisombra" : "Sol directo",
-      color: sector.shade === "full" ? "#1b4332" : sector.shade === "partial" ? "#2d6a4f" : "#7c4a03",
-      bg: sector.shade === "full" ? "#e8f5ee" : sector.shade === "partial" ? "#f0f7f3" : "#fff4e6",
-      border: sector.shade === "full" ? "#b7dfc8" : sector.shade === "partial" ? "#c0ddd0" : "#f5c97a",
-    },
-    {
-      icon: "💧",
-      label: sector.water_available ? "Agua disponible" : "Sin agua",
-      color: sector.water_available ? "#1b4332" : "#7c1d1d",
-      bg: sector.water_available ? "#e8f5ee" : "#fdf0f0",
-      border: sector.water_available ? "#b7dfc8" : "#f5c0c0",
-    },
-  ]
+  ].filter(Boolean)
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
@@ -160,7 +143,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
             gap: 16px !important;
           }
           .route-row {
-            grid-template-columns: 2fr 1fr !important;
+            grid-template-columns: 2fr 1fr 1fr !important;
           }
           .route-col-largo,
           .route-col-descripcion {
@@ -174,7 +157,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
         .route-row {
           display: grid;
-          grid-template-columns: 2fr 1fr 1fr 2fr;
+          grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
           gap: 16px;
           padding: 12px 16px;
           border-radius: 12px;
@@ -213,12 +196,11 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           </div>
 
           {/* Stats */}
-          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 20 }}>
             {[
               { icon: "📍", val: `${sector.routes_count} rutas`, lbl: "Total rutas" },
-              { icon: "🎯", val: `${sector.min_grade} – ${sector.max_grade}`, lbl: "Graduación" },
-              { icon: "⛰️", val: `${sector.altitude} m`, lbl: "Altitud" },
-              { icon: "🧭", val: sector.orientation, lbl: "Orientación" },
+              { icon: "🎯", val: sector.min_grade ? `${sector.min_grade} – ${sector.max_grade}` : "—", lbl: "Graduación" },
+              { icon: "⛰️", val: sector.max_altitude ? `${sector.max_altitude} m` : "—", lbl: "Altitud" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid #e0ddd6",
@@ -245,16 +227,20 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
               </p>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {badges.map((b, i) => (
-                <span key={i} style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px", borderRadius: 999,
-                  fontSize: 12, fontWeight: 600,
-                  color: b.color, background: b.bg, border: `1px solid ${b.border}`,
-                }}>
-                  {b.icon} {b.label}
-                </span>
-              ))}
+              {badges.length === 0 ? (
+                <p style={{ fontSize: 13, color: "#9a9690", margin: 0 }}>Sin características registradas.</p>
+              ) : (
+                badges.map((b, i) => (
+                  <span key={i} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 999,
+                    fontSize: 12, fontWeight: 600,
+                    color: b.color, background: b.bg, border: `1px solid ${b.border}`,
+                  }}>
+                    {b.icon} {b.label}
+                  </span>
+                ))
+              )}
             </div>
           </div>
 
@@ -279,12 +265,13 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
               <div>
                 {/* Header tabla */}
                 <div style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 2fr",
+                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr",
                   gap: 16, padding: "0 16px 10px",
                   borderBottom: "1px solid #ede9e1", marginBottom: 4,
                 }}>
                   <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Nombre</p>
                   <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Grado</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Bolts</p>
                   <p className="route-header-largo" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Largo</p>
                   <p className="route-header-descripcion" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Descripción</p>
                 </div>
@@ -310,6 +297,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                           {route.grade}
                         </span>
                       </div>
+                      <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>{route.bolts ?? "—"}</p>
                       <p className="route-col-largo" style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>
                         {route.length ? `${route.length} m` : "—"}
                       </p>

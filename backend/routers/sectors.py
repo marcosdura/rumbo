@@ -31,6 +31,29 @@ def generate_slug(name: str) -> str:
     slug = re.sub(r'-+', '-', slug)
     return slug.strip('-')
 
+def _grade_sort_key(grade):
+    if not grade:
+        return (0, 0, 0)
+    g = grade.strip().lower()
+    plus = 1 if g.endswith('+') else 0
+    g = g.rstrip('+')
+    letter = g[-1] if g and g[-1] in 'abc' else ''
+    num_part = g[:-1] if letter else g
+    try:
+        num = float(num_part)
+    except ValueError:
+        num = 0
+    letter_val = {'a': 0, 'b': 1, 'c': 2}.get(letter, 0)
+    return (num, letter_val, plus)
+
+
+def _attach_sector_stats(sector):
+    grades = [r.grade for r in sector.routes if r.grade]
+    sector.routes_count = len(sector.routes)
+    sector.min_grade = min(grades, key=_grade_sort_key) if grades else None
+    sector.max_grade = max(grades, key=_grade_sort_key) if grades else None
+    return sector
+
 @router.post("/", response_model=ClimbingSectorResponse)
 def create_sector(sector: ClimbingSectorCreate, db: Session = Depends(get_db)):
     valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
@@ -54,11 +77,14 @@ def get_sector_by_slug(slug: str, db: Session = Depends(get_db)):
     sector = db.query(ClimbingSector).filter(ClimbingSector.slug == slug).first()
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
-    return sector
+    return _attach_sector_stats(sector)
 
 @router.get("/{sector_id}", response_model=ClimbingSectorResponse)
 def get_sector(sector_id: int, db: Session = Depends(get_db)):
-    return db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()
+    sector = db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    return _attach_sector_stats(sector)
 
 @router.get("/{sector_id}/routes", response_model=list[ClimbingRouteResponse])
 def get_sector_routes(sector_id: int, db: Session = Depends(get_db)):

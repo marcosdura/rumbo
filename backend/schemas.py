@@ -148,6 +148,9 @@ class ClimbingSectorCreate(ClimbingSectorBase):
 
 class ClimbingSectorResponse(ClimbingSectorBase):
     id: int
+    routes_count: int = 0
+    min_grade: Optional[str] = None
+    max_grade: Optional[str] = None
 
     class Config:
         from_attributes = True
