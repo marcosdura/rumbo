@@ -8,6 +8,7 @@ import { DEPARTMENTS, PHONE_COUNTRIES } from "../constants"
 import { s, errorInputBorder, errorHintText } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
+import Toggle from "../ui/Toggle"
 import NavRow from "../ui/NavRow"
 import type { BasicInfo } from "../types"
 
@@ -81,12 +82,12 @@ export default function StepInfoBasica({
       if (!basic.season_start) missing.add("season_start")
       if (!basic.season_end) missing.add("season_end")
     }
-    if (!basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
+    if (!basic.noContact && !basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
       missing.add("contact")
     }
-    if (basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
+    if (!basic.noContact && basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
     const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
-    if (basic.whatsapp.trim() && basic.whatsapp.trim().length !== phoneCountry.digits) missing.add("whatsapp")
+    if (!basic.noContact && basic.whatsapp.trim() && basic.whatsapp.trim().length !== phoneCountry.digits) missing.add("whatsapp")
     if (isPublic === null) missing.add("isPublic")
     if (!basic.lat || !basic.lng) missing.add("location")
     setFieldErrors(missing)
@@ -152,6 +153,21 @@ export default function StepInfoBasica({
         <div style={s.card}>
           <p style={s.cardTitle}>Contacto</p>
           <p style={s.subtitle}>Completá al menos uno de los tres: email, WhatsApp o Instagram.</p>
+          <div style={{ marginBottom: basic.noContact ? 0 : 14 }}>
+            <Toggle
+              label="Este lugar no tiene datos de contacto (ej: un cerro, una ruta de trekking)"
+              checked={basic.noContact}
+              onChange={v => {
+                setBasic(prev => ({
+                  ...prev, noContact: v,
+                  ...(v ? { email: "", whatsapp: "", instagram: "" } : {}),
+                }))
+                setEmailError(null)
+                setFieldErrors(prev => { const n = new Set(prev); n.delete("contact"); n.delete("email"); n.delete("whatsapp"); return n })
+              }}
+            />
+          </div>
+          {!basic.noContact && (
           <div style={s.form}>
             <Field label="Email del lugar" required={false} hasError={fieldErrors.has("contact") || fieldErrors.has("email")}>
               <input
@@ -195,6 +211,7 @@ export default function StepInfoBasica({
               />
             </Field>
           </div>
+          )}
           {fieldErrors.has("contact") && (
             <p style={errorHintText}>
               Completá al menos un método de contacto (email, WhatsApp o Instagram)

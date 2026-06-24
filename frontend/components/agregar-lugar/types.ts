@@ -40,6 +40,7 @@ export type BasicInfo = {
   price: string; season_type: "all_year" | "seasonal"
   season_start: string; season_end: string
   email: string; whatsapp: string; whatsappCountry: string; instagram: string
+  noContact: boolean
   lat: string; lng: string
 }
 

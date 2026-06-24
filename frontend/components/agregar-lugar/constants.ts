@@ -164,7 +164,7 @@ export const emptyBasic = (): BasicInfo => ({
   name: "", description: "", department: "",
   price: "", season_type: "all_year",
   season_start: "", season_end: "",
-  email: "", whatsapp: "", whatsappCountry: "UY", instagram: "", lat: "", lng: "",
+  email: "", whatsapp: "", whatsappCountry: "UY", instagram: "", noContact: false, lat: "", lng: "",
 })
 
 export const defaultMotorhomeDetail = (): MotorhomeDetailItem => ({
