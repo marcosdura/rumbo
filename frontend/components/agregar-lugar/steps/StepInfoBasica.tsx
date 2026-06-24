@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 import { useState, useEffect, useRef } from "react"
 import type { CSSProperties } from "react"
 import type React from "react"
-import { DEPARTMENTS } from "../constants"
+import { DEPARTMENTS, PHONE_COUNTRIES } from "../constants"
 import { s, errorInputBorder, errorHintText } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -85,6 +85,8 @@ export default function StepInfoBasica({
       missing.add("contact")
     }
     if (basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
+    const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
+    if (basic.whatsapp.trim() && basic.whatsapp.trim().length !== phoneCountry.digits) missing.add("whatsapp")
     if (isPublic === null) missing.add("isPublic")
     if (!basic.lat || !basic.lng) missing.add("location")
     setFieldErrors(missing)
@@ -147,42 +149,58 @@ export default function StepInfoBasica({
             <p style={errorHintText}>Completá el inicio y el fin de temporada</p>
           )}
         </div>
-        <div className="form-two-col">
-          <Field label="Email del lugar" required={false}>
-            <>
+        <div style={s.card}>
+          <p style={s.cardTitle}>Contacto</p>
+          <p style={s.subtitle}>Completá al menos uno de los tres: email, WhatsApp o Instagram.</p>
+          <div style={s.form}>
+            <Field label="Email del lugar" required={false} hasError={fieldErrors.has("contact") || fieldErrors.has("email")}>
               <input
-                style={{ ...s.input, ...(fieldErrors.has("email") ? errorInputBorder : {}) }}
+                style={{ ...s.input, ...((fieldErrors.has("contact") || fieldErrors.has("email")) ? errorInputBorder : {}) }}
                 type="email"
                 value={basic.email}
                 onChange={e => { upd("email", e.target.value); if (!e.target.value.trim()) setEmailError(null) }}
                 onBlur={handleEmailBlur}
               />
-              {emailError && (
-                <p style={errorHintText}>{emailError}</p>
-              )}
-            </>
-          </Field>
-          <Field label="WhatsApp" required={false}>
-            <input
-              style={{ ...s.input, ...(fieldErrors.has("contact") ? errorInputBorder : {}) }}
-              type="text" placeholder="Ej: 099123456" value={basic.whatsapp} onChange={e => upd("whatsapp", e.target.value)}
-            />
-          </Field>
+              {emailError && <p style={errorHintText}>{emailError}</p>}
+            </Field>
+            <Field label="WhatsApp" required={false} hasError={fieldErrors.has("contact") || fieldErrors.has("whatsapp")}
+              errorText="El número no tiene la cantidad de dígitos esperada para el país elegido">
+              <div style={{ display: "flex", gap: 8 }}>
+                <select
+                  style={{ ...s.input, width: 130, flexShrink: 0 }}
+                  value={basic.whatsappCountry}
+                  onChange={e => upd("whatsappCountry", e.target.value)}
+                >
+                  {PHONE_COUNTRIES.map(c => (
+                    <option key={c.code} value={c.code}>+{c.dial} {c.name}</option>
+                  ))}
+                </select>
+                <input
+                  style={{ ...s.input, ...((fieldErrors.has("contact") || fieldErrors.has("whatsapp")) ? errorInputBorder : {}) }}
+                  type="text" inputMode="numeric"
+                  placeholder={`${PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry)?.digits ?? 8} dígitos`}
+                  value={basic.whatsapp}
+                  onChange={e => {
+                    const digitsOnly = e.target.value.replace(/\D/g, "")
+                    const maxDigits = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry)?.digits ?? 8
+                    upd("whatsapp", digitsOnly.slice(0, maxDigits))
+                  }}
+                />
+              </div>
+            </Field>
+            <Field label="Instagram" required={false} hasError={fieldErrors.has("contact")}>
+              <input
+                style={{ ...s.input, ...(fieldErrors.has("contact") ? errorInputBorder : {}) }}
+                type="text" placeholder="@usuario" value={basic.instagram} onChange={e => upd("instagram", e.target.value)}
+              />
+            </Field>
+          </div>
+          {fieldErrors.has("contact") && (
+            <p style={errorHintText}>
+              Completá al menos un método de contacto (email, WhatsApp o Instagram)
+            </p>
+          )}
         </div>
-        <div className="form-two-col">
-          <Field label="Instagram" required={false}>
-            <input
-              style={{ ...s.input, ...(fieldErrors.has("contact") ? errorInputBorder : {}) }}
-              type="text" placeholder="@usuario" value={basic.instagram} onChange={e => upd("instagram", e.target.value)}
-            />
-          </Field>
-          <div />
-        </div>
-        {fieldErrors.has("contact") && (
-          <p style={errorHintText}>
-            Completá al menos un método de contacto (email, WhatsApp o Instagram)
-          </p>
-        )}
 
         {/* ¿Público o privado? */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

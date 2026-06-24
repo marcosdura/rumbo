@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import type React from "react"
-import { s } from "../styles"
+import { s, errorInputBorder, errorHintText } from "../styles"
 import Field from "../ui/Field"
 import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -29,9 +29,12 @@ export default function StepKayak({
   const ref2 = useRef<HTMLInputElement>(null)
   const ref3 = useRef<HTMLInputElement>(null)
   const refs = [ref1, ref2, ref3]
+  const [nameErrors, setNameErrors] = useState<Set<number>>(new Set())
+  const [photoError, setPhotoError] = useState(false)
 
   function updKayak(i: number, field: string, val: string | boolean) {
     setKayaks(prev => prev.map((k, idx) => idx === i ? { ...k, [field]: val } : k))
+    if (field === "name" && val) setNameErrors(prev => { const n = new Set(prev); n.delete(i); return n })
   }
   function updKayakSeason(i: number, t: "all_year" | "seasonal") {
     setKayaks(prev => prev.map((k, idx) => idx === i ? { ...k, season_type: t } : k))
@@ -40,6 +43,21 @@ export default function StepKayak({
     const file = e.target.files?.[0] ?? null
     setKayakPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
     setKayakPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
+    if (index === 0 && file) setPhotoError(false)
+  }
+
+  function validate(): boolean {
+    const missing = new Set<number>()
+    kayaks.forEach((k, i) => { if (!k.name.trim()) missing.add(i) })
+    const missingPhoto = !kayakPhotoFiles[0]
+    setNameErrors(missing)
+    setPhotoError(missingPhoto)
+    return missing.size === 0 && !missingPhoto
+  }
+
+  function handleNext() {
+    if (!validate()) return
+    onNext()
   }
 
   return (
@@ -49,8 +67,11 @@ export default function StepKayak({
         <div key={i} style={s.card}>
           <p style={s.cardTitle}>Servicio {i + 1}</p>
           <div style={s.form}>
-            <Field label="Nombre" required={true}>
-              <input style={s.input} value={k.name} onChange={e => updKayak(i, "name", e.target.value)} />
+            <Field label="Nombre" required={true} hasError={nameErrors.has(i)} errorText="El nombre es obligatorio">
+              <input
+                style={{ ...s.input, ...(nameErrors.has(i) ? errorInputBorder : {}) }}
+                value={k.name} onChange={e => updKayak(i, "name", e.target.value)}
+              />
             </Field>
             <div className="form-two-col">
               <Field label="Tipo de agua" required={false}>
@@ -101,8 +122,9 @@ export default function StepKayak({
 
             {i === 0 && (
               <div style={{ borderTop: "1px solid #e0ddd6", paddingTop: 16 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>Fotos del servicio</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: photoError ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos del servicio</p>
                 <p style={{ fontSize: 12, color: "#9a9690", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
+                {photoError && <p style={errorHintText}>Subí la foto de portada para continuar</p>}
                 {([
                   { label: "Foto de portada",  req: true,  idx: 0 },
                   { label: "Foto adicional 2", req: false, idx: 1 },
@@ -158,7 +180,7 @@ export default function StepKayak({
           </button>
         </div>
       )}
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={handleNext} error={error ?? ((nameErrors.size > 0 || photoError) ? "Completá los campos marcados en rojo." : null)} />
     </div>
   )
 }

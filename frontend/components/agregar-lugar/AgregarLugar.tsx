@@ -973,6 +973,8 @@ export default function AgregarLugar() {
             motorhomeDetail={motorhomeDetail}
             campingDetail={campingDetail}
             glampingUnits={glampingUnits}
+            trekkingMode={trekkingMode}
+            sectorRoutes={sectorRoutes}
           />
         )}
       </div>

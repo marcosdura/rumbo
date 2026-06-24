@@ -39,16 +39,18 @@ export type BasicInfo = {
   name: string; description: string; department: string
   price: string; season_type: "all_year" | "seasonal"
   season_start: string; season_end: string
-  email: string; whatsapp: string; instagram: string
+  email: string; whatsapp: string; whatsappCountry: string; instagram: string
   lat: string; lng: string
 }
+
+export type PhoneCountry = { code: string; name: string; dial: string; digits: number }
 
 export type MotorhomeDetailItem = {
   capacity: string
   surface_type: string
-  has_water: boolean
-  has_electricity: boolean
-  has_dump_station: boolean
+  has_water: boolean | null
+  has_electricity: boolean | null
+  has_dump_station: boolean | null
   max_stay_nights: string
 }
 

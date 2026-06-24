@@ -1,4 +1,14 @@
-import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
+import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, PhoneCountry } from "./types"
+
+export const PHONE_COUNTRIES: PhoneCountry[] = [
+  { code: "UY", name: "Uruguay",        dial: "598", digits: 8 },
+  { code: "AR", name: "Argentina",      dial: "54",  digits: 10 },
+  { code: "BR", name: "Brasil",         dial: "55",  digits: 11 },
+  { code: "CL", name: "Chile",          dial: "56",  digits: 9 },
+  { code: "PY", name: "Paraguay",       dial: "595", digits: 9 },
+  { code: "ES", name: "España",         dial: "34",  digits: 9 },
+  { code: "US", name: "Estados Unidos", dial: "1",   digits: 10 },
+]
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: "Camping",  label: "Camping",  emoji: "⛺" },
@@ -154,12 +164,12 @@ export const emptyBasic = (): BasicInfo => ({
   name: "", description: "", department: "",
   price: "", season_type: "all_year",
   season_start: "", season_end: "",
-  email: "", whatsapp: "", instagram: "", lat: "", lng: "",
+  email: "", whatsapp: "", whatsappCountry: "UY", instagram: "", lat: "", lng: "",
 })
 
 export const defaultMotorhomeDetail = (): MotorhomeDetailItem => ({
-  capacity: "", surface_type: "", has_water: false,
-  has_electricity: false, has_dump_station: false, max_stay_nights: "",
+  capacity: "", surface_type: "", has_water: null,
+  has_electricity: null, has_dump_station: null, max_stay_nights: "",
 })
 
 export const defaultCampingDetail = (): CampingDetailItem => ({

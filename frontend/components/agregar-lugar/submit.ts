@@ -1,5 +1,11 @@
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
-import { GLAMPING_AMENITY_MAP } from "./constants"
+import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES } from "./constants"
+
+function formatWhatsapp(basic: BasicInfo): string | null {
+  if (!basic.whatsapp.trim()) return null
+  const country = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
+  return `+${country.dial} ${basic.whatsapp}`
+}
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
   const formatted = spotName
@@ -74,7 +80,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             department: basic.department,
             category_id: selectedCat.id,
             email: basic.email || null,
-            whatsapp: basic.whatsapp || null,
+            whatsapp: formatWhatsapp(basic),
             instagram: basic.instagram || null,
             price: basic.price ? parseInt(basic.price) : null,
             lat: basic.lat ? parseFloat(basic.lat) : null,
@@ -241,7 +247,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         season_start: seasonStart,
         season_end:   seasonEnd,
         email:        basic.email     || null,
-        whatsapp:     basic.whatsapp  || null,
+        whatsapp:     formatWhatsapp(basic),
         instagram:    basic.instagram || null,
         lat:          basic.lat ? parseFloat(basic.lat) : null,
         lng:          basic.lng ? parseFloat(basic.lng) : null,

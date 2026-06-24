@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import type React from "react"
-import { s } from "../styles"
+import { s, errorInputBorder, errorHintText } from "../styles"
 import Field from "../ui/Field"
 import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -29,11 +29,26 @@ export default function StepSurf({
   const ref2 = useRef<HTMLInputElement>(null)
   const ref3 = useRef<HTMLInputElement>(null)
   const refs = [ref1, ref2, ref3]
+  const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
 
   function handleSurfPhoto(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null
     setSurfPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
     setSurfPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
+    if (index === 0 && file) setFieldErrors(prev => { const n = new Set(prev); n.delete("photo"); return n })
+  }
+
+  function validate(): boolean {
+    const missing = new Set<string>()
+    if (!surf.name.trim()) missing.add("name")
+    if (!surfPhotoFiles[0]) missing.add("photo")
+    setFieldErrors(missing)
+    return missing.size === 0
+  }
+
+  function handleNext() {
+    if (!validate()) return
+    onNext()
   }
 
   return (
@@ -41,8 +56,11 @@ export default function StepSurf({
       <h2 style={s.title}>Datos de Surf</h2>
       <div style={s.card}>
         <div style={s.form}>
-          <Field label="Nombre de la escuela" required={true}>
-            <input style={s.input} value={surf.name} onChange={e => setSurf(p => ({ ...p, name: e.target.value }))} />
+          <Field label="Nombre de la escuela" required={true} hasError={fieldErrors.has("name")} errorText="El nombre de la escuela es obligatorio">
+            <input
+              style={{ ...s.input, ...(fieldErrors.has("name") ? errorInputBorder : {}) }}
+              value={surf.name} onChange={e => setSurf(p => ({ ...p, name: e.target.value }))}
+            />
           </Field>
           <div className="form-two-col">
             <Field label="Tipo de clase" required={false}>
@@ -74,8 +92,9 @@ export default function StepSurf({
           <Toggle label="Equipo incluido" checked={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
 
           <div style={{ borderTop: "1px solid #e0ddd6", paddingTop: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: fieldErrors.has("photo") ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>
             <p style={{ fontSize: 12, color: "#9a9690", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
+            {fieldErrors.has("photo") && <p style={errorHintText}>Subí la foto de portada para continuar</p>}
             {([
               { label: "Foto de portada",  req: true,  i: 0 },
               { label: "Foto adicional 2", req: false, i: 1 },
@@ -129,7 +148,7 @@ export default function StepSurf({
           </button>
         </div>
       )}
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={handleNext} error={error ?? (fieldErrors.size > 0 ? "Completá los campos marcados en rojo." : null)} />
     </div>
   )
 }

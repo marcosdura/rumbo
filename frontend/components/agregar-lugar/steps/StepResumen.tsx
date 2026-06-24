@@ -7,6 +7,7 @@ import SummaryRow from "../ui/SummaryRow"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, ClimbingRouteForm, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
+  TrekkingMode, ClimbingRouteItem,
 } from "../types"
 
 export default function StepResumen({
@@ -18,6 +19,7 @@ export default function StepResumen({
   images, previews, surfPhotoPreviews, kayakPhotoPreviews,
   selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
   additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
+  trekkingMode, sectorRoutes,
 }: {
   selectedCat: Category
   isService: boolean
@@ -54,6 +56,8 @@ export default function StepResumen({
   motorhomeDetail?: MotorhomeDetailItem
   campingDetail?: CampingDetailItem
   glampingUnits?: GlampingDetailItem[]
+  trekkingMode?: TrekkingMode
+  sectorRoutes?: ClimbingRouteItem[]
 }) {
   const isCamping = selectedCat.name === "Camping"
   const isGlamping = selectedCat.name === "Glamping"
@@ -266,7 +270,7 @@ export default function StepResumen({
       )}
 
       {selectedCat.name === "Trekking" && routes.filter(r => r.name).length > 0 && (
-        <SummaryCard title="Rutas" onEdit={() => onEditStep(3)}>
+        <SummaryCard title="Rutas" onEdit={() => onEditStep(trekkingMode === "new_route" ? 3 : 4)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {routes.filter(r => r.name).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -288,6 +292,22 @@ export default function StepResumen({
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{sec.name}</p>
                 <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
                   {[sec.type, sec.max_altitude && `${sec.max_altitude} m`].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SummaryCard>
+      )}
+
+      {isEscalada && climbingMode !== "new_route" && sectorRoutes && sectorRoutes.filter(r => r.name).length > 0 && (
+        <SummaryCard title="Rutas de escalada" onEdit={() => onEditStep(4)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {sectorRoutes.filter(r => r.name).map((r, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
+                <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                  {sectors?.[r.sectorIndex]?.name || "Sector sin nombre"}
+                  {r.grade && ` · ${r.grade}`}
                 </p>
               </div>
             ))}
@@ -324,9 +344,14 @@ export default function StepResumen({
           <SummaryRow label="Nombre" value={surf.name} />
           {surf.class_type && <SummaryRow label="Tipo de clase" value={surf.class_type} />}
           {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
+          <SummaryRow
+            label="Temporada"
+            value={surf.season_type === "seasonal" ? `Estacional (${surf.season_start || "?"} a ${surf.season_end || "?"})` : "Todo el año"}
+          />
           <SummaryRow label="Equipo incluido" value={surf.equipment_include ? "Sí" : "No"} />
           {surf.email && <SummaryRow label="Email" value={surf.email} />}
           {surf.whatsapp && <SummaryRow label="WhatsApp" value={surf.whatsapp} />}
+          {surf.instagram && <SummaryRow label="Instagram" value={surf.instagram} />}
           {surfPhotoPreviews && surfPhotoPreviews.some(p => p) && (
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               {surfPhotoPreviews.filter(Boolean).map((src, i) => (
@@ -344,7 +369,16 @@ export default function StepResumen({
               <SummaryRow label="Nombre" value={k.name} />
               {k.water_type && <SummaryRow label="Tipo de agua" value={k.water_type} />}
               {k.difficulty && <SummaryRow label="Dificultad" value={k.difficulty} />}
+              {k.duration && <SummaryRow label="Duración" value={`${k.duration} hs`} />}
+              {k.kayak_type && <SummaryRow label="Tipo de kayak" value={k.kayak_type} />}
+              <SummaryRow
+                label="Temporada"
+                value={k.season_type === "seasonal" ? `Estacional (${k.season_start || "?"} a ${k.season_end || "?"})` : "Todo el año"}
+              />
               <SummaryRow label="Alquiler disponible" value={k.rental_available ? "Sí" : "No"} />
+              {k.email && <SummaryRow label="Email" value={k.email} />}
+              {k.whatsapp && <SummaryRow label="WhatsApp" value={k.whatsapp} />}
+              {k.instagram && <SummaryRow label="Instagram" value={k.instagram} />}
             </div>
           ))}
           {kayakPhotoPreviews && kayakPhotoPreviews.some(p => p) && (

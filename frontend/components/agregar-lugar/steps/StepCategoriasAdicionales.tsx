@@ -5,6 +5,7 @@ import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from 
 import { GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, AMENITY_ICONS } from "../constants"
 import { s, errorInputBorder, amenityChipStyle } from "../styles"
 import Field from "../ui/Field"
+import BinaryToggle from "../ui/BinaryToggle"
 import NavRow from "../ui/NavRow"
 
 interface Props {
@@ -78,7 +79,7 @@ export default function StepCategoriasAdicionales({
     )
   }
 
-  function updMotorhome(field: keyof MotorhomeDetailItem, val: string | boolean) {
+  function updMotorhome(field: keyof MotorhomeDetailItem, val: string | boolean | null) {
     setMotorhomeDetail({ ...motorhomeDetail, [field]: val })
     setMotorhomeErrors(prev => { const n = new Set(prev); n.delete(field as string); return n })
   }
@@ -119,6 +120,9 @@ export default function StepCategoriasAdicionales({
       const missing = new Set<string>()
       if (!motorhomeDetail.capacity) missing.add("capacity")
       if (!motorhomeDetail.surface_type) missing.add("surface_type")
+      if (motorhomeDetail.has_water === null) missing.add("has_water")
+      if (motorhomeDetail.has_electricity === null) missing.add("has_electricity")
+      if (motorhomeDetail.has_dump_station === null) missing.add("has_dump_station")
       if (missing.size > 0) { setMotorhomeErrors(missing); ok = false } else { setMotorhomeErrors(new Set()) }
     } else {
       setMotorhomeErrors(new Set())
@@ -196,18 +200,24 @@ export default function StepCategoriasAdicionales({
                   <option value="tierra">Tierra</option>
                 </select>
               </Field>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                <input type="checkbox" checked={motorhomeDetail.has_water} onChange={e => updMotorhome("has_water", e.target.checked)} />
-                Tiene agua
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                <input type="checkbox" checked={motorhomeDetail.has_electricity} onChange={e => updMotorhome("has_electricity", e.target.checked)} />
-                Tiene electricidad
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                <input type="checkbox" checked={motorhomeDetail.has_dump_station} onChange={e => updMotorhome("has_dump_station", e.target.checked)} />
-                Tiene dump station
-              </label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_water") ? "#e53e3e" : "#1b1b19" }}>
+                  ¿Tiene agua? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                </span>
+                <BinaryToggle value={motorhomeDetail.has_water} onChange={v => updMotorhome("has_water", v)} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_electricity") ? "#e53e3e" : "#1b1b19" }}>
+                  ¿Tiene electricidad? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                </span>
+                <BinaryToggle value={motorhomeDetail.has_electricity} onChange={v => updMotorhome("has_electricity", v)} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_dump_station") ? "#e53e3e" : "#1b1b19" }}>
+                  ¿Tiene dump station? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                </span>
+                <BinaryToggle value={motorhomeDetail.has_dump_station} onChange={v => updMotorhome("has_dump_station", v)} />
+              </div>
               <Field label="Noches máximas permitidas" required={false}>
                 <input
                   type="number" value={motorhomeDetail.max_stay_nights}
