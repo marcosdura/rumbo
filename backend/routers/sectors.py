@@ -33,7 +33,9 @@ def generate_slug(name: str) -> str:
 
 @router.post("/", response_model=ClimbingSectorResponse)
 def create_sector(sector: ClimbingSectorCreate, db: Session = Depends(get_db)):
-    db_sector = ClimbingSector(**sector.dict())
+    valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
+    sector_data = {k: v for k, v in sector.dict().items() if k in valid_fields}
+    db_sector = ClimbingSector(**sector_data)
     db_sector.slug = generate_slug(sector.name)
     db.add(db_sector)
     db.commit()

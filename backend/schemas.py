@@ -136,11 +136,8 @@ class RouteResponse(RouteBase):
 # -------- CLIMBING SECTOR --------
 class ClimbingSectorBase(BaseModel):
     name: str
-    min_grade: Optional[float] = None
-    max_grade: Optional[float] = None
-    type: Optional[str] = None              # boulder / deportiva / tradicional
+    type: Optional[str] = None
     max_altitude: Optional[int] = None
-    routes_number: Optional[int] = None
     restrictions: Optional[str] = None
     slug: str | None = None
 
