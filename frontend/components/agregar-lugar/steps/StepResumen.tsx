@@ -1,16 +1,23 @@
 "use client"
 
-import { TREKKING_FEATURES } from "../constants"
+import { TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES } from "../constants"
 import { s } from "../styles"
 import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem, ClimbingMode, ClimbingRouteForm, SectorItem } from "../types"
+import type {
+  Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
+  ClimbingMode, ClimbingRouteForm, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
+} from "../types"
 
 export default function StepResumen({
   selectedCat, isService, isTrekking, basic, trekkingFeatures, routes,
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
   error, onSubmit, onBack, onEditStep,
   climbingMode, climbingSpotName, climbingSectorName, sectors, climbingRoute,
+  isPublic, publicTransport, creatingNewSpot,
+  images, previews, surfPhotoPreviews, kayakPhotoPreviews,
+  selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
+  additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
 }: {
   selectedCat: Category
   isService: boolean
@@ -33,13 +40,37 @@ export default function StepResumen({
   climbingSectorName?: string
   sectors?: SectorItem[]
   climbingRoute?: ClimbingRouteForm
+  isPublic?: boolean | null
+  publicTransport?: string | null
+  creatingNewSpot?: boolean
+  images?: File[]
+  previews?: string[]
+  surfPhotoPreviews?: (string | null)[]
+  kayakPhotoPreviews?: (string | null)[]
+  selectedAmenities?: string[]
+  selectedGlampingAmenities?: string[]
+  selectedCampingAmenities?: string[]
+  additionalCategories?: string[]
+  motorhomeDetail?: MotorhomeDetailItem
+  campingDetail?: CampingDetailItem
+  glampingUnits?: GlampingDetailItem[]
 }) {
+  const isCamping = selectedCat.name === "Camping"
+  const isGlamping = selectedCat.name === "Glamping"
+  const isMotorhome = selectedCat.name === "Motorhome"
+  const isEscalada = selectedCat.name === "Escalada"
+  const showBasicInfoCard = !isService || creatingNewSpot
+
+  const seasonLabel = basic.season_type === "seasonal"
+    ? `Estacional (${basic.season_start || "?"} a ${basic.season_end || "?"})`
+    : "Todo el año"
+
   return (
     <div>
       <h2 style={s.title}>Revisá tu lugar</h2>
 
       <SummaryCard title="Información general" onEdit={() => onEditStep(2)}>
-        {isService ? (
+        {isService && !creatingNewSpot ? (
           <>
             <SummaryRow label="Categoría" value={selectedCat.label} />
             <SummaryRow
@@ -62,7 +93,7 @@ export default function StepResumen({
         )}
       </SummaryCard>
 
-      {!isService && basic.description && (
+      {showBasicInfoCard && basic.description && (
         <SummaryCard title="Descripción" onEdit={() => onEditStep(2)}>
           <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0, lineHeight: 1.6 }}>
             {basic.description.length > 120
@@ -72,18 +103,146 @@ export default function StepResumen({
         </SummaryCard>
       )}
 
-      {!isService && (basic.lat || basic.lng) && (
+      {showBasicInfoCard && (
+        <SummaryCard title="Precio y temporada" onEdit={() => onEditStep(2)}>
+          <SummaryRow label="Precio" value={basic.price ? `$${basic.price}` : "Gratis"} />
+          <SummaryRow label="Temporada" value={seasonLabel} />
+        </SummaryCard>
+      )}
+
+      {showBasicInfoCard && (isPublic !== null && isPublic !== undefined) && (
+        <SummaryCard title="Acceso" onEdit={() => onEditStep(2)}>
+          <SummaryRow label="Tipo de acceso" value={isPublic ? "Público" : "Privado"} />
+          {publicTransport && (
+            <SummaryRow
+              label="Transporte público"
+              value={publicTransport === "si" ? "Accesible" : publicTransport === "no" ? "No accesible" : "No sabe"}
+            />
+          )}
+        </SummaryCard>
+      )}
+
+      {showBasicInfoCard && (basic.lat || basic.lng) && (
         <SummaryCard title="Ubicación" onEdit={() => onEditStep(2)}>
           <SummaryRow label="Latitud" value={basic.lat} />
           <SummaryRow label="Longitud" value={basic.lng} />
         </SummaryCard>
       )}
 
-      {!isService && (basic.email || basic.whatsapp || basic.instagram) && (
+      {showBasicInfoCard && (basic.email || basic.whatsapp || basic.instagram) && (
         <SummaryCard title="Contacto" onEdit={() => onEditStep(2)}>
           {basic.email     && <SummaryRow label="Email"     value={basic.email} />}
           {basic.whatsapp  && <SummaryRow label="WhatsApp"  value={basic.whatsapp} />}
           {basic.instagram && <SummaryRow label="Instagram" value={basic.instagram} />}
+        </SummaryCard>
+      )}
+
+      {images && images.length > 0 && previews && previews.length > 0 && (
+        <SummaryCard title="Imágenes" onEdit={() => onEditStep(isTrekking ? 5 : 4)}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {previews.map((src, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                <img
+                  src={src}
+                  alt={`Imagen ${i + 1}`}
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, border: "1px solid #e0ddd6" }}
+                />
+                {i === 0 && (
+                  <span style={{
+                    position: "absolute", bottom: 4, left: 4,
+                    background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 600,
+                    padding: "2px 6px", borderRadius: 999,
+                  }}>
+                    Principal
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </SummaryCard>
+      )}
+
+      {(isCamping || isGlamping) && selectedAmenities && selectedAmenities.length > 0 && (
+        <SummaryCard title={`Amenities del ${isCamping ? "camping" : "glamping"}`} onEdit={() => onEditStep(3)}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {selectedAmenities.map(name => (
+              <span key={name} style={{ fontSize: 12, background: "#f0f7f3", border: "1px solid #c0ddd0", borderRadius: 999, padding: "4px 10px" }}>
+                {name}
+              </span>
+            ))}
+          </div>
+        </SummaryCard>
+      )}
+
+      {isCamping && campingDetail?.price && (
+        <SummaryCard title="Datos del camping" onEdit={() => onEditStep(2)}>
+          <SummaryRow label="Precio por noche" value={`$${campingDetail.price}`} />
+        </SummaryCard>
+      )}
+
+      {isGlamping && glampingUnits && glampingUnits.length > 0 && (
+        <SummaryCard title="Tipos de alojamiento" onEdit={() => onEditStep(3)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {glampingUnits.map((unit, i) => (
+              <div key={i} style={{ fontSize: 13, color: "#3d3d3a" }}>
+                <strong>{unit.accommodation_type || `Tipo ${i + 1}`}</strong>
+                {" — "}
+                {[unit.capacity && `${unit.capacity} pers.`, unit.price_per_night && `$${unit.price_per_night}/noche`, unit.min_nights && `mín. ${unit.min_nights} noches`]
+                  .filter(Boolean).join(" · ")}
+              </div>
+            ))}
+          </div>
+        </SummaryCard>
+      )}
+
+      {isMotorhome && motorhomeDetail && (
+        <SummaryCard title="Datos del área de motorhomes" onEdit={() => onEditStep(3)}>
+          {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
+          {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
+          <SummaryRow label="Agua" value={motorhomeDetail.has_water ? "Sí" : "No"} />
+          <SummaryRow label="Electricidad" value={motorhomeDetail.has_electricity ? "Sí" : "No"} />
+          <SummaryRow label="Dump station" value={motorhomeDetail.has_dump_station ? "Sí" : "No"} />
+          {motorhomeDetail.max_stay_nights && <SummaryRow label="Noches máximas" value={motorhomeDetail.max_stay_nights} />}
+        </SummaryCard>
+      )}
+
+      {additionalCategories && additionalCategories.length > 0 && (
+        <SummaryCard title="Categorías adicionales" onEdit={() => onEditStep(5)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {additionalCategories.includes("Motorhome") && motorhomeDetail && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>🚐 Motorhome</p>
+                {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
+                {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
+              </div>
+            )}
+            {additionalCategories.includes("Glamping") && glampingUnits && glampingUnits.length > 0 && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>🛖 Glamping</p>
+                {glampingUnits.map((unit, i) => (
+                  <p key={i} style={{ fontSize: 13, color: "#3d3d3a", margin: "0 0 4px" }}>
+                    {unit.accommodation_type || `Tipo ${i + 1}`} — {[unit.capacity && `${unit.capacity} pers.`, unit.price_per_night && `$${unit.price_per_night}/noche`].filter(Boolean).join(" · ")}
+                  </p>
+                ))}
+                {selectedGlampingAmenities && selectedGlampingAmenities.length > 0 && (
+                  <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
+                    Amenities: {selectedGlampingAmenities.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+            {additionalCategories.includes("Camping") && campingDetail?.price && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>⛺ Camping</p>
+                <SummaryRow label="Precio por noche" value={`$${campingDetail.price}`} />
+                {selectedCampingAmenities && selectedCampingAmenities.length > 0 && (
+                  <p style={{ fontSize: 12, color: "#7a7669", margin: "4px 0 0" }}>
+                    Amenities: {selectedCampingAmenities.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </SummaryCard>
       )}
 
@@ -121,6 +280,21 @@ export default function StepResumen({
         </SummaryCard>
       )}
 
+      {isEscalada && (!climbingMode || climbingMode === "new_spot") && sectors && sectors.filter(sec => sec.name).length > 0 && (
+        <SummaryCard title="Sectores" onEdit={() => onEditStep(3)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {sectors.filter(sec => sec.name).map((sec, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{sec.name}</p>
+                <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                  {[sec.type, sec.max_altitude && `${sec.max_altitude} m`].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SummaryCard>
+      )}
+
       {(climbingMode === "new_sector" || climbingMode === "new_route") && (
         <SummaryCard
           title={climbingMode === "new_sector" ? "Nuevo sector" : "Nueva ruta"}
@@ -141,6 +315,44 @@ export default function StepResumen({
               {climbingRoute?.grade && <SummaryRow label="Grado" value={climbingRoute.grade} />}
               {climbingRoute?.type && <SummaryRow label="Tipo" value={climbingRoute.type} />}
             </>
+          )}
+        </SummaryCard>
+      )}
+
+      {selectedCat.name === "Surf" && surf.name && (
+        <SummaryCard title="Datos de la escuela de surf" onEdit={() => onEditStep(isService ? (creatingNewSpot ? 4 : 3) : 3)}>
+          <SummaryRow label="Nombre" value={surf.name} />
+          {surf.class_type && <SummaryRow label="Tipo de clase" value={surf.class_type} />}
+          {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
+          <SummaryRow label="Equipo incluido" value={surf.equipment_include ? "Sí" : "No"} />
+          {surf.email && <SummaryRow label="Email" value={surf.email} />}
+          {surf.whatsapp && <SummaryRow label="WhatsApp" value={surf.whatsapp} />}
+          {surfPhotoPreviews && surfPhotoPreviews.some(p => p) && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              {surfPhotoPreviews.filter(Boolean).map((src, i) => (
+                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #e0ddd6" }} />
+              ))}
+            </div>
+          )}
+        </SummaryCard>
+      )}
+
+      {selectedCat.name === "Kayak" && kayaks.filter(k => k.name).length > 0 && (
+        <SummaryCard title="Datos del servicio de kayak" onEdit={() => onEditStep(isService ? (creatingNewSpot ? 4 : 3) : 3)}>
+          {kayaks.filter(k => k.name).map((k, i) => (
+            <div key={i} style={{ marginBottom: 10 }}>
+              <SummaryRow label="Nombre" value={k.name} />
+              {k.water_type && <SummaryRow label="Tipo de agua" value={k.water_type} />}
+              {k.difficulty && <SummaryRow label="Dificultad" value={k.difficulty} />}
+              <SummaryRow label="Alquiler disponible" value={k.rental_available ? "Sí" : "No"} />
+            </div>
+          ))}
+          {kayakPhotoPreviews && kayakPhotoPreviews.some(p => p) && (
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              {kayakPhotoPreviews.filter(Boolean).map((src, i) => (
+                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #e0ddd6" }} />
+              ))}
+            </div>
           )}
         </SummaryCard>
       )}

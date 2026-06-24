@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { AMENITY_CATEGORIES, AMENITY_ICONS, GLAMPING_AMENITY_CATEGORIES } from "../constants"
+import { s, errorHintText } from "../styles"
 import NavRow from "../ui/NavRow"
 import type { Category } from "../types"
 
@@ -16,14 +18,33 @@ export default function StepAmenities({
 }) {
   const isGlamping = selectedCat.name === "Glamping"
   const categories = isGlamping ? GLAMPING_AMENITY_CATEGORIES : AMENITY_CATEGORIES
+  const MIN_AMENITIES = 3
+  const [showMinError, setShowMinError] = useState(false)
+
+  const belowMin = selectedAmenities.length < MIN_AMENITIES
+
+  function handleNext() {
+    if (belowMin) {
+      setShowMinError(true)
+      return
+    }
+    setShowMinError(false)
+    onNext()
+  }
+
+  function handleToggle(name: string) {
+    toggleAmenity(name)
+    if (showMinError) setShowMinError(false)
+  }
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 20 }}>
-        Servicios e instalaciones
-      </h2>
-      <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 20 }}>
-        Seleccioná los servicios disponibles en tu {isGlamping ? "glamping" : "camping"}. Podés dejar todo sin seleccionar.
+      <h2 style={s.title}>Servicios e instalaciones</h2>
+      <p style={s.subtitle}>
+        Seleccioná los servicios disponibles en tu {isGlamping ? "glamping" : "camping"}.
+      </p>
+      <p style={{ fontSize: 13, color: showMinError ? "#dc2626" : "#9a9690", marginBottom: 20, fontWeight: showMinError ? 600 : 400 }}>
+        Seleccioná al menos {MIN_AMENITIES} ({selectedAmenities.length}/{MIN_AMENITIES})
       </p>
       {categories.map(grp => (
         <div key={grp.id} style={{ marginBottom: 20 }}>
@@ -38,7 +59,7 @@ export default function StepAmenities({
                 <button
                   key={name}
                   type="button"
-                  onClick={() => toggleAmenity(name)}
+                  onClick={() => handleToggle(name)}
                   style={{
                     display: "flex", alignItems: "center", gap: 5,
                     padding: "6px 12px", borderRadius: 20,
@@ -56,7 +77,10 @@ export default function StepAmenities({
           </div>
         </div>
       ))}
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      {showMinError && (
+        <p style={errorHintText}>Seleccioná al menos {MIN_AMENITIES} servicios antes de continuar.</p>
+      )}
+      <NavRow onBack={onBack} onNext={handleNext} error={error} />
     </div>
   )
 }

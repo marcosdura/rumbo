@@ -6,6 +6,7 @@ import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
+  defaultClimbingRouteItem,
 } from "./constants"
 import { submitAgregarLugar, buildPublicId } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
@@ -29,10 +30,11 @@ import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
 import StepMotorhomeDetalle from "./steps/StepMotorhomeDetalle"
 import StepGlampingUnidades from "./steps/StepGlampingUnidades"
+import StepClimbingRoutes from "./steps/StepClimbingRoutes"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
-  MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
+  MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -82,6 +84,7 @@ export default function AgregarLugar() {
   const [climbingRoute, setClimbingRoute]         = useState<ClimbingRouteForm>(
     { name: "", grade: "", type: "", length_m: "", bolts: "", description: "" }
   )
+  const [sectorRoutes, setSectorRoutes]           = useState<ClimbingRouteItem[]>([])
 
   // Trekking mode states
   const [trekkingMode, setTrekkingMode]                 = useState<TrekkingMode>(null)
@@ -106,12 +109,14 @@ export default function AgregarLugar() {
   const isMotorhome = selectedCat?.name === "Motorhome"
   const isGlamping = selectedCat?.name === "Glamping"
   const glampingStepOffset = isGlamping ? 1 : 0
+  const climbingStepOffset = isEscalada && climbingMode === "new_spot" ? 1 : 0
   const summaryStep =
     isService && creatingNewSpot ? 5
     : isService ? 4
     : isTrekking && trekkingMode === "new_route" ? 5
     : isTrekking ? 6
-    : isEscalada && climbingMode === "new_sector" ? 4
+    : isEscalada && climbingMode === "new_sector" ? 5
+    : isEscalada && climbingMode !== "new_route" ? 6
     : isCampingOrGlamping ? 6 + glampingStepOffset : 5
 
   function upd(field: string, val: string) {
@@ -128,22 +133,24 @@ export default function AgregarLugar() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 
-  async function handleCategorySelect(cat: Category) {
+  function handleCategorySelect(cat: Category) {
     setSelectedCat(cat)
     const isServ = cat.name === "Surf" || cat.name === "Kayak"
+    setStep(2)
     if (isServ) {
       setLoadingSpots(true)
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=${cat.name}`)
-        const data = await res.json()
-        setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
-      } catch {
-        // proceed with empty list if fetch fails
-      } finally {
-        setLoadingSpots(false)
-      }
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=${cat.name}`)
+        .then(res => res.json())
+        .then(data => {
+          setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
+        })
+        .catch(() => {
+          // proceed with empty list if fetch fails
+        })
+        .finally(() => {
+          setLoadingSpots(false)
+        })
     }
-    setStep(2)
   }
 
   async function handleTrekkingModeSelect(mode: "new_spot" | "new_route") {
@@ -316,6 +323,27 @@ export default function AgregarLugar() {
           }),
         })
         if (!res.ok) throw new Error()
+        const newSector = await res.json()
+
+        for (const r of sectorRoutes) {
+          if (!r.name) continue
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              name: r.name,
+              grade: r.grade || null,
+              type: r.type || null,
+              length: r.length_m ? parseInt(r.length_m) : null,
+              bolts: r.bolts ? parseInt(r.bolts) : null,
+              description: r.description || null,
+              sector_id: newSector.id,
+            }),
+          })
+        }
         setSuccess(true)
       } catch {
         setError("No se pudo guardar el sector. Intentá de nuevo.")
@@ -371,6 +399,7 @@ export default function AgregarLugar() {
       selectedGlampingAmenities,
       selectedCampingAmenities,
       glampingUnits,
+      sectorRoutes,
       trekkingFeatures,
       routes,
       sectors,
@@ -407,6 +436,7 @@ export default function AgregarLugar() {
     setClimbingSpotId(null); setClimbingSectorId(null)
     setAvailableSectors([]); setLoadingSectors(false)
     setClimbingRoute({ name: "", grade: "", type: "", length_m: "", bolts: "", description: "" })
+    setSectorRoutes([])
     setTrekkingMode(null); setTrekkingSpotId(null)
     setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
   }
@@ -709,6 +739,17 @@ export default function AgregarLugar() {
           />
         )}
 
+        {step === 4 && isEscalada && climbingMode !== "new_route" && (
+          <StepClimbingRoutes
+            sectors={sectors}
+            routes={sectorRoutes}
+            setRoutes={setSectorRoutes}
+            error={error}
+            onBack={() => setStep(3)}
+            onNext={() => setStep(climbingMode === "new_sector" ? summaryStep : 5)}
+          />
+        )}
+
         {/* Escalada new_route: selector de sector */}
         {step === 3 && isEscalada && climbingMode === "new_route" && (
           <StepClimbingSectorSelector
@@ -816,7 +857,7 @@ export default function AgregarLugar() {
         )}
 
         {/* Imágenes: no aplica para escalada new_sector/new_route */}
-        {step === (isTrekking ? 5 : 4 + glampingStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
+        {step === (isTrekking ? 5 : 4 + glampingStepOffset + climbingStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
           <StepImagenes
             images={images}
             setImages={setImages}
@@ -824,7 +865,7 @@ export default function AgregarLugar() {
             setPreviews={setPreviews}
             setError={setError}
             error={error}
-            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset)}
+            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset + climbingStepOffset)}
             onNext={() => setStep(isCampingOrGlamping ? 5 + glampingStepOffset : summaryStep)}
           />
         )}
@@ -908,7 +949,8 @@ export default function AgregarLugar() {
               : isService ? 3
               : isTrekking && trekkingMode === "new_route" ? 3
               : isTrekking ? 5
-              : isEscalada && climbingMode === "new_sector" ? 3
+              : isEscalada && climbingMode === "new_sector" ? 4
+              : isEscalada && climbingMode === "new_spot" ? 5
               : isCampingOrGlamping ? 5 + glampingStepOffset : 4
             )}
             onEditStep={setStep}
@@ -917,6 +959,20 @@ export default function AgregarLugar() {
             climbingSectorName={climbingSectorName}
             sectors={sectors}
             climbingRoute={climbingRoute}
+            isPublic={isPublic}
+            publicTransport={publicTransport}
+            creatingNewSpot={creatingNewSpot}
+            images={images}
+            previews={previews}
+            surfPhotoPreviews={surfPhotoPreviews}
+            kayakPhotoPreviews={kayakPhotoPreviews}
+            selectedAmenities={selectedAmenities}
+            selectedGlampingAmenities={selectedGlampingAmenities}
+            selectedCampingAmenities={selectedCampingAmenities}
+            additionalCategories={additionalCategories}
+            motorhomeDetail={motorhomeDetail}
+            campingDetail={campingDetail}
+            glampingUnits={glampingUnits}
           />
         )}
       </div>

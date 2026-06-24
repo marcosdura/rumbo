@@ -1,4 +1,4 @@
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "./types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
 import { GLAMPING_AMENITY_MAP } from "./constants"
 
 export function buildPublicId(category: string, spotName: string, index: number): string {
@@ -29,6 +29,7 @@ interface SubmitParams {
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   sectors: SectorItem[]
+  sectorRoutes: ClimbingRouteItem[]
   surf: SurfItem
   kayaks: KayakItem[]
   images: File[]
@@ -46,7 +47,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   const {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
     selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, glampingUnits,
-    selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, surf, kayaks,
+    selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, sectorRoutes, surf, kayaks,
     images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
@@ -437,9 +438,10 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     if (cat === "Escalada") {
+      const createdSectorIds: (number | null)[] = []
       for (const sec of sectors) {
-        if (!sec.name) continue
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/`, {
+        if (!sec.name) { createdSectorIds.push(null); continue }
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -447,6 +449,31 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             type: sec.type || null,
             max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
             restrictions: sec.restrictions || null,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          createdSectorIds.push(data.id)
+        } else {
+          createdSectorIds.push(null)
+        }
+      }
+
+      for (const r of sectorRoutes) {
+        if (!r.name) continue
+        const sectorId = createdSectorIds[r.sectorIndex]
+        if (!sectorId) continue
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: r.name,
+            grade: r.grade || null,
+            type: r.type || null,
+            length: r.length_m ? parseInt(r.length_m) : null,
+            bolts: r.bolts ? parseInt(r.bolts) : null,
+            description: r.description || null,
+            sector_id: sectorId,
           }),
         })
       }

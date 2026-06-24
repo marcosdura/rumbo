@@ -62,3 +62,13 @@ export type GlampingDetailItem = {
   price_per_night: string
   min_nights: string
 }
+
+export type ClimbingRouteItem = {
+  name: string
+  grade: string
+  type: string
+  length_m: string
+  bolts: string
+  description: string
+  sectorIndex: number
+}

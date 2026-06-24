@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import type { CSSProperties } from "react"
 import type React from "react"
 import { DEPARTMENTS } from "../constants"
-import { s } from "../styles"
+import { s, errorInputBorder, errorHintText } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
@@ -16,7 +16,6 @@ const LocationPicker = dynamic(
   { ssr: false }
 )
 
-const ERROR_BORDER: CSSProperties = { borderColor: "#e53e3e" }
 
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
@@ -104,14 +103,14 @@ export default function StepInfoBasica({
         <Field label="Nombre del lugar" required={true} hasError={fieldErrors.has("name")}
           errorText={nameTaken ? "Ya existe un lugar con este nombre" : "El nombre es obligatorio"}>
           <input
-            style={{ ...s.input, ...(fieldErrors.has("name") ? ERROR_BORDER : {}) }}
+            style={{ ...s.input, ...(fieldErrors.has("name") ? errorInputBorder : {}) }}
             type="text" value={basic.name} onChange={e => upd("name", e.target.value)}
           />
           {checkingName && <p style={{ fontSize: 12, color: "#9a9690", margin: "4px 0 0" }}>Verificando nombre...</p>}
         </Field>
         <Field label="Descripción" required={true} hasError={fieldErrors.has("description")} errorText="La descripción es obligatoria">
           <textarea
-            style={{ ...s.input, height: 96, resize: "vertical", ...(fieldErrors.has("description") ? ERROR_BORDER : {}) } as CSSProperties}
+            style={{ ...s.input, height: 96, resize: "vertical", ...(fieldErrors.has("description") ? errorInputBorder : {}) } as CSSProperties}
             value={basic.description}
             onChange={e => upd("description", e.target.value)}
             placeholder="Contá cómo es el lugar, qué lo hace especial, qué pueden esperar quienes lo visiten. Cuanto más detalle, mejor."
@@ -119,7 +118,7 @@ export default function StepInfoBasica({
         </Field>
         <Field label="Departamento" required={true} hasError={fieldErrors.has("department")} errorText="Seleccioná un departamento">
           <select
-            style={{ ...s.input, ...(fieldErrors.has("department") ? ERROR_BORDER : {}) }}
+            style={{ ...s.input, ...(fieldErrors.has("department") ? errorInputBorder : {}) }}
             value={basic.department} onChange={e => upd("department", e.target.value)}
           >
             <option value="">Seleccioná...</option>
@@ -129,7 +128,7 @@ export default function StepInfoBasica({
         <div className="form-two-col">
           <Field label="Precio" required={true} sublabel="Si el acceso es gratuito, poné 0" hasError={fieldErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)">
             <input
-              style={{ ...s.input, ...(fieldErrors.has("price") ? ERROR_BORDER : {}) }}
+              style={{ ...s.input, ...(fieldErrors.has("price") ? errorInputBorder : {}) }}
               type="number" value={basic.price} onChange={e => upd("price", e.target.value)}
             />
           </Field>
@@ -145,27 +144,27 @@ export default function StepInfoBasica({
             onEndChange={v => upd("season_end", v)}
           />
           {(fieldErrors.has("season_start") || fieldErrors.has("season_end")) && (
-            <p style={{ fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }}>Completá el inicio y el fin de temporada</p>
+            <p style={errorHintText}>Completá el inicio y el fin de temporada</p>
           )}
         </div>
         <div className="form-two-col">
           <Field label="Email del lugar" required={false}>
             <>
               <input
-                style={{ ...s.input, ...(fieldErrors.has("email") ? ERROR_BORDER : {}) }}
+                style={{ ...s.input, ...(fieldErrors.has("email") ? errorInputBorder : {}) }}
                 type="email"
                 value={basic.email}
                 onChange={e => { upd("email", e.target.value); if (!e.target.value.trim()) setEmailError(null) }}
                 onBlur={handleEmailBlur}
               />
               {emailError && (
-                <p style={{ fontSize: 12, color: "#c0392b", margin: "4px 0 0" }}>{emailError}</p>
+                <p style={errorHintText}>{emailError}</p>
               )}
             </>
           </Field>
           <Field label="WhatsApp" required={false}>
             <input
-              style={{ ...s.input, ...(fieldErrors.has("contact") ? ERROR_BORDER : {}) }}
+              style={{ ...s.input, ...(fieldErrors.has("contact") ? errorInputBorder : {}) }}
               type="text" placeholder="Ej: 099123456" value={basic.whatsapp} onChange={e => upd("whatsapp", e.target.value)}
             />
           </Field>
@@ -173,14 +172,14 @@ export default function StepInfoBasica({
         <div className="form-two-col">
           <Field label="Instagram" required={false}>
             <input
-              style={{ ...s.input, ...(fieldErrors.has("contact") ? ERROR_BORDER : {}) }}
+              style={{ ...s.input, ...(fieldErrors.has("contact") ? errorInputBorder : {}) }}
               type="text" placeholder="@usuario" value={basic.instagram} onChange={e => upd("instagram", e.target.value)}
             />
           </Field>
           <div />
         </div>
         {fieldErrors.has("contact") && (
-          <p style={{ fontSize: 12, color: "#e53e3e", margin: "-8px 0 0" }}>
+          <p style={errorHintText}>
             Completá al menos un método de contacto (email, WhatsApp o Instagram)
           </p>
         )}
@@ -254,7 +253,7 @@ export default function StepInfoBasica({
             }}
           />
           {fieldErrors.has("location") && (
-            <p style={{ fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }}>Seleccioná una ubicación en el mapa</p>
+            <p style={errorHintText}>Seleccioná una ubicación en el mapa</p>
           )}
         </div>
       </div>

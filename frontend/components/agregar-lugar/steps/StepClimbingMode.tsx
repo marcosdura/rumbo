@@ -1,5 +1,6 @@
 "use client"
 
+import NavRow from "../ui/NavRow"
 import { s } from "../styles"
 
 const MODES = [
@@ -24,21 +25,21 @@ export default function StepClimbingMode({
             type="button"
             onClick={() => onSelect(m.key)}
             style={{
-              display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
-              textAlign: "left", background: "#fff", border: "1.5px solid #e0ddd6",
-              borderRadius: 14, padding: "16px 18px", width: "100%",
-              fontFamily: "inherit",
+              ...s.card,
+              display: "flex", alignItems: "center", gap: 16,
+              cursor: "pointer", textAlign: "left", width: "100%",
+              border: "1px solid #e0ddd6",
             }}
           >
-            <span style={{ fontSize: 28, flexShrink: 0 }}>{m.emoji}</span>
+            <span style={{ fontSize: 32 }}>{m.emoji}</span>
             <div>
-              <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: "#1b1b19" }}>{m.title}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 13, color: "#7a7669" }}>{m.desc}</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{m.title}</p>
+              <p style={{ fontSize: 13, color: "#7a7669", margin: "2px 0 0" }}>{m.desc}</p>
             </div>
           </button>
         ))}
       </div>
-      <button style={s.btnSecondary} onClick={onBack}>Volver</button>
+      <NavRow onBack={onBack} />
     </div>
   )
 }

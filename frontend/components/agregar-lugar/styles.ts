@@ -70,4 +70,38 @@ export const s: Record<string, CSSProperties> = {
     color: "#fff", fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
   },
   errorText: { color: "#c0392b", fontSize: 13, marginTop: 10 },
+  subtitle: { fontSize: 13, color: "#7a7669", marginBottom: 16 },
+  deleteBtn: {
+    position: "absolute", top: 10, right: 10,
+    background: "#fdf0f0", border: "1px solid #f5c0c0", color: "#c0392b",
+    borderRadius: "50%", width: 28, height: 28,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer", fontSize: 16, fontWeight: 700, lineHeight: 1,
+  },
 }
+
+export function amenityChipStyle(selected: boolean): CSSProperties {
+  return {
+    display: "flex", alignItems: "center", gap: 5,
+    padding: "6px 12px", borderRadius: 20,
+    border: `1px solid ${selected ? "#2d6a4f" : "#e0ddd6"}`,
+    background: selected ? "#2d6a4f" : "#f7f5f0",
+    color: selected ? "#fff" : "#1b1b19",
+    fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+  }
+}
+
+export function errorRowStyle(hasError: boolean): CSSProperties {
+  return {
+    background: hasError ? "#fff5f5" : "transparent",
+    border: hasError ? "1px solid #fecaca" : "1px solid transparent",
+    borderRadius: 10,
+    transition: "background 0.15s, border-color 0.15s",
+  }
+}
+
+export const errorRowTextColor = (hasError: boolean) => (hasError ? "#dc2626" : "#1b1b19")
+
+export const errorInputBorder: CSSProperties = { borderColor: "#e53e3e" }
+
+export const errorHintText: CSSProperties = { fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }

@@ -1,7 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import type { GlampingDetailItem } from "../types"
 import { defaultGlampingDetail } from "../constants"
+import { s } from "../styles"
+import { errorInputBorder, errorHintText } from "../styles"
+import Field from "../ui/Field"
+import NavRow from "../ui/NavRow"
 
 interface Props {
   glampingUnits: GlampingDetailItem[]
@@ -14,10 +19,17 @@ interface Props {
 export default function StepGlampingUnidades({
   glampingUnits, setGlampingUnits, error, onBack, onNext,
 }: Props) {
+  const [unitErrors, setUnitErrors] = useState<Record<number, Set<string>>>({})
+
   function updUnit(index: number, field: keyof GlampingDetailItem, val: string) {
     const next = [...glampingUnits]
     next[index] = { ...next[index], [field]: val }
     setGlampingUnits(next)
+    setUnitErrors(prev => {
+      const unitSet = new Set(prev[index] ?? [])
+      unitSet.delete(field as string)
+      return { ...prev, [index]: unitSet }
+    })
   }
 
   function addUnit() {
@@ -26,105 +38,104 @@ export default function StepGlampingUnidades({
 
   function removeUnit(index: number) {
     setGlampingUnits(glampingUnits.filter((_, i) => i !== index))
+    setUnitErrors(prev => {
+      const next: Record<number, Set<string>> = {}
+      Object.entries(prev).forEach(([k, v]) => {
+        const i = Number(k)
+        if (i < index) next[i] = v
+        else if (i > index) next[i - 1] = v
+      })
+      return next
+    })
+  }
+
+  function validate(): boolean {
+    if (glampingUnits.length === 0) return false
+    const allErrors: Record<number, Set<string>> = {}
+    let ok = true
+    glampingUnits.forEach((unit, i) => {
+      const missing = new Set<string>()
+      if (!unit.accommodation_type) missing.add("accommodation_type")
+      if (!unit.capacity) missing.add("capacity")
+      if (!unit.price_per_night) missing.add("price_per_night")
+      if (!unit.min_nights) missing.add("min_nights")
+      if (missing.size > 0) { allErrors[i] = missing; ok = false }
+    })
+    setUnitErrors(allErrors)
+    return ok
+  }
+
+  function handleNext() {
+    if (!validate()) return
+    onNext()
   }
 
   return (
-    <div style={{
-      background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
-      padding: "28px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    }}>
-      <p style={{ fontSize: 20, fontWeight: 700, color: "#1b1b19", marginBottom: 4 }}>
-        Tipos de alojamiento
-      </p>
-      <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 20 }}>
+    <div>
+      <h2 style={s.title}>Tipos de alojamiento</h2>
+      <p style={s.subtitle}>
         Contanos qué tipos de cabañas, domos o carpas ofrece este lugar. Si tenés varios tamaños o categorías, agregá uno por cada tipo.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {glampingUnits.map((unit, index) => (
-          <div key={index} style={{
-            border: "1px solid #e0ddd6", borderRadius: 14, padding: "16px",
-            display: "flex", flexDirection: "column", gap: 12, position: "relative",
-          }}>
+      {glampingUnits.map((unit, index) => {
+        const errors = unitErrors[index] ?? new Set<string>()
+        return (
+          <div key={index} style={{ ...s.card, position: "relative" }}>
             {glampingUnits.length > 1 && (
-              <button
-                onClick={() => removeUnit(index)}
-                style={{
-                  position: "absolute", top: 10, right: 10,
-                  background: "none", border: "none", color: "#9a9690",
-                  cursor: "pointer", fontSize: 16, lineHeight: 1,
-                }}
-              >
-                ✕
-              </button>
+              <button onClick={() => removeUnit(index)} style={s.deleteBtn}>✕</button>
             )}
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: 0 }}>
-              Tipo {index + 1}
-            </p>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de alojamiento</label>
-              <select
-                value={unit.accommodation_type}
-                onChange={e => updUnit(index, "accommodation_type", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+            <p style={s.cardTitle}>Tipo {index + 1}</p>
+            <div style={s.form}>
+              <Field label="Tipo de alojamiento" required={true} hasError={errors.has("accommodation_type")} errorText="Seleccioná un tipo de alojamiento">
+                <select
+                  style={{ ...s.input, ...(errors.has("accommodation_type") ? errorInputBorder : {}) }}
+                  value={unit.accommodation_type}
+                  onChange={e => updUnit(index, "accommodation_type", e.target.value)}
+                >
+                  <option value="">Seleccioná...</option>
+                  <option value="domo">Domo</option>
+                  <option value="carpa">Carpa equipada</option>
+                  <option value="cabaña">Cabaña</option>
+                  <option value="treehouse">Treehouse</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </Field>
+              <Field label="Capacidad (personas)" required={true} hasError={errors.has("capacity")} errorText="Completá la capacidad">
+                <input
+                  style={{ ...s.input, ...(errors.has("capacity") ? errorInputBorder : {}) }}
+                  type="number" value={unit.capacity}
+                  onChange={e => updUnit(index, "capacity", e.target.value)}
+                />
+              </Field>
+              <Field label="Precio por noche" required={true} hasError={errors.has("price_per_night")} errorText="Completá el precio por noche">
+                <input
+                  style={{ ...s.input, ...(errors.has("price_per_night") ? errorInputBorder : {}) }}
+                  type="number" value={unit.price_per_night}
+                  onChange={e => updUnit(index, "price_per_night", e.target.value)}
+                />
+              </Field>
+              <Field
+                label="Mínimo de noches" required={true} sublabel="Si no tiene mínimo, poné 0"
+                hasError={errors.has("min_nights")} errorText="Completá el mínimo de noches (poné 0 si no hay mínimo)"
               >
-                <option value="">Seleccioná...</option>
-                <option value="domo">Domo</option>
-                <option value="carpa">Carpa equipada</option>
-                <option value="cabaña">Cabaña</option>
-                <option value="treehouse">Treehouse</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (personas)</label>
-              <input
-                type="number" value={unit.capacity}
-                onChange={e => updUnit(index, "capacity", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche</label>
-              <input
-                type="number" value={unit.price_per_night}
-                onChange={e => updUnit(index, "price_per_night", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Mínimo de noches</label>
-              <input
-                type="number" value={unit.min_nights}
-                onChange={e => updUnit(index, "min_nights", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-              />
+                <input
+                  style={{ ...s.input, ...(errors.has("min_nights") ? errorInputBorder : {}) }}
+                  type="number" value={unit.min_nights}
+                  onChange={e => updUnit(index, "min_nights", e.target.value)}
+                />
+              </Field>
             </div>
           </div>
-        ))}
+        )
+      })}
 
-        <button
-          onClick={addUnit}
-          style={{
-            background: "none", border: "1px dashed #2d6a4f", color: "#2d6a4f",
-            borderRadius: 12, padding: "10px 16px", cursor: "pointer",
-            fontFamily: "inherit", fontWeight: 600, fontSize: 13,
-          }}
-        >
-          + Agregar otro tipo de alojamiento
-        </button>
-      </div>
+      <button style={s.btnAdd} onClick={addUnit}>+ Agregar otro tipo de alojamiento</button>
 
-      {error && <p style={{ color: "#b91c1c", fontSize: 13, marginTop: 16 }}>{error}</p>}
+      {glampingUnits.length === 0 && (
+        <p style={errorHintText}>Agregá al menos un tipo de alojamiento.</p>
+      )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
-        <button onClick={onBack} style={{ background: "none", border: "1px solid #e0ddd6", borderRadius: 12, padding: "10px 20px", cursor: "pointer", fontFamily: "inherit" }}>
-          Atrás
-        </button>
-        <button onClick={onNext} style={{ background: "#2d6a4f", color: "#fff", border: "none", borderRadius: 12, padding: "10px 24px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
-          Continuar
-        </button>
-      </div>
+      <NavRow onBack={onBack} onNext={handleNext} error={error} />
     </div>
   )
 }

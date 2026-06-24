@@ -20,11 +20,18 @@ export default function StepEscalada({
     setSectors(prev => prev.map((sec, idx) => idx === i ? { ...sec, [field]: val } : sec))
   }
 
+  function removeSector(i: number) {
+    setSectors(prev => prev.filter((_, idx) => idx !== i))
+  }
+
   return (
     <div>
       <h2 style={s.title}>Datos de Escalada</h2>
       {sectors.map((sec, i) => (
-        <div key={i} style={s.card}>
+        <div key={i} style={{ ...s.card, position: "relative" }}>
+          {sectors.length > 1 && (
+            <button onClick={() => removeSector(i)} style={s.deleteBtn}>✕</button>
+          )}
           <p style={s.cardTitle}>Sector {i + 1}</p>
           <div style={s.form}>
             <Field label="Nombre" required={true}>

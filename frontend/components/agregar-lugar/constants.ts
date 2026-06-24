@@ -1,4 +1,4 @@
-import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "./types"
+import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: "Camping",  label: "Camping",  emoji: "⛺" },
@@ -182,3 +182,7 @@ export const GLAMPING_AMENITY_MAP: Record<string, string> = {
   "Ropa de cama": "towels_included",
   "Estacionamiento": "parking",
 }
+
+export const defaultClimbingRouteItem = (sectorIndex: number = 0): ClimbingRouteItem => ({
+  name: "", grade: "", type: "", length_m: "", bolts: "", description: "", sectorIndex,
+})

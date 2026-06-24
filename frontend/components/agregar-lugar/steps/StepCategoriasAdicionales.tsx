@@ -1,7 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "../types"
 import { GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, AMENITY_ICONS } from "../constants"
+import { s, errorInputBorder, amenityChipStyle } from "../styles"
+import Field from "../ui/Field"
+import NavRow from "../ui/NavRow"
 
 interface Props {
   primaryCategoryName: string
@@ -22,6 +26,17 @@ interface Props {
   onNext: () => void
 }
 
+const SECTION_BASE: React.CSSProperties = {
+  background: "#f9f8f5",
+  border: "1px solid #e0ddd6",
+  borderRadius: 16,
+  padding: "16px",
+}
+const SECTION_ACTIVE: React.CSSProperties = {
+  background: "#f0f7f3",
+  border: "1px solid #2d6a4f",
+}
+
 export default function StepCategoriasAdicionales({
   primaryCategoryName,
   additionalCategories, setAdditionalCategories,
@@ -35,6 +50,10 @@ export default function StepCategoriasAdicionales({
   const acceptsMotorhome = additionalCategories.includes("Motorhome")
   const acceptsCamping = additionalCategories.includes("Camping")
   const acceptsGlamping = additionalCategories.includes("Glamping")
+
+  const [motorhomeErrors, setMotorhomeErrors] = useState<Set<string>>(new Set())
+  const [campingErrors, setCampingErrors] = useState<Set<string>>(new Set())
+  const [glampingUnitErrors, setGlampingUnitErrors] = useState<Record<number, Set<string>>>({})
 
   function toggle(category: string) {
     setAdditionalCategories(
@@ -61,65 +80,114 @@ export default function StepCategoriasAdicionales({
 
   function updMotorhome(field: keyof MotorhomeDetailItem, val: string | boolean) {
     setMotorhomeDetail({ ...motorhomeDetail, [field]: val })
+    setMotorhomeErrors(prev => { const n = new Set(prev); n.delete(field as string); return n })
   }
   function updCamping(field: keyof CampingDetailItem, val: string) {
     setCampingDetail({ ...campingDetail, [field]: val })
+    setCampingErrors(prev => { const n = new Set(prev); n.delete(field as string); return n })
   }
   function updGlampingUnit(index: number, field: keyof GlampingDetailItem, val: string) {
     const next = [...glampingUnits]
     next[index] = { ...next[index], [field]: val }
     setGlampingUnits(next)
+    setGlampingUnitErrors(prev => {
+      const unitSet = new Set(prev[index] ?? [])
+      unitSet.delete(field as string)
+      return { ...prev, [index]: unitSet }
+    })
   }
   function addGlampingUnit() {
     setGlampingUnits([...glampingUnits, { accommodation_type: "", capacity: "", price_per_night: "", min_nights: "" }])
   }
   function removeGlampingUnit(index: number) {
     setGlampingUnits(glampingUnits.filter((_, i) => i !== index))
+    setGlampingUnitErrors(prev => {
+      const next: Record<number, Set<string>> = {}
+      Object.entries(prev).forEach(([k, v]) => {
+        const i = Number(k)
+        if (i < index) next[i] = v
+        else if (i > index) next[i - 1] = v
+      })
+      return next
+    })
+  }
+
+  function validate(): boolean {
+    let ok = true
+
+    if (acceptsMotorhome) {
+      const missing = new Set<string>()
+      if (!motorhomeDetail.capacity) missing.add("capacity")
+      if (!motorhomeDetail.surface_type) missing.add("surface_type")
+      if (missing.size > 0) { setMotorhomeErrors(missing); ok = false } else { setMotorhomeErrors(new Set()) }
+    } else {
+      setMotorhomeErrors(new Set())
+    }
+
+    if (acceptsGlamping) {
+      const unitErrors: Record<number, Set<string>> = {}
+      glampingUnits.forEach((unit, i) => {
+        const missing = new Set<string>()
+        if (!unit.accommodation_type) missing.add("accommodation_type")
+        if (!unit.capacity) missing.add("capacity")
+        if (!unit.price_per_night) missing.add("price_per_night")
+        if (!unit.min_nights) missing.add("min_nights")
+        if (missing.size > 0) { unitErrors[i] = missing; ok = false }
+      })
+      setGlampingUnitErrors(unitErrors)
+    } else {
+      setGlampingUnitErrors({})
+    }
+
+    if (acceptsCamping) {
+      const missing = new Set<string>()
+      if (!campingDetail.price) missing.add("price")
+      if (missing.size > 0) { setCampingErrors(missing); ok = false } else { setCampingErrors(new Set()) }
+    } else {
+      setCampingErrors(new Set())
+    }
+
+    return ok
+  }
+
+  function handleNext() {
+    if (!validate()) return
+    onNext()
   }
 
   const offerGlamping = primaryCategoryName === "Camping"
   const offerCamping = primaryCategoryName === "Glamping"
+  const hasValidationError = motorhomeErrors.size > 0 || campingErrors.size > 0 || Object.keys(glampingUnitErrors).length > 0
 
   return (
-    <div style={{
-      background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
-      padding: "28px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    }}>
-      <p style={{ fontSize: 20, fontWeight: 700, color: "#1b1b19", marginBottom: 4 }}>
-        ¿Este lugar también ofrece...?
-      </p>
-      <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 20 }}>
+    <div style={s.card}>
+      <h2 style={s.title}>¿Este lugar también ofrece...?</h2>
+      <p style={s.subtitle}>
         Opcional. Si tu lugar tiene otras características, marcalas acá.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Motorhome */}
-        <div>
-          <label style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
-            cursor: "pointer",
-          }}>
+        <div style={{ ...SECTION_BASE, ...(acceptsMotorhome ? SECTION_ACTIVE : {}) }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <input type="checkbox" checked={acceptsMotorhome} onChange={() => toggle("Motorhome")} />
             <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🚐 Acepta motorhomes</span>
           </label>
           {acceptsMotorhome && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (cantidad de motorhomes)</label>
+            <div style={{ ...s.form, padding: "14px 4px 4px" }}>
+              <Field label="Capacidad (cantidad de motorhomes)" required={true} hasError={motorhomeErrors.has("capacity")} errorText="Completá la capacidad">
                 <input
                   type="number" value={motorhomeDetail.capacity}
                   onChange={e => updMotorhome("capacity", e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  style={{ ...s.input, ...(motorhomeErrors.has("capacity") ? errorInputBorder : {}) }}
                 />
-              </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de superficie</label>
+              </Field>
+              <Field label="Tipo de superficie" required={true} hasError={motorhomeErrors.has("surface_type")} errorText="Seleccioná un tipo de superficie">
                 <select
                   value={motorhomeDetail.surface_type}
                   onChange={e => updMotorhome("surface_type", e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  style={{ ...s.input, ...(motorhomeErrors.has("surface_type") ? errorInputBorder : {}) }}
                 >
                   <option value="">Seleccioná...</option>
                   <option value="cesped">Césped</option>
@@ -127,7 +195,7 @@ export default function StepCategoriasAdicionales({
                   <option value="asfalto">Asfalto</option>
                   <option value="tierra">Tierra</option>
                 </select>
-              </div>
+              </Field>
               <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
                 <input type="checkbox" checked={motorhomeDetail.has_water} onChange={e => updMotorhome("has_water", e.target.checked)} />
                 Tiene agua
@@ -140,129 +208,100 @@ export default function StepCategoriasAdicionales({
                 <input type="checkbox" checked={motorhomeDetail.has_dump_station} onChange={e => updMotorhome("has_dump_station", e.target.checked)} />
                 Tiene dump station
               </label>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Noches máximas permitidas</label>
+              <Field label="Noches máximas permitidas" required={false}>
                 <input
                   type="number" value={motorhomeDetail.max_stay_nights}
                   onChange={e => updMotorhome("max_stay_nights", e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                  style={s.input}
                 />
-              </div>
+              </Field>
             </div>
           )}
         </div>
 
         {/* Glamping (solo si la categoría principal es Camping) */}
         {offerGlamping && (
-          <div>
-            <label style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
-              cursor: "pointer",
-            }}>
+          <div style={{ ...SECTION_BASE, ...(acceptsGlamping ? SECTION_ACTIVE : {}) }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
               <input type="checkbox" checked={acceptsGlamping} onChange={() => toggle("Glamping")} />
               <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🛖 También tiene cabañas/domos (glamping)</span>
             </label>
             {acceptsGlamping && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
-                {glampingUnits.map((unit, index) => (
-                  <div key={index} style={{
-                    border: "1px solid #e0ddd6", borderRadius: 12, padding: "12px", position: "relative",
-                    display: "flex", flexDirection: "column", gap: 12, marginBottom: 8,
-                  }}>
-                    {glampingUnits.length > 1 && (
-                      <button
-                        onClick={() => removeGlampingUnit(index)}
-                        style={{
-                          position: "absolute", top: 8, right: 8,
-                          background: "none", border: "none", color: "#9a9690",
-                          cursor: "pointer", fontSize: 15, lineHeight: 1,
-                        }}
-                      >
-                        ✕
-                      </button>
-                    )}
-                    <p style={{ fontSize: 12, fontWeight: 700, color: "#2d6a4f", margin: 0 }}>
-                      Tipo {index + 1}
-                    </p>
-                    <div>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Tipo de alojamiento</label>
-                      <select
-                        value={unit.accommodation_type}
-                        onChange={e => updGlampingUnit(index, "accommodation_type", e.target.value)}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                      >
-                        <option value="">Seleccioná...</option>
-                        <option value="domo">Domo</option>
-                        <option value="carpa">Carpa equipada</option>
-                        <option value="cabaña">Cabaña</option>
-                        <option value="treehouse">Treehouse</option>
-                        <option value="otro">Otro</option>
-                      </select>
+              <div style={{ ...s.form, padding: "14px 4px 4px" }}>
+                {glampingUnits.map((unit, index) => {
+                  const unitErrors = glampingUnitErrors[index] ?? new Set<string>()
+                  return (
+                    <div key={index} style={{ ...s.card, padding: "14px 16px", marginBottom: 0, position: "relative" }}>
+                      {glampingUnits.length > 1 && (
+                        <button onClick={() => removeGlampingUnit(index)} style={s.deleteBtn}>✕</button>
+                      )}
+                      <p style={s.cardTitle}>Tipo {index + 1}</p>
+                      <div style={s.form}>
+                        <Field label="Tipo de alojamiento" required={true} hasError={unitErrors.has("accommodation_type")} errorText="Seleccioná un tipo de alojamiento">
+                          <select
+                            value={unit.accommodation_type}
+                            onChange={e => updGlampingUnit(index, "accommodation_type", e.target.value)}
+                            style={{ ...s.input, ...(unitErrors.has("accommodation_type") ? errorInputBorder : {}) }}
+                          >
+                            <option value="">Seleccioná...</option>
+                            <option value="domo">Domo</option>
+                            <option value="carpa">Carpa equipada</option>
+                            <option value="cabaña">Cabaña</option>
+                            <option value="treehouse">Treehouse</option>
+                            <option value="otro">Otro</option>
+                          </select>
+                        </Field>
+                        <Field label="Capacidad (personas)" required={true} hasError={unitErrors.has("capacity")} errorText="Completá la capacidad">
+                          <input
+                            type="number" value={unit.capacity}
+                            onChange={e => updGlampingUnit(index, "capacity", e.target.value)}
+                            style={{ ...s.input, ...(unitErrors.has("capacity") ? errorInputBorder : {}) }}
+                          />
+                        </Field>
+                        <Field label="Precio por noche" required={true} hasError={unitErrors.has("price_per_night")} errorText="Completá el precio por noche">
+                          <input
+                            type="number" value={unit.price_per_night}
+                            onChange={e => updGlampingUnit(index, "price_per_night", e.target.value)}
+                            style={{ ...s.input, ...(unitErrors.has("price_per_night") ? errorInputBorder : {}) }}
+                          />
+                        </Field>
+                        <Field
+                          label="Mínimo de noches" required={true} sublabel="Si no tiene mínimo, poné 0"
+                          hasError={unitErrors.has("min_nights")} errorText="Completá el mínimo de noches (poné 0 si no hay mínimo)"
+                        >
+                          <input
+                            type="number" value={unit.min_nights}
+                            onChange={e => updGlampingUnit(index, "min_nights", e.target.value)}
+                            style={{ ...s.input, ...(unitErrors.has("min_nights") ? errorInputBorder : {}) }}
+                          />
+                        </Field>
+                      </div>
                     </div>
-                    <div>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Capacidad (personas)</label>
-                      <input
-                        type="number" value={unit.capacity}
-                        onChange={e => updGlampingUnit(index, "capacity", e.target.value)}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche</label>
-                      <input
-                        type="number" value={unit.price_per_night}
-                        onChange={e => updGlampingUnit(index, "price_per_night", e.target.value)}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Mínimo de noches</label>
-                      <input
-                        type="number" value={unit.min_nights}
-                        onChange={e => updGlampingUnit(index, "min_nights", e.target.value)}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
-                      />
-                    </div>
-                  </div>
-                ))}
-                <button
-                  onClick={addGlampingUnit}
-                  style={{
-                    background: "none", border: "1px dashed #2d6a4f", color: "#2d6a4f",
-                    borderRadius: 12, padding: "8px 14px", cursor: "pointer",
-                    fontFamily: "inherit", fontWeight: 600, fontSize: 12, marginBottom: 8,
-                  }}
-                >
-                  + Agregar otro tipo de alojamiento
-                </button>
+                  )
+                })}
+                <button style={s.btnAdd} onClick={addGlampingUnit}>+ Agregar otro tipo de alojamiento</button>
 
                 <div style={{ marginTop: 8 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a", marginBottom: 8 }}>Amenities del glamping</p>
+                  <p style={s.cardTitle}>Amenities del glamping</p>
                   {GLAMPING_AMENITY_CATEGORIES.map(cat => (
                     <div key={cat.id} style={{ marginBottom: 10 }}>
                       <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
                         {cat.emoji} {cat.label}
                       </p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {cat.names.map(name => (
-                          <label
-                            key={name}
-                            style={{
-                              display: "inline-flex", alignItems: "center", gap: 6,
-                              border: `1px solid ${selectedGlampingAmenities.includes(name) ? "#2d6a4f" : "#e0ddd6"}`,
-                              background: selectedGlampingAmenities.includes(name) ? "#e8f5ee" : "#fff",
-                              borderRadius: 999, padding: "5px 10px", fontSize: 12, cursor: "pointer",
-                            }}
-                          >
-                            <input
-                              type="checkbox" checked={selectedGlampingAmenities.includes(name)}
-                              onChange={() => toggleGlampingAmenity(name)}
-                              style={{ display: "none" }}
-                            />
-                            {AMENITY_ICONS[name] ?? ""} {name}
-                          </label>
-                        ))}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {cat.names.map(name => {
+                          const sel = selectedGlampingAmenities.includes(name)
+                          return (
+                            <button
+                              key={name} type="button"
+                              onClick={() => toggleGlampingAmenity(name)}
+                              style={amenityChipStyle(sel)}
+                            >
+                              <span>{AMENITY_ICONS[name] ?? ""}</span>
+                              <span>{name}</span>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   ))}
@@ -274,52 +313,42 @@ export default function StepCategoriasAdicionales({
 
         {/* Camping (solo si la categoría principal es Glamping) */}
         {offerCamping && (
-          <div>
-            <label style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "14px 16px", border: "1px solid #e0ddd6", borderRadius: 12,
-              cursor: "pointer",
-            }}>
+          <div style={{ ...SECTION_BASE, ...(acceptsCamping ? SECTION_ACTIVE : {}) }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
               <input type="checkbox" checked={acceptsCamping} onChange={() => toggle("Camping")} />
               <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>⛺ También permite acampar</span>
             </label>
             {acceptsCamping && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 4px 4px" }}>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>Precio por noche (camping)</label>
+              <div style={{ ...s.form, padding: "14px 4px 4px" }}>
+                <Field label="Precio por noche (camping)" required={true} hasError={campingErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)">
                   <input
                     type="number" value={campingDetail.price}
                     onChange={e => updCamping("price", e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e0ddd6", borderRadius: 10, marginTop: 4 }}
+                    style={{ ...s.input, ...(campingErrors.has("price") ? errorInputBorder : {}) }}
                   />
-                </div>
+                </Field>
 
                 <div style={{ marginTop: 8 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#3d3d3a", marginBottom: 8 }}>Amenities del camping</p>
+                  <p style={s.cardTitle}>Amenities del camping</p>
                   {AMENITY_CATEGORIES.map(cat => (
                     <div key={cat.id} style={{ marginBottom: 10 }}>
                       <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
                         {cat.emoji} {cat.label}
                       </p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {cat.names.map(name => (
-                          <label
-                            key={name}
-                            style={{
-                              display: "inline-flex", alignItems: "center", gap: 6,
-                              border: `1px solid ${selectedCampingAmenities.includes(name) ? "#2d6a4f" : "#e0ddd6"}`,
-                              background: selectedCampingAmenities.includes(name) ? "#e8f5ee" : "#fff",
-                              borderRadius: 999, padding: "5px 10px", fontSize: 12, cursor: "pointer",
-                            }}
-                          >
-                            <input
-                              type="checkbox" checked={selectedCampingAmenities.includes(name)}
-                              onChange={() => toggleCampingAmenity(name)}
-                              style={{ display: "none" }}
-                            />
-                            {AMENITY_ICONS[name] ?? ""} {name}
-                          </label>
-                        ))}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {cat.names.map(name => {
+                          const sel = selectedCampingAmenities.includes(name)
+                          return (
+                            <button
+                              key={name} type="button"
+                              onClick={() => toggleCampingAmenity(name)}
+                              style={amenityChipStyle(sel)}
+                            >
+                              <span>{AMENITY_ICONS[name] ?? ""}</span>
+                              <span>{name}</span>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   ))}
@@ -331,16 +360,11 @@ export default function StepCategoriasAdicionales({
 
       </div>
 
-      {error && <p style={{ color: "#b91c1c", fontSize: 13, marginTop: 16 }}>{error}</p>}
-
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
-        <button onClick={onBack} style={{ background: "none", border: "1px solid #e0ddd6", borderRadius: 12, padding: "10px 20px", cursor: "pointer", fontFamily: "inherit" }}>
-          Atrás
-        </button>
-        <button onClick={onNext} style={{ background: "#2d6a4f", color: "#fff", border: "none", borderRadius: 12, padding: "10px 24px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
-          Continuar
-        </button>
-      </div>
+      <NavRow
+        onBack={onBack}
+        onNext={handleNext}
+        error={error || (hasValidationError ? "Completá los campos marcados en rojo antes de continuar." : null)}
+      />
     </div>
   )
 }
