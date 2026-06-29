@@ -235,11 +235,15 @@ export default function AgregarLugar() {
     if (climbingMode === "new_route") {
       setLoadingSectors(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors?spot_id=${climbingSpotId}`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/?spot_id=${climbingSpotId}`)
+        if (!res.ok) {
+          console.error("Error al cargar sectores, status:", res.status)
+          return
+        }
         const data = await res.json()
         setAvailableSectors(data.map((sec: { id: number; name: string }) => ({ id: sec.id, name: sec.name })))
-      } catch {
-        // proceed with empty list
+      } catch (err) {
+        console.error("Error al cargar sectores:", err)
       } finally {
         setLoadingSectors(false)
       }
