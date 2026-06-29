@@ -32,6 +32,6 @@ export async function POST() {
     timestamp,
     folder,
     apiKey: process.env.CLOUDINARY_API_KEY,
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   });
 }
