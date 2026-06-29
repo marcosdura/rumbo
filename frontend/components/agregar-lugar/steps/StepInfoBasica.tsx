@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import type { CSSProperties } from "react"
 import type React from "react"
 import { DEPARTMENTS, PHONE_COUNTRIES } from "../constants"
-import { s, errorInputBorder, errorHintText } from "../styles"
+import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
 import Toggle from "../ui/Toggle"
@@ -132,7 +132,7 @@ export default function StepInfoBasica({
           <Field label="Precio" required={true} sublabel="Si el acceso es gratuito, poné 0" hasError={fieldErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)">
             <input
               style={{ ...s.input, ...(fieldErrors.has("price") ? errorInputBorder : {}) }}
-              type="number" value={basic.price} onChange={e => upd("price", e.target.value)}
+              type="number" min={0} value={basic.price} onChange={e => upd("price", sanitizeNum(e.target.value))}
             />
           </Field>
           <div />

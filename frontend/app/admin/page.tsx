@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useSession } from "next-auth/react"
+import { uploadImageToCloudinary } from "@/lib/uploadImage"
 
 type AdminSpot = {
   id: number
@@ -355,20 +356,11 @@ export default function AdminPage() {
                       if (!files.length) return
                       setUploadingPhotos(true)
                       try {
-                        const results = await Promise.all(files.map(async (file, i) => {
-                          const fd = new FormData()
-                          fd.append("file", file)
-                          const safeName = selectedSpot.name.trim().replace(/\s+/g, "_")
-                          const ts = Date.now()
-                          fd.append("public_id", `${selectedSpot.category?.name ?? "Spot"}/${safeName}/${safeName}_${ts}_${i + 1}`)
-                          const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
-                          if (!res.ok) throw new Error("Error al subir")
-                          return await res.json()
-                        }))
+                        const results = await Promise.all(files.map(file => uploadImageToCloudinary(file)))
 
-                        await Promise.all(results.map((data, i) => {
+                        await Promise.all(results.map(({ publicId }, i) => {
                           const params = new URLSearchParams({
-                            cloudinary_public_id: data.public_id,
+                            cloudinary_public_id: publicId,
                             is_main: "false",
                             order: String((selectedSpot.images?.length ?? 0) + i),
                           })

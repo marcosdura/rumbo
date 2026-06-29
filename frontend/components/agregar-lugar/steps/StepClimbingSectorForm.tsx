@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { s } from "../styles"
+import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { SectorItem } from "../types"
@@ -38,7 +38,7 @@ export default function StepClimbingSectorForm({
               </select>
             </Field>
             <Field label="Altitud máxima (m)" required={false}>
-              <input style={s.input} type="number" value={sec.max_altitude} onChange={e => upd("max_altitude", e.target.value)} />
+              <input style={s.input} type="number" min={0} value={sec.max_altitude} onChange={e => upd("max_altitude", sanitizeNum(e.target.value))} />
             </Field>
           </div>
           <Field label="Restricciones" required={false}>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type React from "react"
-import { s, errorInputBorder } from "../styles"
+import { s, errorInputBorder, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { SectorItem, ClimbingRouteItem } from "../types"
@@ -112,10 +112,10 @@ export default function StepClimbingRoutes({
             </div>
             <div className="form-two-col">
               <Field label="Largo (metros)" required={false}>
-                <input style={s.input} type="number" value={r.length_m} onChange={e => upd(i, "length_m", e.target.value)} />
+                <input style={s.input} type="number" min={0} value={r.length_m} onChange={e => upd(i, "length_m", sanitizeNum(e.target.value))} />
               </Field>
               <Field label="Cantidad de chapas" required={false}>
-                <input style={s.input} type="number" value={r.bolts} onChange={e => upd(i, "bolts", e.target.value)} />
+                <input style={s.input} type="number" min={0} value={r.bolts} onChange={e => upd(i, "bolts", sanitizeNum(e.target.value))} />
               </Field>
             </div>
             <Field label="Descripción" required={false}>

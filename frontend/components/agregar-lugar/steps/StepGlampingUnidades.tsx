@@ -4,7 +4,7 @@ import { useState } from "react"
 import type { GlampingDetailItem } from "../types"
 import { defaultGlampingDetail } from "../constants"
 import { s } from "../styles"
-import { errorInputBorder, errorHintText } from "../styles"
+import { errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 
@@ -103,15 +103,15 @@ export default function StepGlampingUnidades({
               <Field label="Capacidad (personas)" required={true} hasError={errors.has("capacity")} errorText="Completá la capacidad">
                 <input
                   style={{ ...s.input, ...(errors.has("capacity") ? errorInputBorder : {}) }}
-                  type="number" value={unit.capacity}
-                  onChange={e => updUnit(index, "capacity", e.target.value)}
+                  type="number" min={0} value={unit.capacity}
+                  onChange={e => updUnit(index, "capacity", sanitizeNum(e.target.value))}
                 />
               </Field>
               <Field label="Precio por noche" required={true} hasError={errors.has("price_per_night")} errorText="Completá el precio por noche">
                 <input
                   style={{ ...s.input, ...(errors.has("price_per_night") ? errorInputBorder : {}) }}
-                  type="number" value={unit.price_per_night}
-                  onChange={e => updUnit(index, "price_per_night", e.target.value)}
+                  type="number" min={0} value={unit.price_per_night}
+                  onChange={e => updUnit(index, "price_per_night", sanitizeNum(e.target.value))}
                 />
               </Field>
               <Field
@@ -120,8 +120,8 @@ export default function StepGlampingUnidades({
               >
                 <input
                   style={{ ...s.input, ...(errors.has("min_nights") ? errorInputBorder : {}) }}
-                  type="number" value={unit.min_nights}
-                  onChange={e => updUnit(index, "min_nights", e.target.value)}
+                  type="number" min={0} value={unit.min_nights}
+                  onChange={e => updUnit(index, "min_nights", sanitizeNum(e.target.value))}
                 />
               </Field>
             </div>

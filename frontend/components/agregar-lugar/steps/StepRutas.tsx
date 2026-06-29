@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { defaultRoute } from "../constants"
-import { s } from "../styles"
+import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { RouteItem } from "../types"
@@ -30,16 +30,16 @@ export default function StepRutas({
               <input style={s.input} value={r.name} onChange={e => updRoute(i, "name", e.target.value)} />
             </Field>
             <div className="form-two-col">
-              <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" value={r.distance_km} onChange={e => updRoute(i, "distance_km", e.target.value)} /></Field>
-              <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", e.target.value)} /></Field>
+              <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.distance_km} onChange={e => updRoute(i, "distance_km", sanitizeNum(e.target.value))} /></Field>
+              <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", sanitizeNum(e.target.value))} /></Field>
             </div>
             <div className="form-two-col">
-              <Field label="Desnivel positivo (m)" required={false}><input style={s.input} type="number" value={r.elevation_gain} onChange={e => updRoute(i, "elevation_gain", e.target.value)} /></Field>
-              <Field label="Desnivel negativo (m)" required={false}><input style={s.input} type="number" value={r.elevation_loss} onChange={e => updRoute(i, "elevation_loss", e.target.value)} /></Field>
+              <Field label="Desnivel positivo (m)" required={false}><input style={s.input} type="number" min={0} value={r.elevation_gain} onChange={e => updRoute(i, "elevation_gain", sanitizeNum(e.target.value))} /></Field>
+              <Field label="Desnivel negativo (m)" required={false}><input style={s.input} type="number" min={0} value={r.elevation_loss} onChange={e => updRoute(i, "elevation_loss", sanitizeNum(e.target.value))} /></Field>
             </div>
             <div className="form-two-col">
-              <Field label="Altitud máxima (m)" required={false}><input style={s.input} type="number" value={r.max_altitude} onChange={e => updRoute(i, "max_altitude", e.target.value)} /></Field>
-              <Field label="Altitud mínima (m)" required={false}><input style={s.input} type="number" value={r.min_altitude} onChange={e => updRoute(i, "min_altitude", e.target.value)} /></Field>
+              <Field label="Altitud máxima (m)" required={false}><input style={s.input} type="number" min={0} value={r.max_altitude} onChange={e => updRoute(i, "max_altitude", sanitizeNum(e.target.value))} /></Field>
+              <Field label="Altitud mínima (m)" required={false}><input style={s.input} type="number" min={0} value={r.min_altitude} onChange={e => updRoute(i, "min_altitude", sanitizeNum(e.target.value))} /></Field>
             </div>
             <div className="form-two-col">
               <Field label="Dificultad" required={false}>

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import type React from "react"
-import { s, errorInputBorder, errorHintText } from "../styles"
+import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -72,7 +72,7 @@ export default function StepSurf({
               </select>
             </Field>
             <Field label="Duración (horas)" required={false}>
-              <input style={s.input} type="number" step="any" value={surf.duration} onChange={e => setSurf(p => ({ ...p, duration: e.target.value }))} />
+              <input style={s.input} type="number" step="any" min={0} value={surf.duration} onChange={e => setSurf(p => ({ ...p, duration: sanitizeNum(e.target.value) }))} />
             </Field>
           </div>
           <SeasonToggle

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { s } from "../styles"
+import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { ClimbingRouteForm } from "../types"
@@ -42,10 +42,10 @@ export default function StepClimbingRouteForm({
           </div>
           <div className="form-two-col">
             <Field label="Largo (metros)" required={false}>
-              <input style={s.input} type="number" value={route.length_m} onChange={e => upd("length_m", e.target.value)} />
+              <input style={s.input} type="number" min={0} value={route.length_m} onChange={e => upd("length_m", sanitizeNum(e.target.value))} />
             </Field>
             <Field label="Cantidad de chapas" required={false}>
-              <input style={s.input} type="number" value={route.bolts} onChange={e => upd("bolts", e.target.value)} />
+              <input style={s.input} type="number" min={0} value={route.bolts} onChange={e => upd("bolts", sanitizeNum(e.target.value))} />
             </Field>
           </div>
           <Field label="Descripción" required={false}>

@@ -18,6 +18,18 @@ body {
   font-family: 'DM Sans', Arial, sans-serif;
 }
 
+/* ─── Number inputs: no spinner arrows ────────────────────────────────────── */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* ─── Responsive: Spot Detail ─────────────────────────────────────────────── */
 
 @media (max-width: 768px) {

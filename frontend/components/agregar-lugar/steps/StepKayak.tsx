@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import type React from "react"
-import { s, errorInputBorder, errorHintText } from "../styles"
+import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -93,7 +93,7 @@ export default function StepKayak({
             </div>
             <div className="form-two-col">
               <Field label="Duración (horas)" required={false}>
-                <input style={s.input} type="number" step="any" value={k.duration} onChange={e => updKayak(i, "duration", e.target.value)} />
+                <input style={s.input} type="number" step="any" min={0} value={k.duration} onChange={e => updKayak(i, "duration", sanitizeNum(e.target.value))} />
               </Field>
               <Field label="Tipo de kayak" required={false}>
                 <select style={s.input} value={k.kayak_type} onChange={e => updKayak(i, "kayak_type", e.target.value)}>

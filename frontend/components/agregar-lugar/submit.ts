@@ -1,19 +1,11 @@
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES } from "./constants"
+import { uploadImageToCloudinary } from "@/lib/uploadImage"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
   if (!basic.whatsapp.trim()) return null
   const country = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
   return `+${country.dial} ${basic.whatsapp}`
-}
-
-export function buildPublicId(category: string, spotName: string, index: number): string {
-  const formatted = spotName
-    .trim()
-    .split(/\s+/)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join("_")
-  return `${category}/${formatted}/${formatted}${index + 1}`
 }
 
 interface SubmitParams {
@@ -100,13 +92,8 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         setUploadProgress("Subiendo imágenes del lugar...")
         const uploadResults = await Promise.all(
           images.map(async (file, i) => {
-            const fd = new FormData()
-            fd.append("file", file)
-            fd.append("public_id", buildPublicId(selectedCat.name, basic.name, i))
-            const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
-            if (!res.ok) throw new Error("Error al subir imagen")
-            const data = await res.json()
-            return { publicId: data.public_id, index: i }
+            const { publicId } = await uploadImageToCloudinary(file)
+            return { publicId, index: i }
           })
         )
 
@@ -134,14 +121,8 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = surfPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const fd = new FormData()
-          fd.append("file", file)
-          const safeName = surf.name.trim().replace(/\s+/g, "_")
-          fd.append("public_id", `Surf/${safeName}/${safeName}_photo_${i + 1}`)
-          const uploadRes = await fetch("/api/upload/upload", { method: "POST", body: fd })
-          if (!uploadRes.ok) throw new Error("Error al subir la foto")
-          const uploadData = await uploadRes.json()
-          photoUrls[i] = uploadData.url
+          const { url } = await uploadImageToCloudinary(file)
+          photoUrls[i] = url
         }
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
@@ -170,14 +151,8 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = kayakPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const fd = new FormData()
-          fd.append("file", file)
-          const safeName = kayaks[0]?.name.trim().replace(/\s+/g, "_") || "kayak"
-          fd.append("public_id", `Kayak/${safeName}/${safeName}_photo_${i + 1}`)
-          const uploadRes = await fetch("/api/upload/upload", { method: "POST", body: fd })
-          if (!uploadRes.ok) throw new Error("Error al subir la foto")
-          const uploadData = await uploadRes.json()
-          kayakPhotoUrls[i] = uploadData.url
+          const { url } = await uploadImageToCloudinary(file)
+          kayakPhotoUrls[i] = url
         }
 
         for (const k of kayaks) {
@@ -219,13 +194,8 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setUploadProgress("Subiendo imágenes...")
     const uploadResults = await Promise.all(
       images.map(async (file, i) => {
-        const fd = new FormData()
-        fd.append("file", file)
-        fd.append("public_id", buildPublicId(selectedCat.name, basic.name, i))
-        const res = await fetch("/api/upload/upload", { method: "POST", body: fd })
-        if (!res.ok) throw new Error("Error al subir imagen")
-        const data = await res.json()
-        return { publicId: data.public_id, index: i }
+        const { publicId } = await uploadImageToCloudinary(file)
+        return { publicId, index: i }
       })
     )
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type { MotorhomeDetailItem } from "../types"
-import { s, errorInputBorder } from "../styles"
+import { s, errorInputBorder, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import BinaryToggle from "../ui/BinaryToggle"
 import NavRow from "../ui/NavRow"
@@ -49,8 +49,8 @@ export default function StepMotorhomeDetalle({
       <div style={s.form}>
         <Field label="Capacidad (cantidad de motorhomes)" required={true} hasError={fieldErrors.has("capacity")} errorText="Completá la capacidad">
           <input
-            type="number" value={motorhomeDetail.capacity}
-            onChange={e => upd("capacity", e.target.value)}
+            type="number" min={0} value={motorhomeDetail.capacity}
+            onChange={e => upd("capacity", sanitizeNum(e.target.value))}
             style={{ ...s.input, ...(fieldErrors.has("capacity") ? errorInputBorder : {}) }}
           />
         </Field>
@@ -89,8 +89,8 @@ export default function StepMotorhomeDetalle({
 
         <Field label="Noches máximas permitidas" required={false}>
           <input
-            type="number" value={motorhomeDetail.max_stay_nights}
-            onChange={e => upd("max_stay_nights", e.target.value)}
+            type="number" min={0} value={motorhomeDetail.max_stay_nights}
+            onChange={e => upd("max_stay_nights", sanitizeNum(e.target.value))}
             style={s.input}
           />
         </Field>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { defaultSector } from "../constants"
-import { s } from "../styles"
+import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { SectorItem } from "../types"
@@ -47,7 +47,7 @@ export default function StepEscalada({
                 </select>
               </Field>
               <Field label="Altitud máxima (m)" required={false}>
-                <input style={s.input} type="number" value={sec.max_altitude} onChange={e => updSector(i, "max_altitude", e.target.value)} />
+                <input style={s.input} type="number" min={0} value={sec.max_altitude} onChange={e => updSector(i, "max_altitude", sanitizeNum(e.target.value))} />
               </Field>
             </div>
             <Field label="Restricciones" required={false}>

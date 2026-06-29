@@ -105,3 +105,7 @@ export const errorRowTextColor = (hasError: boolean) => (hasError ? "#dc2626" : 
 export const errorInputBorder: CSSProperties = { borderColor: "#e53e3e" }
 
 export const errorHintText: CSSProperties = { fontSize: 12, color: "#e53e3e", margin: "4px 0 0" }
+
+export function sanitizeNum(v: string): string {
+  return v.replace(/-/g, "")
+}

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "../types"
 import { GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, AMENITY_ICONS } from "../constants"
-import { s, errorInputBorder, amenityChipStyle } from "../styles"
+import { s, errorInputBorder, amenityChipStyle, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import BinaryToggle from "../ui/BinaryToggle"
 import NavRow from "../ui/NavRow"
@@ -182,8 +182,8 @@ export default function StepCategoriasAdicionales({
             <div style={{ ...s.form, padding: "14px 4px 4px" }}>
               <Field label="Capacidad (cantidad de motorhomes)" required={true} hasError={motorhomeErrors.has("capacity")} errorText="Completá la capacidad">
                 <input
-                  type="number" value={motorhomeDetail.capacity}
-                  onChange={e => updMotorhome("capacity", e.target.value)}
+                  type="number" min={0} value={motorhomeDetail.capacity}
+                  onChange={e => updMotorhome("capacity", sanitizeNum(e.target.value))}
                   style={{ ...s.input, ...(motorhomeErrors.has("capacity") ? errorInputBorder : {}) }}
                 />
               </Field>
@@ -220,8 +220,8 @@ export default function StepCategoriasAdicionales({
               </div>
               <Field label="Noches máximas permitidas" required={false}>
                 <input
-                  type="number" value={motorhomeDetail.max_stay_nights}
-                  onChange={e => updMotorhome("max_stay_nights", e.target.value)}
+                  type="number" min={0} value={motorhomeDetail.max_stay_nights}
+                  onChange={e => updMotorhome("max_stay_nights", sanitizeNum(e.target.value))}
                   style={s.input}
                 />
               </Field>
@@ -263,15 +263,15 @@ export default function StepCategoriasAdicionales({
                         </Field>
                         <Field label="Capacidad (personas)" required={true} hasError={unitErrors.has("capacity")} errorText="Completá la capacidad">
                           <input
-                            type="number" value={unit.capacity}
-                            onChange={e => updGlampingUnit(index, "capacity", e.target.value)}
+                            type="number" min={0} value={unit.capacity}
+                            onChange={e => updGlampingUnit(index, "capacity", sanitizeNum(e.target.value))}
                             style={{ ...s.input, ...(unitErrors.has("capacity") ? errorInputBorder : {}) }}
                           />
                         </Field>
                         <Field label="Precio por noche" required={true} hasError={unitErrors.has("price_per_night")} errorText="Completá el precio por noche">
                           <input
-                            type="number" value={unit.price_per_night}
-                            onChange={e => updGlampingUnit(index, "price_per_night", e.target.value)}
+                            type="number" min={0} value={unit.price_per_night}
+                            onChange={e => updGlampingUnit(index, "price_per_night", sanitizeNum(e.target.value))}
                             style={{ ...s.input, ...(unitErrors.has("price_per_night") ? errorInputBorder : {}) }}
                           />
                         </Field>
@@ -280,8 +280,8 @@ export default function StepCategoriasAdicionales({
                           hasError={unitErrors.has("min_nights")} errorText="Completá el mínimo de noches (poné 0 si no hay mínimo)"
                         >
                           <input
-                            type="number" value={unit.min_nights}
-                            onChange={e => updGlampingUnit(index, "min_nights", e.target.value)}
+                            type="number" min={0} value={unit.min_nights}
+                            onChange={e => updGlampingUnit(index, "min_nights", sanitizeNum(e.target.value))}
                             style={{ ...s.input, ...(unitErrors.has("min_nights") ? errorInputBorder : {}) }}
                           />
                         </Field>
@@ -332,8 +332,8 @@ export default function StepCategoriasAdicionales({
               <div style={{ ...s.form, padding: "14px 4px 4px" }}>
                 <Field label="Precio por noche (camping)" required={true} hasError={campingErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)">
                   <input
-                    type="number" value={campingDetail.price}
-                    onChange={e => updCamping("price", e.target.value)}
+                    type="number" min={0} value={campingDetail.price}
+                    onChange={e => updCamping("price", sanitizeNum(e.target.value))}
                     style={{ ...s.input, ...(campingErrors.has("price") ? errorInputBorder : {}) }}
                   />
                 </Field>

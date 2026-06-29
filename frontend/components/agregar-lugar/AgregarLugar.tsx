@@ -8,7 +8,7 @@ import {
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
   defaultClimbingRouteItem,
 } from "./constants"
-import { submitAgregarLugar, buildPublicId } from "./submit"
+import { submitAgregarLugar } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"
