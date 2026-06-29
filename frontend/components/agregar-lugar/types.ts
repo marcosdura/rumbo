@@ -31,10 +31,6 @@ export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null
 
 export type TrekkingMode = "new_spot" | "new_route" | null
 
-export type ClimbingRouteForm = {
-  name: string; grade: string; type: string; length_m: string; bolts: string; description: string
-}
-
 export type BasicInfo = {
   name: string; description: string; department: string
   price: string; season_type: "all_year" | "seasonal"

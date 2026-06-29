@@ -24,7 +24,6 @@ import StepClimbingMode from "./steps/StepClimbingMode"
 import StepClimbingSpotSelector from "./steps/StepClimbingSpotSelector"
 import StepClimbingSectorForm from "./steps/StepClimbingSectorForm"
 import StepClimbingSectorSelector from "./steps/StepClimbingSectorSelector"
-import StepClimbingRouteForm from "./steps/StepClimbingRouteForm"
 import StepTrekkingMode from "./steps/StepTrekkingMode"
 import StepTrekkingSpotSelector from "./steps/StepTrekkingSpotSelector"
 import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
@@ -33,7 +32,7 @@ import StepGlampingUnidades from "./steps/StepGlampingUnidades"
 import StepClimbingRoutes from "./steps/StepClimbingRoutes"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
-  SurfItem, KayakItem, BasicInfo, ClimbingMode, ClimbingRouteForm, TrekkingMode,
+  SurfItem, KayakItem, BasicInfo, ClimbingMode, TrekkingMode,
   MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem,
 } from "./types"
 
@@ -81,9 +80,7 @@ export default function AgregarLugar() {
   const [climbingSectorId, setClimbingSectorId]   = useState<number | null>(null)
   const [availableSectors, setAvailableSectors]   = useState<{ id: number; name: string }[]>([])
   const [loadingSectors, setLoadingSectors]       = useState(false)
-  const [climbingRoute, setClimbingRoute]         = useState<ClimbingRouteForm>(
-    { name: "", grade: "", type: "", length_m: "", bolts: "", description: "" }
-  )
+  const [climbingNewRoutes, setClimbingNewRoutes] = useState<ClimbingRouteItem[]>([defaultClimbingRouteItem(0)])
   const [sectorRoutes, setSectorRoutes]           = useState<ClimbingRouteItem[]>([])
 
   // Trekking mode states
@@ -260,15 +257,6 @@ export default function AgregarLugar() {
     setStep(4)
   }
 
-  function goToClimbingStep5() {
-    if (!climbingRoute.name.trim()) {
-      setError("El nombre de la ruta es obligatorio.")
-      return
-    }
-    setError(null)
-    setStep(5)
-  }
-
   async function handleSubmit() {
     if (isTrekking && trekkingMode === "new_route") {
       setSubmitting(true)
@@ -361,23 +349,26 @@ export default function AgregarLugar() {
       setSubmitting(true)
       setError(null)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            name: climbingRoute.name,
-            grade: climbingRoute.grade || null,
-            type: climbingRoute.type || null,
-            length: climbingRoute.length_m ? parseInt(climbingRoute.length_m) : null,
-            bolts: climbingRoute.bolts ? parseInt(climbingRoute.bolts) : null,
-            description: climbingRoute.description || null,
-            sector_id: climbingSectorId,
-          }),
-        })
-        if (!res.ok) throw new Error()
+        for (const r of climbingNewRoutes) {
+          if (!r.name) continue
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              name: r.name,
+              grade: r.grade || null,
+              type: r.type || null,
+              length: r.length_m ? parseInt(r.length_m) : null,
+              bolts: r.bolts ? parseInt(r.bolts) : null,
+              description: r.description || null,
+              sector_id: climbingSectorId,
+            }),
+          })
+          if (!res.ok) throw new Error()
+        }
         setSuccess(true)
       } catch {
         setError("No se pudo guardar la ruta. Intentá de nuevo.")
@@ -439,7 +430,7 @@ export default function AgregarLugar() {
     setCreatingNewSpot(false); setClimbingMode(null)
     setClimbingSpotId(null); setClimbingSectorId(null)
     setAvailableSectors([]); setLoadingSectors(false)
-    setClimbingRoute({ name: "", grade: "", type: "", length_m: "", bolts: "", description: "" })
+    setClimbingNewRoutes([defaultClimbingRouteItem(0)])
     setSectorRoutes([])
     setTrekkingMode(null); setTrekkingSpotId(null)
     setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
@@ -851,12 +842,13 @@ export default function AgregarLugar() {
 
         {/* Escalada new_route: formulario de ruta */}
         {step === 4 && isEscalada && climbingMode === "new_route" && (
-          <StepClimbingRouteForm
-            route={climbingRoute}
-            setRoute={setClimbingRoute}
+          <StepClimbingRoutes
+            sectors={[{ name: climbingSectorName || "Sector", type: "", max_altitude: "", restrictions: "" }]}
+            routes={climbingNewRoutes}
+            setRoutes={setClimbingNewRoutes}
             error={error}
             onBack={() => setStep(3)}
-            onNext={goToClimbingStep5}
+            onNext={() => setStep(5)}
           />
         )}
 
@@ -962,7 +954,7 @@ export default function AgregarLugar() {
             climbingSpotName={climbingSpotName}
             climbingSectorName={climbingSectorName}
             sectors={sectors}
-            climbingRoute={climbingRoute}
+            climbingNewRoutes={climbingNewRoutes}
             isPublic={isPublic}
             publicTransport={publicTransport}
             creatingNewSpot={creatingNewSpot}

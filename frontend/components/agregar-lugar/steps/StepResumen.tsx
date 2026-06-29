@@ -6,7 +6,7 @@ import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
-  ClimbingMode, ClimbingRouteForm, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
+  ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
   TrekkingMode, ClimbingRouteItem,
 } from "../types"
 
@@ -14,7 +14,7 @@ export default function StepResumen({
   selectedCat, isService, isTrekking, basic, trekkingFeatures, routes,
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
   error, onSubmit, onBack, onEditStep,
-  climbingMode, climbingSpotName, climbingSectorName, sectors, climbingRoute,
+  climbingMode, climbingSpotName, climbingSectorName, sectors, climbingNewRoutes,
   isPublic, publicTransport, creatingNewSpot,
   images, previews, surfPhotoPreviews, kayakPhotoPreviews,
   selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
@@ -41,7 +41,7 @@ export default function StepResumen({
   climbingSpotName?: string
   climbingSectorName?: string
   sectors?: SectorItem[]
-  climbingRoute?: ClimbingRouteForm
+  climbingNewRoutes?: ClimbingRouteItem[]
   isPublic?: boolean | null
   publicTransport?: string | null
   creatingNewSpot?: boolean
@@ -331,9 +331,18 @@ export default function StepResumen({
           {climbingMode === "new_route" && (
             <>
               {climbingSectorName && <SummaryRow label="Sector" value={climbingSectorName} />}
-              {climbingRoute?.name && <SummaryRow label="Ruta" value={climbingRoute.name} />}
-              {climbingRoute?.grade && <SummaryRow label="Grado" value={climbingRoute.grade} />}
-              {climbingRoute?.type && <SummaryRow label="Tipo" value={climbingRoute.type} />}
+              {climbingNewRoutes && climbingNewRoutes.filter(r => r.name).length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+                  {climbingNewRoutes.filter(r => r.name).map((r, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
+                      <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                        {[r.grade, r.type].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </SummaryCard>
