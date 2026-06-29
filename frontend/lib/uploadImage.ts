@@ -1,15 +1,19 @@
+import { compressImage } from "./compressImage"
+
 export interface CloudinaryUploadResult {
   url: string
   publicId: string
 }
 
 export async function uploadImageToCloudinary(file: File): Promise<CloudinaryUploadResult> {
+  const compressedFile = await compressImage(file)
+
   const sigRes = await fetch("/api/upload/signature", { method: "POST" })
   if (!sigRes.ok) throw new Error("No se pudo obtener la firma de upload")
   const { signature, timestamp, folder, apiKey, cloudName } = await sigRes.json()
 
   const formData = new FormData()
-  formData.append("file", file)
+  formData.append("file", compressedFile)
   formData.append("api_key", apiKey)
   formData.append("timestamp", timestamp.toString())
   formData.append("signature", signature)
