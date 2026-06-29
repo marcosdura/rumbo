@@ -356,7 +356,13 @@ export default function AdminPage() {
                       if (!files.length) return
                       setUploadingPhotos(true)
                       try {
-                        const results = await Promise.all(files.map(file => uploadImageToCloudinary(file)))
+                        const results = await Promise.all(files.map((file, i) =>
+                          uploadImageToCloudinary(file, {
+                            category: selectedSpot.category?.name ?? "Spot",
+                            spotName: selectedSpot.name,
+                            index: (selectedSpot.images?.length ?? 0) + i,
+                          })
+                        ))
 
                         await Promise.all(results.map(({ publicId }, i) => {
                           const params = new URLSearchParams({

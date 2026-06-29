@@ -92,7 +92,11 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         setUploadProgress("Subiendo imágenes del lugar...")
         const uploadResults = await Promise.all(
           images.map(async (file, i) => {
-            const { publicId } = await uploadImageToCloudinary(file)
+            const { publicId } = await uploadImageToCloudinary(file, {
+              category: selectedCat.name,
+              spotName: basic.name,
+              index: i,
+            })
             return { publicId, index: i }
           })
         )
@@ -121,7 +125,11 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = surfPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file)
+          const { url } = await uploadImageToCloudinary(file, {
+            category: "Surf",
+            spotName: surf.name,
+            index: i,
+          })
           photoUrls[i] = url
         }
 
@@ -151,7 +159,11 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = kayakPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file)
+          const { url } = await uploadImageToCloudinary(file, {
+            category: "Kayak",
+            spotName: kayaks[0]?.name || "kayak",
+            index: i,
+          })
           kayakPhotoUrls[i] = url
         }
 
@@ -194,7 +206,11 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setUploadProgress("Subiendo imágenes...")
     const uploadResults = await Promise.all(
       images.map(async (file, i) => {
-        const { publicId } = await uploadImageToCloudinary(file)
+        const { publicId } = await uploadImageToCloudinary(file, {
+          category: selectedCat.name,
+          spotName: basic.name,
+          index: i,
+        })
         return { publicId, index: i }
       })
     )

@@ -3,18 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
 
-export async function POST() {
+export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const { publicId } = await req.json();
   const timestamp = Math.round(Date.now() / 1000);
   const folder = "rumbo/spots";
 
   const paramsToSign: Record<string, string | number> = {
     timestamp,
     folder,
+    public_id: publicId,
   };
 
   const sortedParams = Object.keys(paramsToSign)
