@@ -72,31 +72,25 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          maxWidth: "90vw",
-          maxHeight: "80vh",
+          width: "min(90vw, 1100px)",
+          height: "min(80vh, 750px)",
           borderRadius: 12,
-          overflow: "hidden",
         }}
       >
         <CldImage
           key={current}
           src={images[current].cloudinary_public_id}
           alt={`${name} ${current + 1}`}
-          width={1600}
-          height={1600}
+          fill
           crop="limit"
           quality="auto"
           format="auto"
-          style={{
-            width: "auto",
-            height: "auto",
-            maxWidth: "90vw",
-            maxHeight: "80vh",
-            objectFit: "contain",
-          }}
+          className="object-contain"
+          sizes="(max-width: 1100px) 90vw, 1100px"
           priority
         />
       </div>
