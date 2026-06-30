@@ -72,9 +72,11 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          position: "relative",
-          width: "min(90vw, 960px)",
-          height: "min(70vh, 640px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          maxWidth: "90vw",
+          maxHeight: "80vh",
           borderRadius: 12,
           overflow: "hidden",
         }}
@@ -83,13 +85,18 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
           key={current}
           src={images[current].cloudinary_public_id}
           alt={`${name} ${current + 1}`}
-          fill
-          crop="fill"
-          gravity="auto"
+          width={1600}
+          height={1600}
+          crop="limit"
           quality="auto"
           format="auto"
-          className="object-cover"
-          sizes="90vw"
+          style={{
+            width: "auto",
+            height: "auto",
+            maxWidth: "90vw",
+            maxHeight: "80vh",
+            objectFit: "contain",
+          }}
           priority
         />
       </div>
