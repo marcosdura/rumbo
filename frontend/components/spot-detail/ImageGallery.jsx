@@ -60,12 +60,13 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 1,
         }}
       >
         ✕
       </button>
 
-      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: 0, position: "absolute", top: 22, left: "50%", transform: "translateX(-50%)" }}>
+      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: 0 }}>
         {current + 1} / {images.length}
       </p>
 
@@ -77,7 +78,7 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
           alignItems: "center",
           justifyContent: "center",
           width: "min(90vw, 1100px)",
-          height: "min(80vh, 750px)",
+          height: "min(76vh, 720px)",
           borderRadius: 12,
         }}
       >
