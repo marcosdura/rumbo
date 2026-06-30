@@ -23,6 +23,7 @@ class SpotDB(Base):
     owner_phone = Column(String, nullable=True)
     is_approved = Column(Boolean, default=False)
     slug = Column(String, unique=True, nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12

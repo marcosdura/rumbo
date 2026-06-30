@@ -141,6 +141,7 @@ def get_spots(
     no_restrictions: Optional[bool] = None,
     amenity_ids: Optional[List[int]] = Query(default=None),
     price_range: Optional[List[str]] = Query(default=None),
+    sort: Optional[str] = Query(default="recent"),  # recent | oldest
 ):
     query = db.query(SpotDB).options(
         joinedload(SpotDB.category),
@@ -337,6 +338,11 @@ def get_spots(
         if pr_conds:
             query = query.filter(or_(*pr_conds))
 
+    if sort == "oldest":
+        query = query.order_by(SpotDB.created_at.asc())
+    else:
+        query = query.order_by(SpotDB.created_at.desc())
+
     spots = query.all()
 
     spot_ids = [s.id for s in spots]
@@ -424,6 +430,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "slug": spot.slug,
+        "created_at": spot.created_at,
         "category": spot.category,
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
@@ -474,6 +481,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "instagram": spot.instagram,
         "whatsapp": spot.whatsapp,
         "price": spot.price,
+        "created_at": spot.created_at,
         "category": spot.category,
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,
@@ -686,7 +694,7 @@ def get_all_spots_admin(db: Session = Depends(get_db)):
             "category": s.category,
             "images": s.images,
             "owner_email": s.owner_email,
-            "created_at": None,
+            "created_at": s.created_at,
             "review_count": review_counts.get(s.id, 0),
         }
         for s in spots

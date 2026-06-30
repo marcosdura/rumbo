@@ -301,6 +301,7 @@ class SpotResponse(BaseModel):
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
     slug: str | None = None
+    created_at: datetime
 
     category: CategoryResponse
     categories: list[CategoryResponse] = []
