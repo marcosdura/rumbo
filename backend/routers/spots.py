@@ -694,6 +694,7 @@ def get_all_spots_admin(db: Session = Depends(get_db)):
             "category": s.category,
             "images": s.images,
             "owner_email": s.owner_email,
+            "slug": s.slug,
             "created_at": s.created_at,
             "review_count": review_counts.get(s.id, 0),
         }

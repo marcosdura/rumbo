@@ -11,6 +11,8 @@ type AdminSpot = {
   department: string
   is_approved: boolean
   owner_email: string | null
+  slug: string | null
+  created_at: string
   category: { name: string } | null
   images: { cloudinary_public_id: string; is_main: boolean; order: number }[]
   review_count?: number
@@ -30,7 +32,7 @@ export default function AdminPage() {
   const [photoLoading, setPhotoLoading] = useState(false)
   const [searchSpots, setSearchSpots] = useState("")
   const [searchPhotos, setSearchPhotos] = useState("")
-  const [sortBy, setSortBy] = useState<"name" | "category" | "department">("name")
+  const [sortBy, setSortBy] = useState<"name" | "category" | "department" | "date_desc" | "date_asc">("date_desc")
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
@@ -117,6 +119,8 @@ export default function AdminPage() {
       if (sortBy === "name") return a.name.localeCompare(b.name)
       if (sortBy === "category") return (a.category?.name ?? "").localeCompare(b.category?.name ?? "")
       if (sortBy === "department") return (a.department ?? "").localeCompare(b.department ?? "")
+      if (sortBy === "date_desc") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (sortBy === "date_asc") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       return 0
     })
   const selectedSpot = spots.find(s => s.id === photoSpotId) ?? null
@@ -202,6 +206,8 @@ export default function AdminPage() {
                 onChange={e => setSortBy(e.target.value as "name" | "category" | "department")}
                 style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
               >
+                <option value="date_desc">Más recientes primero</option>
+                <option value="date_asc">Más antiguos primero</option>
                 <option value="name">Ordenar por nombre</option>
                 <option value="category">Ordenar por categoría</option>
                 <option value="department">Ordenar por departamento</option>
@@ -286,12 +292,12 @@ export default function AdminPage() {
                             Desaprobar
                           </button>
                         )}
-                        <a href={`/spots/${spot.id}`} target="_blank"
+                        <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank"
                           className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                           Ver
                         </a>
                         <button
-                          onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.id}`)}
+                          onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.slug ?? spot.id}`)}
                           className="action-btn-sm"
                           style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
                         >
