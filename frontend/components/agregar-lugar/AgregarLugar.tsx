@@ -118,7 +118,7 @@ export default function AgregarLugar() {
     : isTrekking ? 6
     : isEscalada && climbingMode === "new_sector" ? 5
     : isEscalada && climbingMode !== "new_route" ? 6
-    : isCampingOrGlamping ? 7 + glampingStepOffset : isMotorhome ? 6 : 5
+    : isCampingOrGlamping ? 7 + glampingStepOffset : isMotorhome ? 7 : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -878,11 +878,11 @@ export default function AgregarLugar() {
             setError={setError}
             error={error}
             onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset + climbingStepOffset + experiencesStepOffset)}
-            onNext={() => setStep(isCampingOrGlamping ? 6 + glampingStepOffset : summaryStep)}
+            onNext={() => setStep((isCampingOrGlamping || isMotorhome) ? 6 + glampingStepOffset : summaryStep)}
           />
         )}
 
-        {step === 6 + glampingStepOffset && isCampingOrGlamping && (
+        {step === 6 + glampingStepOffset && (isCampingOrGlamping || isMotorhome) && (
           <StepCategoriasAdicionales
             primaryCategoryName={selectedCat?.name ?? ""}
             additionalCategories={additionalCategories}
@@ -963,7 +963,7 @@ export default function AgregarLugar() {
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 4
               : isEscalada && climbingMode === "new_spot" ? 5
-              : isCampingOrGlamping ? 6 + glampingStepOffset : isMotorhome ? 5 : 4
+              : (isCampingOrGlamping || isMotorhome) ? 6 + glampingStepOffset : 4
             )}
             onEditStep={setStep}
             climbingMode={climbingMode}

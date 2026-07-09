@@ -159,8 +159,8 @@ export default function StepCategoriasAdicionales({
     onNext()
   }
 
-  const offerGlamping = primaryCategoryName === "Camping"
-  const offerCamping = primaryCategoryName === "Glamping"
+  const offerGlamping = primaryCategoryName === "Camping" || primaryCategoryName === "Motorhome"
+  const offerCamping = primaryCategoryName === "Glamping" || primaryCategoryName === "Motorhome"
   const hasValidationError = motorhomeErrors.size > 0 || campingErrors.size > 0 || Object.keys(glampingUnitErrors).length > 0
 
   return (

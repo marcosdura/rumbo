@@ -314,7 +314,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       }
     }
 
-    if ((cat === "Camping" || cat === "Glamping") && additionalCategories.includes("Motorhome")) {
+    if ((cat === "Camping" || cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Motorhome")) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
           method: "POST",
@@ -336,7 +336,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       }
     }
 
-    if (cat === "Camping" && additionalCategories.includes("Glamping")) {
+    if ((cat === "Camping" || cat === "Motorhome") && additionalCategories.includes("Glamping")) {
       const amenityPayload: Record<string, boolean> = {}
       for (const name of selectedGlampingAmenities) {
         const field = GLAMPING_AMENITY_MAP[name]
@@ -366,7 +366,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       }
     }
 
-    if (cat === "Glamping" && additionalCategories.includes("Camping")) {
+    if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping")) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
           method: "POST",
@@ -383,7 +383,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       }
     }
 
-    if (cat === "Glamping" && additionalCategories.includes("Camping") && selectedCampingAmenities.length > 0) {
+    if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping") && selectedCampingAmenities.length > 0) {
       try {
         const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
         if (amenRes.ok) {
