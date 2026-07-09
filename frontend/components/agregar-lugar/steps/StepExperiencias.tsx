@@ -12,8 +12,6 @@ const EXPERIENCE_CATEGORIES = [
   { id: 3, emoji: "🧗", label: "Escalada" },
   { id: 4, emoji: "🏄", label: "Surf" },
   { id: 5, emoji: "🛶", label: "Kayak" },
-  { id: 9, emoji: "🐴", label: "Cabalgatas" },
-  { id: 10, emoji: "🎣", label: "Pesca" },
 ]
 
 function upd(
