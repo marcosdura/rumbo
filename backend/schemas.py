@@ -286,6 +286,35 @@ class MotorhomeDetailResponse(MotorhomeDetailCreate):
         from_attributes = True
 
 
+# -------- EXPERIENCES --------
+class ExperienceCreate(BaseModel):
+    category_id: int
+    title: str
+    description: Optional[str] = None
+    price: Optional[float] = None
+    currency: str = "UYU"
+    schedule: Optional[str] = None
+    contact: Optional[str] = None
+    is_active: bool = True
+
+class ExperienceResponse(BaseModel):
+    id: int
+    spot_id: int
+    category_id: int
+    title: str
+    description: Optional[str] = None
+    price: Optional[float] = None
+    currency: str
+    schedule: Optional[str] = None
+    contact: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    category: CategoryResponse
+
+    class Config:
+        from_attributes = True
+
+
 # -------- SPOT RESPONSE --------
 class SpotResponse(BaseModel):
     id: int
@@ -325,6 +354,7 @@ class SpotResponse(BaseModel):
 
     routes: list[RouteResponse] = []
     images: list[SpotImageResponse] = []
+    experiences: list[ExperienceResponse] = []
     average_rating: float | None = None
     review_count: int = 0
     owner_email: str | None = None

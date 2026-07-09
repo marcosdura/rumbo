@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate
+from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
+from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -410,6 +410,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
+            selectinload(SpotDB.experiences).selectinload(Experience.category),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
         .first()
@@ -441,6 +442,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
         "routes": spot.routes,
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
+        "experiences": spot.experiences,
         "average_rating": None,
         "review_count": 0,
         "is_public": spot.is_public,
@@ -462,6 +464,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
+            selectinload(SpotDB.experiences).selectinload(Experience.category),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -494,6 +497,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         ],
         "routes": spot.routes,
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
+        "experiences": spot.experiences,
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "is_public": spot.is_public,
@@ -746,3 +750,68 @@ def delete_image(public_id: str, db: Session = Depends(get_db)):
     db.delete(img)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/spots/{spot_id}/experiences", response_model=ExperienceResponse)
+def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    category = db.query(models.Category).filter(models.Category.id == data.category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    experience = Experience(spot_id=spot_id, **data.dict())
+    db.add(experience)
+    db.flush()
+
+    existing_sc = db.query(SpotCategory).filter(
+        SpotCategory.spot_id == spot_id,
+        SpotCategory.category_id == data.category_id,
+    ).first()
+    if not existing_sc:
+        db.add(SpotCategory(spot_id=spot_id, category_id=data.category_id, is_primary=False))
+
+    db.commit()
+    db.refresh(experience)
+    experience.category
+    return experience
+
+
+@router.get("/spots/{spot_id}/experiences", response_model=list[ExperienceResponse])
+def get_experiences(spot_id: int, db: Session = Depends(get_db)):
+    return (
+        db.query(Experience)
+        .options(selectinload(Experience.category))
+        .filter(Experience.spot_id == spot_id, Experience.is_active == True)
+        .all()
+    )
+
+
+@router.delete("/spots/{spot_id}/experiences/{experience_id}")
+def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db)):
+    experience = db.query(Experience).filter(
+        Experience.id == experience_id,
+        Experience.spot_id == spot_id,
+    ).first()
+    if not experience:
+        raise HTTPException(status_code=404, detail="Experience not found")
+
+    category_id = experience.category_id
+    db.delete(experience)
+    db.flush()
+
+    remaining = db.query(Experience).filter(
+        Experience.spot_id == spot_id,
+        Experience.category_id == category_id,
+    ).count()
+
+    if remaining == 0:
+        db.query(SpotCategory).filter(
+            SpotCategory.spot_id == spot_id,
+            SpotCategory.category_id == category_id,
+        ).delete()
+
+    db.commit()
+    return {"message": "Experience deleted"}

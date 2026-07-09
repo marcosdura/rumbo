@@ -48,6 +48,7 @@ class SpotDB(Base):
     images = relationship("SpotImage", back_populates="spot")
     favorites = relationship("Favorite", back_populates="spot")
     reviews = relationship("Review", back_populates="spot")
+    experiences = relationship("Experience", back_populates="spot")
 
 
 class Category(Base):
@@ -376,3 +377,22 @@ class KayakReview(Base):
 
     kayak_detail = relationship("KayakDetail")
     user         = relationship("User", back_populates="kayak_reviews")
+
+
+class Experience(Base):
+    __tablename__ = "experiences"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    spot_id     = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    title       = Column(String(150), nullable=False)
+    description = Column(String, nullable=True)
+    price       = Column(Float, nullable=True)
+    currency    = Column(String(3), default="UYU")
+    schedule    = Column(String(255), nullable=True)
+    contact     = Column(String(255), nullable=True)
+    is_active   = Column(Boolean, default=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+    spot     = relationship("SpotDB", back_populates="experiences")
+    category = relationship("Category")
