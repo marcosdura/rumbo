@@ -173,7 +173,7 @@ export default function StepCategoriasAdicionales({
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Motorhome */}
-        <div style={{ ...SECTION_BASE, ...(acceptsMotorhome ? SECTION_ACTIVE : {}) }}>
+        {primaryCategoryName !== "Motorhome" && <div style={{ ...SECTION_BASE, ...(acceptsMotorhome ? SECTION_ACTIVE : {}) }}>
           <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <input type="checkbox" checked={acceptsMotorhome} onChange={() => toggle("Motorhome")} />
             <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>🚐 Acepta motorhomes</span>
@@ -227,7 +227,7 @@ export default function StepCategoriasAdicionales({
               </Field>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Glamping (solo si la categoría principal es Camping) */}
         {offerGlamping && (
