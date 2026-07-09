@@ -97,22 +97,16 @@ function ExperienceCard({
   const hasTitleNoCat = exp.title.trim() !== "" && exp.category_id === ""
 
   return (
-    <div style={{ position: "relative", background: "#f7f5f0", border: "1px solid #e0ddd6", borderRadius: 12, padding: 16 }}>
+    <div style={{ ...s.card, position: "relative" }}>
       <button
         type="button"
         onClick={() => setExperiences(prev => prev.filter((_, i) => i !== index))}
-        style={{
-          position: "absolute", top: 10, right: 10,
-          background: "#fdf0f0", border: "1px solid #f5c0c0", color: "#c0392b",
-          borderRadius: "50%", width: 28, height: 28,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-        }}
+        style={s.deleteBtn}
       >
-        🗑
+        ✕
       </button>
 
-      <div style={{ ...s.form, paddingRight: 36 }}>
+      <div style={s.form}>
         {/* Category */}
         <div>
           <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", marginBottom: 8 }}>
@@ -147,7 +141,7 @@ function ExperienceCard({
         {/* Title */}
         <Field label="Título" required={true}>
           <input
-            style={{ ...s.input, background: "#fff" }}
+            style={s.input}
             type="text"
             placeholder="Ej: Trekking al Cerro Grande"
             value={exp.title}
@@ -158,7 +152,7 @@ function ExperienceCard({
         {/* Description */}
         <Field label="Descripción" required={false}>
           <textarea
-            style={{ ...s.input, height: 80, resize: "vertical", background: "#fff" } as React.CSSProperties}
+            style={{ ...s.input, height: 80, resize: "vertical" } as React.CSSProperties}
             placeholder="Contá de qué se trata, qué incluye, qué nivel se requiere..."
             value={exp.description}
             onChange={e => upd(setExperiences, index, "description", e.target.value)}
@@ -170,7 +164,7 @@ function ExperienceCard({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 13, color: "#7a7669", flexShrink: 0 }}>$ UYU</span>
             <input
-              style={{ ...s.input, background: "#fff" }}
+              style={s.input}
               type="number"
               min={0}
               value={exp.price}
@@ -214,7 +208,7 @@ function ExperienceCard({
           </div>
           {exp.schedule_type === "personalizado" && (
             <input
-              style={{ ...s.input, background: "#fff", marginTop: 10 }}
+              style={{ ...s.input, marginTop: 10 }}
               type="text"
               placeholder="Ej: Primer sábado de cada mes, solo en temporada de verano..."
               value={exp.schedule_custom}
@@ -226,7 +220,7 @@ function ExperienceCard({
         {/* Contact */}
         <Field label="Contacto" required={false} sublabel="Si el contacto es el mismo del lugar, podés dejarlo vacío">
           <input
-            style={{ ...s.input, background: "#fff" }}
+            style={s.input}
             type="text"
             placeholder="WhatsApp, email o Instagram"
             value={exp.contact}
