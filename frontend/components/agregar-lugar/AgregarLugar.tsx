@@ -6,7 +6,7 @@ import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
-  defaultClimbingRouteItem,
+  defaultClimbingRouteItem, defaultExperience,
 } from "./constants"
 import { submitAgregarLugar } from "./submit"
 import StepCategoria from "./steps/StepCategoria"
@@ -30,10 +30,11 @@ import StepCategoriasAdicionales from "./steps/StepCategoriasAdicionales"
 import StepMotorhomeDetalle from "./steps/StepMotorhomeDetalle"
 import StepGlampingUnidades from "./steps/StepGlampingUnidades"
 import StepClimbingRoutes from "./steps/StepClimbingRoutes"
+import StepExperiencias from "./steps/StepExperiencias"
 import type {
   Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, TrekkingMode,
-  MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem,
+  MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem,
 } from "./types"
 
 export default function AgregarLugar() {
@@ -89,6 +90,8 @@ export default function AgregarLugar() {
   const [availableTrekkingSpots, setAvailableTrekkingSpots] = useState<{ id: number; name: string }[]>([])
   const [loadingTrekkingSpots, setLoadingTrekkingSpots] = useState(false)
 
+  const [experiences, setExperiences]                   = useState<ExperienceItem[]>([])
+
   useEffect(() => {
     if (!submitting) return
     const handler = (e: BeforeUnloadEvent) => {
@@ -107,6 +110,7 @@ export default function AgregarLugar() {
   const isGlamping = selectedCat?.name === "Glamping"
   const glampingStepOffset = isGlamping ? 1 : 0
   const climbingStepOffset = isEscalada && climbingMode === "new_spot" ? 1 : 0
+  const experiencesStepOffset = (isCampingOrGlamping || isMotorhome) ? 1 : 0
   const summaryStep =
     isService && creatingNewSpot ? 5
     : isService ? 4
@@ -114,7 +118,7 @@ export default function AgregarLugar() {
     : isTrekking ? 6
     : isEscalada && climbingMode === "new_sector" ? 5
     : isEscalada && climbingMode !== "new_route" ? 6
-    : isCampingOrGlamping ? 6 + glampingStepOffset : 5
+    : isCampingOrGlamping ? 7 + glampingStepOffset : isMotorhome ? 6 : 5
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -405,6 +409,7 @@ export default function AgregarLugar() {
       kayakPhotoFiles,
       selectedSpotId,
       ownerEmail: session?.user?.email ?? null,
+      experiences,
       setSubmitting,
       setUploadProgress,
       setError,
@@ -434,6 +439,7 @@ export default function AgregarLugar() {
     setSectorRoutes([])
     setTrekkingMode(null); setTrekkingSpotId(null)
     setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
+    setExperiences([])
   }
 
   const pageHeader = (
@@ -680,6 +686,16 @@ export default function AgregarLugar() {
           />
         )}
 
+        {step === 4 + glampingStepOffset && (isCampingOrGlamping || isMotorhome) && (
+          <StepExperiencias
+            experiences={experiences}
+            setExperiences={setExperiences}
+            error={error}
+            onBack={() => setStep(3 + glampingStepOffset)}
+            onNext={() => setStep(5 + glampingStepOffset)}
+          />
+        )}
+
         {((step === 3 && selectedCat?.name === "Camping") || (step === 4 && selectedCat?.name === "Glamping")) && (
           <StepAmenities
             selectedCat={selectedCat!}
@@ -853,7 +869,7 @@ export default function AgregarLugar() {
         )}
 
         {/* Imágenes: no aplica para escalada new_sector/new_route */}
-        {step === (isTrekking ? 5 : 4 + glampingStepOffset + climbingStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
+        {step === (isTrekking ? 5 : 4 + glampingStepOffset + climbingStepOffset + experiencesStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
           <StepImagenes
             images={images}
             setImages={setImages}
@@ -861,12 +877,12 @@ export default function AgregarLugar() {
             setPreviews={setPreviews}
             setError={setError}
             error={error}
-            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset + climbingStepOffset)}
-            onNext={() => setStep(isCampingOrGlamping ? 5 + glampingStepOffset : summaryStep)}
+            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset + climbingStepOffset + experiencesStepOffset)}
+            onNext={() => setStep(isCampingOrGlamping ? 6 + glampingStepOffset : summaryStep)}
           />
         )}
 
-        {step === 5 + glampingStepOffset && isCampingOrGlamping && (
+        {step === 6 + glampingStepOffset && isCampingOrGlamping && (
           <StepCategoriasAdicionales
             primaryCategoryName={selectedCat?.name ?? ""}
             additionalCategories={additionalCategories}
@@ -882,7 +898,7 @@ export default function AgregarLugar() {
             selectedCampingAmenities={selectedCampingAmenities}
             setSelectedCampingAmenities={setSelectedCampingAmenities}
             error={error}
-            onBack={() => setStep(4 + glampingStepOffset)}
+            onBack={() => setStep(5 + glampingStepOffset)}
             onNext={() => setStep(summaryStep)}
           />
         )}
@@ -947,7 +963,7 @@ export default function AgregarLugar() {
               : isTrekking ? 5
               : isEscalada && climbingMode === "new_sector" ? 4
               : isEscalada && climbingMode === "new_spot" ? 5
-              : isCampingOrGlamping ? 5 + glampingStepOffset : 4
+              : isCampingOrGlamping ? 6 + glampingStepOffset : isMotorhome ? 5 : 4
             )}
             onEditStep={setStep}
             climbingMode={climbingMode}

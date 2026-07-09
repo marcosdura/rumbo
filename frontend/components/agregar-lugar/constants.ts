@@ -1,4 +1,4 @@
-import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, PhoneCountry } from "./types"
+import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, PhoneCountry, ExperienceItem, ExperienceScheduleType } from "./types"
 
 export const PHONE_COUNTRIES: PhoneCountry[] = [
   { code: "UY", name: "Uruguay",        dial: "598", digits: 8 },
@@ -195,4 +195,24 @@ export const GLAMPING_AMENITY_MAP: Record<string, string> = {
 
 export const defaultClimbingRouteItem = (sectorIndex: number = 0): ClimbingRouteItem => ({
   name: "", grade: "", type: "", length_m: "", bolts: "", description: "", sectorIndex,
+})
+
+export const EXPERIENCE_SCHEDULE_OPTIONS: { value: ExperienceScheduleType; label: string }[] = [
+  { value: "todos_los_dias",  label: "Todos los días" },
+  { value: "fines_de_semana", label: "Fines de semana" },
+  { value: "solo_sabados",    label: "Solo sábados" },
+  { value: "solo_domingos",   label: "Solo domingos" },
+  { value: "lunes_a_viernes", label: "Lunes a viernes" },
+  { value: "bajo_reserva",    label: "Bajo reserva" },
+  { value: "personalizado",   label: "Personalizado..." },
+]
+
+export const defaultExperience = (): ExperienceItem => ({
+  category_id: "",
+  title: "",
+  description: "",
+  price: "",
+  schedule_type: "",
+  schedule_custom: "",
+  contact: "",
 })

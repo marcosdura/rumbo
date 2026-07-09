@@ -1,5 +1,5 @@
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem } from "./types"
-import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES } from "./constants"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
+import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
@@ -35,6 +35,7 @@ interface SubmitParams {
   kayakPhotoFiles: (File | null)[]
   selectedSpotId: number | null
   ownerEmail: string | null
+  experiences: ExperienceItem[]
   setSubmitting: (v: boolean) => void
   setUploadProgress: (v: string | null) => void
   setError: (v: string | null) => void
@@ -46,7 +47,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
     selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, glampingUnits,
     selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, sectorRoutes, surf, kayaks,
-    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail,
+    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail, experiences,
     setSubmitting, setUploadProgress, setError, setSuccess,
   } = params
 
@@ -519,6 +520,28 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           }),
         })
       }
+    }
+
+    for (const exp of experiences) {
+      if (!exp.title.trim() || !exp.category_id) continue
+      const scheduleValue = exp.schedule_type === "personalizado"
+        ? exp.schedule_custom.trim() || null
+        : exp.schedule_type
+          ? EXPERIENCE_SCHEDULE_OPTIONS.find(o => o.value === exp.schedule_type)?.label ?? null
+          : null
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/experiences`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          category_id: parseInt(exp.category_id),
+          title: exp.title.trim(),
+          description: exp.description.trim() || null,
+          price: exp.price ? parseFloat(exp.price) : null,
+          currency: "UYU",
+          schedule: scheduleValue,
+          contact: exp.contact.trim() || null,
+        }),
+      })
     }
 
     setSuccess(true)

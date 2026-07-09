@@ -71,3 +71,15 @@ export type ClimbingRouteItem = {
   description: string
   sectorIndex: number
 }
+
+export type ExperienceScheduleType = "todos_los_dias" | "fines_de_semana" | "solo_sabados" | "solo_domingos" | "lunes_a_viernes" | "bajo_reserva" | "personalizado"
+
+export type ExperienceItem = {
+  category_id: string
+  title: string
+  description: string
+  price: string
+  schedule_type: ExperienceScheduleType | ""
+  schedule_custom: string
+  contact: string
+}
