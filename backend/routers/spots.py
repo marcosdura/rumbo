@@ -484,6 +484,15 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             "name": s.name,
             "slug": s.slug,
             "department": s.department,
+            "description": s.description,
+            "email": s.email,
+            "whatsapp": s.whatsapp,
+            "instagram": s.instagram,
+            "price": s.price,
+            "season_start": s.season_start,
+            "season_end": s.season_end,
+            "is_public": s.is_public,
+            "public_transport": s.public_transport,
             "is_approved": s.is_approved,
             "created_at": s.created_at.isoformat(),
             "category": s.category,
@@ -768,7 +777,7 @@ def edit_spot_admin(spot_id: int, data: dict, db: Session = Depends(get_db)):
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    allowed = ["name", "description", "department", "email", "whatsapp", "instagram", "price", "lat", "lng", "is_public", "public_transport"]
+    allowed = ["name", "description", "department", "email", "whatsapp", "instagram", "price", "lat", "lng", "is_public", "public_transport", "season_start", "season_end"]
     for field, value in data.items():
         if field in allowed:
             setattr(spot, field, value)

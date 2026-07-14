@@ -24,6 +24,10 @@ async def add_image_to_spot(
     if not spot:
         raise HTTPException(status_code=404, detail="Spot no encontrado")
 
+    current_count = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).count()
+    if current_count >= 10:
+        raise HTTPException(status_code=400, detail="El spot ya tiene el máximo de 10 fotos")
+
     image = SpotImage(
         spot_id=spot_id,
         cloudinary_public_id=cloudinary_public_id,
