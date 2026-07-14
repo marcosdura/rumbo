@@ -15,6 +15,11 @@ from models import Base
 import re
 from sqlalchemy import text
 import cloudinary.uploader
+import cloudinary
+import cloudinary.uploader
+import os
+
+
 
 
 Base.metadata.create_all(bind=engine)
@@ -22,6 +27,11 @@ Base.metadata.create_all(bind=engine)
 
 router = APIRouter()
 
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 def generate_slug(name: str) -> str:
     slug = name.lower().strip()
