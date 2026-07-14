@@ -1,5 +1,7 @@
 "use client"
 
+import AmenityPill from "./AmenityPill"
+
 const CATEGORIES = [
   {
     id: "esenciales",
@@ -98,19 +100,6 @@ const AMENITY_ICONS = {
   "Zona de descanso exterior":  "🌿",
 }
 
-function AmenityPill({ amenity }) {
-  return (
-    <div className="amenity-pill">
-      <span style={{ fontSize: 15, lineHeight: 1 }}>
-        {AMENITY_ICONS[amenity.name] || "✨"}
-      </span>
-      <span style={{ fontSize: 13, fontWeight: 500, color: "#3d3d3a" }}>
-        {amenity.name}
-      </span>
-    </div>
-  )
-}
-
 function AmenitiesList({ amenities }) {
   const categorized = CATEGORIES.map((cat) => ({
     ...cat,
@@ -124,26 +113,6 @@ function AmenitiesList({ amenities }) {
   return (
     <>
       <style>{`
-        .amenity-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: #f7f5f0;
-          border: 1px solid #e0ddd6;
-          font-family: 'DM Sans', sans-serif;
-          transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          cursor: default;
-          user-select: none;
-        }
-        @media (hover: hover) {
-          .amenity-pill:hover {
-            background: #eeeae2;
-            border-color: #ccc8bf;
-            transform: scale(1.08);
-          }
-        }
         .amenity-cat-label {
           font-size: 13px;
           font-weight: 600;
@@ -153,8 +122,6 @@ function AmenitiesList({ amenities }) {
           letter-spacing: 0.05em;
         }
         @media (max-width: 480px) {
-          .amenity-pill { padding: 5px 10px; }
-          .amenity-pill span:last-child { font-size: 12px; }
           .amenity-cat-label { font-size: 12px; }
         }
       `}</style>
@@ -165,7 +132,7 @@ function AmenitiesList({ amenities }) {
             <p className="amenity-cat-label">{cat.label}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {cat.items.map((amenity) => (
-                <AmenityPill key={amenity.id} amenity={amenity} />
+                <AmenityPill key={amenity.id} emoji={AMENITY_ICONS[amenity.name] || "✨"} label={amenity.name} />
               ))}
             </div>
           </div>
@@ -176,7 +143,7 @@ function AmenitiesList({ amenities }) {
             <p className="amenity-cat-label">✨ Otros</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {uncategorized.map((amenity) => (
-                <AmenityPill key={amenity.id} amenity={amenity} />
+                <AmenityPill key={amenity.id} emoji="✨" label={amenity.name} />
               ))}
             </div>
           </div>

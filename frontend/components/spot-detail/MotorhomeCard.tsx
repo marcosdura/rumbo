@@ -1,5 +1,7 @@
 "use client"
 
+import DetailCell from "./DetailCell"
+
 interface MotorhomeDetailProps {
   motorhomeDetail: {
     capacity?: number | null
@@ -30,37 +32,13 @@ export default function MotorhomeCard({ motorhomeDetail }: MotorhomeDetailProps)
 
   return (
     <div className="amenities-card">
-      <style>{`
-        .motorhome-cell {
-          background: #f7f5f0;
-          border: 1px solid #e0ddd6;
-          border-radius: 12px;
-          padding: 10px 14px;
-          min-width: 140px;
-          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-        }
-        @media (hover: hover) {
-          .motorhome-cell:hover {
-            background: #f0f7f3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
-          }
-        }
-      `}</style>
       <div className="amenities-label">
         <div className="amenities-dot" />
         <p className="amenities-title">🚐 Acepta motorhomes</p>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {rows.map(r => (
-          <div key={r.label} className="motorhome-cell">
-            <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>
-              {r.label}
-            </p>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-              <span>{r.emoji}</span> {r.value}
-            </p>
-          </div>
+          <DetailCell key={r.label} label={r.label} value={r.value} emoji={r.emoji} />
         ))}
       </div>
     </div>

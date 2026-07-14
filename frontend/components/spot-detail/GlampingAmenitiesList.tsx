@@ -1,6 +1,8 @@
 "use client"
 
-interface GlampingAmenities {
+import AmenityPill from "./AmenityPill"
+
+export interface GlampingAmenities {
   private_bathroom?: boolean | null
   electricity?: boolean | null
   wifi?: boolean | null
@@ -40,20 +42,7 @@ export default function GlampingAmenitiesList({ amenities }: Props) {
       {active.map(([key]) => {
         const meta = GLAMPING_AMENITY_LABELS[key as keyof GlampingAmenities]
         if (!meta) return null
-        return (
-          <span
-            key={key}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              background: "#f7f5f0", border: "1px solid #e0ddd6",
-              borderRadius: 999, padding: "6px 12px",
-              fontSize: 13, color: "#3d3d3a",
-            }}
-          >
-            <span>{meta.emoji}</span>
-            {meta.label}
-          </span>
-        )
+        return <AmenityPill key={key} emoji={meta.emoji} label={meta.label} />
       })}
     </div>
   )

@@ -13,7 +13,6 @@ const CATEGORY_EMOJIS = {
 }
 import { useRouter } from "next/navigation"
 import Navbar from "../../../components/layout/Navbar"
-import AmenitiesList from "../../../components/spot-detail/AmenitiesList"
 import dynamic from "next/dynamic"
 import SpotDescription from "../../../components/spot-detail/SpotDescription"
 import SpotDetails from "../../../components/spot-detail/SpotDetails"
@@ -29,8 +28,11 @@ import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import SpotImages from "../../../components/spot-detail/SpotImages"
 import ShareModal from "@/components/spot-detail/ShareModal"
 import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
-import GlampingAmenitiesList from "../../../components/spot-detail/GlampingAmenitiesList"
+import CampingCard from "../../../components/spot-detail/CampingCard"
+import GlampingCard from "../../../components/spot-detail/GlampingCard"
 import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
+
+const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
@@ -71,6 +73,23 @@ useEffect(() => {
         .then(data => { if (data) setSurfSchools(data) })
     }
   }, [spot.id])
+
+  const stayCards = {
+    Camping: spot.camping_detail ? (
+      <CampingCard key="camping" campingDetail={spot.camping_detail} amenities={spot.amenities} />
+    ) : null,
+    Glamping: spot.glamping_detail && spot.glamping_detail.length > 0 ? (
+      <GlampingCard key="glamping" glampingDetail={spot.glamping_detail} glampingAmenities={spot.glamping_amenities} />
+    ) : null,
+    Motorhome: spot.motorhome_detail ? (
+      <MotorhomeCard key="motorhome" motorhomeDetail={spot.motorhome_detail} />
+    ) : null,
+  }
+  const primaryStayType = spot.category?.name
+  const orderedStayTypes = STAY_TYPE_ORDER.includes(primaryStayType)
+    ? [primaryStayType, ...STAY_TYPE_ORDER.filter((t) => t !== primaryStayType)]
+    : STAY_TYPE_ORDER
+  const orderedStayCards = orderedStayTypes.map((t) => stayCards[t]).filter(Boolean)
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
@@ -185,6 +204,53 @@ useEffect(() => {
         .amenities-title {
           font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
           text-transform: uppercase; color: #2d6a4f; margin: 0;
+        }
+
+        /* Hover compartido: cards/cells de datos y pills de amenities */
+        .hover-lift-green {
+          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        @media (hover: hover) {
+          .hover-lift-green:hover {
+            background: #f0f7f3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+          }
+        }
+
+        .detail-cell {
+          background: #f7f5f0;
+          border: 1px solid #e0ddd6;
+          border-radius: 12px;
+          padding: 10px 14px;
+          min-width: 140px;
+        }
+        .detail-cell-label {
+          font-size: 11px; font-weight: 600; color: #9a9690;
+          text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px;
+        }
+        .detail-cell-value {
+          font-size: 14px; font-weight: 600; color: #1b1b19; margin: 0;
+          display: flex; align-items: center; gap: 6px;
+        }
+
+        .amenity-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: #f7f5f0;
+          border: 1px solid #e0ddd6;
+          font-family: 'DM Sans', sans-serif;
+          cursor: default;
+          user-select: none;
+        }
+        .amenity-pill-emoji { font-size: 15px; line-height: 1; }
+        .amenity-pill-label { font-size: 13px; font-weight: 500; color: #3d3d3a; }
+        @media (max-width: 480px) {
+          .amenity-pill { padding: 5px 10px; }
+          .amenity-pill-label { font-size: 12px; }
         }
 
         .spot-divider {
@@ -408,120 +474,7 @@ useEffect(() => {
                 <ClimbingSectorsCards sectors={sectors} spotSlug={spot.slug} />
               )}
 
-              {spot.camping_detail && (
-                <div className="amenities-card">
-                  <div className="amenities-label">
-                    <div className="amenities-dot" />
-                    <p className="amenities-title">⛺ Información del Camping</p>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: spot.amenities?.length > 0 ? 18 : 0 }}>
-                    {spot.camping_detail.price != null && (
-                      <div style={{
-                        background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                        padding: "10px 14px", minWidth: 140,
-                      }}>
-                        <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          Precio por noche
-                        </p>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                          ${spot.camping_detail.price}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {spot.amenities?.length > 0 && (
-                    <AmenitiesList amenities={spot.amenities} />
-                  )}
-                </div>
-              )}
-
-              {spot.glamping_detail && spot.glamping_detail.length > 0 && (
-                <div className="amenities-card">
-                  <div className="amenities-label">
-                    <div className="amenities-dot" />
-                    <p className="amenities-title">🛖 Información del Glamping</p>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: spot.glamping_amenities ? 18 : 0 }}>
-                    {spot.glamping_detail.map((unit, index) => (
-                      <div key={unit.id ?? index}>
-                        {spot.glamping_detail.length > 1 && (
-                          <p style={{ fontSize: 12, fontWeight: 700, color: "#2d6a4f", margin: "0 0 8px" }}>
-                            {unit.accommodation_type
-                              ? unit.accommodation_type.charAt(0).toUpperCase() + unit.accommodation_type.slice(1)
-                              : `Tipo ${index + 1}`}
-                          </p>
-                        )}
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                          {unit.accommodation_type && spot.glamping_detail.length === 1 && (
-                            <div style={{
-                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                              padding: "10px 14px", minWidth: 140,
-                            }}>
-                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                Tipo de alojamiento
-                              </p>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0, textTransform: "capitalize" }}>
-                                {unit.accommodation_type}
-                              </p>
-                            </div>
-                          )}
-                          {unit.capacity != null && (
-                            <div style={{
-                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                              padding: "10px 14px", minWidth: 140,
-                            }}>
-                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                Capacidad
-                              </p>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                                {unit.capacity} persona{unit.capacity !== 1 ? "s" : ""}
-                              </p>
-                            </div>
-                          )}
-                          {unit.price_per_night != null && (
-                            <div style={{
-                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                              padding: "10px 14px", minWidth: 140,
-                            }}>
-                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                Precio por noche
-                              </p>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                                ${unit.price_per_night}
-                              </p>
-                            </div>
-                          )}
-                          {unit.min_nights != null && (
-                            <div style={{
-                              background: "#f5f4f0", border: "1px solid #e0ddd6", borderRadius: 12,
-                              padding: "10px 14px", minWidth: 140,
-                            }}>
-                              <p style={{ fontSize: 11, color: "#9a9690", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                Mínimo de noches
-                              </p>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                                {unit.min_nights} noche{unit.min_nights !== 1 ? "s" : ""}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        {spot.glamping_detail.length > 1 && index < spot.glamping_detail.length - 1 && (
-                          <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", margin: "14px 0 0" }} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {spot.glamping_amenities && (
-                    <GlampingAmenitiesList amenities={spot.glamping_amenities} />
-                  )}
-                </div>
-              )}
-
-              {spot.motorhome_detail && (
-                <MotorhomeCard motorhomeDetail={spot.motorhome_detail} />
-              )}
+              {orderedStayCards}
 
               {(spot.category?.name === "Camping" || spot.category?.name === "Glamping" || spot.category?.name === "Motorhome") && (
                 <ExperienciasSection spotId={spot.id} />
