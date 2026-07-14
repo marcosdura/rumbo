@@ -30,6 +30,7 @@ import SpotImages from "../../../components/spot-detail/SpotImages"
 import ShareModal from "@/components/spot-detail/ShareModal"
 import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
 import GlampingAmenitiesList from "../../../components/spot-detail/GlampingAmenitiesList"
+import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
@@ -520,6 +521,10 @@ useEffect(() => {
 
               {spot.motorhome_detail && (
                 <MotorhomeCard motorhomeDetail={spot.motorhome_detail} />
+              )}
+
+              {(spot.category?.name === "Camping" || spot.category?.name === "Glamping" || spot.category?.name === "Motorhome") && (
+                <ExperienciasSection spotId={spot.id} />
               )}
 
               {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (
