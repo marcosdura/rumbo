@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 import { useState, useEffect, useRef } from "react"
 import type { CSSProperties } from "react"
 import type React from "react"
-import { DEPARTMENTS, PHONE_COUNTRIES } from "../constants"
+import { DEPARTMENTS, PHONE_COUNTRIES, normalizePhoneDigits } from "../constants"
 import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
@@ -87,7 +87,8 @@ export default function StepInfoBasica({
     }
     if (!basic.noContact && basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
     const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
-    if (!basic.noContact && basic.whatsapp.trim() && basic.whatsapp.trim().length !== phoneCountry.digits) missing.add("whatsapp")
+    const normalizedWhatsapp = normalizePhoneDigits(basic.whatsapp.trim(), phoneCountry)
+    if (!basic.noContact && basic.whatsapp.trim() && normalizedWhatsapp.length !== phoneCountry.digits) missing.add("whatsapp")
     if (isPublic === null) missing.add("isPublic")
     if (!basic.lat || !basic.lng) missing.add("location")
     setFieldErrors(missing)
@@ -197,8 +198,9 @@ export default function StepInfoBasica({
                   placeholder={`${PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry)?.digits ?? 8} dígitos`}
                   value={basic.whatsapp}
                   onChange={e => {
+                    const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
                     const digitsOnly = e.target.value.replace(/\D/g, "")
-                    const maxDigits = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry)?.digits ?? 8
+                    const maxDigits = phoneCountry.digits + (phoneCountry.trunkPrefix?.length ?? 0)
                     upd("whatsapp", digitsOnly.slice(0, maxDigits))
                   }}
                 />

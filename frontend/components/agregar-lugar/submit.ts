@@ -1,11 +1,11 @@
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
-import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS } from "./constants"
+import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
   if (!basic.whatsapp.trim()) return null
   const country = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
-  return `+${country.dial} ${basic.whatsapp}`
+  return `+${country.dial} ${normalizePhoneDigits(basic.whatsapp.trim(), country)}`
 }
 
 interface SubmitParams {

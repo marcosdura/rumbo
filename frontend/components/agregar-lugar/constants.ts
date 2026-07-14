@@ -1,7 +1,7 @@
 import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, PhoneCountry, ExperienceItem, ExperienceScheduleType } from "./types"
 
 export const PHONE_COUNTRIES: PhoneCountry[] = [
-  { code: "UY", name: "Uruguay",        dial: "598", digits: 8 },
+  { code: "UY", name: "Uruguay",        dial: "598", digits: 8, trunkPrefix: "0" },
   { code: "AR", name: "Argentina",      dial: "54",  digits: 10 },
   { code: "BR", name: "Brasil",         dial: "55",  digits: 11 },
   { code: "CL", name: "Chile",          dial: "56",  digits: 9 },
@@ -9,6 +9,16 @@ export const PHONE_COUNTRIES: PhoneCountry[] = [
   { code: "ES", name: "España",         dial: "34",  digits: 9 },
   { code: "US", name: "Estados Unidos", dial: "1",   digits: 10 },
 ]
+
+// Algunos países (ej. Uruguay) permiten escribir el número con el 0 inicial
+// de larga distancia (093 332 453) además de sin él (93 332 453).
+export function normalizePhoneDigits(rawDigits: string, country: PhoneCountry): string {
+  const prefix = country.trunkPrefix
+  if (prefix && rawDigits.length === country.digits + prefix.length && rawDigits.startsWith(prefix)) {
+    return rawDigits.slice(prefix.length)
+  }
+  return rawDigits
+}
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: "Camping",  label: "Camping",  emoji: "⛺" },
