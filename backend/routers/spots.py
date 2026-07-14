@@ -450,6 +450,51 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/spots/mine")
+def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    email = user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    spots = (
+        db.query(SpotDB)
+        .options(
+            joinedload(SpotDB.category),
+            joinedload(SpotDB.images),
+            joinedload(SpotDB.spot_categories).joinedload(SpotCategory.category),
+        )
+        .filter(SpotDB.owner_email == email)
+        .order_by(SpotDB.created_at.desc())
+        .all()
+    )
+    spot_ids = [s.id for s in spots]
+    review_aggs = (
+        db.query(
+            models.Review.spot_id,
+            func.avg(models.Review.rating).label("average_rating"),
+            func.count(models.Review.id).label("review_count"),
+        )
+        .filter(models.Review.spot_id.in_(spot_ids))
+        .group_by(models.Review.spot_id)
+        .all()
+    ) if spot_ids else []
+    agg_by_id = {r.spot_id: r for r in review_aggs}
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "slug": s.slug,
+            "department": s.department,
+            "is_approved": s.is_approved,
+            "created_at": s.created_at.isoformat(),
+            "category": s.category,
+            "images": s.images,
+            "average_rating": round(float(agg_by_id[s.id].average_rating), 1) if s.id in agg_by_id and agg_by_id[s.id].average_rating else None,
+            "review_count": agg_by_id[s.id].review_count if s.id in agg_by_id else 0,
+        }
+        for s in spots
+    ]
+
+
 @router.get("/spots/{id}", response_model=SpotResponse)
 def get_spot(id: int, db: Session = Depends(get_db)):
     spot = (

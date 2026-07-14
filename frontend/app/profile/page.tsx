@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const { data: session, status } = useSession()
   const [favorites, setFavorites] = useState<any[]>([])
   const [reviews, setReviews] = useState<any[]>([])
+  const [mySpots, setMySpots] = useState<any[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDangerZone, setShowDangerZone] = useState(false)
   const [confirmText, setConfirmText] = useState("")
@@ -30,6 +31,10 @@ export default function ProfilePage() {
   fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers })
     .then(res => res.json())
     .then(data => setReviews(Array.isArray(data) ? data : []))
+
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers })
+    .then(res => res.json())
+    .then(data => setMySpots(Array.isArray(data) ? data : []))
 }, [session?.id_token, session?.error])
 
   if (status === "loading") return <LoadingScreen />
@@ -319,6 +324,64 @@ export default function ProfilePage() {
                 </Link>
               ))}
             </div>
+
+            {mySpots.length > 0 && (
+              <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f" }} />
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                    Tus lugares
+                  </p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {mySpots.map(spot => {
+                    const main = spot.images?.find((i: any) => i.is_main) || spot.images?.[0]
+                    return (
+                      <div key={spot.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #ede9e1" }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#f7f5f0" }}>
+                          {main ? (
+                            <img
+                              src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_96,h_96,c_fill/${main.cloudinary_public_id}`}
+                              alt={spot.name}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🏕️</div>
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: "0 0 2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {spot.name}
+                          </p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{
+                              fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20,
+                              background: spot.is_approved ? "#e8f5ee" : "#fef3cd",
+                              color: spot.is_approved ? "#1b4332" : "#92400e",
+                            }}>
+                              {spot.is_approved ? "Aprobado" : "Pendiente"}
+                            </span>
+                            <span style={{ fontSize: 12, color: "#9a9690" }}>
+                              ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </div>
+                        <Link
+                          href={`/dashboard/spots/${spot.id}`}
+                          style={{
+                            padding: "6px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                            background: "#f7f5f0", border: "1px solid #e0ddd6", color: "#3d3d3a",
+                            textDecoration: "none", flexShrink: 0,
+                          }}
+                        >
+                          Administrar →
+                        </Link>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Preview favoritos */}
             {favorites.length > 0 && (
