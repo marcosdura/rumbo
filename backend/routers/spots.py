@@ -14,7 +14,6 @@ from database import engine
 from models import Base
 import re
 from sqlalchemy import text
-import cloudinary.uploader
 import cloudinary
 import cloudinary.uploader
 import os
