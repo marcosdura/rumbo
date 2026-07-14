@@ -195,7 +195,10 @@ export default function StepInfoBasica({
                 <input
                   style={{ ...s.input, ...((fieldErrors.has("contact") || fieldErrors.has("whatsapp")) ? errorInputBorder : {}) }}
                   type="text" inputMode="numeric"
-                  placeholder={`${PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry)?.digits ?? 8} dígitos`}
+                  placeholder={(() => {
+                    const c = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
+                    return c.example ?? `${c.digits} dígitos`
+                  })()}
                   value={basic.whatsapp}
                   onChange={e => {
                     const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]

@@ -1,7 +1,7 @@
 import type { Category, TrekkingFeatureKey, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, BasicInfo, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, PhoneCountry, ExperienceItem, ExperienceScheduleType } from "./types"
 
 export const PHONE_COUNTRIES: PhoneCountry[] = [
-  { code: "UY", name: "Uruguay",        dial: "598", digits: 8, trunkPrefix: "0" },
+  { code: "UY", name: "Uruguay",        dial: "598", digits: 8, trunkPrefix: "0", example: "099 999 999" },
   { code: "AR", name: "Argentina",      dial: "54",  digits: 10 },
   { code: "BR", name: "Brasil",         dial: "55",  digits: 11 },
   { code: "CL", name: "Chile",          dial: "56",  digits: 9 },

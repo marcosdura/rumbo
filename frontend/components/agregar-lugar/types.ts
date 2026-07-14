@@ -40,7 +40,7 @@ export type BasicInfo = {
   lat: string; lng: string
 }
 
-export type PhoneCountry = { code: string; name: string; dial: string; digits: number; trunkPrefix?: string }
+export type PhoneCountry = { code: string; name: string; dial: string; digits: number; trunkPrefix?: string; example?: string }
 
 export type MotorhomeDetailItem = {
   capacity: string
