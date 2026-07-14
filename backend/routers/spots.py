@@ -386,9 +386,11 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db)):
     images = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).all()
     for img in images:
         try:
-            cloudinary.uploader.destroy(img.cloudinary_public_id)
-        except Exception:
-            pass
+            print(f"[Cloudinary] Destruyendo: {img.cloudinary_public_id}")
+            result = cloudinary.uploader.destroy(img.cloudinary_public_id)
+            print(f"[Cloudinary] Resultado: {result}")
+        except Exception as e:
+            print(f"[Cloudinary] Error: {e}")
 
     db.execute(text("DELETE FROM spots WHERE id = :id"), {"id": spot_id})
     db.commit()
