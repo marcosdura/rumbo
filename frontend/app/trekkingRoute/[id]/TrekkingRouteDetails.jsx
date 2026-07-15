@@ -68,9 +68,6 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          .altitude-grid {
-            grid-template-columns: 1fr !important;
-          }
           .page-content {
             padding: 20px 16px 48px !important;
           }
@@ -116,13 +113,15 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
             </div>
           </div>
 
-          {/* Stats principales */}
-          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
+          {/* Stats */}
+          <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 16, marginBottom: 20 }}>
             {[
               { icon: "📏", val: formatStat(route.distance_km, " km"),      lbl: "Distancia" },
               { icon: "⏱️", val: formatStat(route.duration_hours, " h"),    lbl: "Duración" },
               { icon: "↑",  val: formatStat(route.elevation_gain, " m"),    lbl: "Desnivel +" },
               { icon: "↓",  val: formatStat(route.elevation_loss, " m"),    lbl: "Desnivel −" },
+              { icon: "⛰️", val: formatStat(route.max_altitude, " m"),      lbl: "Altitud máxima" },
+              { icon: "🏕️", val: formatStat(route.min_altitude, " m"),      lbl: "Altitud mínima" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid #e0ddd6",
@@ -132,27 +131,6 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
                 <p style={{ fontSize: 24, marginBottom: 6 }}>{icon}</p>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{val}</p>
                 <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Altitudes */}
-          <div className="fade-up fade-up-2 altitude-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 20 }}>
-            {[
-              { icon: "⛰️", val: formatStat(route.max_altitude, " m"), lbl: "Altitud máxima" },
-              { icon: "🏕️", val: formatStat(route.min_altitude, " m"), lbl: "Altitud mínima" },
-            ].map(({ icon, val, lbl }) => (
-              <div key={lbl} style={{
-                background: "#fff", border: "1px solid #e0ddd6",
-                borderRadius: 16, padding: "20px 24px",
-                display: "flex", alignItems: "center", gap: 16,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              }}>
-                <span style={{ fontSize: 28 }}>{icon}</span>
-                <div>
-                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 2px" }}>{val}</p>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
-                </div>
               </div>
             ))}
           </div>
