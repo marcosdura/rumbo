@@ -283,7 +283,7 @@ input[type="number"] {
   }
 }
 
-/* Hover compartido: cards/cells de datos y pills de amenities */
+/* Hover compartido: cards/cells de datos */
 .hover-lift-green {
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
@@ -294,14 +294,17 @@ input[type="number"] {
     box-shadow: 0 4px 14px rgba(0,0,0,0.07);
   }
 }
-.hover-lift-red {
-  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+
+/* Hover compartido para Pill (una sola clase, tinte via CSS custom properties) */
+.pill-hover {
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 @media (hover: hover) {
-  .hover-lift-red:hover {
-    background: #fdeaea;
+  .pill-hover:hover {
+    background: var(--pill-hover-bg);
+    border-color: var(--pill-hover-border);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(220,38,38,0.1);
+    box-shadow: 0 4px 14px var(--pill-hover-shadow, rgba(0,0,0,0.07));
   }
 }
 
@@ -319,23 +322,4 @@ input[type="number"] {
 .detail-cell-value {
   font-size: 14px; font-weight: 600; color: #1b1b19; margin: 0;
   display: flex; align-items: center; gap: 6px;
-}
-
-.amenity-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #f7f5f0;
-  border: 1px solid #e0ddd6;
-  font-family: 'DM Sans', sans-serif;
-  cursor: default;
-  user-select: none;
-}
-.amenity-pill-emoji { font-size: 15px; line-height: 1; }
-.amenity-pill-label { font-size: 13px; font-weight: 500; color: #3d3d3a; }
-@media (max-width: 480px) {
-  .amenity-pill { padding: 5px 10px; }
-  .amenity-pill-label { font-size: 12px; }
 }

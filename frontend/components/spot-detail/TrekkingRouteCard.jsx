@@ -1,73 +1,50 @@
 "use client"
 
-const difficultyStyle = {
-  "fácil":      { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8", dot: "🟢" },
-  "moderado":   { color: "#78590a", bg: "#fef9e7", border: "#f0d98a", dot: "🟡" },
-  "difícil":    { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0", dot: "🔴" },
+import Pill from "@/components/ui/Pill"
+
+const DIFFICULTY_CONFIG = {
+  "fácil":    { variant: "green",  dot: "🟢" },
+  "moderado": { variant: "yellow", dot: "🟡" },
+  "difícil":  { variant: "red",    dot: "🔴" },
 }
 
-const levelStyle = {
-  "bajo":  { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
-  "medio": { color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
-  "alto":  { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
-}
-
-const neutral = { color: "#4a443b", bg: "#f7f5f0", border: "#e0ddd6" }
-
-function Badge({ label, style }) {
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 6,
-      padding: "5px 12px", borderRadius: 999,
-      fontSize: 12, fontWeight: 600,
-      color: style.color, background: style.bg, border: `1px solid ${style.border}`,
-    }}>
-      {label}
-    </span>
-  )
-}
+const LEVEL_VARIANT = { "bajo": "green", "medio": "yellow", "alto": "red" }
 
 export default function TrekkingRouteCard({ route }) {
   if (!route) return null
 
-  const diff = difficultyStyle[route.difficulty]
-  const tech = levelStyle[route.technical_level]
-  const phys = levelStyle[route.physical_demand]
-
   const items = []
 
-  if (diff) items.push({ label: `${diff.dot} ${route.difficulty?.charAt(0).toUpperCase() + route.difficulty?.slice(1)}`, style: diff })
-  else if (route.difficulty) items.push({ label: route.difficulty, style: neutral })
+  if (route.difficulty) {
+    const conf = DIFFICULTY_CONFIG[route.difficulty]
+    const label = route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1)
+    items.push({ variant: conf?.variant || "neutral", label: conf ? `${conf.dot} ${label}` : label })
+  }
 
-  if (route.route_type) items.push({
-    label: `${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`,
-    style: neutral,
-  })
+  if (route.route_type) {
+    items.push({ variant: "neutral", label: `${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}` })
+  }
 
-  if (tech) items.push({ label: `🧗 Técnico: ${route.technical_level}`, style: tech })
-  else if (route.technical_level) items.push({ label: `🧗 Técnico: ${route.technical_level}`, style: neutral })
+  if (route.technical_level) {
+    items.push({ variant: LEVEL_VARIANT[route.technical_level] || "neutral", label: `🧗 Técnico: ${route.technical_level}` })
+  }
 
-  if (phys) items.push({ label: `💪 Físico: ${route.physical_demand}`, style: phys })
-  else if (route.physical_demand) items.push({ label: `💪 Físico: ${route.physical_demand}`, style: neutral })
+  if (route.physical_demand) {
+    items.push({ variant: LEVEL_VARIANT[route.physical_demand] || "neutral", label: `💪 Físico: ${route.physical_demand}` })
+  }
 
   if (items.length === 0) return null
 
   return (
-    <div style={{
-      background: "#fff",
-      border: "1px solid #e0ddd6",
-      borderRadius: 20,
-      padding: "24px 28px",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
-          Características de la ruta
-        </p>
+    <div className="amenities-card">
+      <div className="amenities-label">
+        <div className="amenities-dot" />
+        <p className="amenities-title">Características de la ruta</p>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {items.map((item, i) => <Badge key={i} label={item.label} style={item.style} />)}
+        {items.map((item, i) => (
+          <Pill key={i} variant={item.variant} size="lg" hover>{item.label}</Pill>
+        ))}
       </div>
     </div>
   )

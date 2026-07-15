@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { CldImage } from "next-cloudinary"
+import Pill from "@/components/ui/Pill"
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
@@ -354,13 +355,9 @@ export default function ProfilePage() {
                             {spot.name}
                           </p>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{
-                              fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20,
-                              background: spot.is_approved ? "#e8f5ee" : "#fef3cd",
-                              color: spot.is_approved ? "#1b4332" : "#92400e",
-                            }}>
+                            <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
                               {spot.is_approved ? "Aprobado" : "Pendiente"}
-                            </span>
+                            </Pill>
                             <span style={{ fontSize: 12, color: "#9a9690" }}>
                               ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
                             </span>

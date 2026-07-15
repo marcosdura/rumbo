@@ -4,6 +4,7 @@ import BackButton from "./BackButton"
 import KayakPhotos from "./KayakPhotos"
 import Footer from "@/components/layout/Footer"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
+import Pill from "@/components/ui/Pill"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -17,10 +18,10 @@ const WATER_TYPE: Record<string, { label: string; icon: string }> = {
   mar:  { label: "Mar",  icon: "🌊" },
 }
 
-const DIFFICULTY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  facil:      { label: "Fácil",      color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
-  intermedio: { label: "Intermedio", color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
-  dificil:    { label: "Difícil",    color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
+const DIFFICULTY_CONFIG: Record<string, { label: string; variant: "green" | "yellow" | "red" }> = {
+  facil:      { label: "Fácil",      variant: "green" },
+  intermedio: { label: "Intermedio", variant: "yellow" },
+  dificil:    { label: "Difícil",    variant: "red" },
 }
 
 const KAYAK_TYPE: Record<string, string> = {
@@ -163,18 +164,12 @@ export default async function KayakDetailPage({ params }: Props) {
           {/* Title block */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ background: "#eae6df", border: "1px solid #d0c9bc", color: "#4a443b", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                🛶 Kayak
-              </span>
+              <Pill variant="beige" hover>🛶 Kayak</Pill>
               {kayak.spot_name && (
-                <span style={{ background: "#f0f7f3", border: "1px solid #b7dfc9", color: "#1b4332", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                  📍 {kayak.spot_name}
-                </span>
+                <Pill variant="green" hover>📍 {kayak.spot_name}</Pill>
               )}
               {kayak.spot_department && (
-                <span style={{ background: "#1b4332", color: "#d8f3dc", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                  {kayak.spot_department}
-                </span>
+                <Pill variant="dark-green" hover>{kayak.spot_department}</Pill>
               )}
             </div>
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
@@ -226,12 +221,7 @@ export default async function KayakDetailPage({ params }: Props) {
                   {diffInfo && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: "#7a7669" }}>Dificultad</span>
-                      <span style={{
-                        fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                        color: diffInfo.color, background: diffInfo.bg, border: `1px solid ${diffInfo.border}`,
-                      }}>
-                        {diffInfo.label}
-                      </span>
+                      <Pill variant={diffInfo.variant}>{diffInfo.label}</Pill>
                     </div>
                   )}
                   {kayak.duration != null && (

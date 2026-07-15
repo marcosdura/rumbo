@@ -35,7 +35,7 @@ export default function SectorCard({ sector, spotSlug }) {
 
         {sector.type && (
           <div className="sector-badges">
-            <Pill variant="green">🧗 {sector.type}</Pill>
+            <Pill variant="green" size="sm">🧗 {sector.type}</Pill>
           </div>
         )}
       </div>

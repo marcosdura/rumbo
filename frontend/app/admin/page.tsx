@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
+import Pill from "@/components/ui/Pill"
 
 type AdminSpot = {
   id: number
@@ -254,13 +255,9 @@ export default function AdminPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
-                          <span style={{
-                            fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 20,
-                            background: spot.is_approved ? "#e8f5ee" : "#fef3cd",
-                            color: spot.is_approved ? "#1b4332" : "#92400e",
-                          }}>
+                          <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
                             {spot.is_approved ? "Aprobado" : "Pendiente"}
-                          </span>
+                          </Pill>
                         </div>
                         <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
                           {spot.category?.name} · {spot.department}

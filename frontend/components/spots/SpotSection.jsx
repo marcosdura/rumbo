@@ -94,7 +94,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
         {title}
       </h2>
       {count > 0 && (
-        <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
+        <Pill variant="dark-green" hover style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
           {count}
         </Pill>
       )}

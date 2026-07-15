@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
+import Pill from "@/components/ui/Pill"
 
 type SpotImage = { cloudinary_public_id: string; is_main: boolean; order: number }
 type Review = {
@@ -273,13 +274,9 @@ export default function SpotDashboardPage() {
                 {spot.name}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20,
-                  background: spot.is_approved ? "#e8f5ee" : "#fef3cd",
-                  color: spot.is_approved ? "#1b4332" : "#92400e",
-                }}>
+                <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
                   {spot.is_approved ? "✓ Aprobado" : "⏳ Pendiente de aprobación"}
-                </span>
+                </Pill>
                 {spot.category && (
                   <span style={{ fontSize: 12, color: "#9a9690" }}>{spot.category.name} · {spot.department}</span>
                 )}

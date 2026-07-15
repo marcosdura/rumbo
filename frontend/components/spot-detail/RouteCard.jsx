@@ -6,22 +6,15 @@ import Pill from "@/components/ui/Pill"
 import { formatStat } from "@/lib/formatStat"
 
 const difficultyConfig = {
-  "fácil":    { label: "Fácil",    color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8", dot: "🟢" },
-  "moderado": { label: "Moderado", color: "#78590a", bg: "#fef9e7", border: "#f0d98a", dot: "🟡" },
-  "difícil":  { label: "Difícil",  color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0", dot: "🔴" },
+  "fácil":    { label: "Fácil",    variant: "green",  dot: "🟢" },
+  "moderado": { label: "Moderado", variant: "yellow", dot: "🟡" },
+  "difícil":  { label: "Difícil",  variant: "red",    dot: "🔴" },
 }
-
-const neutralBadge = (label) => ({
-  label,
-  color: "#4a443b",
-  bg: "#f7f5f0",
-  border: "#e0ddd6",
-})
 
 export default function RouteCard({ route, spotSlug }) {
   const [hovered, setHovered] = useState(false)
   const diff = difficultyConfig[route.difficulty]
-    || { label: route.difficulty || "Sin datos", color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6", dot: "⚪" }
+    || { label: route.difficulty || "Sin datos", variant: "muted", dot: "⚪" }
   const href = spotSlug && route.slug
     ? `/spots/${spotSlug}/rutas/${route.slug}`
     : `/trekkingRoute/${route.id}`
@@ -68,10 +61,14 @@ export default function RouteCard({ route, spotSlug }) {
         </div>
 
         <div className="route-badges">
-          <Pill bg={diff.bg} color={diff.color} border={diff.border}>
+          <Pill variant={diff.variant} size="sm">
             {diff.dot} {diff.label}
           </Pill>
-          {route.route_type && <Pill {...neutralBadge(`${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}`)} />}
+          {route.route_type && (
+            <Pill variant="neutral" size="sm">
+              {route.route_type === "circular" ? "🔁" : "↩️"} {route.route_type}
+            </Pill>
+          )}
         </div>
       </div>
     </Link>

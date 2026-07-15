@@ -1,6 +1,6 @@
 "use client"
 
-import AmenityPill from "./AmenityPill"
+import Pill from "@/components/ui/Pill"
 
 const CATEGORIES = [
   {
@@ -132,7 +132,9 @@ function AmenitiesList({ amenities }) {
             <p className="amenity-cat-label">{cat.label}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {cat.items.map((amenity) => (
-                <AmenityPill key={amenity.id} emoji={AMENITY_ICONS[amenity.name] || "✨"} label={amenity.name} />
+                <Pill key={amenity.id} variant="neutral" size="lg" hover>
+                  {AMENITY_ICONS[amenity.name] || "✨"} {amenity.name}
+                </Pill>
               ))}
             </div>
           </div>
@@ -143,7 +145,9 @@ function AmenitiesList({ amenities }) {
             <p className="amenity-cat-label">✨ Otros</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {uncategorized.map((amenity) => (
-                <AmenityPill key={amenity.id} emoji="✨" label={amenity.name} />
+                <Pill key={amenity.id} variant="neutral" size="lg" hover>
+                  ✨ {amenity.name}
+                </Pill>
               ))}
             </div>
           </div>

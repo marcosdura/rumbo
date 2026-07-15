@@ -31,6 +31,7 @@ import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
 import CampingCard from "../../../components/spot-detail/CampingCard"
 import GlampingCard from "../../../components/spot-detail/GlampingCard"
 import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
+import Pill from "@/components/ui/Pill"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -126,26 +127,6 @@ useEffect(() => {
           transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .img-zoom:hover img { transform: scale(1.06); }
-
-        .category-pill {
-          background: #eae6df;
-          border: 1px solid #d0c9bc;
-          color: #4a443b;
-          font-weight: 600;
-          font-size: 12px;
-          letter-spacing: 0.04em;
-          padding: 4px 12px;
-          border-radius: 999px;
-        }
-        .department-pill {
-          background: #1b4332;
-          color: #d8f3dc;
-          font-weight: 600;
-          font-size: 12px;
-          letter-spacing: 0.04em;
-          padding: 4px 12px;
-          border-radius: 999px;
-        }
 
         .rating-badge {
           display: inline-flex;
@@ -324,18 +305,18 @@ useEffect(() => {
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
                 {spot.categories && spot.categories.length > 0 ? (
                   spot.categories.map((cat) => (
-                    <span key={cat.id} className="category-pill">
+                    <Pill key={cat.id} variant="beige" hover>
                       {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}
                       {cat.name}
-                    </span>
+                    </Pill>
                   ))
                 ) : (
-                  <span className="category-pill">
+                  <Pill variant="beige" hover>
                     {CATEGORY_EMOJIS[spot.category?.name] && `${CATEGORY_EMOJIS[spot.category.name]} `}
                     {spot.category?.name || "Sin categoría"}
-                  </span>
+                  </Pill>
                 )}
-                <span className="department-pill">{spot.department || "Sin departamento"}</span>
+                <Pill variant="dark-green" hover>{spot.department || "Sin departamento"}</Pill>
               </div>
             </div>
 

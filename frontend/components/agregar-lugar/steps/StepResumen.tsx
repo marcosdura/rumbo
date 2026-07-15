@@ -4,6 +4,7 @@ import { TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES } fr
 import { s } from "../styles"
 import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
+import Pill from "@/components/ui/Pill"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
@@ -170,9 +171,7 @@ export default function StepResumen({
         <SummaryCard title={`Amenities del ${isCamping ? "camping" : "glamping"}`} onEdit={() => onEditStep(3)}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {selectedAmenities.map(name => (
-              <span key={name} style={{ fontSize: 12, background: "#f0f7f3", border: "1px solid #c0ddd0", borderRadius: 999, padding: "4px 10px" }}>
-                {name}
-              </span>
+              <Pill key={name} variant="subtle-green" hover>{name}</Pill>
             ))}
           </div>
         </SummaryCard>

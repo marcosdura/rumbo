@@ -1,6 +1,6 @@
 "use client"
 
-import AmenityPill from "./AmenityPill"
+import Pill from "@/components/ui/Pill"
 
 const AMENITIES = [
   { key: "bathrooms",     label: "Baños",            emoji: "🚽" },
@@ -31,8 +31,8 @@ export default function TrekkingAmenitiesCard({ trekkingDetail }) {
         {badges.map(({ key, label, emoji }) => {
           const val = trekkingDetail[key]
           return val
-            ? <AmenityPill key={key} emoji={emoji} label={label} tone="positive" />
-            : <AmenityPill key={key} emoji="" label={`No ${label}`} tone="negative" />
+            ? <Pill key={key} variant="green" size="lg" hover>{emoji} {label}</Pill>
+            : <Pill key={key} variant="red" size="lg" hover>No {label}</Pill>
         })}
       </div>
     </div>

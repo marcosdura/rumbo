@@ -165,18 +165,12 @@ export default async function SurfSchoolPage({ params }: Props) {
           {/* Title block */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ background: "#eae6df", border: "1px solid #d0c9bc", color: "#4a443b", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                🏄 Surf
-              </span>
+              <Pill variant="beige" hover>🏄 Surf</Pill>
               {school.spot_name && (
-                <span style={{ background: "#f0f7f3", border: "1px solid #b7dfc9", color: "#1b4332", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                  📍 {school.spot_name}
-                </span>
+                <Pill variant="green" hover>📍 {school.spot_name}</Pill>
               )}
               {school.spot_department && (
-                <span style={{ background: "#1b4332", color: "#d8f3dc", fontWeight: 600, fontSize: 12, letterSpacing: "0.04em", padding: "4px 12px", borderRadius: 999 }}>
-                  {school.spot_department}
-                </span>
+                <Pill variant="dark-green" hover>{school.spot_department}</Pill>
               )}
             </div>
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>

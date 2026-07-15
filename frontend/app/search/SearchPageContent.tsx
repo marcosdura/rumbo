@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
+import Pill from "../../components/ui/Pill"
 import FilterDrawer from "../../components/spots/TrekkingFilters"
 import KayakFilterDrawer from "../../components/spots/KayakFilters"
 import SurfFilterDrawer from "../../components/spots/SurfFilters"
@@ -332,15 +333,9 @@ export default function SearchPage() {
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {!loading && (
-                  <span style={{
-                    fontSize: 12, fontWeight: 600,
-                    padding: "3px 12px", borderRadius: 999,
-                    background: "#1b4332", color: "#d8f3dc",
-                    border: "1px solid #2d6a4f",
-                    letterSpacing: "0.03em",
-                  }}>
+                  <Pill variant="dark-green" hover style={{ fontSize: 12, padding: "3px 12px" }}>
                     {spots.length}
-                  </span>
+                  </Pill>
                 )}
                 {canFilter && (
                   <button
@@ -370,24 +365,12 @@ export default function SearchPage() {
             {(activity || department) && (
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {activity && (
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 11, fontWeight: 600,
-                    padding: "4px 10px", borderRadius: 999,
-                    background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8",
-                  }}>
+                  <Pill variant="green" hover>
                     {({ Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶" } as Record<string,string>)[activity] ?? "🏃"} {activity}
-                  </span>
+                  </Pill>
                 )}
                 {department && (
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 11, fontWeight: 600,
-                    padding: "4px 10px", borderRadius: 999,
-                    background: "#1b4332", color: "#d8f3dc", border: "1px solid #2d6a4f",
-                  }}>
-                    📍 {department}
-                  </span>
+                  <Pill variant="dark-green" hover>📍 {department}</Pill>
                 )}
               </div>
             )}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
+import Pill, { type PillVariant } from "@/components/ui/Pill"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const params = useParams()
@@ -38,21 +39,21 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
       .catch(() => setRoutes([]))
   }, [sector?.id])
 
-  const gradeConfig = (grade: any) => {
-    if (!grade) return { color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
+  const gradeVariant = (grade: any): PillVariant => {
+    if (!grade) return "muted"
     const g = grade.toLowerCase()
     if (g.startsWith("v")) {
       const num = parseInt(g.slice(1))
-      if (num <= 3) return { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" }
-      if (num <= 6) return { color: "#78590a", bg: "#fef9e7", border: "#f0d98a" }
-      if (num <= 9) return { color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a" }
-      return { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" }
+      if (num <= 3) return "green"
+      if (num <= 6) return "yellow"
+      if (num <= 9) return "orange"
+      return "red"
     }
     const num = parseFloat(g)
-    if (num <= 5) return { color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" }
-    if (num <= 6) return { color: "#78590a", bg: "#fef9e7", border: "#f0d98a" }
-    if (num <= 7) return { color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a" }
-    return { color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" }
+    if (num <= 5) return "green"
+    if (num <= 6) return "yellow"
+    if (num <= 7) return "orange"
+    return "red"
   }
 
   if (error) return (
@@ -84,15 +85,9 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   if (!sector) return <LoadingScreen />
 
   const badges = [
-    sector.type && {
-      icon: "🧗", label: sector.type,
-      color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8",
-    },
-    sector.restrictions && {
-      icon: "⚠️", label: sector.restrictions,
-      color: "#7c3a0a", bg: "#fff4e6", border: "#f5c97a",
-    },
-  ].filter(Boolean)
+    sector.type && { icon: "🧗", label: sector.type, variant: "green" as PillVariant },
+    sector.restrictions && { icon: "⚠️", label: sector.restrictions, variant: "orange" as PillVariant },
+  ].filter(Boolean) as { icon: string; label: string; variant: PillVariant }[]
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
@@ -215,30 +210,19 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           </div>
 
           {/* Características */}
-          <div className="fade-up fade-up-3" style={{
-            background: "#fff", border: "1px solid #e0ddd6",
-            borderRadius: 20, padding: "24px 28px",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: 20,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
-                Características
-              </p>
+          <div className="fade-up fade-up-3 amenities-card" style={{ marginBottom: 20 }}>
+            <div className="amenities-label">
+              <div className="amenities-dot" />
+              <p className="amenities-title">Características</p>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {badges.length === 0 ? (
                 <p style={{ fontSize: 13, color: "#9a9690", margin: 0 }}>Sin características registradas.</p>
               ) : (
                 badges.map((b, i) => (
-                  <span key={i} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "5px 12px", borderRadius: 999,
-                    fontSize: 12, fontWeight: 600,
-                    color: b.color, background: b.bg, border: `1px solid ${b.border}`,
-                  }}>
+                  <Pill key={i} variant={b.variant} size="lg" hover>
                     {b.icon} {b.label}
-                  </span>
+                  </Pill>
                 ))
               )}
             </div>
@@ -278,7 +262,6 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
                 {/* Filas */}
                 {routes.map((route: any, i: number) => {
-                  const gc = gradeConfig(route.grade)
                   return (
                     <div key={route.id} className="route-row">
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -288,14 +271,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                         <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{route.name}</p>
                       </div>
                       <div>
-                        <span style={{
-                          display: "inline-block",
-                          padding: "3px 10px", borderRadius: 999,
-                          fontSize: 12, fontWeight: 600,
-                          color: gc.color, background: gc.bg, border: `1px solid ${gc.border}`,
-                        }}>
-                          {route.grade}
-                        </span>
+                        <Pill variant={gradeVariant(route.grade)}>{route.grade}</Pill>
                       </div>
                       <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>{route.bolts ?? "—"}</p>
                       <p className="route-col-largo" style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>

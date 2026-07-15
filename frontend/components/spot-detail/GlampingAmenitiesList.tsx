@@ -1,6 +1,6 @@
 "use client"
 
-import AmenityPill from "./AmenityPill"
+import Pill from "@/components/ui/Pill"
 
 export interface GlampingAmenities {
   private_bathroom?: boolean | null
@@ -42,7 +42,11 @@ export default function GlampingAmenitiesList({ amenities }: Props) {
       {active.map(([key]) => {
         const meta = GLAMPING_AMENITY_LABELS[key as keyof GlampingAmenities]
         if (!meta) return null
-        return <AmenityPill key={key} emoji={meta.emoji} label={meta.label} />
+        return (
+          <Pill key={key} variant="neutral" size="lg" hover>
+            {meta.emoji} {meta.label}
+          </Pill>
+        )
       })}
     </div>
   )

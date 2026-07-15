@@ -125,7 +125,7 @@ export default function FavoritosPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <h1 className="favs-title">Favoritos</h1>
               {favorites.length > 0 && (
-                <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
+                <Pill variant="dark-green" hover style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
                   {favorites.length} spot{favorites.length !== 1 ? "s" : ""}
                 </Pill>
               )}

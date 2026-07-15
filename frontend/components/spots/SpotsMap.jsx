@@ -201,7 +201,7 @@ function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, on
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {categories.map(cat => (
-                <Pill key={cat.id ?? cat.name} variant="green" style={{ padding: '3px 8px' }}>
+                <Pill key={cat.id ?? cat.name} variant="green" size="sm">
                   {CATEGORY_EMOJI[cat.name]} {cat.name}
                 </Pill>
               ))}

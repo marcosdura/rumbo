@@ -162,7 +162,7 @@ export default function ReviewsPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <h1 className="reviews-title">Mis reviews</h1>
               {reviews.length > 0 && (
-                <Pill variant="dark-green" style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
+                <Pill variant="dark-green" hover style={{ fontSize: 12, padding: "3px 12px", flexShrink: 0 }}>
                   {reviews.length} review{reviews.length !== 1 ? "s" : ""}
                 </Pill>
               )}
