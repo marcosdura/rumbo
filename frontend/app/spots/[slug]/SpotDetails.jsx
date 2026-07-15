@@ -185,74 +185,6 @@ useEffect(() => {
           transform: translateY(-1px);
         }
 
-        .amenities-card {
-          background: #fff;
-          border: 1px solid #e0ddd6;
-          border-radius: 20px;
-          padding: 24px 28px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-        }
-        .amenities-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 18px;
-        }
-        .amenities-dot {
-          width: 8px; height: 8px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0;
-        }
-        .amenities-title {
-          font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
-          text-transform: uppercase; color: #2d6a4f; margin: 0;
-        }
-
-        /* Hover compartido: cards/cells de datos y pills de amenities */
-        .hover-lift-green {
-          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-        }
-        @media (hover: hover) {
-          .hover-lift-green:hover {
-            background: #f0f7f3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
-          }
-        }
-
-        .detail-cell {
-          background: #f7f5f0;
-          border: 1px solid #e0ddd6;
-          border-radius: 12px;
-          padding: 10px 14px;
-          min-width: 140px;
-        }
-        .detail-cell-label {
-          font-size: 11px; font-weight: 600; color: #9a9690;
-          text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px;
-        }
-        .detail-cell-value {
-          font-size: 14px; font-weight: 600; color: #1b1b19; margin: 0;
-          display: flex; align-items: center; gap: 6px;
-        }
-
-        .amenity-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: #f7f5f0;
-          border: 1px solid #e0ddd6;
-          font-family: 'DM Sans', sans-serif;
-          cursor: default;
-          user-select: none;
-        }
-        .amenity-pill-emoji { font-size: 15px; line-height: 1; }
-        .amenity-pill-label { font-size: 13px; font-weight: 500; color: #3d3d3a; }
-        @media (max-width: 480px) {
-          .amenity-pill { padding: 5px 10px; }
-          .amenity-pill-label { font-size: 12px; }
-        }
-
         .spot-divider {
           border: none;
           border-top: 1px solid #e0ddd6;
@@ -342,9 +274,6 @@ useEffect(() => {
           .spot-right-panel {
             position: static;
             padding: 20px 16px;
-          }
-          .amenities-card {
-            padding: 18px 16px;
           }
         }
       `}</style>

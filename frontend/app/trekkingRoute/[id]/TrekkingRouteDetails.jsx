@@ -7,6 +7,7 @@ import LoadingScreen from "@/components/ui/LoadingScreen"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
+import { formatStat } from "@/lib/formatStat"
 
 
 function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
@@ -118,10 +119,10 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
           {/* Stats principales */}
           <div className="fade-up fade-up-2 stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
             {[
-              { icon: "📏", val: `${route.distance_km} km`,      lbl: "Distancia" },
-              { icon: "⏱️", val: `${route.duration_hours} h`,    lbl: "Duración" },
-              { icon: "↑",  val: `${route.elevation_gain} m`,    lbl: "Desnivel +" },
-              { icon: "↓",  val: `${route.elevation_loss} m`,    lbl: "Desnivel −" },
+              { icon: "📏", val: formatStat(route.distance_km, " km"),      lbl: "Distancia" },
+              { icon: "⏱️", val: formatStat(route.duration_hours, " h"),    lbl: "Duración" },
+              { icon: "↑",  val: formatStat(route.elevation_gain, " m"),    lbl: "Desnivel +" },
+              { icon: "↓",  val: formatStat(route.elevation_loss, " m"),    lbl: "Desnivel −" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid #e0ddd6",
@@ -138,8 +139,8 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
           {/* Altitudes */}
           <div className="fade-up fade-up-2 altitude-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 20 }}>
             {[
-              { icon: "⛰️", val: `${route.max_altitude} m`, lbl: "Altitud máxima" },
-              { icon: "🏕️", val: `${route.min_altitude} m`, lbl: "Altitud mínima" },
+              { icon: "⛰️", val: formatStat(route.max_altitude, " m"), lbl: "Altitud máxima" },
+              { icon: "🏕️", val: formatStat(route.min_altitude, " m"), lbl: "Altitud mínima" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid #e0ddd6",
