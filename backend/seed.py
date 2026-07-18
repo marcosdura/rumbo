@@ -21,7 +21,7 @@ amenities_list = [
     "Lavadero", "Parrillero", "Cocina compartida", "Comedor", "Heladera",
     "Leña disponible", "Sombra", "Mesas y bancos", "Parcelas delimitadas",
     "Acceso a río/lago/mar", "Playa", "Cancha de fútbol", "Cancha de vóley",
-    "Piscina", "Alquiler de bicis", "Kayak", "WiFi", "Acepta mascotas",
+    "Piscina", "Alquiler de bicis", "Kayak", "Pesca", "WiFi", "Acepta mascotas",
     "Proveeduría/kiosco", "Cafetería", "Restaurante/bar",
     "Estacionamiento", "Seguridad", "Zona para fogón",
     "Tomas para camper/van", "Área para motorhomes",

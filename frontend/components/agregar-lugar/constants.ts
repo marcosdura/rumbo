@@ -56,7 +56,7 @@ export const AMENITY_CATEGORIES = [
   },
   {
     id: "actividades", label: "Actividades & diversión", emoji: "🏄",
-    names: ["Acceso a río/lago/mar","Playa","Piscina","Cancha de fútbol","Cancha de Voley","Alquiler de bicis","Kayak"],
+    names: ["Acceso a río/lago/mar","Playa","Piscina","Cancha de fútbol","Cancha de Voley","Alquiler de bicis","Kayak","Pesca"],
   },
   {
     id: "comodidades", label: "Comodidades del sitio", emoji: "🏕️",
@@ -75,7 +75,7 @@ export const AMENITY_ICONS: Record<string, string> = {
   "Leña disponible":"🪵","Sombra":"🌳","Mesas y bancos":"🪑",
   "Parcelas delimitadas":"⛺","Acceso a río/lago/mar":"🌊","Playa":"🏖️",
   "Cancha de fútbol":"⚽","Cancha de Voley":"🏐","Piscina":"🏊",
-  "Alquiler de bicis":"🚴","Kayak":"🛶","WiFi":"🛜",
+  "Alquiler de bicis":"🚴","Kayak":"🛶","Pesca":"🎣","WiFi":"🛜",
   "Acepta mascotas":"🐶","Proveeduría/kiosco":"🛒","Cafetería":"☕",
   "Restaurante/bar":"🍺","Estacionamiento":"🚗","Seguridad":"🔒",
   "Zona para fogón":"🏕️","Tomas para camper/van":"🔌","Área para motorhomes":"🚐",
