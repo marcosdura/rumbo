@@ -275,6 +275,34 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
         .leaflet-popup-close-button:hover {
           color: #1b1b19 !important;
         }
+
+        /* Cluster base - mismo diseño que las pills del mapa */
+        .marker-cluster {
+          background: rgba(255, 255, 255, 0.2) !important;
+        }
+        .marker-cluster div {
+          background: #fff !important;
+          color: #3d3d3a !important;
+          border: 1.5px solid #e0ddd6 !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+          font-family: 'DM Sans', sans-serif !important;
+          font-size: 12px !important;
+          font-weight: 500 !important;
+          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        }
+        .marker-cluster div:hover {
+          background: #e8f5ee !important;
+          border-color: #b7dfc8 !important;
+          color: #1b4332 !important;
+          box-shadow: 0 4px 14px rgba(27,67,50,0.25) !important;
+        }
+        .marker-cluster-small div,
+        .marker-cluster-medium div,
+        .marker-cluster-large div {
+          background: #fff !important;
+          color: #3d3d3a !important;
+          border: 1.5px solid #e0ddd6 !important;
+        }
       `}</style>
 
       <MapContainer
