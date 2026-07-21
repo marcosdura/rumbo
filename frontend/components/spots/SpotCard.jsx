@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import CircleArrow from "@/components/ui/CircleArrow"
@@ -16,6 +17,7 @@ function SpotCard({ spot, isHighlighted = false }) {
   const [hovered, setHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showExtraCategories, setShowExtraCategories] = useState(false)
+  const [extraCategoriesPos, setExtraCategoriesPos] = useState(null)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
   useEffect(() => {
@@ -199,28 +201,43 @@ function SpotCard({ spot, isHighlighted = false }) {
               {extraCategories.length > 0 && (
                 <div
                   style={{ position: "relative" }}
-                  onMouseEnter={() => !isMobile && setShowExtraCategories(true)}
+                  onMouseEnter={(e) => {
+                    if (isMobile) return
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setExtraCategoriesPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 })
+                    setShowExtraCategories(true)
+                  }}
                   onMouseLeave={() => !isMobile && setShowExtraCategories(false)}
                   onClick={(e) => {
                     if (!isMobile) return
                     e.preventDefault()
                     e.stopPropagation()
-                    setShowExtraCategories(v => !v)
+                    if (showExtraCategories) {
+                      setShowExtraCategories(false)
+                      return
+                    }
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setExtraCategoriesPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 })
+                    setShowExtraCategories(true)
                   }}
                 >
                   <Pill variant="beige">+{extraCategories.length}</Pill>
-                  {showExtraCategories && (
-                    <div style={{
-                      position: "absolute", bottom: "calc(100% + 6px)", left: 0,
-                      background: "#1b1b19", color: "#fff", borderRadius: 10,
-                      padding: "8px 10px", fontSize: 12, whiteSpace: "nowrap",
-                      display: "flex", flexDirection: "column", gap: 4,
-                      zIndex: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
-                    }}>
+                  {showExtraCategories && extraCategoriesPos && createPortal(
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        position: "fixed", left: extraCategoriesPos.left, bottom: extraCategoriesPos.bottom,
+                        background: "#1b1b19", color: "#fff", borderRadius: 10,
+                        padding: "8px 10px", fontSize: 12, whiteSpace: "nowrap",
+                        display: "flex", flexDirection: "column", gap: 4,
+                        zIndex: 1000, boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+                      }}
+                    >
                       {extraCategories.map(c => (
                         <span key={c.id ?? c.name}>{`${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()}</span>
                       ))}
-                    </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
               )}

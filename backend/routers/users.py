@@ -16,6 +16,19 @@ def get_db():
         db.close()
 
 
+@router.get("/me")
+async def get_me(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    db_user = db.query(User).filter(User.id == user.get("sub")).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"id": db_user.id}
+
+
 @router.delete("/me")
 @limiter.limit("5/minute")
 async def delete_account(

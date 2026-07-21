@@ -35,6 +35,10 @@ export const authOptions = {
       },
     }),
   ],
+  session: {
+    strategy: /** @type {"jwt"} */ ("jwt"),
+    maxAge: 60 * 60 * 24 * 7, // 7 días
+  },
   callbacks: {
     async jwt({ token, account, trigger, session: updateSession }) {
       // Primer login: upsert usuario y guardar termsAcceptedAt
@@ -65,6 +69,24 @@ export const authOptions = {
       // El usuario acaba de aceptar los términos — actualizar token
       if (trigger === "update" && updateSession?.termsAcceptedAt) {
         return { ...token, termsAcceptedAt: updateSession.termsAcceptedAt }
+      }
+
+      // Verificación periódica: el usuario pudo haber sido eliminado
+      if (!token.lastChecked || Date.now() - token.lastChecked > 5 * 60 * 1000) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+            headers: { Authorization: `Bearer ${token.id_token}` },
+          })
+          if (res.status === 404 || res.status === 401) {
+            return { ...token, error: "UserNotFound" }
+          }
+          if (res.ok) {
+            token = { ...token, lastChecked: Date.now() }
+          }
+        } catch (e) {
+          console.error("Error verificando usuario:", e)
+          return { ...token, error: "UserNotFound" }
+        }
       }
 
       // Token todavía válido (con 60s de margen)
