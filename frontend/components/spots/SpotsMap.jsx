@@ -279,6 +279,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
         /* Cluster base - mismo diseño que las pills del mapa */
         .marker-cluster {
           background: rgba(255, 255, 255, 0.2) !important;
+          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
         .marker-cluster div {
           background: #fff !important;
@@ -290,10 +291,13 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
           font-weight: 500 !important;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
+        .marker-cluster:hover {
+          background: rgba(45, 106, 79, 0.12) !important;
+        }
         .marker-cluster div:hover {
-          background: #e8f5ee !important;
-          border-color: #b7dfc8 !important;
-          color: #1b4332 !important;
+          background: #2d6a4f !important;
+          border-color: #2d6a4f !important;
+          color: #d8f3dc !important;
           box-shadow: 0 4px 14px rgba(27,67,50,0.25) !important;
         }
         .marker-cluster-small div,
@@ -302,6 +306,9 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
           background: #fff !important;
           color: #3d3d3a !important;
           border: 1.5px solid #e0ddd6 !important;
+        }
+        .leaflet-zoom-animated {
+          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
       `}</style>
 

@@ -199,8 +199,14 @@ function SpotCard({ spot, isHighlighted = false }) {
               {extraCategories.length > 0 && (
                 <div
                   style={{ position: "relative" }}
-                  onMouseEnter={() => setShowExtraCategories(true)}
-                  onMouseLeave={() => setShowExtraCategories(false)}
+                  onMouseEnter={() => !isMobile && setShowExtraCategories(true)}
+                  onMouseLeave={() => !isMobile && setShowExtraCategories(false)}
+                  onClick={(e) => {
+                    if (!isMobile) return
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowExtraCategories(v => !v)
+                  }}
                 >
                   <Pill variant="beige">+{extraCategories.length}</Pill>
                   {showExtraCategories && (
