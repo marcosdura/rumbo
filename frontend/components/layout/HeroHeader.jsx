@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
+import AuthModal from "@/components/layout/AuthModal"
 
 function Avatar({ user, size = 32 }) {
   const initials = user?.name
@@ -38,6 +39,7 @@ function Avatar({ user, size = 32 }) {
 
 export default function HeroHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const menuRef   = useRef()
   const { data: session, status } = useSession()
   const isLoggedIn = status === "authenticated"
@@ -82,10 +84,10 @@ export default function HeroHeader() {
           </Link>
         ) : (
           <>
-            <button className="signin-nav-btn" onClick={() => signIn("google", {}, { prompt: "select_account" })}>
+            <button className="signin-nav-btn" onClick={() => setAuthModalOpen(true)}>
               Iniciar sesión
             </button>
-            <button className="avatar-btn signin-avatar-mobile" onClick={() => signIn("google", {}, { prompt: "select_account" })} aria-label="Iniciar sesión">
+            <button className="avatar-btn signin-avatar-mobile" onClick={() => setAuthModalOpen(true)} aria-label="Iniciar sesión">
               <Avatar user={null} />
             </button>
           </>
@@ -139,7 +141,7 @@ export default function HeroHeader() {
               </>
             ) : (
               <button
-                onClick={() => { setMenuOpen(false); signIn("google", {}, { prompt: "select_account" }) }}
+                onClick={() => { setMenuOpen(false); setAuthModalOpen(true) }}
                 className="signin-btn"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -153,6 +155,8 @@ export default function HeroHeader() {
           </div>
         </div>
       </div>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </div>
   )
 }

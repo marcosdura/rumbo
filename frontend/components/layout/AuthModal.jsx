@@ -1,9 +1,26 @@
 "use client"
 
+import { useState } from "react"
 import { createPortal } from "react-dom"
 import { signIn } from "next-auth/react"
 
+const PERKS = [
+  { emoji: "⭐", text: "Guardar spots favoritos" },
+  { emoji: "💬", text: "Dejar reseñas" },
+  { emoji: "📍", text: "Sugerir nuevos spots" },
+]
+
 export default function AuthModal({ onClose }) {
+  const [rememberMe, setRememberMe] = useState(true)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+
+  const handleGoogleSignIn = () => {
+    if (!termsAccepted) return
+    localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
+    localStorage.setItem("rumbo_terms_accepted", "true")
+    signIn("google", {}, { prompt: "select_account" })
+  }
+
   return createPortal(
     <>
       <style>{`
@@ -61,6 +78,52 @@ export default function AuthModal({ onClose }) {
         }
         .auth-close:hover { background: #f7f5f0; color: #1b1b19; }
 
+        .auth-perks {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          list-style: none;
+          margin: 0 0 22px;
+          padding: 0;
+        }
+        .auth-perk {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: #4a443b;
+        }
+
+        .auth-checkbox-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          cursor: pointer;
+          margin-bottom: 12px;
+          padding: 16px;
+          background: #fff;
+          border: 1.5px solid #e0ddd6;
+          border-radius: 14px;
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .auth-checkbox-row:hover { border-color: #2d6a4f; background: #f0f7f3; }
+        .auth-checkbox-row.checked { border-color: #2d6a4f; background: #f0f7f3; }
+
+        .auth-checkbox {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #c8c4bc;
+          border-radius: 6px;
+          flex-shrink: 0;
+          margin-top: 1px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: border-color 0.2s, background 0.2s;
+          background: #fff;
+        }
+        .auth-checkbox.checked { border-color: #2d6a4f; background: #2d6a4f; }
+
         .auth-google-btn {
           width: 100%;
           display: flex;
@@ -78,13 +141,18 @@ export default function AuthModal({ onClose }) {
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+          margin-top: 12px;
         }
-        .auth-google-btn:hover {
+        .auth-google-btn:not(:disabled):hover {
           background: #f7f5f0;
           transform: translateY(-1px);
           box-shadow: 0 4px 14px rgba(0,0,0,0.08);
         }
-        .auth-google-btn:active { transform: translateY(0); }
+        .auth-google-btn:not(:disabled):active { transform: translateY(0); }
+        .auth-google-btn:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+        }
       `}</style>
 
       <div className="auth-overlay" onClick={onClose}>
@@ -107,26 +175,72 @@ export default function AuthModal({ onClose }) {
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
             fontSize: 24, fontWeight: 600,
-            color: "#1b1b19", textAlign: "center", margin: "0 0 10px",
+            color: "#1b1b19", textAlign: "center", margin: "0 0 16px",
           }}>
             Iniciá sesión
           </h2>
 
-          <p style={{
-            fontSize: 14, color: "#9a9690",
-            textAlign: "center", lineHeight: 1.65,
-            margin: "0 0 24px",
-          }}>
-            Necesitás iniciar sesión para completar esta acción.
-          </p>
+          {/* Perks */}
+          <ul className="auth-perks">
+            {PERKS.map((perk) => (
+              <li key={perk.text} className="auth-perk">
+                <span>{perk.emoji}</span>
+                <span>{perk.text}</span>
+              </li>
+            ))}
+          </ul>
 
           {/* Divider */}
-          <div style={{ height: 1, background: "#ede9e1", marginBottom: 24 }} />
+          <div style={{ height: 1, background: "#ede9e1", marginBottom: 20 }} />
+
+          {/* Checkbox: recordar sesión */}
+          <label
+            className={`auth-checkbox-row${rememberMe ? " checked" : ""}`}
+            onClick={() => setRememberMe(v => !v)}
+          >
+            <div className={`auth-checkbox${rememberMe ? " checked" : ""}`}>
+              {rememberMe && (
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+            <span style={{ fontSize: 13, color: "#3a3730", lineHeight: 1.5 }}>
+              Mantener sesión iniciada en este dispositivo
+            </span>
+          </label>
+
+          {/* Checkbox: términos */}
+          <label
+            className={`auth-checkbox-row${termsAccepted ? " checked" : ""}`}
+            onClick={() => setTermsAccepted(v => !v)}
+          >
+            <div className={`auth-checkbox${termsAccepted ? " checked" : ""}`}>
+              {termsAccepted && (
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+            <span style={{ fontSize: 13, color: "#3a3730", lineHeight: 1.5 }}>
+              Leí y acepto los{" "}
+              <a
+                href="/legal"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{ color: "#2d6a4f", fontWeight: 600 }}
+              >
+                Términos y Condiciones
+              </a>
+            </span>
+          </label>
 
           {/* Botón Google */}
           <button
             className="auth-google-btn"
-            onClick={() => signIn("google", {}, { prompt: "select_account" })}
+            disabled={!termsAccepted}
+            onClick={handleGoogleSignIn}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

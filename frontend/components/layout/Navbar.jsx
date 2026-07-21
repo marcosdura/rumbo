@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import SearchBar from "@/components/spots/SearchBar"
 import Image from "next/image"
+import AuthModal from "@/components/layout/AuthModal"
 
 function Avatar({ user, size = 28 }) {
   const initials = user?.name
@@ -43,9 +44,10 @@ function Avatar({ user, size = 28 }) {
 }
 
 function Navbar() {
-  const [menuOpen,   setMenuOpen]   = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [heroGone,   setHeroGone]   = useState(false)
+  const [menuOpen,      setMenuOpen]      = useState(false)
+  const [searchOpen,    setSearchOpen]    = useState(false)
+  const [heroGone,      setHeroGone]      = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const pathname = usePathname()
   const menuRef  = useRef()
   const { data: session, status } = useSession()
@@ -379,13 +381,13 @@ function Navbar() {
             <>
               <button
                 className="signin-nav-btn"
-                onClick={() => signIn("google", {}, { prompt: "select_account" })}
+                onClick={() => setAuthModalOpen(true)}
               >
                 Iniciar sesión
               </button>
               <button
                 className="avatar-btn signin-avatar-mobile"
-                onClick={() => signIn("google", {}, { prompt: "select_account" })}
+                onClick={() => setAuthModalOpen(true)}
                 aria-label="Iniciar sesión"
               >
                 <Avatar user={null} size={32} />
@@ -453,7 +455,7 @@ function Navbar() {
             </>
           ) : (
             <button
-              onClick={() => { setMenuOpen(false); signIn("google", {}, { prompt: "select_account" }) }}
+              onClick={() => { setMenuOpen(false); setAuthModalOpen(true) }}
               className="signin-btn"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -467,6 +469,8 @@ function Navbar() {
         </div>
 
       </nav>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </>
   )
 }

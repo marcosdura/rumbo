@@ -38,7 +38,7 @@ import type {
 } from "./types"
 
 export default function AgregarLugar() {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
   const token = session?.id_token
 
   const [step, setStep]                           = useState(1)
@@ -101,6 +101,16 @@ export default function AgregarLugar() {
     window.addEventListener("beforeunload", handler)
     return () => window.removeEventListener("beforeunload", handler)
   }, [submitting])
+
+  useEffect(() => {
+    if (!session?.id_token) return
+    if (session.termsAcceptedAt) return
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/terms`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${session.id_token}` },
+    }).then(() => update({ termsAcceptedAt: new Date().toISOString() }))
+  }, [session?.id_token])
 
   const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
   const isTrekking = selectedCat?.name === "Trekking"
