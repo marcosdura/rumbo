@@ -18,14 +18,26 @@ body {
   font-family: 'DM Sans', Arial, sans-serif;
 }
 
-/* ─── Leaflet marker clusters (colores de Rumbo) ──────────────────────────── */
+/* ─── Leaflet marker clusters (estilo pill de Rumbo) ──────────────────────── */
 
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(45, 106, 79, 0.18);
+  border-radius: 50%;
+}
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
   background-color: #2d6a4f;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(27, 67, 50, 0.35);
+}
+.marker-cluster span {
   color: #fff;
   font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
 }
 
 /* ─── Number inputs: no spinner arrows ────────────────────────────────────── */
