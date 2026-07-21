@@ -23,19 +23,18 @@ body {
 .marker-cluster-small,
 .marker-cluster-medium,
 .marker-cluster-large {
-  background-color: rgba(45, 106, 79, 0.18);
-  border-radius: 50%;
+  background: transparent;
 }
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-  background-color: #2d6a4f;
-  border: 2px solid #fff;
+  background-color: #fff;
+  border: 2px solid #2d6a4f;
   border-radius: 50%;
-  box-shadow: 0 2px 10px rgba(27, 67, 50, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 .marker-cluster span {
-  color: #fff;
+  color: #1b4332;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
 }
