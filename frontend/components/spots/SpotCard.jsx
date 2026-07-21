@@ -41,10 +41,11 @@ function SpotCard({ spot, isHighlighted = false }) {
           border-radius: 20px;
           overflow: hidden;
           cursor: pointer;
-          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-                      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                      box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
                       border-color 0.2s;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          will-change: transform, box-shadow;
         }
         .spot-card:hover {
           transform: translateY(-3px);
@@ -64,7 +65,8 @@ function SpotCard({ spot, isHighlighted = false }) {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+          will-change: transform;
         }
         .spot-card:hover .spot-card-img-wrap img {
           transform: scale(1.07);
@@ -205,10 +207,13 @@ function SpotCard({ spot, isHighlighted = false }) {
                     <div style={{
                       position: "absolute", bottom: "calc(100% + 6px)", left: 0,
                       background: "#1b1b19", color: "#fff", borderRadius: 10,
-                      padding: "6px 10px", fontSize: 12, whiteSpace: "nowrap",
+                      padding: "8px 10px", fontSize: 12, whiteSpace: "nowrap",
+                      display: "flex", flexDirection: "column", gap: 4,
                       zIndex: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
                     }}>
-                      {extraCategories.map(c => `${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()).join(" · ")}
+                      {extraCategories.map(c => (
+                        <span key={c.id ?? c.name}>{`${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()}</span>
+                      ))}
                     </div>
                   )}
                 </div>
