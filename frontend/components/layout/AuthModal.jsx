@@ -12,10 +12,8 @@ const PERKS = [
 
 export default function AuthModal({ onClose }) {
   const [rememberMe, setRememberMe] = useState(true)
-  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const handleGoogleSignIn = () => {
-    if (!termsAccepted) return
     localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
     localStorage.setItem("rumbo_terms_accepted", "true")
     signIn("google", {}, { prompt: "select_account" })
@@ -210,36 +208,25 @@ export default function AuthModal({ onClose }) {
             </span>
           </label>
 
-          {/* Checkbox: términos */}
-          <label
-            className={`auth-checkbox-row${termsAccepted ? " checked" : ""}`}
-            onClick={() => setTermsAccepted(v => !v)}
-          >
-            <div className={`auth-checkbox${termsAccepted ? " checked" : ""}`}>
-              {termsAccepted && (
-                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                  <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-            <span style={{ fontSize: 13, color: "#3a3730", lineHeight: 1.5 }}>
-              Leí y acepto los{" "}
-              <a
-                href="/legal"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                style={{ color: "#2d6a4f", fontWeight: 600 }}
-              >
-                Términos y Condiciones
-              </a>
-            </span>
-          </label>
+          {/* Aviso de términos */}
+          <p style={{
+            fontSize: 12, color: "#b0aca5",
+            textAlign: "center", margin: "0 0 20px",
+          }}>
+            Al continuar aceptás nuestros{" "}
+            <a
+              href="/legal"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#2d6a4f", fontWeight: 600 }}
+            >
+              Términos y condiciones
+            </a>
+          </p>
 
           {/* Botón Google */}
           <button
             className="auth-google-btn"
-            disabled={!termsAccepted}
             onClick={handleGoogleSignIn}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
