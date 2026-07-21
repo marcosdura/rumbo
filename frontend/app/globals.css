@@ -18,6 +18,16 @@ body {
   font-family: 'DM Sans', Arial, sans-serif;
 }
 
+/* ─── Leaflet marker clusters (colores de Rumbo) ──────────────────────────── */
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: #2d6a4f;
+  color: #fff;
+  font-weight: 700;
+}
+
 /* ─── Number inputs: no spinner arrows ────────────────────────────────────── */
 
 input[type="number"]::-webkit-inner-spin-button,

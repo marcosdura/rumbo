@@ -1,11 +1,12 @@
 ﻿'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import Pill from '@/components/ui/Pill';
-import { useEffect, useState, useRef, useMemo } from 'react';
-import Link from 'next/link';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 
 const CATEGORY_EMOJI = {
   'Camping':    '🏕️',
@@ -139,85 +140,98 @@ function FitBounds({ spots, mapExpanded }) {
   return null
 }
 
-function SpotMarker({ spot, isActive, isSelected, onHover, onLeave, onSelect, onDeselect }) {
-  const [isMobile, setIsMobile] = useState(false)
+const createPopupHtml = (spot, categories) => {
+  const pillsHtml = categories.map(cat => `
+    <span style="
+      display:inline-flex; align-items:center; gap:4px;
+      padding:3px 8px; border-radius:999px;
+      background:#e8f5ee; color:#1b4332; border:1px solid #b7dfc8;
+      font-size:10px; font-weight:600; letter-spacing:0.03em;
+      font-family:'DM Sans', sans-serif;
+    ">${CATEGORY_EMOJI[cat.name] ?? ''} ${cat.name}</span>
+  `).join('')
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  const categories = spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
-  const primaryCategoryName = categories[0]?.name ?? spot.category?.name
-  const extraCategoryNames = categories.slice(1).map(c => c.name)
-
-  const icon = useMemo(
-    () => createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected),
-    [primaryCategoryName, extraCategoryNames.join(','), isActive, isSelected]
-  )
-
-  return (
-    <Marker
-      position={[spot.lat, spot.lng]}
-      icon={icon}
-      zIndexOffset={isSelected ? 2000 : isActive ? 1000 : 0}
-      eventHandlers={{
-        mouseover: onHover,
-        mouseout:  onLeave,
-        popupopen: onSelect,
-        popupclose: onDeselect,
-      }}
-    >
-      <Popup>
-        <Link
-          href={`/spots/${spot.slug}`}
-          target={isMobile ? undefined : '_blank'}
-          rel={isMobile ? undefined : 'noopener noreferrer'}
-          style={{ textDecoration: 'none' }}
-        >
-        <div
-          style={{
-            cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
-            minWidth: 180,
-            padding: '2px 0',
-          }}
-        >
-          <p style={{
-            fontFamily: "'Playfair Display', serif",
-            fontWeight: 600, fontSize: 15,
-            color: '#1b1b19', margin: '0 0 4px',
-          }}>
-            {spot.name}
-          </p>
-          <p style={{
-            fontSize: 12, color: '#9a9690',
-            margin: '0 0 10px',
-          }}>
-            {spot.department}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {categories.map(cat => (
-                <Pill key={cat.id ?? cat.name} variant="green" size="sm">
-                  {CATEGORY_EMOJI[cat.name]} {cat.name}
-                </Pill>
-              ))}
-            </div>
-            <span style={{
-              fontSize: 12, fontWeight: 600,
-              color: '#2d6a4f', marginLeft: 'auto',
-            }}>
-              Ver →
-            </span>
-          </div>
+  return `
+    <a href="/spots/${spot.slug}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+      <div style="cursor:pointer; font-family:'DM Sans', sans-serif; min-width:180px; padding:2px 0;">
+        <p style="font-family:'Playfair Display', serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
+          ${spot.name}
+        </p>
+        <p style="font-size:12px; color:#9a9690; margin:0 0 10px;">
+          ${spot.department ?? ''}
+        </p>
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">${pillsHtml}</div>
+          <span style="font-size:12px; font-weight:600; color:#2d6a4f; margin-left:auto;">Ver →</span>
         </div>
-        </Link>
-      </Popup>
-    </Marker>
-  )
+      </div>
+    </a>
+  `
+}
+
+function spotCategories(spot) {
+  return spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
+}
+
+function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, onHover, onLeave, onSelect, onDeselect }) {
+  const map = useMap()
+  const markersRef = useRef({})
+
+  // Crea el grupo de clusters y sus markers cuando cambia la lista de spots
+  useEffect(() => {
+    const clusterGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 60,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    })
+
+    const markersById = {}
+
+    spots.forEach(spot => {
+      const categories = spotCategories(spot)
+      const primaryCategoryName = categories[0]?.name ?? spot.category?.name
+      const extraCategoryNames = categories.slice(1).map(c => c.name)
+
+      const marker = L.marker([spot.lat, spot.lng], {
+        icon: createPillIcon(primaryCategoryName, extraCategoryNames, false, false),
+      })
+
+      marker.on('mouseover', () => onHover(spot.id))
+      marker.on('mouseout', () => onLeave(spot.id))
+      marker.on('popupopen', () => onSelect(spot.id))
+      marker.on('popupclose', () => onDeselect())
+      marker.bindPopup(createPopupHtml(spot, categories))
+
+      clusterGroup.addLayer(marker)
+      markersById[spot.id] = marker
+    })
+
+    map.addLayer(clusterGroup)
+    markersRef.current = markersById
+
+    return () => {
+      map.removeLayer(clusterGroup)
+      markersRef.current = {}
+    }
+  }, [map, spots, onHover, onLeave, onSelect, onDeselect])
+
+  // Actualiza el ícono de cada marker in-place al hacer hover/seleccionar, sin reconstruir el grupo
+  useEffect(() => {
+    spots.forEach(spot => {
+      const marker = markersRef.current[spot.id]
+      if (!marker) return
+      const categories = spotCategories(spot)
+      const primaryCategoryName = categories[0]?.name ?? spot.category?.name
+      const extraCategoryNames = categories.slice(1).map(c => c.name)
+      const isActive = activeSpotId === spot.id
+      const isSelected = selectedSpotId === spot.id
+      marker.setIcon(createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected))
+      marker.setZIndexOffset(isSelected ? 2000 : isActive ? 1000 : 0)
+    })
+  }, [spots, activeSpotId, selectedSpotId])
+
+  return null
 }
 
 export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
@@ -230,6 +244,11 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
   )
 
   const activeSpotId = hoveredSpotId ?? highlightedSpotId
+
+  const handleHover    = useCallback((id) => setHoveredSpotId(id), [])
+  const handleLeave    = useCallback((id) => setHoveredSpotId(prev => prev === id ? null : prev), [])
+  const handleSelect   = useCallback((id) => setSelectedSpotId(id), [])
+  const handleDeselect = useCallback(() => setSelectedSpotId(null), [])
 
   return (
     <>
@@ -274,18 +293,15 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
         <ResizeHandler trigger={mapExpanded} />
         {validSpots.length > 0 && <FitBounds spots={validSpots} mapExpanded={mapExpanded} />}
 
-        {validSpots.map(spot => (
-          <SpotMarker
-            key={spot.id}
-            spot={spot}
-            isActive={activeSpotId === spot.id}
-            isSelected={selectedSpotId === spot.id}
-            onHover={() => setHoveredSpotId(spot.id)}
-            onLeave={() => setHoveredSpotId(prev => prev === spot.id ? null : prev)}
-            onSelect={() => setSelectedSpotId(spot.id)}
-            onDeselect={() => setSelectedSpotId(null)}
-          />
-        ))}
+        <ClusteredMarkers
+          spots={validSpots}
+          activeSpotId={activeSpotId}
+          selectedSpotId={selectedSpotId}
+          onHover={handleHover}
+          onLeave={handleLeave}
+          onSelect={handleSelect}
+          onDeselect={handleDeselect}
+        />
       </MapContainer>
     </>
   )
