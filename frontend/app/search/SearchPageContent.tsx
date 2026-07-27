@@ -430,7 +430,7 @@ export default function SearchPage() {
                       onMouseEnter={() => setHighlightedSpotId(spot.id)}
                       onMouseLeave={() => setHighlightedSpotId(null)}
                     >
-                      <SpotCard spot={spot} isHighlighted={highlightedSpotId === spot.id} />
+                      <SpotCard spot={spot} isHighlighted={highlightedSpotId === spot.id} activeCategory={activity} />
                     </div>
                   ))}
                 </div>

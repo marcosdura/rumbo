@@ -320,6 +320,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
         }
         .marker-cluster:hover {
           background: rgba(45, 106, 79, 0.12) !important;
+          z-index: 10000 !important;
         }
         .marker-cluster div:hover {
           background: #2d6a4f !important;

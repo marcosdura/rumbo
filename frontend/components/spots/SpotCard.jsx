@@ -13,7 +13,7 @@ const CATEGORY_EMOJI = {
   Escalada: "🧗", Surf: "🏄", Kayak: "🛶", Motorhome: "🚐",
 }
 
-function SpotCard({ spot, isHighlighted = false }) {
+function SpotCard({ spot, isHighlighted = false, activeCategory }) {
   const [hovered, setHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showExtraCategories, setShowExtraCategories] = useState(false)
@@ -30,6 +30,9 @@ function SpotCard({ spot, isHighlighted = false }) {
   const categories = spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
   const primaryCategory = categories[0]
   const extraCategories = categories.slice(1)
+  const showsSecondaryMatch = activeCategory
+    && activeCategory !== primaryCategory?.name
+    && categories.some(c => c.name === activeCategory)
 
   return (
     <>
@@ -99,6 +102,16 @@ function SpotCard({ spot, isHighlighted = false }) {
           gap: 4px;
         }
         .spot-card-rating .star { color: #2d6a4f; }
+
+        .spot-card-secondary-match {
+          font-size: 11px;
+          font-weight: 500;
+          color: #2d6a4f;
+          margin: 0 0 6px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
 
         .spot-card-footer {
           display: flex;
@@ -191,6 +204,12 @@ function SpotCard({ spot, isHighlighted = false }) {
             <p className="spot-card-rating">
               <span className="star">★</span>
               <span>{spot.average_rating} · {spot.review_count} reseña{spot.review_count !== 1 ? "s" : ""}</span>
+            </p>
+          )}
+          {showsSecondaryMatch && (
+            <p className="spot-card-secondary-match">
+              <span>{CATEGORY_EMOJI[activeCategory] ?? ""}</span>
+              <span>Este lugar también ofrece {activeCategory}</span>
             </p>
           )}
           <div className="spot-card-footer">

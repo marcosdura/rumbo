@@ -19,26 +19,29 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState("")
   const [deleting, setDeleting] = useState(false)
   const confirmInputRef = useRef<HTMLInputElement>(null)
+  const [dataLoading, setDataLoading] = useState(true)
 
  useEffect(() => {
   if (!session?.id_token) return
 
+  setDataLoading(true)
   const headers = { Authorization: `Bearer ${session.id_token}` }
 
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers })
-    .then(res => res.json())
-    .then(data => setFavorites(Array.isArray(data) ? data : []))
-
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers })
-    .then(res => res.json())
-    .then(data => setReviews(Array.isArray(data) ? data : []))
-
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers })
-    .then(res => res.json())
-    .then(data => setMySpots(Array.isArray(data) ? data : []))
+  Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }).then(res => res.json()),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }).then(res => res.json()),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }).then(res => res.json()),
+  ])
+    .then(([favData, reviewData, spotsData]) => {
+      setFavorites(Array.isArray(favData) ? favData : [])
+      setReviews(Array.isArray(reviewData) ? reviewData : [])
+      setMySpots(Array.isArray(spotsData) ? spotsData : [])
+    })
+    .finally(() => setDataLoading(false))
 }, [session?.id_token, session?.error])
 
-  if (status === "loading") return <LoadingScreen />
+  const showLoading = status === "loading" || (!!session?.id_token && dataLoading)
+  if (showLoading) return <LoadingScreen />
 
   if (!session) return null
 
