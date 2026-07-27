@@ -79,8 +79,14 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
               </div>
               {exp.price != null && (
                 <p style={{ fontSize: 14, fontWeight: 700, color: "#2d6a4f", margin: 0, flexShrink: 0 }}>
-                  ${exp.price}{" "}
-                  <span style={{ fontSize: 11, fontWeight: 400, color: "#9a9690" }}>{exp.currency}</span>
+                  {exp.price === 0 ? (
+                    "Gratis"
+                  ) : (
+                    <>
+                      ${exp.price}{" "}
+                      <span style={{ fontSize: 11, fontWeight: 400, color: "#9a9690" }}>{exp.currency}</span>
+                    </>
+                  )}
                 </p>
               )}
             </div>

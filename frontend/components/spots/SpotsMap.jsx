@@ -24,6 +24,19 @@ const CATEGORY_EMOJI = {
   'Motorhome':  '🚐',
 }
 
+const buildExtraBadges = (extraCategories) => {
+  const names = extraCategories || []
+  if (names.length <= 3) {
+    return names.map(name => ({ text: CATEGORY_EMOJI[name] || '📍', isCount: false }))
+  }
+  const remaining = names.length - 2
+  return [
+    { text: CATEGORY_EMOJI[names[0]] || '📍', isCount: false },
+    { text: CATEGORY_EMOJI[names[1]] || '📍', isCount: false },
+    { text: `+${remaining}`, isCount: true },
+  ]
+}
+
 const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => {
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
   const label = categoryName || 'Spot'
@@ -43,24 +56,27 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
   const scale   = isActive || isSelected ? 'scale(1.08)' : 'scale(1)'
   const weight  = isSelected ? '600' : '500'
 
-  const visibleExtras = (extraCategories || []).slice(0, 2)
-  const badgesHtml = visibleExtras.map((catName, i) => `
+  const badges = buildExtraBadges(extraCategories)
+  const badgesHtml = badges.map((badge, i) => `
     <div style="
       position: absolute;
       top: -6px;
       right: ${-6 + i * 16}px;
-      width: 18px;
+      min-width: 18px;
       height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      border: 1.5px solid #e0ddd6;
+      border-radius: 999px;
+      background: ${badge.isCount ? '#1b4332' : '#fff'};
+      border: 1.5px solid ${badge.isCount ? '#1b4332' : '#e0ddd6'};
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      padding: ${badge.isCount ? '0 4px' : '0'};
+      font-size: ${badge.isCount ? '9px' : '10px'};
+      font-weight: ${badge.isCount ? '700' : '400'};
+      color: ${badge.isCount ? '#d8f3dc' : '#3d3d3a'};
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       z-index: ${10 - i};
-    ">${CATEGORY_EMOJI[catName] || '📍'}</div>
+    ">${badge.text}</div>
   `).join('')
 
   return L.divIcon({
@@ -173,7 +189,18 @@ function spotCategories(spot) {
   return spot.categories && spot.categories.length > 0 ? spot.categories : (spot.category ? [spot.category] : [])
 }
 
-function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, onHover, onLeave, onSelect, onDeselect }) {
+// Si hay una categoría buscada activa y el spot la tiene (aunque no sea la principal),
+// se muestra esa en la pill en vez de la categoría principal del spot.
+function pillCategoryName(categories, activeCategory) {
+  if (activeCategory && categories.some(c => c.name === activeCategory)) return activeCategory
+  return categories[0]?.name
+}
+
+function pillExtraCategoryNames(categories, mainCategoryName) {
+  return categories.map(c => c.name).filter(name => name !== mainCategoryName)
+}
+
+function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, activeCategory, onHover, onLeave, onSelect, onDeselect }) {
   const map = useMap()
   const markersRef = useRef({})
 
@@ -190,8 +217,8 @@ function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, onHover, onLeav
 
     spots.forEach(spot => {
       const categories = spotCategories(spot)
-      const primaryCategoryName = categories[0]?.name ?? spot.category?.name
-      const extraCategoryNames = categories.slice(1).map(c => c.name)
+      const primaryCategoryName = pillCategoryName(categories, activeCategory)
+      const extraCategoryNames = pillExtraCategoryNames(categories, primaryCategoryName)
 
       const marker = L.marker([spot.lat, spot.lng], {
         icon: createPillIcon(primaryCategoryName, extraCategoryNames, false, false),
@@ -214,7 +241,7 @@ function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, onHover, onLeav
       map.removeLayer(clusterGroup)
       markersRef.current = {}
     }
-  }, [map, spots, onHover, onLeave, onSelect, onDeselect])
+  }, [map, spots, activeCategory, onHover, onLeave, onSelect, onDeselect])
 
   // Actualiza el ícono de cada marker in-place al hacer hover/seleccionar, sin reconstruir el grupo
   useEffect(() => {
@@ -222,19 +249,19 @@ function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, onHover, onLeav
       const marker = markersRef.current[spot.id]
       if (!marker) return
       const categories = spotCategories(spot)
-      const primaryCategoryName = categories[0]?.name ?? spot.category?.name
-      const extraCategoryNames = categories.slice(1).map(c => c.name)
+      const primaryCategoryName = pillCategoryName(categories, activeCategory)
+      const extraCategoryNames = pillExtraCategoryNames(categories, primaryCategoryName)
       const isActive = activeSpotId === spot.id
       const isSelected = selectedSpotId === spot.id
       marker.setIcon(createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected))
       marker.setZIndexOffset(isSelected ? 2000 : isActive ? 1000 : 0)
     })
-  }, [spots, activeSpotId, selectedSpotId])
+  }, [spots, activeSpotId, selectedSpotId, activeCategory])
 
   return null
 }
 
-export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
+export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, activeCategory }) {
   const [hoveredSpotId, setHoveredSpotId]   = useState(null)
   const [selectedSpotId, setSelectedSpotId] = useState(null)
 
@@ -332,6 +359,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded }) {
           spots={validSpots}
           activeSpotId={activeSpotId}
           selectedSpotId={selectedSpotId}
+          activeCategory={activeCategory}
           onHover={handleHover}
           onLeave={handleLeave}
           onSelect={handleSelect}

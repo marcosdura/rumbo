@@ -470,7 +470,7 @@ export default function SearchPage() {
               </div>
             )}
 
-            <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} />
+            <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} activeCategory={activity} />
           </div>
 
           <button className="map-close-btn" onClick={() => setMapExpanded(false)}>
