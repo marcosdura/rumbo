@@ -2,6 +2,7 @@
 // Instalá zustand si no lo tenés: npm install zustand
 
 import { create } from "zustand"
+import { signOut } from "next-auth/react"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 const CACHE_KEY = "rumbo_favorites"
@@ -53,6 +54,12 @@ export const useFavoritesStore = create((set, get) => ({
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (res.status === 401) {
+        set({ favorites: prev })
+        saveCache(prev)
+        signOut({ redirect: false })
+        return
+      }
       if (!res.ok && res.status !== 409) throw new Error()
     } catch {
       set({ favorites: prev })
@@ -72,6 +79,12 @@ export const useFavoritesStore = create((set, get) => ({
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (res.status === 401) {
+        set({ favorites: prev })
+        saveCache(prev)
+        signOut({ redirect: false })
+        return
+      }
       if (!res.ok) throw new Error()
     } catch {
       // Revertir si falla

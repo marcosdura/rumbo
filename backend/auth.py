@@ -1,5 +1,5 @@
 import os
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -20,3 +20,9 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depen
         return user_info
     except Exception:
         return None
+
+
+def get_current_user_required(user: Optional[dict] = Depends(get_current_user)) -> dict:
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    return user

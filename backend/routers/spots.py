@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from auth import get_current_user
+from auth import get_current_user, get_current_user_required
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
@@ -462,7 +462,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
 
 
 @router.get("/spots/mine")
-def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     email = user.get("email")
     if not email:
         raise HTTPException(status_code=401, detail="No autenticado")

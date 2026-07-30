@@ -26,13 +26,26 @@ export default function ProfilePage() {
 
   setDataLoading(true)
   const headers = { Authorization: `Bearer ${session.id_token}` }
+  let loggedOut = false
+
+  const handle = (res: Response) => {
+    if (res.status === 401) {
+      loggedOut = true
+      return []
+    }
+    return res.ok ? res.json() : []
+  }
 
   Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }).then(res => res.json()),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }).then(res => res.json()),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }).then(res => res.json()),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }).then(handle),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }).then(handle),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }).then(handle),
   ])
     .then(([favData, reviewData, spotsData]) => {
+      if (loggedOut) {
+        signOut({ redirect: false })
+        return
+      }
       setFavorites(Array.isArray(favData) ? favData : [])
       setReviews(Array.isArray(reviewData) ? reviewData : [])
       setMySpots(Array.isArray(spotsData) ? spotsData : [])

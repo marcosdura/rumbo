@@ -4,7 +4,7 @@ from sqlalchemy import func
 from database import SessionLocal
 from models import Review, SpotDB, User
 from schemas import ReviewCreate, ReviewResponse
-from auth import get_current_user
+from auth import get_current_user_required
 from limiter import limiter
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
@@ -19,7 +19,7 @@ def get_db():
 
 
 @router.get("/user/me")
-def get_user_reviews(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def get_user_reviews(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     reviews = (
         db.query(Review)
@@ -70,7 +70,7 @@ def get_reviews(spot_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{spot_id}", status_code=status.HTTP_201_CREATED, response_model=ReviewResponse)
 @limiter.limit("10/minute")
-async def create_review(request: Request, spot_id: int, data: ReviewCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def create_review(request: Request, spot_id: int, data: ReviewCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
 
     if not 1 <= data.rating <= 5:
@@ -98,7 +98,7 @@ async def create_review(request: Request, spot_id: int, data: ReviewCreate, db: 
 
 @router.delete("/{review_id}")
 @limiter.limit("10/minute")
-async def delete_review(request: Request, review_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def delete_review(request: Request, review_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     review = db.query(Review).filter(Review.id == review_id).first()
     if not review:

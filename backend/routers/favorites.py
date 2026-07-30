@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 from database import SessionLocal
 from models import Favorite, SpotDB
 from schemas import SpotResponse
-from auth import get_current_user
+from auth import get_current_user_required
 from limiter import limiter
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
@@ -20,7 +20,7 @@ def get_db():
 
 
 @router.get("", response_model=list[SpotResponse])
-def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     spots = (
         db.query(SpotDB)
@@ -34,7 +34,7 @@ def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_curren
 
 @router.post("/{spot_id}", status_code=status.HTTP_201_CREATED)
 @limiter.limit("30/minute")
-async def add_favorite(request: Request, spot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def add_favorite(request: Request, spot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
@@ -53,7 +53,7 @@ async def add_favorite(request: Request, spot_id: int, db: Session = Depends(get
 
 @router.delete("/{spot_id}")
 @limiter.limit("30/minute")
-async def remove_favorite(request: Request, spot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+async def remove_favorite(request: Request, spot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     favorite = (
         db.query(Favorite)

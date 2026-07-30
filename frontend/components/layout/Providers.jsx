@@ -6,7 +6,7 @@ import { useFavoritesStore } from "@/store/favoritesStore"
 function AuthErrorHandler() {
   const { data: session } = useSession()
   useEffect(() => {
-    if (session?.error === "RefreshTokenError") {
+    if (session?.error === "RefreshTokenError" || session?.error === "UserNotFound") {
       signOut({ redirect: false })
     }
   }, [session])
@@ -65,7 +65,7 @@ function FavoritesLoader() {
 
 export default function Providers({ children, session }) {
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchInterval={5 * 60}>
       <AuthErrorHandler />
       <RememberMeHandler />
       <TermsAcceptHandler />

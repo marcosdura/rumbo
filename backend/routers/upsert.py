@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from models import User
 from database import SessionLocal
-from auth import get_current_user
+from auth import get_current_user_required
 from limiter import limiter
 from schemas import UserResponse
 
@@ -20,7 +20,7 @@ def get_db():
 
 @router.post("/upsert", response_model=UserResponse)
 @limiter.limit("20/minute")
-async def upsert_user(request: Request, db: Session = Depends(get_db), user_info: dict = Depends(get_current_user)):
+async def upsert_user(request: Request, db: Session = Depends(get_db), user_info: dict = Depends(get_current_user_required)):
     user = db.query(User).filter(User.email == user_info["email"]).first()
     if user:
         user.name  = user_info.get("name")
@@ -39,7 +39,7 @@ async def upsert_user(request: Request, db: Session = Depends(get_db), user_info
 
 
 @router.patch("/me/terms", response_model=UserResponse)
-async def accept_terms(db: Session = Depends(get_db), user_info: dict = Depends(get_current_user)):
+async def accept_terms(db: Session = Depends(get_db), user_info: dict = Depends(get_current_user_required)):
     user = db.query(User).filter(User.email == user_info["email"]).first()
     if not user:
         from fastapi import HTTPException

@@ -4,7 +4,7 @@ from sqlalchemy import func
 from database import SessionLocal
 from models import SurfReview, SurfSchool, User
 from schemas import ReviewCreate, SurfReviewResponse
-from auth import get_current_user
+from auth import get_current_user_required
 from limiter import limiter
 
 router = APIRouter(prefix="/surf-reviews", tags=["surf-reviews"])
@@ -51,7 +51,7 @@ async def create_surf_review(
     surf_beach_id: int,
     data: ReviewCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_current_user_required),
 ):
     user_id = user["sub"]
 
@@ -82,7 +82,7 @@ async def delete_surf_review(
     request: Request,
     review_id: int,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_current_user_required),
 ):
     user_id = user["sub"]
     review = db.query(SurfReview).filter(SurfReview.id == review_id).first()
