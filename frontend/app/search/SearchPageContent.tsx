@@ -184,8 +184,13 @@ export default function SearchPage() {
           position: relative; z-index: 0;
         }
         .search-header { padding: 36px 24px 0; flex-shrink: 0; }
-        .search-cards-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .search-cards-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .search-skeleton-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        .search-cards-grid .spot-card-img-wrap {
+          aspect-ratio: 4 / 3 !important;
+          height: auto !important;
+        }
 
         .filter-trigger-btn {
           font-family: 'DM Sans', sans-serif;
@@ -297,9 +302,8 @@ export default function SearchPage() {
           }
           .map-close-btn:hover { background: #f7f5f0; }
           .search-header     { padding: 20px 16px 0; }
-          .search-cards-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .search-cards-grid    { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
           .search-skeleton-grid { grid-template-columns: 1fr 1fr; }
-          .search-cards-grid .spot-card-img-wrap { height: 100px !important; }
           .search-cards-grid .spot-card-body     { padding: 7px 9px 9px !important; }
           .search-cards-grid .spot-card-name     { font-size: 12px !important; margin-bottom: 4px !important; }
           .search-cards-grid .spot-card-badges   { gap: 4px !important; }
@@ -405,7 +409,7 @@ export default function SearchPage() {
               {loading ? (
                 <div className="search-skeleton-grid">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} style={{ height: 240, borderRadius: 20, background: "#ede9e1", animation: "pulse 1.5s infinite" }} />
+                    <div key={i} style={{ height: 300, borderRadius: 20, background: "#ede9e1", animation: "pulse 1.5s infinite" }} />
                   ))}
                 </div>
               ) : spots.length === 0 ? (

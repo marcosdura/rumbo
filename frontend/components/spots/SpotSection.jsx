@@ -149,26 +149,31 @@ export default function SpotSection({ label, title, count, spots, loading, href 
         .spots-scroll { scrollbar-width: none; }
 
         .spots-scroll .spot-card {
-          width: 240px;
+          width: 180px;
           flex-shrink: 0;
           scroll-snap-align: start;
         }
 
+        .spots-scroll .spot-card-img-wrap {
+          aspect-ratio: 1 / 1 !important;
+          height: auto !important;
+        }
+
         .spots-scroll .spot-skeleton {
-          width: 240px;
+          width: 180px;
           flex-shrink: 0;
           scroll-snap-align: start;
-          height: 220px;
+          height: 240px;
           border-radius: 20px;
           background: #ede9e1;
           animation: pulse 1.5s ease-in-out infinite;
         }
 
         .ver-todo-card {
-          width: 240px;
+          width: 180px;
           flex-shrink: 0;
           scroll-snap-align: start;
-          height: 237px;
+          height: 256px;
           border-radius: 20px;
           border: 1px solid #e0ddd6;
           background: #fff;
@@ -201,9 +206,9 @@ export default function SpotSection({ label, title, count, spots, loading, href 
 
         @media (max-width: 480px) {
           .spots-scroll .spot-card     { width: 200px; }
-          .spots-scroll .spot-skeleton { width: 200px; height: 200px; }
+          .spots-scroll .spot-skeleton { width: 200px; height: 260px; }
           .spot-section-title          { font-size: 22px; }
-          .ver-todo-card               { width: 200px; height: 197px; }
+          .ver-todo-card               { width: 200px; height: 276px; }
         }
 
         @keyframes pulse {
