@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from models import Route
 from schemas import RouteCreate, RouteResponse
 from database import SessionLocal
+from auth import get_current_user_required
 
 router = APIRouter(prefix="/routes", tags=["routes"])
 
@@ -28,7 +29,7 @@ def generate_slug(name: str) -> str:
     return slug.strip('-')
 
 @router.post("/", response_model=RouteResponse)
-def create_route(route: RouteCreate, db: Session = Depends(get_db)):
+def create_route(route: RouteCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     db_route = Route(**route.dict())
     db_route.slug = generate_slug(route.name)
     db.add(db_route)

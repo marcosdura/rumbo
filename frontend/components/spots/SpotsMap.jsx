@@ -24,6 +24,11 @@ const CATEGORY_EMOJI = {
   'Motorhome':  '🚐',
 }
 
+const escapeHtml = (str) =>
+  String(str ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]))
+
 const buildExtraBadges = (extraCategories) => {
   const names = extraCategories || []
   if (names.length <= 3) {
@@ -171,10 +176,10 @@ const createPopupHtml = (spot, categories) => {
     <a href="/spots/${spot.slug}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
       <div style="cursor:pointer; font-family:'DM Sans', sans-serif; min-width:180px; padding:2px 0;">
         <p style="font-family:'Playfair Display', serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
-          ${spot.name}
+          ${escapeHtml(spot.name)}
         </p>
         <p style="font-size:12px; color:#9a9690; margin:0 0 10px;">
-          ${spot.department ?? ''}
+          ${escapeHtml(spot.department)}
         </p>
         <div style="display:flex; align-items:center; justify-content:space-between;">
           <div style="display:flex; gap:6px; flex-wrap:wrap;">${pillsHtml}</div>

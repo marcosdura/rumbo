@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from models import SurfSchool
 from schemas import SurfSchoolCreate, SurfSchoolResponse
 from database import SessionLocal
-from auth import get_current_user
+from auth import get_current_user_required
 from limiter import limiter
-from typing import Optional
 
 router = APIRouter(prefix="/surfschool", tags=["surfschool"])
 
@@ -23,7 +22,7 @@ async def create_surfschool(
     request: Request,
     surfschool: SurfSchoolCreate,
     db: Session = Depends(get_db),
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user_required),
 ):
     db_surfschool = SurfSchool(**surfschool.dict())
     db.add(db_surfschool)

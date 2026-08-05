@@ -44,6 +44,7 @@ export const authOptions = {
       // Primer login: upsert usuario y guardar termsAcceptedAt
       if (account) {
         let termsAcceptedAt = null
+        let signupError = null
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/upsert`, {
             method: "POST",
@@ -52,9 +53,12 @@ export const authOptions = {
           if (res.ok) {
             const user = await res.json()
             termsAcceptedAt = user.terms_accepted_at ?? null
+          } else {
+            signupError = "SignupError"
           }
         } catch (e) {
           console.error("Error guardando usuario:", e)
+          signupError = "SignupError"
         }
         return {
           ...token,
@@ -63,6 +67,7 @@ export const authOptions = {
           refresh_token:    account.refresh_token,
           expires_at:       account.expires_at,
           termsAcceptedAt,
+          ...(signupError ? { error: signupError } : {}),
         }
       }
 
@@ -71,13 +76,28 @@ export const authOptions = {
         return { ...token, termsAcceptedAt: updateSession.termsAcceptedAt }
       }
 
-      // Verificación periódica: el usuario pudo haber sido eliminado
-      if (!token.lastChecked || Date.now() - token.lastChecked > 5 * 60 * 1000) {
+      // Token vencido — renovar. Va antes del chequeo de existencia para no
+      // evaluarlo con un id_token que ya sabemos muerto (eso hacía que un 401
+      // por vencimiento normal se confundiera con "usuario borrado").
+      if (Date.now() >= (token.expires_at - 60) * 1000) {
+        try {
+          token = await refreshIdToken(token)
+        } catch (e) {
+          console.error("Error renovando token:", e)
+          return { ...token, error: "RefreshTokenError" }
+        }
+      }
+
+      // Verificación periódica: el usuario pudo haber sido eliminado.
+      // Solo un 404 real (token válido, sin fila User) cuenta como borrado;
+      // cualquier otro fallo (401 inesperado, 5xx, error de red) es fail-open:
+      // no desloguea, solo reintenta en el próximo ciclo.
+      if (!token.lastChecked || Date.now() - token.lastChecked > 10 * 60 * 1000) {
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
             headers: { Authorization: `Bearer ${token.id_token}` },
           })
-          if (res.status === 404 || res.status === 401) {
+          if (res.status === 404) {
             return { ...token, error: "UserNotFound" }
           }
           if (res.ok) {
@@ -85,22 +105,10 @@ export const authOptions = {
           }
         } catch (e) {
           console.error("Error verificando usuario:", e)
-          return { ...token, error: "UserNotFound" }
         }
       }
 
-      // Token todavía válido (con 60s de margen)
-      if (Date.now() < (token.expires_at - 60) * 1000) {
-        return token
-      }
-
-      // Token expirado — renovar
-      try {
-        return await refreshIdToken(token)
-      } catch (e) {
-        console.error("Error renovando token:", e)
-        return { ...token, error: "RefreshTokenError" }
-      }
+      return token
     },
 
     async session({ session, token }) {

@@ -39,7 +39,8 @@ async def upsert_user(request: Request, db: Session = Depends(get_db), user_info
 
 
 @router.patch("/me/terms", response_model=UserResponse)
-async def accept_terms(db: Session = Depends(get_db), user_info: dict = Depends(get_current_user_required)):
+@limiter.limit("20/minute")
+async def accept_terms(request: Request, db: Session = Depends(get_db), user_info: dict = Depends(get_current_user_required)):
     user = db.query(User).filter(User.email == user_info["email"]).first()
     if not user:
         from fastapi import HTTPException

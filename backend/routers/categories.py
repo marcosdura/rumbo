@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import models, schemas
 from database import SessionLocal
+from auth import get_current_user_required
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -15,7 +16,7 @@ def get_db():
 
 
 @router.post("/")
-def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db)):
+def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     db_category = models.Category(name=category.name)
     db.add(db_category)
     db.commit()

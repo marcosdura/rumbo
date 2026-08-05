@@ -270,7 +270,10 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         for (const name of selectedAmenities) {
           const id = nameToId[name]
           if (id) {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, { method: "POST" })
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, {
+              method: "POST",
+              headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            })
           }
         }
       }
@@ -392,7 +395,10 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           for (const name of selectedCampingAmenities) {
             const id = nameToId[name]
             if (id) {
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, { method: "POST" })
+              await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, {
+                method: "POST",
+                headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+              })
             }
           }
         }
@@ -406,7 +412,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!r.name) continue
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             spot_id: spotId, name: r.name,
             distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
@@ -424,7 +430,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       if (hasFeatures) {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/trekking-detail`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify(trekkingFeatures),
         })
       }
@@ -436,7 +442,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!sec.name) { createdSectorIds.push(null); continue }
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             spot_id: spotId, name: sec.name,
             type: sec.type || null,
@@ -458,7 +464,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!sectorId) continue
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             name: r.name,
             grade: r.grade || null,
@@ -490,7 +496,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (cat === "Surf" && surf.name) {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           spot_id: spotId, name: surf.name,
           class_type: surf.class_type || null,
@@ -508,7 +514,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!k.name) continue
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             spot_id: spotId, name: k.name,
             water_type: k.water_type || null, difficulty: k.difficulty || null,

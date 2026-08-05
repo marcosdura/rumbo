@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models import SpotImage, SpotDB
-from auth import get_current_user
+from auth import get_current_user_required, is_admin
 from limiter import limiter
-from typing import Optional
 
 router = APIRouter(prefix="/images", tags=["images"])
 
@@ -17,12 +16,15 @@ async def add_image_to_spot(
     is_main: bool = False,
     order: int = 0,
     db: Session = Depends(get_db),
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user_required),
 ):
     # verificar que el spot existe
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot no encontrado")
+
+    if not is_admin(user) and spot.owner_email != user.get("email"):
+        raise HTTPException(status_code=403, detail="No autorizado")
 
     current_count = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).count()
     if current_count >= 10:

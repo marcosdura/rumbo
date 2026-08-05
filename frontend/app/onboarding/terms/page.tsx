@@ -24,7 +24,10 @@ export default function TermsPage() {
       if (!res.ok) throw new Error()
       const user = await res.json()
       await update({ termsAcceptedAt: user.terms_accepted_at })
-      const callbackUrl = searchParams.get("callbackUrl") || "/"
+      const requestedCallback = searchParams.get("callbackUrl") || "/"
+      const callbackUrl = requestedCallback.startsWith("/") && !requestedCallback.startsWith("//")
+        ? requestedCallback
+        : "/"
       router.replace(callbackUrl)
     } catch {
       setError("Hubo un error. Intentá de nuevo.")

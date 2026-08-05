@@ -6,7 +6,7 @@ import { useFavoritesStore } from "@/store/favoritesStore"
 function AuthErrorHandler() {
   const { data: session } = useSession()
   useEffect(() => {
-    if (session?.error === "RefreshTokenError" || session?.error === "UserNotFound") {
+    if (session?.error === "RefreshTokenError" || session?.error === "UserNotFound" || session?.error === "SignupError") {
       signOut({ redirect: false })
     }
   }, [session])

@@ -31,9 +31,6 @@ class SpotCreate(BaseModel):
     price: int | None = None
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
-    owner_email: str | None = None
-    owner_phone: str | None = None
-    is_approved: bool = False
     lat: float | None = None
     lng: float | None = None
     slug: str | None = None

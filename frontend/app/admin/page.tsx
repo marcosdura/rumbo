@@ -289,7 +289,7 @@ export default function AdminPage() {
                             Desaprobar
                           </button>
                         )}
-                        <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank"
+                        <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank" rel="noopener noreferrer"
                           className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                           Ver
                         </a>
