@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user_required, is_admin, get_current_admin_user
+from ownership import get_owned_spot_or_admin
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
@@ -573,7 +574,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
     }
 
 @router.post("/spots/{spot_id}/trekking-detail")
-def add_trekking_detail(spot_id: int, data: TrekkingDetailCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+def add_trekking_detail(spot_id: int, data: TrekkingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     detail = TrekkingDetail(spot_id=spot_id, **data.dict())
     db.add(detail)
     db.commit()
@@ -583,11 +584,7 @@ def add_trekking_detail(spot_id: int, data: TrekkingDetailCreate, db: Session = 
 
 # agrega una amenity al spot
 @router.post("/spots/{spot_id}/amenities/{amenity_id}")
-def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-
-    spot = db.query(models.SpotDB).filter(models.SpotDB.id == spot_id).first()
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
+def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
 
     amenity = db.query(models.Amenity).filter(models.Amenity.id == amenity_id).first()
     if not amenity:
@@ -613,11 +610,7 @@ def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), us
 
 
 @router.post("/spots/{spot_id}/categories")
-def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
-
+def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     category = db.query(models.Category).filter(models.Category.name == data.category).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -679,7 +672,7 @@ def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
 
 # agrega detalles del camping
 @router.post("/spots/{spot_id}/camping")
-def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     
     camping = CampingDetail(
         spot_id=spot_id,
@@ -694,7 +687,7 @@ def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = De
 
 
 @router.post("/spots/{spot_id}/motorhome")
-def add_motorhome_detail(spot_id: int, data: MotorhomeDetailCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+def add_motorhome_detail(spot_id: int, data: MotorhomeDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     detail = MotorhomeDetail(
         spot_id=spot_id,
         capacity=data.capacity,
@@ -736,15 +729,6 @@ def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
 @router.get("/spots/{spot_id}/surf-schools", response_model=list[SurfSchoolResponse])
 def get_surf_schools(spot_id: int, db: Session = Depends(get_db)):
     return db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).all()
-
-
-def get_owned_spot_or_admin(spot_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)) -> SpotDB:
-    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
-    if not is_admin(user) and spot.owner_email != user.get("email"):
-        raise HTTPException(status_code=403, detail="No autorizado")
-    return spot
 
 
 @router.get("/admin/spots")
@@ -830,11 +814,7 @@ def delete_image(public_id: str, db: Session = Depends(get_db), user: dict = Dep
 
 
 @router.post("/spots/{spot_id}/experiences", response_model=ExperienceResponse)
-def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
-
+def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     category = db.query(models.Category).filter(models.Category.id == data.category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -867,7 +847,7 @@ def get_experiences(spot_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/spots/{spot_id}/experiences/{experience_id}")
-def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     experience = db.query(Experience).filter(
         Experience.id == experience_id,
         Experience.spot_id == spot_id,

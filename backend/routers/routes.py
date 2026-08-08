@@ -5,6 +5,7 @@ from models import Route
 from schemas import RouteCreate, RouteResponse
 from database import SessionLocal
 from auth import get_current_user_required
+from ownership import assert_owns_spot
 
 router = APIRouter(prefix="/routes", tags=["routes"])
 
@@ -30,6 +31,7 @@ def generate_slug(name: str) -> str:
 
 @router.post("/", response_model=RouteResponse)
 def create_route(route: RouteCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    assert_owns_spot(db, route.spot_id, user)
     db_route = Route(**route.dict())
     db_route.slug = generate_slug(route.name)
     db.add(db_route)

@@ -4,6 +4,7 @@ from models import SurfSchool
 from schemas import SurfSchoolCreate, SurfSchoolResponse
 from database import SessionLocal
 from auth import get_current_user_required
+from ownership import assert_owns_spot
 from limiter import limiter
 
 router = APIRouter(prefix="/surfschool", tags=["surfschool"])
@@ -24,6 +25,7 @@ async def create_surfschool(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user_required),
 ):
+    assert_owns_spot(db, surfschool.spot_id, user)
     db_surfschool = SurfSchool(**surfschool.dict())
     db.add(db_surfschool)
     db.commit()

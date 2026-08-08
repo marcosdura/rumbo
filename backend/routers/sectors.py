@@ -8,6 +8,7 @@ from schemas import ClimbingSectorCreate, ClimbingSectorResponse
 from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
 from auth import get_current_user_required
+from ownership import assert_owns_spot
 
 
 router = APIRouter(prefix="/sectors", tags=["sectors"])
@@ -57,6 +58,7 @@ def _attach_sector_stats(sector):
 
 @router.post("/", response_model=ClimbingSectorResponse)
 def create_sector(sector: ClimbingSectorCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    assert_owns_spot(db, sector.spot_id, user)
     valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
     sector_data = {k: v for k, v in sector.dict().items() if k in valid_fields}
     db_sector = ClimbingSector(**sector_data)

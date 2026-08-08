@@ -4,6 +4,7 @@ from models import KayakDetail
 from schemas import KayakDetailCreate, KayakDetailResponse
 from database import SessionLocal
 from auth import get_current_user_required
+from ownership import assert_owns_spot
 from limiter import limiter
 
 router = APIRouter(prefix="/kayak", tags=["kayak"])
@@ -24,6 +25,7 @@ async def create_kayak(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user_required),
 ):
+    assert_owns_spot(db, kayak.spot_id, user)
     db_kayak = KayakDetail(**kayak.dict())
     db.add(db_kayak)
     db.commit()
