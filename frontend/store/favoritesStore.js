@@ -2,7 +2,7 @@
 // Instalá zustand si no lo tenés: npm install zustand
 
 import { create } from "zustand"
-import { signOut } from "next-auth/react"
+import { signOut, getSession } from "next-auth/react"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 const CACHE_KEY = "rumbo_favorites"
@@ -17,6 +17,22 @@ const readCache = () => {
     const raw = localStorage.getItem(CACHE_KEY)
     return raw ? JSON.parse(raw) : []
   } catch { return [] }
+}
+
+// Un 401 acá puede ser solo el id_token cruzando su expiración (~1h) mientras
+// el refresh silencioso de NextAuth todavía no corrió (el poll de sesión es
+// cada 5 min). Antes de desloguear, forzamos un refresh de sesión y
+// reintentamos una vez con el token fresco.
+const fetchWithRefresh = async (url, method, token) => {
+  const req = (t) => fetch(url, { method, headers: { Authorization: `Bearer ${t}` } })
+  let res = await req(token)
+  if (res.status === 401) {
+    const fresh = await getSession()
+    if (fresh?.id_token && fresh.id_token !== token && !fresh.error) {
+      res = await req(fresh.id_token)
+    }
+  }
+  return res
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -50,10 +66,7 @@ export const useFavoritesStore = create((set, get) => ({
     saveCache(next)
 
     try {
-      const res = await fetch(`${API}/favorites/${spot.id}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetchWithRefresh(`${API}/favorites/${spot.id}`, "POST", token)
       if (res.status === 401) {
         set({ favorites: prev })
         saveCache(prev)
@@ -75,10 +88,7 @@ export const useFavoritesStore = create((set, get) => ({
     saveCache(next)
 
     try {
-      const res = await fetch(`${API}/favorites/${spotId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetchWithRefresh(`${API}/favorites/${spotId}`, "DELETE", token)
       if (res.status === 401) {
         set({ favorites: prev })
         saveCache(prev)

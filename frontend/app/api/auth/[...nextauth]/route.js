@@ -80,6 +80,14 @@ export const authOptions = {
       // evaluarlo con un id_token que ya sabemos muerto (eso hacía que un 401
       // por vencimiento normal se confundiera con "usuario borrado").
       if (Date.now() >= (token.expires_at - 60) * 1000) {
+        // Sesiones creadas antes de que pidiéramos access_type=offline no
+        // tienen refresh_token guardado en su cookie y nunca van a poder
+        // renovar (Google rechaza el POST sin refresh_token). Se distingue
+        // de un RefreshTokenError real para poder diagnosticarlo: acá no
+        // hay refresh que reintentar, requiere login manual.
+        if (!token.refresh_token) {
+          return { ...token, error: "NoRefreshToken" }
+        }
         try {
           token = await refreshIdToken(token)
         } catch (e) {

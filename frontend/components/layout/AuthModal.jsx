@@ -16,7 +16,12 @@ export default function AuthModal({ onClose }) {
   const handleGoogleSignIn = () => {
     localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
     localStorage.setItem("rumbo_terms_accepted", "true")
-    signIn("google", {}, { prompt: "select_account" })
+    // "select_account" solo deja elegir cuenta; sin "consent" Google no
+    // reemite refresh_token salvo que sea la primera vez que esa cuenta
+    // autoriza la app — causaba el deslogueo cada 1h en cualquier login
+    // repetido por este modal. "consent" fuerza la pantalla de permisos y
+    // con eso Google sí devuelve un refresh_token nuevo cada vez.
+    signIn("google", {}, { prompt: "select_account consent" })
   }
 
   return createPortal(

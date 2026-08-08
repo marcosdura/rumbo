@@ -3,10 +3,17 @@ import { SessionProvider, useSession, signOut } from "next-auth/react"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
 
+const FATAL_AUTH_ERRORS = ["RefreshTokenError", "NoRefreshToken", "UserNotFound", "SignupError"]
+
 function AuthErrorHandler() {
   const { data: session } = useSession()
   useEffect(() => {
-    if (session?.error === "RefreshTokenError" || session?.error === "UserNotFound" || session?.error === "SignupError") {
+    if (session?.error && FATAL_AUTH_ERRORS.includes(session.error)) {
+      // Log para poder distinguir en consola/monitoreo qué causa disparó el
+      // logout: NoRefreshToken/RefreshTokenError = sesión sin refresh_token
+      // (login previo a soportarlo, requiere volver a loguearse) vs.
+      // UserNotFound/SignupError = problema del lado del usuario/backend.
+      console.warn(`Cerrando sesión por error de auth: ${session.error}`)
       signOut({ redirect: false })
     }
   }, [session])

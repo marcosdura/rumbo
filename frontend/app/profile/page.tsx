@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useSession, signOut } from "next-auth/react"
+import { useSession, signOut, getSession } from "next-auth/react"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import { useState, useEffect, useRef } from "react"
 import Navbar from "@/components/layout/Navbar"
@@ -25,32 +25,44 @@ export default function ProfilePage() {
   if (!session?.id_token) return
 
   setDataLoading(true)
-  const headers = { Authorization: `Bearer ${session.id_token}` }
-  let loggedOut = false
+  let cancelled = false
 
-  const handle = (res: Response) => {
-    if (res.status === 401) {
-      loggedOut = true
-      return []
-    }
-    return res.ok ? res.json() : []
+  const fetchAll = (idToken: string) => {
+    const headers = { Authorization: `Bearer ${idToken}` }
+    return Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }),
+    ])
   }
 
-  Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }).then(handle),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }).then(handle),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }).then(handle),
-  ])
-    .then(([favData, reviewData, spotsData]) => {
-      if (loggedOut) {
+  const toJson = (res: Response) => (res.ok ? res.json() : [])
+
+  fetchAll(session.id_token)
+    .then(async (responses) => {
+      // Un 401 acá puede ser solo el id_token cruzando su expiración (~1h)
+      // mientras el refresh silencioso de NextAuth todavía no corrió (el
+      // poll de sesión es cada 5 min). Antes de desloguear, forzamos un
+      // refresh de sesión y reintentamos una vez con el token fresco.
+      if (responses.some((res) => res.status === 401)) {
+        const fresh = await getSession()
+        if (fresh?.id_token && fresh.id_token !== session.id_token && !fresh.error) {
+          responses = await fetchAll(fresh.id_token)
+        }
+      }
+      if (cancelled) return
+      if (responses.some((res) => res.status === 401)) {
         signOut({ redirect: false })
         return
       }
+      const [favData, reviewData, spotsData] = await Promise.all(responses.map(toJson))
       setFavorites(Array.isArray(favData) ? favData : [])
       setReviews(Array.isArray(reviewData) ? reviewData : [])
       setMySpots(Array.isArray(spotsData) ? spotsData : [])
     })
-    .finally(() => setDataLoading(false))
+    .finally(() => { if (!cancelled) setDataLoading(false) })
+
+  return () => { cancelled = true }
 }, [session?.id_token, session?.error])
 
   const showLoading = status === "loading" || (!!session?.id_token && dataLoading)
