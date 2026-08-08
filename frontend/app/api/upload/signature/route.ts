@@ -5,11 +5,26 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  if (!session?.user || !session.id_token) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { publicId } = await req.json();
+  const { publicId, spotId } = await req.json();
+  if (!publicId || !spotId) {
+    return NextResponse.json({ error: "Falta publicId o spotId" }, { status: 400 });
+  }
+
+  // El spot tiene que ser del usuario (o admin), y ese public_id no puede
+  // estar ya en uso por otro spot — sin esto, cualquiera logueado podía
+  // pedir una firma válida para pisar la foto de un spot ajeno.
+  const checkUrl = `${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/can-upload?public_id=${encodeURIComponent(publicId)}`;
+  const checkRes = await fetch(checkUrl, {
+    headers: { Authorization: `Bearer ${session.id_token}` },
+  });
+  if (!checkRes.ok) {
+    return NextResponse.json({ error: "No autorizado para subir a este spot" }, { status: 403 });
+  }
+
   const timestamp = Math.round(Date.now() / 1000);
   const folder = "rumbo/spots";
 

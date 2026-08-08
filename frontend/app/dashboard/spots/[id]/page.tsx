@@ -187,6 +187,7 @@ export default function SpotDashboardPage() {
           category: spot.category?.name ?? "Spot",
           spotName: spot.name,
           index: currentCount + i,
+          spotId: spot.id,
         })
       ))
       await Promise.all(results.map(({ publicId }, i) => {

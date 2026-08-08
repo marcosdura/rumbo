@@ -779,6 +779,18 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
     return {"id": spot.id, "is_approved": spot.is_approved}
 
 
+@router.get("/spots/{spot_id}/can-upload")
+def can_upload_image(public_id: str, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+    # get_owned_spot_or_admin ya garantiza que spot_id es del usuario (o admin).
+    # Además, ese public_id no puede estar ya usado por OTRO spot — evita que
+    # alguien pise la foto de un spot ajeno subiendo a un spot propio con el
+    # mismo nombre/categoría (mismo public_id calculado).
+    existing = db.query(SpotImage).filter(SpotImage.cloudinary_public_id == public_id).first()
+    if existing and existing.spot_id != spot.id:
+        raise HTTPException(status_code=409, detail="Ese public_id ya está en uso por otro spot")
+    return {"ok": True}
+
+
 @router.patch("/admin/spots/{spot_id}")
 def edit_spot_admin(data: dict, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     allowed = ["name", "description", "department", "email", "whatsapp", "instagram", "price", "lat", "lng", "is_public", "public_transport", "season_start", "season_end"]

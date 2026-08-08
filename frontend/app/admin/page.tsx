@@ -364,6 +364,7 @@ export default function AdminPage() {
                             category: selectedSpot.category?.name ?? "Spot",
                             spotName: selectedSpot.name,
                             index: (selectedSpot.images?.length ?? 0) + i,
+                            spotId: selectedSpot.id,
                           })
                         ))
 

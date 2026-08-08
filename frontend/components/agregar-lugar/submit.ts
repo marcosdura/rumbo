@@ -97,6 +97,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
               category: selectedCat.name,
               spotName: basic.name,
               index: i,
+              spotId: spotId as number,
             })
             return { publicId, index: i }
           })
@@ -130,6 +131,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             category: "Surf",
             spotName: surf.name,
             index: i,
+            spotId: spotId as number,
           })
           photoUrls[i] = url
         }
@@ -164,6 +166,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             category: "Kayak",
             spotName: kayaks[0]?.name || "kayak",
             index: i,
+            spotId: spotId as number,
           })
           kayakPhotoUrls[i] = url
         }
@@ -203,20 +206,10 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
   setSubmitting(true)
 
   try {
-    // 1. Upload images en paralelo
-    setUploadProgress("Subiendo imágenes...")
-    const uploadResults = await Promise.all(
-      images.map(async (file, i) => {
-        const { publicId } = await uploadImageToCloudinary(file, {
-          category: selectedCat.name,
-          spotName: basic.name,
-          index: i,
-        })
-        return { publicId, index: i }
-      })
-    )
-
-    // 2. Create spot
+    // 1. Create spot — primero, para tener un spot_id real (y con
+    // owner_email fijado server-side al usuario autenticado) antes de subir
+    // ninguna imagen. La firma de Cloudinary exige ese spot_id para
+    // verificar que el spot es del usuario antes de firmar.
     setUploadProgress("Guardando lugar...")
     const seasonStart = basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null
     const seasonEnd   = basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null
@@ -245,6 +238,20 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (!spotRes.ok) throw new Error("Error al crear el lugar")
     const spot = await spotRes.json()
     const spotId: number = spot.id
+
+    // 2. Upload images en paralelo
+    setUploadProgress("Subiendo imágenes...")
+    const uploadResults = await Promise.all(
+      images.map(async (file, i) => {
+        const { publicId } = await uploadImageToCloudinary(file, {
+          category: selectedCat.name,
+          spotName: basic.name,
+          index: i,
+          spotId,
+        })
+        return { publicId, index: i }
+      })
+    )
 
     // 3. Add images en paralelo
     await Promise.all(

@@ -4,6 +4,7 @@ export interface PublicIdParams {
   category: string
   spotName: string
   index: number
+  spotId: number
 }
 
 export interface CloudinaryUploadResult {
@@ -30,7 +31,7 @@ export async function uploadImageToCloudinary(
   const sigRes = await fetch("/api/upload/signature", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ publicId }),
+    body: JSON.stringify({ publicId, spotId: publicIdParams.spotId }),
   })
   if (!sigRes.ok) throw new Error("No se pudo obtener la firma de upload")
   const { signature, timestamp, folder, apiKey, cloudName } = await sigRes.json()
