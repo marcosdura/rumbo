@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [mode, setMode] = useState<AdminMode>("spots")
   const [spots, setSpots] = useState<AdminSpot[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [filter, setFilter] = useState<"pending" | "approved" | "all">("pending")
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
@@ -41,11 +42,18 @@ export default function AdminPage() {
   const photoUploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (!token) return
+    setLoadError(null)
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.json())
-      .then(data => { setSpots(data); setLoading(false) })
+      .then(r => {
+        if (r.status === 403) throw new Error("No tenés permisos de administrador con esta cuenta.")
+        if (!r.ok) throw new Error("Error al cargar los spots.")
+        return r.json()
+      })
+      .then(data => { setSpots(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(e => { setLoadError(e instanceof Error ? e.message : "Error al cargar los spots."); setLoading(false) })
   }, [token])
 
   async function handleApprove(id: number, approved: boolean) {
@@ -230,7 +238,9 @@ export default function AdminPage() {
               </div>
             )}
 
-            {loading ? (
+            {loadError ? (
+              <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
+            ) : loading ? (
               <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
             ) : displayed.length === 0 ? (
               <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta categoría.</p>
