@@ -1,6 +1,6 @@
 import re
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import ClimbingSector
@@ -9,6 +9,7 @@ from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
 from auth import get_current_user_required
 from ownership import assert_owns_spot
+from limiter import limiter
 
 
 router = APIRouter(prefix="/sectors", tags=["sectors"])
@@ -57,7 +58,8 @@ def _attach_sector_stats(sector):
     return sector
 
 @router.post("/", response_model=ClimbingSectorResponse)
-def create_sector(sector: ClimbingSectorCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("10/minute")
+async def create_sector(request: Request, sector: ClimbingSectorCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     assert_owns_spot(db, sector.spot_id, user)
     valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
     sector_data = {k: v for k, v in sector.dict().items() if k in valid_fields}

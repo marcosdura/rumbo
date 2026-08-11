@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from schemas import AmenityResponse, AmenityCreate
 import models
 from database import SessionLocal
 from auth import get_current_user_required
+from limiter import limiter
 
 router = APIRouter(prefix="/amenities", tags=["amenities"])
 
@@ -22,7 +23,8 @@ def get_amenities(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=AmenityResponse)
-def create_amenity(amenity: AmenityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("10/minute")
+async def create_amenity(request: Request, amenity: AmenityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
 
     # evitar duplicados
     existing = db.query(models.Amenity).filter(models.Amenity.name == amenity.name).first()
