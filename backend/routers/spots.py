@@ -114,7 +114,7 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
 
 @router.get("/spots/ids")
 def get_spot_ids(db: Session = Depends(get_db)):
-    rows = db.query(SpotDB.id, SpotDB.slug).filter(SpotDB.is_approved == True, SpotDB.slug != None).all()
+    rows = db.query(SpotDB.id, SpotDB.slug).filter(SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None), SpotDB.slug != None).all()
     return [{"id": r.id, "slug": r.slug} for r in rows]
 
 
@@ -159,7 +159,7 @@ def get_spots(
         joinedload(SpotDB.images),
         selectinload(SpotDB.glamping_detail),
         selectinload(SpotDB.glamping_amenities),
-    ).filter(SpotDB.is_approved == True)
+    ).filter(SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
 
     if department:
         query = query.filter(SpotDB.department == department)
@@ -427,7 +427,7 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
         )
-        .filter(SpotDB.slug == slug, SpotDB.is_approved == True)
+        .filter(SpotDB.slug == slug, SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
         .first()
     )
     if not spot:
@@ -539,7 +539,7 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         .first()
     )
 
-    if not spot or not spot.is_approved:
+    if not spot or not spot.is_approved or spot.owner_deleted_at is not None:
         raise HTTPException(status_code=404, detail="Spot not found")
 
     return {
@@ -759,12 +759,26 @@ def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get
             "category": s.category,
             "images": s.images,
             "owner_email": s.owner_email,
+            "owner_deleted_at": s.owner_deleted_at,
             "slug": s.slug,
             "created_at": s.created_at,
             "review_count": review_counts.get(s.id, 0),
         }
         for s in spots
     ]
+
+
+@router.patch("/admin/spots/{spot_id}/reactivate")
+def reactivate_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+    # No usa get_owned_spot_or_admin: si el spot está acá es porque su dueño
+    # borró la cuenta, ya no hay ningún dueño legítimo que autorizar — es
+    # una decisión exclusiva del admin.
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    spot.owner_deleted_at = None
+    db.commit()
+    return {"id": spot.id}
 
 
 @router.patch("/admin/spots/{spot_id}/approve")

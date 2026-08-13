@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from models import User, Favorite, Review, SurfReview, KayakReview
+from sqlalchemy.sql import func
+from models import User, Favorite, Review, SurfReview, KayakReview, SpotDB
 from database import SessionLocal
 from auth import get_current_user_required
 from limiter import limiter
@@ -43,6 +44,14 @@ async def delete_account(
     db.query(SurfReview).filter(SurfReview.user_id == user_id).delete()
     db.query(Review).filter(Review.user_id == user_id).delete()
     db.query(Favorite).filter(Favorite.user_id == user_id).delete()
+
+    # Los spots no se borran: se desactivan (dejan de mostrarse públicamente)
+    # y quedan a la vista del admin en /admin bajo "Cuentas eliminadas" para
+    # poder contactar al dueño antes de decidir qué hacer con ellos.
+    db.query(SpotDB).filter(
+        SpotDB.owner_email == db_user.email,
+        SpotDB.owner_deleted_at.is_(None),
+    ).update({"owner_deleted_at": func.now()}, synchronize_session=False)
 
     db.delete(db_user)
     db.commit()

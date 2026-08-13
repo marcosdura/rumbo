@@ -22,6 +22,10 @@ class SpotDB(Base):
     owner_email = Column(String, nullable=True)
     owner_phone = Column(String, nullable=True)
     is_approved = Column(Boolean, default=False)
+    # NULL = spot normal. Con fecha = el dueño borró su cuenta ese día: el
+    # spot se desactiva (deja de mostrarse públicamente) en vez de borrarse,
+    # y pasa a la pestaña "Cuentas eliminadas" del panel admin.
+    owner_deleted_at = Column(DateTime(timezone=True), nullable=True)
     slug = Column(String, unique=True, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

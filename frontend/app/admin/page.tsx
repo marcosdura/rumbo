@@ -12,6 +12,7 @@ type AdminSpot = {
   department: string
   is_approved: boolean
   owner_email: string | null
+  owner_deleted_at: string | null
   slug: string | null
   created_at: string
   category: { name: string } | null
@@ -19,7 +20,7 @@ type AdminSpot = {
   review_count?: number
 }
 
-type AdminMode = "spots" | "fotos"
+type AdminMode = "spots" | "fotos" | "cuentas-eliminadas"
 
 export default function AdminPage() {
   const { data: session } = useSession()
@@ -79,6 +80,16 @@ export default function AdminPage() {
     setDeleteConfirmText("")
   }
 
+  async function handleReactivate(id: number) {
+    setActionLoading(id)
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${id}/reactivate`, {
+      method: "PATCH",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    setSpots(prev => prev.map(s => s.id === id ? { ...s, owner_deleted_at: null } : s))
+    setActionLoading(null)
+  }
+
   async function handleSetMainPhoto(spotId: number, publicId: string) {
     setPhotoLoading(true)
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${spotId}/main-image`, {
@@ -113,8 +124,15 @@ export default function AdminPage() {
     setPhotoLoading(false)
   }
 
-  const pending = spots.filter(s => !s.is_approved).length
-  const filtered = spots.filter(s =>
+  // Los spots cuyo dueño borró la cuenta se dejan de mostrar en la gestión
+  // normal — viven aparte, en la pestaña "Cuentas eliminadas".
+  const activeSpots = spots.filter(s => !s.owner_deleted_at)
+  const deactivatedSpots = spots
+    .filter(s => s.owner_deleted_at)
+    .sort((a, b) => new Date(a.owner_deleted_at!).getTime() - new Date(b.owner_deleted_at!).getTime())
+
+  const pending = activeSpots.filter(s => !s.is_approved).length
+  const filtered = activeSpots.filter(s =>
     filter === "all" ? true : filter === "pending" ? !s.is_approved : s.is_approved
   )
   const displayed = filtered
@@ -170,6 +188,7 @@ export default function AdminPage() {
           {([
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
+            { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
             <button
               key={m.id}
@@ -449,6 +468,63 @@ export default function AdminPage() {
                       </div>
                     ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {mode === "cuentas-eliminadas" && (
+          <div>
+            <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, lineHeight: 1.5 }}>
+              Estos spots quedaron sin dueño porque la cuenta que los creó se eliminó.
+              No se muestran públicamente. Contactá el email antes de reactivar o
+              eliminar el spot definitivamente.
+            </p>
+
+            {loadError ? (
+              <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
+            ) : loading ? (
+              <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
+            ) : deactivatedSpots.length === 0 ? (
+              <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta situación.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {deactivatedSpots.map(spot => (
+                  <div key={spot.id} className="spot-row">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
+                        <Pill variant="yellow" size="sm">Desactivado</Pill>
+                      </div>
+                      <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
+                        {spot.category?.name} · {spot.department}
+                      </p>
+                      <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
+                        {spot.owner_email && (
+                          <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
+                            ✉️ {spot.owner_email} (cuenta borrada)
+                          </a>
+                        )}
+                        {spot.owner_deleted_at && (
+                          <span style={{ fontSize: 11, color: "#9a9690" }}>
+                            Desactivado el {new Date(spot.owner_deleted_at).toLocaleDateString("es-UY")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      <button onClick={() => handleReactivate(spot.id)} disabled={actionLoading === spot.id}
+                        className="action-btn-sm" style={{ background: "#2d6a4f", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                        Reactivar
+                      </button>
+                      <button onClick={() => { setDeleteConfirmId(spot.id); setDeleteConfirmText("") }} disabled={actionLoading === spot.id}
+                        className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                        Eliminar definitivamente
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
