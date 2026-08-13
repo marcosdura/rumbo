@@ -3,6 +3,7 @@
 
 import { create } from "zustand"
 import { signOut, getSession } from "next-auth/react"
+import { trackEvent } from "@/lib/analytics"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 const CACHE_KEY = "rumbo_favorites"
@@ -74,6 +75,7 @@ export const useFavoritesStore = create((set, get) => ({
         return
       }
       if (!res.ok && res.status !== 409) throw new Error()
+      trackEvent("favorite_add", { spot_id: spot.id })
     } catch {
       set({ favorites: prev })
       saveCache(prev)
@@ -96,6 +98,7 @@ export const useFavoritesStore = create((set, get) => ({
         return
       }
       if (!res.ok) throw new Error()
+      trackEvent("favorite_remove", { spot_id: spotId })
     } catch {
       // Revertir si falla
       set({ favorites: prev })

@@ -2,6 +2,7 @@
 import { SessionProvider, useSession, signOut } from "next-auth/react"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
+import { trackEvent } from "@/lib/analytics"
 
 const FATAL_AUTH_ERRORS = ["RefreshTokenError", "NoRefreshToken", "UserNotFound", "SignupError"]
 
@@ -57,6 +58,20 @@ function TermsAcceptHandler() {
   return null
 }
 
+function LoginTracker() {
+  const { data: session, status } = useSession()
+  useEffect(() => {
+    if (status !== "authenticated" || !session) return
+    // Solo confirma el evento si el login se disparó desde un click nuestro
+    // (AuthModal / AgregarLugar) — evita contar como "login" cada vez que
+    // alguien vuelve a abrir la app ya logueado.
+    if (localStorage.getItem("rumbo_pending_login_track") !== "1") return
+    localStorage.removeItem("rumbo_pending_login_track")
+    trackEvent("login", { method: "google" })
+  }, [status, session])
+  return null
+}
+
 function FavoritesLoader() {
   const { data: session } = useSession()
   const { loadFavorites } = useFavoritesStore()
@@ -76,6 +91,7 @@ export default function Providers({ children, session }) {
       <AuthErrorHandler />
       <RememberMeHandler />
       <TermsAcceptHandler />
+      <LoginTracker />
       <FavoritesLoader />
       {children}
     </SessionProvider>

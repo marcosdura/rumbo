@@ -9,6 +9,7 @@ import {
   defaultClimbingRouteItem, defaultExperience,
 } from "./constants"
 import { submitAgregarLugar } from "./submit"
+import { trackEvent } from "@/lib/analytics"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"
@@ -91,6 +92,11 @@ export default function AgregarLugar() {
   const [loadingTrekkingSpots, setLoadingTrekkingSpots] = useState(false)
 
   const [experiences, setExperiences]                   = useState<ExperienceItem[]>([])
+
+  useEffect(() => {
+    trackEvent("add_spot_start")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!submitting) return
@@ -501,7 +507,10 @@ export default function AgregarLugar() {
               Guardamos tu email para poder contactarte si necesitamos verificar o completar la información del lugar que enviás.
             </p>
             <button
-              onClick={() => signIn("google", { callbackUrl: "/agregar-lugar" })}
+              onClick={() => {
+                localStorage.setItem("rumbo_pending_login_track", "1")
+                signIn("google", { callbackUrl: "/agregar-lugar" })
+              }}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
                 background: "#fff", border: "1px solid #e0ddd6", borderRadius: 12,

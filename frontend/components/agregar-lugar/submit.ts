@@ -1,6 +1,7 @@
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
+import { trackEvent } from "@/lib/analytics"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
   if (!basic.whatsapp.trim()) return null
@@ -190,6 +191,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           })
         }
       }
+      trackEvent("add_spot_complete", { category: cat, creating_new_spot: creatingNewSpot })
       setSuccess(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Error inesperado")
@@ -557,6 +559,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       })
     }
 
+    trackEvent("add_spot_complete", { category: cat, creating_new_spot: true })
     setSuccess(true)
   } catch (e: unknown) {
     setError(e instanceof Error ? e.message : "Error inesperado")

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import Toast from "@/components/ui/Toast"
 import AuthModal from "@/components/layout/AuthModal"
+import { trackEvent } from "@/lib/analytics"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -99,6 +100,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         body: JSON.stringify({ rating, comment }),
       })
       if (res.ok) {
+        trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
         setRating(0)
         setComment("")
         setShowForm(false)

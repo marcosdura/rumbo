@@ -16,6 +16,9 @@ export default function AuthModal({ onClose }) {
   const handleGoogleSignIn = () => {
     localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
     localStorage.setItem("rumbo_terms_accepted", "true")
+    // Se confirma como evento "login" recién cuando la sesión aparece
+    // (LoginTracker en Providers.jsx) — así no contamos clicks cancelados.
+    localStorage.setItem("rumbo_pending_login_track", "1")
     // "select_account" solo deja elegir cuenta; sin "consent" Google no
     // reemite refresh_token salvo que sea la primera vez que esa cuenta
     // autoriza la app — causaba el deslogueo cada 1h en cualquier login

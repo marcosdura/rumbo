@@ -36,6 +36,7 @@ import {
   EMPTY_CAMPING_FILTERS,
   countActiveCampingFilters,
 } from "../../lib/camping-filters"
+import { trackEvent } from "../../lib/analytics"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -117,7 +118,17 @@ export default function SearchPage() {
     }
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => res.json())
-      .then(data => { setSpots(data); setLoading(false) })
+      .then(data => {
+        setSpots(data)
+        setLoading(false)
+        trackEvent("search", {
+          search_term: activity || department || "todos",
+          activity: activity || undefined,
+          department: department || undefined,
+          filter_count: Array.from(params.keys()).length,
+          result_count: Array.isArray(data) ? data.length : undefined,
+        })
+      })
   }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters])
 
   const title = activity && department
