@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import SpotDetails from "./SpotDetails"
+import JsonLd from "@/components/seo/JsonLd"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -39,5 +40,29 @@ export default async function SpotPage({ params }: Props) {
   const spot = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
   ).then(r => r.json())
-  return <SpotDetails spot={spot} />
+
+  const mainImage = spot.images?.find((img: any) => img.is_main) ?? spot.images?.[0]
+  const imageUrl = mainImage
+    ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${mainImage.cloudinary_public_id}`
+    : undefined
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: spot.name,
+    description: spot.description,
+    ...(imageUrl ? { image: imageUrl } : {}),
+    ...(spot.department ? { address: { "@type": "PostalAddress", addressRegion: spot.department } } : {}),
+    ...(spot.lat && spot.lng ? { geo: { "@type": "GeoCoordinates", latitude: spot.lat, longitude: spot.lng } } : {}),
+    ...(spot.review_count > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: spot.average_rating, reviewCount: spot.review_count } }
+      : {}),
+  }
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      <SpotDetails spot={spot} />
+    </>
+  )
 }

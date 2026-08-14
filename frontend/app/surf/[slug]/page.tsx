@@ -6,9 +6,11 @@ import SurfPhotos from "./SurfPhotos"
 import Footer from "@/components/layout/Footer"
 import Pill from "@/components/ui/Pill"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
+import JsonLd from "@/components/seo/JsonLd"
+import { idFromSlug } from "@/lib/slugify"
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
 const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
@@ -20,7 +22,9 @@ const CLASS_CONFIG: Record<string, { label: string; icon: string }> = {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = await params
+  const { slug } = await params
+  const id = idFromSlug(slug)
+  if (id === null) return { title: "Escuela de Surf | Rumbo" }
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`)
   if (!res.ok) return { title: "Escuela de Surf | Rumbo" }
   const school = await res.json()
@@ -40,13 +44,33 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SurfSchoolPage({ params }: Props) {
-  const { id } = await params
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`, {
-    cache: "no-store",
-  })
+  const { slug } = await params
+  const id = idFromSlug(slug)
+  if (id === null) notFound()
+
+  const [res, summaryRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`, { cache: "no-store" }),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/surf-reviews/${id}/summary`, { cache: "no-store" }),
+  ])
   if (!res.ok) notFound()
 
   const school = await res.json()
+  const summary = summaryRes.ok ? await summaryRes.json() : { average: null, total: 0 }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: school.name,
+    description: school.spot_name
+      ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}.`
+      : "Escuela de surf en Uruguay.",
+    ...(school.photo_1 ? { image: school.photo_1 } : {}),
+    ...(school.spot_department ? { address: { "@type": "PostalAddress", addressRegion: school.spot_department } } : {}),
+    ...(school.email ? { email: school.email } : {}),
+    ...(summary.total > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: summary.average, reviewCount: summary.total } }
+      : {}),
+  }
 
   const classInfo = school.class_type ? CLASS_CONFIG[school.class_type] : null
   const whatsappUrl = school.whatsapp
@@ -60,6 +84,7 @@ export default async function SurfSchoolPage({ params }: Props) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
+      <JsonLd data={jsonLd} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 

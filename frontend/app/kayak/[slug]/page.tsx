@@ -5,9 +5,11 @@ import KayakPhotos from "./KayakPhotos"
 import Footer from "@/components/layout/Footer"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import Pill from "@/components/ui/Pill"
+import JsonLd from "@/components/seo/JsonLd"
+import { idFromSlug } from "@/lib/slugify"
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
 const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
@@ -31,7 +33,9 @@ const KAYAK_TYPE: Record<string, string> = {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = await params
+  const { slug } = await params
+  const id = idFromSlug(slug)
+  if (id === null) return { title: "Kayak | Rumbo" }
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`)
   if (!res.ok) return { title: "Kayak | Rumbo" }
   const kayak = await res.json()
@@ -51,13 +55,33 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function KayakDetailPage({ params }: Props) {
-  const { id } = await params
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`, {
-    cache: "no-store",
-  })
+  const { slug } = await params
+  const id = idFromSlug(slug)
+  if (id === null) notFound()
+
+  const [res, summaryRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`, { cache: "no-store" }),
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak-reviews/${id}/summary`, { cache: "no-store" }),
+  ])
   if (!res.ok) notFound()
 
   const kayak = await res.json()
+  const summary = summaryRes.ok ? await summaryRes.json() : { average: null, total: 0 }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: kayak.name,
+    description: kayak.spot_name
+      ? `Servicio de kayak en ${kayak.spot_name}, ${kayak.spot_department}.`
+      : "Servicio de kayak en Uruguay.",
+    ...(kayak.photo_1 ? { image: kayak.photo_1 } : {}),
+    ...(kayak.spot_department ? { address: { "@type": "PostalAddress", addressRegion: kayak.spot_department } } : {}),
+    ...(kayak.email ? { email: kayak.email } : {}),
+    ...(summary.total > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: summary.average, reviewCount: summary.total } }
+      : {}),
+  }
 
   const waterInfo = kayak.water_type ? WATER_TYPE[kayak.water_type] : null
   const diffInfo  = kayak.difficulty ? DIFFICULTY_CONFIG[kayak.difficulty] : null
@@ -72,6 +96,7 @@ export default async function KayakDetailPage({ params }: Props) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
+      <JsonLd data={jsonLd} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 

@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import CircleArrow from "@/components/ui/CircleArrow"
+import { slugWithId } from "@/lib/slugify"
 
 const classTypeConfig = {
   grupal:    { label: "Grupal",    icon: "👥" },
@@ -22,7 +23,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
 
   return (
     <Link
-      href={`/surf/${school.id}`}
+      href={`/surf/${slugWithId(school.name, school.id)}`}
       style={{ textDecoration: "none", display: "block" }}
     >
       <div

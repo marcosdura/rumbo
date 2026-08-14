@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { slugWithId } from "@/lib/slugify"
 
 const BASE_URL = "https://rumbo-eight.vercel.app"
 const API = process.env.NEXT_PUBLIC_API_URL!
@@ -31,18 +32,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     if (surfRes.ok) {
-      const ids: number[] = await surfRes.json()
-      surfUrls = ids.map(id => ({
-        url: `${BASE_URL}/surf/${id}`,
+      const schools: { id: number; name: string }[] = await surfRes.json()
+      surfUrls = schools.map(({ id, name }) => ({
+        url: `${BASE_URL}/surf/${slugWithId(name, id)}`,
         changeFrequency: "weekly",
         priority: 0.7,
       }))
     }
 
     if (kayakRes.ok) {
-      const ids: number[] = await kayakRes.json()
-      kayakUrls = ids.map(id => ({
-        url: `${BASE_URL}/kayak/${id}`,
+      const kayaks: { id: number; name: string }[] = await kayakRes.json()
+      kayakUrls = kayaks.map(({ id, name }) => ({
+        url: `${BASE_URL}/kayak/${slugWithId(name, id)}`,
         changeFrequency: "weekly",
         priority: 0.7,
       }))

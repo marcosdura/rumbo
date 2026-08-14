@@ -36,8 +36,10 @@ async def create_surfschool(
 
 @router.get("/ids")
 def get_surfschool_ids(db: Session = Depends(get_db)):
-    rows = db.query(SurfSchool.id).all()
-    return [r.id for r in rows]
+    # {id, name} en vez de solo id — el sitemap arma un slug cosmético
+    # (/surf/nombre-slug-id) y necesita el nombre para eso.
+    rows = db.query(SurfSchool.id, SurfSchool.name).all()
+    return [{"id": r.id, "name": r.name} for r in rows]
 
 
 @router.get("/", response_model=list[SurfSchoolResponse])

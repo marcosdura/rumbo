@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import CircleArrow from "@/components/ui/CircleArrow"
+import { slugWithId } from "@/lib/slugify"
 
 const waterTypeLabel = {
   rio:  { label: "Río",  icon: "🏞️" },
@@ -35,7 +36,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
 
   return (
     <Link
-      href={`/kayak/${kayak.id}`}
+      href={`/kayak/${slugWithId(kayak.name, kayak.id)}`}
       style={{ textDecoration: "none", display: "block" }}
     >
       <div
