@@ -399,7 +399,11 @@ def get_spots(
 
     # Total antes de paginar — calculado antes de sumar los joinedload/
     # selectinload de abajo, para que no interfieran con el count().
-    total = query.with_entities(SpotDB.id).distinct().count()
+    # order_by(None) es necesario: build_spots_filter_query ya le aplicó un
+    # ORDER BY created_at, y Postgres exige que las columnas del ORDER BY
+    # estén en el SELECT cuando hay DISTINCT (SQLite no lo exige, por eso
+    # esto pasaba los tests locales pero rompía en producción).
+    total = query.order_by(None).with_entities(SpotDB.id).distinct().count()
     response.headers["X-Total-Count"] = str(total)
 
     query = query.options(
