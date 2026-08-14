@@ -558,6 +558,20 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
     )
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
+
+    # Antes esto devolvía average_rating/review_count hardcodeados en None/0
+    # — mismo cálculo real que ya usa GET /spots, pero para un solo spot.
+    agg = (
+        db.query(
+            func.avg(models.Review.rating).label("average_rating"),
+            func.count(models.Review.id).label("review_count"),
+        )
+        .filter(models.Review.spot_id == spot.id)
+        .first()
+    )
+    average_rating = round(float(agg.average_rating), 1) if agg and agg.average_rating else None
+    review_count = agg.review_count if agg else 0
+
     return {
         "id": spot.id,
         "name": spot.name,
@@ -584,8 +598,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "routes": spot.routes,
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "experiences": spot.experiences,
-        "average_rating": None,
-        "review_count": 0,
+        "average_rating": average_rating,
+        "review_count": review_count,
         "is_public": spot.is_public,
         "public_transport": spot.public_transport,
     }
