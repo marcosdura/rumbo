@@ -50,7 +50,10 @@ export default function SearchPage() {
   const [spots, setSpots]                         = useState<any[]>([])
   const [total, setTotal]                         = useState<number | null>(null)
   const [loading, setLoading]                     = useState(true)
+  const [error, setError]                         = useState<string | null>(null)
+  const [retryTick, setRetryTick]                 = useState(0)
   const [loadingMore, setLoadingMore]             = useState(false)
+  const [loadMoreError, setLoadMoreError]         = useState<string | null>(null)
   const [mapSpots, setMapSpots]                   = useState<any[]>([])
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]             = useState(false)
@@ -127,12 +130,14 @@ export default function SearchPage() {
 
   useEffect(() => {
     setLoading(true)
+    setError(null)
 
     const listParams = buildFilterParams()
     listParams.set("limit", String(PAGE_SIZE))
     listParams.set("offset", "0")
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${listParams.toString()}`)
       .then(res => {
+        if (!res.ok) throw new Error("Error al cargar los spots.")
         const totalHeader = res.headers.get("X-Total-Count")
         setTotal(totalHeader ? parseInt(totalHeader, 10) : null)
         return res.json()
@@ -148,23 +153,31 @@ export default function SearchPage() {
           result_count: Array.isArray(data) ? data.length : undefined,
         })
       })
+      .catch(e => {
+        setError(e instanceof Error ? e.message : "Error al cargar los spots.")
+        setLoading(false)
+      })
 
     // Pines del mapa: mismos filtros, sin paginar — no se vuelve a pedir
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
+    // Si falla, el mapa se queda vacío (degrada solo, no bloquea la lista).
     const mapParams = buildFilterParams()
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?${mapParams.toString()}`)
-      .then(res => res.json())
+      .then(res => (res.ok ? res.json() : []))
       .then(data => setMapSpots(Array.isArray(data) ? data : []))
-  }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters])
+      .catch(() => setMapSpots([]))
+  }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters, retryTick])
 
   const loadMore = () => {
     if (loadingMore) return
     setLoadingMore(true)
+    setLoadMoreError(null)
     const params = buildFilterParams()
     params.set("limit", String(PAGE_SIZE))
     params.set("offset", String(spots.length))
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
       .then(res => {
+        if (!res.ok) throw new Error("Error al cargar más spots.")
         const totalHeader = res.headers.get("X-Total-Count")
         if (totalHeader) setTotal(parseInt(totalHeader, 10))
         return res.json()
@@ -173,7 +186,10 @@ export default function SearchPage() {
         setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])
         setLoadingMore(false)
       })
-      .catch(() => setLoadingMore(false))
+      .catch(e => {
+        setLoadMoreError(e instanceof Error ? e.message : "Error al cargar más spots.")
+        setLoadingMore(false)
+      })
   }
 
   const hasMore = total !== null && spots.length < total
@@ -464,7 +480,27 @@ export default function SearchPage() {
               style={{ height: "100%", overflowY: "auto", padding: "24px 24px 20px" }}
               onScroll={handleScroll}
             >
-              {loading ? (
+              {error ? (
+                <div style={{
+                  background: "#fff", border: "1px solid #e0ddd6",
+                  borderRadius: 20, padding: "60px 40px",
+                  textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                }}>
+                  <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 16 }}>{error}</p>
+                  <button
+                    onClick={() => setRetryTick(t => t + 1)}
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 13, fontWeight: 600,
+                      color: "#2d6a4f", background: "#fff",
+                      border: "1px solid #2d6a4f", borderRadius: 10,
+                      padding: "10px 20px", cursor: "pointer",
+                    }}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : loading ? (
                 <div className="search-skeleton-grid">
                   {[...Array(4)].map((_, i) => (
                     <div key={i} style={{ height: 300, borderRadius: 20, background: "#ede9e1", animation: "pulse 1.5s infinite" }} />
@@ -499,7 +535,10 @@ export default function SearchPage() {
                   </div>
 
                   {hasMore && (
-                    <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 20 }}>
+                      {loadMoreError && (
+                        <p style={{ color: "#dc2626", fontSize: 13, margin: 0 }}>{loadMoreError}</p>
+                      )}
                       <button
                         onClick={loadMore}
                         disabled={loadingMore}
@@ -510,7 +549,7 @@ export default function SearchPage() {
                           opacity: loadingMore ? 0.6 : 1,
                         }}
                       >
-                        {loadingMore ? "Cargando..." : `Cargar más (${total! - spots.length} más)`}
+                        {loadingMore ? "Cargando..." : loadMoreError ? "Reintentar" : `Cargar más (${total! - spots.length} más)`}
                       </button>
                     </div>
                   )}

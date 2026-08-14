@@ -130,13 +130,20 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   }
 
   const handleDelete = async (reviewId) => {
+    if (!confirm("¿Eliminar tu review?")) return
     try {
-      await fetch(`${deleteBase}/${reviewId}`, {
+      const res = await fetch(`${deleteBase}/${reviewId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (!res.ok) {
+        alert("No se pudo eliminar la review. Intentá de nuevo.")
+        return
+      }
       loadReviews()
-    } catch {}
+    } catch {
+      alert("No se pudo eliminar la review. Intentá de nuevo.")
+    }
   }
 
   return (

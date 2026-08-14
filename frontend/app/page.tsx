@@ -15,14 +15,19 @@ export default function Home() {
   const [lavalleja, setLavalleja] = useState<Section>({ data: [], total: 0 })
   const [rocha, setRocha]         = useState<Section>({ data: [], total: 0 })
   const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
+  const [retryTick, setRetryTick] = useState(0)
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL
+    setLoading(true)
+    setError(null)
     // 3 pedidos chicos y ya filtrados en vez de traer el catálogo entero y
     // recortarlo a mano acá — antes esto pedía TODOS los spots aprobados
     // solo para mostrar 6 en cada sección.
     const fetchSection = (params: string): Promise<Section> =>
       fetch(`${API}/spots?${params}`).then(async (res) => {
+        if (!res.ok) throw new Error("Error al cargar los spots.")
         const total = parseInt(res.headers.get("X-Total-Count") ?? "0", 10)
         const data = await res.json()
         return { data: Array.isArray(data) ? data : [], total }
@@ -37,8 +42,11 @@ export default function Home() {
       setLavalleja(l)
       setRocha(ro)
       setLoading(false)
+    }).catch((e) => {
+      setError(e instanceof Error ? e.message : "Error al cargar los spots.")
+      setLoading(false)
     })
-  }, [])
+  }, [retryTick])
 
   const sections = [
     {
@@ -123,17 +131,39 @@ export default function Home() {
       <div style={{ flex: 1, fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 64px" }}>
 
-          {sections.map((section) => (
-            <SpotSection
-              key={section.title}
-              label={section.label}
-              title={section.title}
-              count={section.count}
-              spots={section.spots}
-              href={section.href}
-              loading={loading}
-            />
-          ))}
+          {error ? (
+            <div style={{ textAlign: "center", padding: "64px 24px" }}>
+              <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 16 }}>{error}</p>
+              <button
+                onClick={() => setRetryTick((t) => t + 1)}
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#2d6a4f",
+                  background: "#fff",
+                  border: "1px solid #2d6a4f",
+                  borderRadius: 10,
+                  padding: "10px 20px",
+                  cursor: "pointer",
+                }}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            sections.map((section) => (
+              <SpotSection
+                key={section.title}
+                label={section.label}
+                title={section.title}
+                count={section.count}
+                spots={section.spots}
+                href={section.href}
+                loading={loading}
+              />
+            ))
+          )}
 
         </div>
         <Footer />
