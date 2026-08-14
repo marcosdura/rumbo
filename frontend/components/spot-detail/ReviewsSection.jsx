@@ -48,9 +48,13 @@ function Avatar({ user, size = 36 }) {
   )
 }
 
+const REVIEWS_PAGE_SIZE = 10
+
 export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const { data: session } = useSession()
   const [reviews, setReviews] = useState([])
+  const [reviewsTotal, setReviewsTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [rating, setRating] = useState(0)
@@ -75,14 +79,29 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const loadReviews = async () => {
     try {
       const [revRes, sumRes] = await Promise.all([
-        fetch(baseUrl),
+        fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=0`),
         fetch(`${baseUrl}/summary`),
       ])
+      const total = parseInt(revRes.headers.get("X-Total-Count") ?? "0", 10)
       const revData = await revRes.json()
       setReviews(Array.isArray(revData) ? revData : [])
+      setReviewsTotal(total)
       setSummary(await sumRes.json())
     } catch {}
     setLoading(false)
+  }
+
+  const loadMoreReviews = async () => {
+    if (loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=${reviews.length}`)
+      const total = res.headers.get("X-Total-Count")
+      if (total) setReviewsTotal(parseInt(total, 10))
+      const data = await res.json()
+      setReviews(prev => [...prev, ...(Array.isArray(data) ? data : [])])
+    } catch {}
+    setLoadingMore(false)
   }
 
   useEffect(() => { loadReviews() }, [spotId])
@@ -360,6 +379,21 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 )}
               </div>
             ))}
+
+            {reviews.length < reviewsTotal && (
+              <button
+                onClick={loadMoreReviews}
+                disabled={loadingMore}
+                style={{
+                  marginTop: 6, padding: "10px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                  fontFamily: "inherit", cursor: loadingMore ? "default" : "pointer",
+                  background: "#fff", color: "#1b4332", border: "1px solid #b7dfc8",
+                  opacity: loadingMore ? 0.6 : 1,
+                }}
+              >
+                {loadingMore ? "Cargando..." : `Ver más reviews (${reviewsTotal - reviews.length})`}
+              </button>
+            )}
           </div>
         )}
       </div>

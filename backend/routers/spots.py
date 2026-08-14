@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from auth import get_current_user_required, is_admin, get_current_admin_user
 from ownership import get_owned_spot_or_admin
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
+from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
 from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
@@ -124,42 +124,40 @@ def check_spot_name(name: str, db: Session = Depends(get_db)):
     return {"exists": existing is not None}
 
 
-@router.get("/spots", response_model=list[SpotResponse])
-def get_spots(
-    db: Session = Depends(get_db),
+def build_spots_filter_query(
+    db: Session,
     activity: Optional[str] = None,
     department: Optional[str] = None,
-    difficulty: Optional[List[str]] = Query(default=None),
-    duration: Optional[List[str]] = Query(default=None),
-    distance: Optional[List[str]] = Query(default=None),
+    difficulty: Optional[List[str]] = None,
+    duration: Optional[List[str]] = None,
+    distance: Optional[List[str]] = None,
     parking: Optional[bool] = None,
     potable_water: Optional[bool] = None,
     pet_friendly: Optional[bool] = None,
     kids_friendly: Optional[bool] = None,
     bathrooms: Optional[bool] = None,
     camping_amenity: Optional[bool] = None,
-    water_type: Optional[List[str]] = Query(default=None),
-    kayak_difficulty: Optional[List[str]] = Query(default=None),
-    kayak_duration: Optional[List[str]] = Query(default=None),
+    water_type: Optional[List[str]] = None,
+    kayak_difficulty: Optional[List[str]] = None,
+    kayak_duration: Optional[List[str]] = None,
     rental_available: Optional[bool] = None,
-    class_type: Optional[List[str]] = Query(default=None),
-    surf_duration: Optional[List[str]] = Query(default=None),
+    class_type: Optional[List[str]] = None,
+    surf_duration: Optional[List[str]] = None,
     equipment_included: Optional[bool] = None,
     has_surf_school: Optional[bool] = None,
-    climbing_type: Optional[List[str]] = Query(default=None),
-    grade_range: Optional[List[str]] = Query(default=None),
+    climbing_type: Optional[List[str]] = None,
+    grade_range: Optional[List[str]] = None,
     no_restrictions: Optional[bool] = None,
-    amenity_ids: Optional[List[int]] = Query(default=None),
-    price_range: Optional[List[str]] = Query(default=None),
-    sort: Optional[str] = Query(default="recent"),  # recent | oldest
+    amenity_ids: Optional[List[int]] = None,
+    price_range: Optional[List[str]] = None,
+    sort: Optional[str] = "recent",  # recent | oldest
 ):
-    query = db.query(SpotDB).options(
-        joinedload(SpotDB.category),
-        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
-        joinedload(SpotDB.images),
-        selectinload(SpotDB.glamping_detail),
-        selectinload(SpotDB.glamping_amenities),
-    ).filter(SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
+    """Arma la query de /spots con todos los filtros de actividad, sin los
+    joinedload/selectinload (esos los agrega cada caller aparte, según qué
+    necesite: GET /spots quiere el payload completo, GET /spots/pins solo
+    lo mínimo para el mapa). Compartida entre los dos para que nunca puedan
+    desincronizarse los filtros que ve la lista y los que ve el mapa."""
+    query = db.query(SpotDB).filter(SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
 
     if department:
         query = query.filter(SpotDB.department == department)
@@ -353,7 +351,65 @@ def get_spots(
     else:
         query = query.order_by(SpotDB.created_at.desc())
 
-    spots = query.all()
+    return query
+
+
+@router.get("/spots", response_model=list[SpotResponse])
+def get_spots(
+    response: Response,
+    db: Session = Depends(get_db),
+    activity: Optional[str] = None,
+    department: Optional[str] = None,
+    difficulty: Optional[List[str]] = Query(default=None),
+    duration: Optional[List[str]] = Query(default=None),
+    distance: Optional[List[str]] = Query(default=None),
+    parking: Optional[bool] = None,
+    potable_water: Optional[bool] = None,
+    pet_friendly: Optional[bool] = None,
+    kids_friendly: Optional[bool] = None,
+    bathrooms: Optional[bool] = None,
+    camping_amenity: Optional[bool] = None,
+    water_type: Optional[List[str]] = Query(default=None),
+    kayak_difficulty: Optional[List[str]] = Query(default=None),
+    kayak_duration: Optional[List[str]] = Query(default=None),
+    rental_available: Optional[bool] = None,
+    class_type: Optional[List[str]] = Query(default=None),
+    surf_duration: Optional[List[str]] = Query(default=None),
+    equipment_included: Optional[bool] = None,
+    has_surf_school: Optional[bool] = None,
+    climbing_type: Optional[List[str]] = Query(default=None),
+    grade_range: Optional[List[str]] = Query(default=None),
+    no_restrictions: Optional[bool] = None,
+    amenity_ids: Optional[List[int]] = Query(default=None),
+    price_range: Optional[List[str]] = Query(default=None),
+    sort: Optional[str] = Query(default="recent"),  # recent | oldest
+    limit: int = Query(default=24, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    query = build_spots_filter_query(
+        db, activity=activity, department=department, difficulty=difficulty,
+        duration=duration, distance=distance, parking=parking, potable_water=potable_water,
+        pet_friendly=pet_friendly, kids_friendly=kids_friendly, bathrooms=bathrooms,
+        camping_amenity=camping_amenity, water_type=water_type, kayak_difficulty=kayak_difficulty,
+        kayak_duration=kayak_duration, rental_available=rental_available, class_type=class_type,
+        surf_duration=surf_duration, equipment_included=equipment_included, has_surf_school=has_surf_school,
+        climbing_type=climbing_type, grade_range=grade_range, no_restrictions=no_restrictions,
+        amenity_ids=amenity_ids, price_range=price_range, sort=sort,
+    )
+
+    # Total antes de paginar — calculado antes de sumar los joinedload/
+    # selectinload de abajo, para que no interfieran con el count().
+    total = query.with_entities(SpotDB.id).distinct().count()
+    response.headers["X-Total-Count"] = str(total)
+
+    query = query.options(
+        joinedload(SpotDB.category),
+        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
+        joinedload(SpotDB.images),
+        selectinload(SpotDB.glamping_detail),
+        selectinload(SpotDB.glamping_amenities),
+    )
+    spots = query.limit(limit).offset(offset).all()
 
     spot_ids = [s.id for s in spots]
     review_aggs = (
@@ -387,6 +443,72 @@ def get_spots(
         item.pop("owner_phone", None)
         result.append(item)
 
+    return result
+
+
+@router.get("/spots/pins")
+def get_spot_pins(
+    db: Session = Depends(get_db),
+    activity: Optional[str] = None,
+    department: Optional[str] = None,
+    difficulty: Optional[List[str]] = Query(default=None),
+    duration: Optional[List[str]] = Query(default=None),
+    distance: Optional[List[str]] = Query(default=None),
+    parking: Optional[bool] = None,
+    potable_water: Optional[bool] = None,
+    pet_friendly: Optional[bool] = None,
+    kids_friendly: Optional[bool] = None,
+    bathrooms: Optional[bool] = None,
+    camping_amenity: Optional[bool] = None,
+    water_type: Optional[List[str]] = Query(default=None),
+    kayak_difficulty: Optional[List[str]] = Query(default=None),
+    kayak_duration: Optional[List[str]] = Query(default=None),
+    rental_available: Optional[bool] = None,
+    class_type: Optional[List[str]] = Query(default=None),
+    surf_duration: Optional[List[str]] = Query(default=None),
+    equipment_included: Optional[bool] = None,
+    has_surf_school: Optional[bool] = None,
+    climbing_type: Optional[List[str]] = Query(default=None),
+    grade_range: Optional[List[str]] = Query(default=None),
+    no_restrictions: Optional[bool] = None,
+    amenity_ids: Optional[List[int]] = Query(default=None),
+    price_range: Optional[List[str]] = Query(default=None),
+    sort: Optional[str] = Query(default="recent"),
+):
+    """Para el mapa de /search: los mismos filtros que GET /spots, pero sin
+    paginar (el mapa necesita todos los pines que matcheen) y con el payload
+    mínimo que usa SpotsMap.jsx — nada de imágenes/amenities/rutas/reviews,
+    que es lo que hace pesado a GET /spots."""
+    query = build_spots_filter_query(
+        db, activity=activity, department=department, difficulty=difficulty,
+        duration=duration, distance=distance, parking=parking, potable_water=potable_water,
+        pet_friendly=pet_friendly, kids_friendly=kids_friendly, bathrooms=bathrooms,
+        camping_amenity=camping_amenity, water_type=water_type, kayak_difficulty=kayak_difficulty,
+        kayak_duration=kayak_duration, rental_available=rental_available, class_type=class_type,
+        surf_duration=surf_duration, equipment_included=equipment_included, has_surf_school=has_surf_school,
+        climbing_type=climbing_type, grade_range=grade_range, no_restrictions=no_restrictions,
+        amenity_ids=amenity_ids, price_range=price_range, sort=sort,
+    )
+    query = query.options(
+        joinedload(SpotDB.category),
+        selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
+    )
+    spots = query.all()
+
+    result = []
+    for spot in spots:
+        sorted_spot_categories = sorted(spot.spot_categories, key=lambda sc: not sc.is_primary)
+        categories = [sc.category for sc in sorted_spot_categories]
+        result.append({
+            "id": spot.id,
+            "name": spot.name,
+            "slug": spot.slug,
+            "department": spot.department,
+            "lat": spot.lat,
+            "lng": spot.lng,
+            "category": spot.category,
+            "categories": categories,
+        })
     return result
 
 

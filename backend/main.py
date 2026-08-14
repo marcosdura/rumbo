@@ -26,6 +26,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Sin esto, el navegador bloquea la lectura de X-Total-Count desde el
+    # frontend (headers custom no son legibles cross-origin por default,
+    # aunque estén en la respuesta) — lo usa la paginación de /spots y reviews.
+    expose_headers=["X-Total-Count"],
 )
 
 app.include_router(spots.router)

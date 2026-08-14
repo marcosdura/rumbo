@@ -156,7 +156,9 @@ export default function AgregarLugar() {
     setStep(2)
     if (isServ) {
       setLoadingSpots(true)
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=${cat.name}`)
+      // /spots/pins en vez de /spots: no pagina (el picker necesita "todos"
+      // los de esa actividad) y ya trae id+name, sin el payload pesado.
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=${cat.name}`)
         .then(res => res.json())
         .then(data => {
           setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
@@ -175,7 +177,7 @@ export default function AgregarLugar() {
     if (mode === "new_route") {
       setLoadingTrekkingSpots(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=Trekking`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=Trekking`)
         const data = await res.json()
         setAvailableTrekkingSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
       } catch {} finally {
@@ -189,7 +191,7 @@ export default function AgregarLugar() {
     if (mode === "new_sector" || mode === "new_route") {
       setLoadingSpots(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?activity=Escalada`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=Escalada`)
         const data = await res.json()
         setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
       } catch {

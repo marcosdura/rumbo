@@ -11,7 +11,7 @@ class SpotDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     description = Column(String)
-    department = Column(String)
+    department = Column(String, index=True)
     lat = Column(Float, nullable=True)
     lng = Column(Float, nullable=True)
     price = Column(Integer, nullable=True)
@@ -19,15 +19,17 @@ class SpotDB(Base):
     email = Column(String, nullable=True)
     instagram = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
-    owner_email = Column(String, nullable=True)
+    owner_email = Column(String, nullable=True, index=True)
     owner_phone = Column(String, nullable=True)
-    is_approved = Column(Boolean, default=False)
+    is_approved = Column(Boolean, default=False, index=True)
     # NULL = spot normal. Con fecha = el dueño borró su cuenta ese día: el
     # spot se desactiva (deja de mostrarse públicamente) en vez de borrarse,
     # y pasa a la pestaña "Cuentas eliminadas" del panel admin.
-    owner_deleted_at = Column(DateTime(timezone=True), nullable=True)
+    owner_deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
     slug = Column(String, unique=True, nullable=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # Índice: es la columna de ORDER BY de get_spots — ordenar + LIMIT/OFFSET
+    # sin índice acá es el peor caso posible para paginar.
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12
@@ -36,7 +38,7 @@ class SpotDB(Base):
     is_public        = Column(Boolean, nullable=True)  # True=público, False=privado
     public_transport = Column(String, nullable=True)   # "si" | "no" | "nose"
     
-    category_id = Column(Integer, ForeignKey("categories.id"))
+    category_id = Column(Integer, ForeignKey("categories.id"), index=True)
     category = relationship("Category", back_populates="spots")
     spot_categories = relationship("SpotCategory", uselist=True, back_populates="spot")
     amenities = relationship("SpotAmenity", back_populates="spot")
@@ -79,7 +81,7 @@ class GlampingDetail(Base):
     __tablename__ = "glamping_details"
 
     id = Column(Integer, primary_key=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"))
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
 
     accommodation_type = Column(String, nullable=True)   # domo | carpa | cabaña | treehouse | otro
     capacity = Column(Integer, nullable=True)
@@ -177,8 +179,8 @@ class Route(Base):
     __tablename__ = "routes"
 
     id = Column(Integer, primary_key=True, index=True)
-    
-    spot_id = Column(Integer, ForeignKey("spots.id"))
+
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     spot = relationship("SpotDB", back_populates="routes")
 
     name = Column(String)
@@ -204,8 +206,8 @@ class ClimbingSector(Base):
     __tablename__ = "climbingsectors"
     
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"))
-    
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+
     name = Column(String)
     type = Column(String)
     max_altitude = Column(Integer)
@@ -235,7 +237,7 @@ class KayakDetail(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"))
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     spot = relationship("SpotDB", back_populates="kayak_detail")
 
     name = Column(String)
@@ -270,7 +272,7 @@ class SurfSchool(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"))
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     spot = relationship("SpotDB", back_populates="surf_schools")
 
     name = Column(String)
@@ -316,7 +318,7 @@ class SpotImage(Base):
     __tablename__ = "spot_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"))
+    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     cloudinary_public_id = Column(String)
     is_main = Column(Boolean, default=False)
     order = Column(Integer, default=0)
@@ -345,7 +347,7 @@ class Review(Base):
     __tablename__ = "reviews"
 
     id         = Column(Integer, primary_key=True, index=True)
-    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False)
+    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
     user_id    = Column(String, ForeignKey("users.id"), nullable=False)
     rating     = Column(Integer, nullable=False)   # 1 a 5
     comment    = Column(String, nullable=True)
@@ -359,7 +361,7 @@ class SurfReview(Base):
     __tablename__ = "surf_reviews"
 
     id            = Column(Integer, primary_key=True, index=True)
-    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id"), nullable=False)
+    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id"), nullable=False, index=True)
     user_id       = Column(String, ForeignKey("users.id"), nullable=False)
     rating        = Column(Integer, nullable=False)
     comment       = Column(String, nullable=True)
@@ -373,7 +375,7 @@ class KayakReview(Base):
     __tablename__ = "kayak_reviews"
 
     id               = Column(Integer, primary_key=True, index=True)
-    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id"), nullable=False)
+    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id"), nullable=False, index=True)
     user_id          = Column(String, ForeignKey("users.id"), nullable=False)
     rating           = Column(Integer, nullable=False)
     comment          = Column(String, nullable=True)

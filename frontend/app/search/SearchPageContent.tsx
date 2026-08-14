@@ -40,13 +40,18 @@ import { trackEvent } from "../../lib/analytics"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
+const PAGE_SIZE = 24
+
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
 
   const [spots, setSpots]                         = useState<any[]>([])
+  const [total, setTotal]                         = useState<number | null>(null)
   const [loading, setLoading]                     = useState(true)
+  const [loadingMore, setLoadingMore]             = useState(false)
+  const [mapSpots, setMapSpots]                   = useState<any[]>([])
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]             = useState(false)
   const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
@@ -82,8 +87,9 @@ export default function SearchPage() {
     setAtBottom(el.scrollHeight <= el.clientHeight + 8)
   }, [spots, loading])
 
-  useEffect(() => {
-    setLoading(true)
+  // Los mismos filtros alimentan dos requests separados: la lista pagina,
+  // el mapa no (necesita todos los pines que matcheen para el clustering).
+  const buildFilterParams = () => {
     const params = new URLSearchParams()
     if (activity)   params.append("activity", activity)
     if (department) params.append("department", department)
@@ -116,8 +122,21 @@ export default function SearchPage() {
       campingFilters.amenityIds.forEach(id => params.append("amenity_ids", String(id)))
       campingFilters.priceRanges.forEach(p => params.append("price_range", p))
     }
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
-      .then(res => res.json())
+    return params
+  }
+
+  useEffect(() => {
+    setLoading(true)
+
+    const listParams = buildFilterParams()
+    listParams.set("limit", String(PAGE_SIZE))
+    listParams.set("offset", "0")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${listParams.toString()}`)
+      .then(res => {
+        const totalHeader = res.headers.get("X-Total-Count")
+        setTotal(totalHeader ? parseInt(totalHeader, 10) : null)
+        return res.json()
+      })
       .then(data => {
         setSpots(data)
         setLoading(false)
@@ -125,11 +144,39 @@ export default function SearchPage() {
           search_term: activity || department || "todos",
           activity: activity || undefined,
           department: department || undefined,
-          filter_count: Array.from(params.keys()).length,
+          filter_count: Array.from(listParams.keys()).length,
           result_count: Array.isArray(data) ? data.length : undefined,
         })
       })
+
+    // Pines del mapa: mismos filtros, sin paginar — no se vuelve a pedir
+    // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
+    const mapParams = buildFilterParams()
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?${mapParams.toString()}`)
+      .then(res => res.json())
+      .then(data => setMapSpots(Array.isArray(data) ? data : []))
   }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters])
+
+  const loadMore = () => {
+    if (loadingMore) return
+    setLoadingMore(true)
+    const params = buildFilterParams()
+    params.set("limit", String(PAGE_SIZE))
+    params.set("offset", String(spots.length))
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
+      .then(res => {
+        const totalHeader = res.headers.get("X-Total-Count")
+        if (totalHeader) setTotal(parseInt(totalHeader, 10))
+        return res.json()
+      })
+      .then(data => {
+        setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])
+        setLoadingMore(false)
+      })
+      .catch(() => setLoadingMore(false))
+  }
+
+  const hasMore = total !== null && spots.length < total
 
   const title = activity && department
     ? `${activity} en ${department}`
@@ -349,7 +396,7 @@ export default function SearchPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {!loading && (
                   <Pill variant="dark-green" hover style={{ fontSize: 12, padding: "3px 12px" }}>
-                    {spots.length}
+                    {total ?? spots.length}
                   </Pill>
                 )}
                 {canFilter && (
@@ -438,17 +485,36 @@ export default function SearchPage() {
                   </p>
                 </div>
               ) : (
-                <div className="search-cards-grid">
-                  {spots.map((spot) => (
-                    <div
-                      key={spot.id}
-                      onMouseEnter={() => setHighlightedSpotId(spot.id)}
-                      onMouseLeave={() => setHighlightedSpotId(null)}
-                    >
-                      <SpotCard spot={spot} isHighlighted={highlightedSpotId === spot.id} activeCategory={activity} />
+                <>
+                  <div className="search-cards-grid">
+                    {spots.map((spot) => (
+                      <div
+                        key={spot.id}
+                        onMouseEnter={() => setHighlightedSpotId(spot.id)}
+                        onMouseLeave={() => setHighlightedSpotId(null)}
+                      >
+                        <SpotCard spot={spot} isHighlighted={highlightedSpotId === spot.id} activeCategory={activity} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {hasMore && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+                      <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        style={{
+                          padding: "10px 24px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                          fontFamily: "'DM Sans', sans-serif", cursor: loadingMore ? "default" : "pointer",
+                          background: "#fff", color: "#1b4332", border: "1px solid #b7dfc8",
+                          opacity: loadingMore ? 0.6 : 1,
+                        }}
+                      >
+                        {loadingMore ? "Cargando..." : `Cargar más (${total! - spots.length} más)`}
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -468,7 +534,7 @@ export default function SearchPage() {
         <div className={`search-map-panel${mapExpanded ? " map-visible-mobile" : ""}`}>
           <div className="map-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid #e0ddd6", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 
-            {!loading && spots.length === 0 && (
+            {!loading && mapSpots.length === 0 && (
               <div style={{
                 position: "absolute", top: "50%", left: "50%",
                 transform: "translate(-50%, -50%)",
@@ -485,7 +551,7 @@ export default function SearchPage() {
               </div>
             )}
 
-            <SpotsMap spots={spots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} activeCategory={activity} />
+            <SpotsMap spots={mapSpots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} activeCategory={activity} />
           </div>
 
           <button className="map-close-btn" onClick={() => setMapExpanded(false)}>

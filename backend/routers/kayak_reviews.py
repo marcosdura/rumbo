@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import SessionLocal
@@ -35,13 +35,16 @@ def get_kayak_reviews_summary(kayak_details_id: int, db: Session = Depends(get_d
 
 
 @router.get("/{kayak_details_id}", response_model=list[KayakReviewResponse])
-def get_kayak_reviews(kayak_details_id: int, db: Session = Depends(get_db)):
-    return (
-        db.query(KayakReview)
-        .filter(KayakReview.kayak_details_id == kayak_details_id)
-        .order_by(KayakReview.created_at.desc())
-        .all()
-    )
+def get_kayak_reviews(
+    kayak_details_id: int,
+    response: Response,
+    db: Session = Depends(get_db),
+    limit: int = Query(default=10, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+):
+    base = db.query(KayakReview).filter(KayakReview.kayak_details_id == kayak_details_id)
+    response.headers["X-Total-Count"] = str(base.count())
+    return base.order_by(KayakReview.created_at.desc()).limit(limit).offset(offset).all()
 
 
 @router.post("/{kayak_details_id}", status_code=status.HTTP_201_CREATED, response_model=KayakReviewResponse)

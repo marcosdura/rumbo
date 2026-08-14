@@ -8,41 +8,58 @@ import SpotSection from "@/components/spots/SpotSection"
 import SearchBar from "@/components/spots/SearchBar"
 
 type Spot = { id: number; name: string; department: string; [key: string]: unknown }
+type Section = { data: Spot[]; total: number }
 
 export default function Home() {
-  const [spots, setSpots] = useState<Spot[]>([])
+  const [recent, setRecent]       = useState<Section>({ data: [], total: 0 })
+  const [lavalleja, setLavalleja] = useState<Section>({ data: [], total: 0 })
+  const [rocha, setRocha]         = useState<Section>({ data: [], total: 0 })
+  const [loading, setLoading]     = useState(true)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`)
-      .then(res => res.json())
-      .then(data => setSpots(data))
+    const API = process.env.NEXT_PUBLIC_API_URL
+    // 3 pedidos chicos y ya filtrados en vez de traer el catálogo entero y
+    // recortarlo a mano acá — antes esto pedía TODOS los spots aprobados
+    // solo para mostrar 6 en cada sección.
+    const fetchSection = (params: string): Promise<Section> =>
+      fetch(`${API}/spots?${params}`).then(async (res) => {
+        const total = parseInt(res.headers.get("X-Total-Count") ?? "0", 10)
+        const data = await res.json()
+        return { data: Array.isArray(data) ? data : [], total }
+      })
+
+    Promise.all([
+      fetchSection("limit=6"),
+      fetchSection("department=Lavalleja&limit=6"),
+      fetchSection("department=Rocha&limit=6"),
+    ]).then(([r, l, ro]) => {
+      setRecent(r)
+      setLavalleja(l)
+      setRocha(ro)
+      setLoading(false)
+    })
   }, [])
-
-  const loading = spots.length === 0
-
-  const lavallejaSpots = spots.filter(s => s.department === "Lavalleja").slice(0, 6)
-  const rochaSpots     = spots.filter(s => s.department === "Rocha").slice(0, 6)
 
   const sections = [
     {
       label: "Descubrí Uruguay",
       title: "Spots populares del mes",
-      spots: spots.slice(0, 6),
-      count: spots.length,
+      spots: recent.data,
+      count: recent.total,
       href: "/search",
     },
     {
       label: "Destacados",
       title: "Spots en Lavalleja",
-      spots: lavallejaSpots,
-      count: lavallejaSpots.length,
+      spots: lavalleja.data,
+      count: lavalleja.total,
       href: "/search?department=Lavalleja",
     },
     {
       label: "Destacados",
       title: "Spots en Rocha",
-      spots: rochaSpots,
-      count: rochaSpots.length,
+      spots: rocha.data,
+      count: rocha.total,
       href: "/search?department=Rocha",
     },
   ]

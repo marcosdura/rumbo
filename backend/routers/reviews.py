@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import SessionLocal
@@ -58,13 +58,16 @@ def get_reviews_summary(spot_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{spot_id}", response_model=list[ReviewResponse])
-def get_reviews(spot_id: int, db: Session = Depends(get_db)):
-    reviews = (
-        db.query(Review)
-        .filter(Review.spot_id == spot_id)
-        .order_by(Review.created_at.desc())
-        .all()
-    )
+def get_reviews(
+    spot_id: int,
+    response: Response,
+    db: Session = Depends(get_db),
+    limit: int = Query(default=10, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+):
+    base = db.query(Review).filter(Review.spot_id == spot_id)
+    response.headers["X-Total-Count"] = str(base.count())
+    reviews = base.order_by(Review.created_at.desc()).limit(limit).offset(offset).all()
     return reviews
 
 
