@@ -14,7 +14,6 @@ from typing import Optional, List
 from database import engine
 from models import Base
 from slugs import generate_slug
-from sqlalchemy import text
 import cloudinary
 import cloudinary.uploader
 import os
@@ -509,7 +508,12 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
         except Exception as e:
             print(f"[Cloudinary] Error: {e}")
 
-    db.execute(text("DELETE FROM spots WHERE id = :id"), {"id": spot_id})
+    # Antes esto era un DELETE FROM spots crudo, que rompía con
+    # IntegrityError apenas el spot tenía cualquier fila asociada (reviews,
+    # detalles, categorías, etc.) — ninguna FK tenía cascada. Ahora que los
+    # relationships de SpotDB tienen cascade="all, delete-orphan", db.delete
+    # hace que SQLAlchemy arme el orden de DELETEs solo.
+    db.delete(db_spot)
     db.commit()
 
     return {"message": "Spot deleted"}

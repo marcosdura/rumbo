@@ -40,21 +40,26 @@ class SpotDB(Base):
     
     category_id = Column(Integer, ForeignKey("categories.id"), index=True)
     category = relationship("Category", back_populates="spots")
-    spot_categories = relationship("SpotCategory", uselist=True, back_populates="spot")
-    amenities = relationship("SpotAmenity", back_populates="spot")
-    camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot")
-    glamping_detail = relationship("GlampingDetail", uselist=True, back_populates="spot")
-    glamping_amenities = relationship("GlampingAmenity", uselist=False, back_populates="spot")
-    trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot")
-    motorhome_detail = relationship("MotorhomeDetail", uselist=False, back_populates="spot")
-    routes = relationship("Route", back_populates="spot")
-    climbing_sectors = relationship("ClimbingSector", back_populates="spot")
-    kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot")
-    surf_schools = relationship("SurfSchool", uselist=True, back_populates="spot")
-    images = relationship("SpotImage", back_populates="spot")
-    favorites = relationship("Favorite", back_populates="spot")
-    reviews = relationship("Review", back_populates="spot")
-    experiences = relationship("Experience", back_populates="spot")
+    # cascade="all, delete-orphan" en todas estas: borrar un spot borra todo
+    # lo que cuelga de él a nivel ORM (SQLAlchemy arma el orden de DELETEs
+    # solo), sin tocar el schema real de Postgres ni requerir migración —
+    # antes, delete_spot hacía un DELETE FROM spots crudo que rompía con
+    # IntegrityError apenas el spot tenía cualquier fila asociada.
+    spot_categories = relationship("SpotCategory", uselist=True, back_populates="spot", cascade="all, delete-orphan")
+    amenities = relationship("SpotAmenity", back_populates="spot", cascade="all, delete-orphan")
+    camping_detail  = relationship("CampingDetail",  uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    glamping_detail = relationship("GlampingDetail", uselist=True, back_populates="spot", cascade="all, delete-orphan")
+    glamping_amenities = relationship("GlampingAmenity", uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    motorhome_detail = relationship("MotorhomeDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    routes = relationship("Route", back_populates="spot", cascade="all, delete-orphan")
+    climbing_sectors = relationship("ClimbingSector", back_populates="spot", cascade="all, delete-orphan")
+    kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot", cascade="all, delete-orphan")
+    surf_schools = relationship("SurfSchool", uselist=True, back_populates="spot", cascade="all, delete-orphan")
+    images = relationship("SpotImage", back_populates="spot", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="spot", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="spot", cascade="all, delete-orphan")
+    experiences = relationship("Experience", back_populates="spot", cascade="all, delete-orphan")
 
 
 class Category(Base):
@@ -215,7 +220,7 @@ class ClimbingSector(Base):
     slug = Column(String, nullable=True, index=True)
 
     spot = relationship("SpotDB", back_populates="climbing_sectors")
-    routes = relationship("ClimbingRoute", back_populates="sector")
+    routes = relationship("ClimbingRoute", back_populates="sector", cascade="all, delete-orphan")
 
 class ClimbingRoute(Base):
     __tablename__ = "climbingroutes"
@@ -239,6 +244,10 @@ class KayakDetail(Base):
 
     spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     spot = relationship("SpotDB", back_populates="kayak_detail")
+    # Sin esto, borrar un spot con servicios de kayak fallaba: KayakReview
+    # tiene FK a kayak_details.id, y esa cascada no se disparaba sola
+    # porque no había ninguna relación (en ningún sentido) entre las dos.
+    reviews = relationship("KayakReview", back_populates="kayak_detail", cascade="all, delete-orphan")
 
     name = Column(String)
     water_type = Column(String)       # rio | lago | mar
@@ -274,6 +283,9 @@ class SurfSchool(Base):
 
     spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
     spot = relationship("SpotDB", back_populates="surf_schools")
+    # Idem KayakDetail.reviews — sin esto, borrar un spot con escuelas de
+    # surf fallaba por la FK de SurfReview a surf_beach.id sin cascada.
+    reviews = relationship("SurfReview", back_populates="surf_school", cascade="all, delete-orphan")
 
     name = Column(String)
     class_type = Column(String)        # grupal | privada | intensivo
@@ -367,7 +379,7 @@ class SurfReview(Base):
     comment       = Column(String, nullable=True)
     created_at    = Column(DateTime(timezone=True), server_default=func.now())
 
-    surf_school = relationship("SurfSchool")
+    surf_school = relationship("SurfSchool", back_populates="reviews")
     user        = relationship("User", back_populates="surf_reviews")
 
 
@@ -381,7 +393,7 @@ class KayakReview(Base):
     comment          = Column(String, nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
 
-    kayak_detail = relationship("KayakDetail")
+    kayak_detail = relationship("KayakDetail", back_populates="reviews")
     user         = relationship("User", back_populates="kayak_reviews")
 
 
