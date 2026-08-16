@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import get_db
 from models import GlampingDetail, GlampingAmenity, SpotDB
 from schemas import GlampingDetailCreate, GlampingDetailResponse, GlampingAmenityCreate, GlampingAmenityResponse
 from typing import Optional
@@ -10,13 +10,6 @@ from limiter import limiter
 
 router = APIRouter(prefix="/glamping", tags=["glamping"])
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post("/spots/{spot_id}/glamping", response_model=GlampingDetailResponse)

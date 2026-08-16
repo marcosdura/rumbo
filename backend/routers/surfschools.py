@@ -2,19 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from models import SurfSchool
 from schemas import SurfSchoolCreate, SurfSchoolResponse
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required
 from ownership import assert_owns_spot
 from limiter import limiter
 
 router = APIRouter(prefix="/surfschool", tags=["surfschool"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post("/", response_model=SurfSchoolResponse)

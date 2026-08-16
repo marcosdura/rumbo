@@ -392,29 +392,9 @@ class ReviewCreate(BaseModel):
     comment: str | None = None
 
 
+# Compartida por reviews de spots, surf y kayak — las tres eran idénticas
+# campo a campo (ReviewResponse/SurfReviewResponse/KayakReviewResponse).
 class ReviewResponse(BaseModel):
-    id: int
-    rating: int
-    comment: str | None = None
-    created_at: datetime
-    user: ReviewUserResponse
-
-    class Config:
-        from_attributes = True
-
-
-class SurfReviewResponse(BaseModel):
-    id: int
-    rating: int
-    comment: str | None = None
-    created_at: datetime
-    user: ReviewUserResponse
-
-    class Config:
-        from_attributes = True
-
-
-class KayakReviewResponse(BaseModel):
     id: int
     rating: int
     comment: str | None = None

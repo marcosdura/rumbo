@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from database import SessionLocal
+from database import get_db
 from models import Favorite, SpotDB
 from schemas import SpotResponse
 from auth import get_current_user_required
@@ -10,13 +10,6 @@ from limiter import limiter
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.get("", response_model=list[SpotResponse])

@@ -1,8 +1,7 @@
-import re
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import get_db
 from models import ClimbingSector
 from schemas import ClimbingSectorCreate, ClimbingSectorResponse
 from models import ClimbingRoute
@@ -10,29 +9,10 @@ from schemas import ClimbingRouteResponse
 from auth import get_current_user_required
 from ownership import assert_owns_spot
 from limiter import limiter
+from slugs import generate_slug
 
 
 router = APIRouter(prefix="/sectors", tags=["sectors"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def generate_slug(name: str) -> str:
-    slug = name.lower().strip()
-    slug = re.sub(r'[áàäâ]', 'a', slug)
-    slug = re.sub(r'[éèëê]', 'e', slug)
-    slug = re.sub(r'[íìïî]', 'i', slug)
-    slug = re.sub(r'[óòöô]', 'o', slug)
-    slug = re.sub(r'[úùüû]', 'u', slug)
-    slug = re.sub(r'[ñ]', 'n', slug)
-    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
-    slug = re.sub(r'[\s]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
 
 def _grade_sort_key(grade):
     if not grade:

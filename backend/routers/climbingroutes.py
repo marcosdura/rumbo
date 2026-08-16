@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import get_db
 from models import ClimbingRoute
 from schemas import ClimbingRouteCreate, ClimbingRouteResponse
 from auth import get_current_user_required
@@ -8,13 +8,6 @@ from ownership import assert_owns_sector
 from limiter import limiter
 
 router = APIRouter(prefix="/climbingroutes", tags=["climbingroutes"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/", response_model=ClimbingRouteResponse)
 @limiter.limit("10/minute")

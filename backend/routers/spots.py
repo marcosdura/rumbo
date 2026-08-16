@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required, is_admin, get_current_admin_user
 from ownership import get_owned_spot_or_admin
 from limiter import limiter
@@ -13,7 +13,7 @@ from sqlalchemy import func, or_, and_
 from typing import Optional, List
 from database import engine
 from models import Base
-import re
+from slugs import generate_slug
 from sqlalchemy import text
 import cloudinary
 import cloudinary.uploader
@@ -32,28 +32,6 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
-
-def generate_slug(name: str) -> str:
-    slug = name.lower().strip()
-    slug = re.sub(r'[áàäâ]', 'a', slug)
-    slug = re.sub(r'[éèëê]', 'e', slug)
-    slug = re.sub(r'[íìïî]', 'i', slug)
-    slug = re.sub(r'[óòöô]', 'o', slug)
-    slug = re.sub(r'[úùüû]', 'u', slug)
-    slug = re.sub(r'[ñ]', 'n', slug)
-    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
-    slug = re.sub(r'[\s]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
-
-
-# dependencia DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.get("/")

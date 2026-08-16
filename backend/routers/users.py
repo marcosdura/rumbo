@@ -2,19 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from models import User, Favorite, Review, SurfReview, KayakReview, SpotDB
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.get("/me")

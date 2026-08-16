@@ -2,20 +2,13 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from datetime import datetime
 from models import User
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
 from schemas import UserResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post("/upsert", response_model=UserResponse)

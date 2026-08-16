@@ -2,19 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from schemas import AmenityResponse, AmenityCreate
 import models
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
 
 router = APIRouter(prefix="/amenities", tags=["amenities"])
-
-# dependencia DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.get("/", response_model=list[AmenityResponse])

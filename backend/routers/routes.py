@@ -1,34 +1,14 @@
-import re
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from models import Route
 from schemas import RouteCreate, RouteResponse
-from database import SessionLocal
+from database import get_db
 from auth import get_current_user_required
 from ownership import assert_owns_spot
 from limiter import limiter
+from slugs import generate_slug
 
 router = APIRouter(prefix="/routes", tags=["routes"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def generate_slug(name: str) -> str:
-    slug = name.lower().strip()
-    slug = re.sub(r'[áàäâ]', 'a', slug)
-    slug = re.sub(r'[éèëê]', 'e', slug)
-    slug = re.sub(r'[íìïî]', 'i', slug)
-    slug = re.sub(r'[óòöô]', 'o', slug)
-    slug = re.sub(r'[úùüû]', 'u', slug)
-    slug = re.sub(r'[ñ]', 'n', slug)
-    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
-    slug = re.sub(r'[\s]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
 
 @router.post("/", response_model=RouteResponse)
 @limiter.limit("10/minute")
