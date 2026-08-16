@@ -34,7 +34,7 @@ export async function uploadImageToCloudinary(
     body: JSON.stringify({ publicId, spotId: publicIdParams.spotId }),
   })
   if (!sigRes.ok) throw new Error("No se pudo obtener la firma de upload")
-  const { signature, timestamp, folder, apiKey, cloudName } = await sigRes.json()
+  const { signature, timestamp, folder, apiKey, cloudName, allowedFormats } = await sigRes.json()
 
   const formData = new FormData()
   formData.append("file", compressedFile)
@@ -43,6 +43,10 @@ export async function uploadImageToCloudinary(
   formData.append("signature", signature)
   formData.append("folder", folder)
   formData.append("public_id", publicId)
+  // Tiene que viajar igual que se firmó — Cloudinary recalcula la firma
+  // sobre los parámetros que realmente llegan en este POST, así que si
+  // falta este campo (o viene distinto), la firma no matchea y rechaza.
+  formData.append("allowed_formats", allowedFormats)
 
   const uploadRes = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,

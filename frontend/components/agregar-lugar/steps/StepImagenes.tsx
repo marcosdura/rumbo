@@ -19,11 +19,23 @@ export default function StepImagenes({
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Espejo de allowed_formats en app/api/upload/signature/route.ts — esto es
+  // solo UX (falla rápido antes de comprimir/subir), la validación real que
+  // no se puede saltear está firmada del lado de Cloudinary.
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]
+  const MAX_FILE_BYTES = 15 * 1024 * 1024 // 15MB antes de comprimir
+
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const incoming = Array.from(e.target.files ?? [])
+
+    const valid = incoming.filter(f => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_BYTES)
+    const rejected = incoming.length - valid.length
+
     setImages(prev => {
-      const combined = [...prev, ...incoming].slice(0, 10)
-      if (prev.length + incoming.length > 10) {
+      const combined = [...prev, ...valid].slice(0, 10)
+      if (rejected > 0) {
+        setError(`${rejected} archivo${rejected !== 1 ? "s" : ""} no se pudo agregar: solo se aceptan imágenes (JPG, PNG, WEBP, GIF, HEIC) de hasta 15MB.`)
+      } else if (prev.length + valid.length > 10) {
         setError("Límite de 10 imágenes. Se tomaron las primeras 10.")
       } else {
         setError(null)

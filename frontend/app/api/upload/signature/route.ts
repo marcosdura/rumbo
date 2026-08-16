@@ -27,11 +27,17 @@ export async function POST(req: Request) {
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = "rumbo/spots";
+  // Firmado, no solo un hint del navegador: si alguien pide subir otra cosa
+  // (o edita el multipart a mano), Cloudinary rechaza el upload aunque el
+  // request tenga una firma "válida" — cambiar este parámetro invalida la
+  // firma entera, así que no es bypasseable editando el JS del cliente.
+  const allowedFormats = "jpg,jpeg,png,webp,gif,heic,heif";
 
   const paramsToSign: Record<string, string | number> = {
     timestamp,
     folder,
     public_id: publicId,
+    allowed_formats: allowedFormats,
   };
 
   const sortedParams = Object.keys(paramsToSign)
@@ -48,6 +54,7 @@ export async function POST(req: Request) {
     signature,
     timestamp,
     folder,
+    allowedFormats,
     apiKey: process.env.CLOUDINARY_API_KEY,
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   });
