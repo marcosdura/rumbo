@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from pydantic import field_validator
@@ -6,7 +6,7 @@ from pydantic import field_validator
 
 # -------- CATEGORY --------
 class CategoryBase(BaseModel):
-    name: str
+    name: str = Field(max_length=100)
 
 class CategoryCreate(CategoryBase):
     pass
@@ -21,21 +21,21 @@ class CategoryResponse(CategoryBase):
 
 # -------- SPOT --------
 class SpotCreate(BaseModel):
-    name: str
-    description: str
-    department: str
+    name: str = Field(max_length=200)
+    description: str = Field(max_length=3000)
+    department: str = Field(max_length=100)
     category_id: int
-    email: str | None = None
-    instagram: str | None = None
-    whatsapp: str | None = None
+    email: str | None = Field(default=None, max_length=254)
+    instagram: str | None = Field(default=None, max_length=100)
+    whatsapp: str | None = Field(default=None, max_length=30)
     price: int | None = None
     season_start: Optional[int] = None  # 1–12
     season_end:   Optional[int] = None  # 1–12
     lat: float | None = None
     lng: float | None = None
-    slug: str | None = None
+    slug: str | None = Field(default=None, max_length=250)
     is_public: Optional[bool] = None
-    public_transport: Optional[str] = None
+    public_transport: Optional[str] = Field(default=None, max_length=20)
 
 
 # -------- GLAMPING --------
@@ -59,7 +59,7 @@ class GlampingAmenityResponse(GlampingAmenityCreate):
         from_attributes = True
 
 class GlampingDetailCreate(BaseModel):
-    accommodation_type: Optional[str]   = None
+    accommodation_type: Optional[str]   = Field(default=None, max_length=50)
     capacity:           Optional[int]   = None
     price_per_night:    Optional[float] = None
     min_nights:         Optional[int]   = None
@@ -97,12 +97,12 @@ class AmenityResponse(BaseModel):
         from_attributes = True
 
 class AmenityCreate(BaseModel):
-    name: str
+    name: str = Field(max_length=100)
 
 
 # -------- TREKKING ROUTE --------
 class RouteBase(BaseModel):
-    name: str
+    name: str = Field(max_length=200)
     distance_km: Optional[float] = None
     duration_hours: Optional[float] = None
     elevation_gain: Optional[int] = None
@@ -110,13 +110,13 @@ class RouteBase(BaseModel):
     max_altitude: Optional[int] = None
     min_altitude: Optional[int] = None
 
-    difficulty: Optional[str] = None        # fácil / moderado / difícil
-    route_type: Optional[str] = None        # circular / ida y vuelta
+    difficulty: Optional[str] = Field(default=None, max_length=50)        # fácil / moderado / difícil
+    route_type: Optional[str] = Field(default=None, max_length=50)        # circular / ida y vuelta
 
-    technical_level: Optional[str] = None   # bajo / medio / alto
-    physical_demand: Optional[str] = None   # bajo / medio / alto
+    technical_level: Optional[str] = Field(default=None, max_length=50)   # bajo / medio / alto
+    physical_demand: Optional[str] = Field(default=None, max_length=50)   # bajo / medio / alto
 
-    slug: str | None = None
+    slug: str | None = Field(default=None, max_length=250)
 
 
 class RouteCreate(RouteBase):
@@ -132,11 +132,11 @@ class RouteResponse(RouteBase):
 
 # -------- CLIMBING SECTOR --------
 class ClimbingSectorBase(BaseModel):
-    name: str
-    type: Optional[str] = None
+    name: str = Field(max_length=200)
+    type: Optional[str] = Field(default=None, max_length=50)
     max_altitude: Optional[int] = None
-    restrictions: Optional[str] = None
-    slug: str | None = None
+    restrictions: Optional[str] = Field(default=None, max_length=500)
+    slug: str | None = Field(default=None, max_length=250)
 
 
 class ClimbingSectorCreate(ClimbingSectorBase):
@@ -155,12 +155,12 @@ class ClimbingSectorResponse(ClimbingSectorBase):
 
 # -------- CLIMBING ROUTE --------
 class ClimbingRouteBase(BaseModel):
-    name: str
-    grade: Optional[str] = None
-    type: Optional[str] = None              # boulder / deportiva / tradicional
+    name: str = Field(max_length=200)
+    grade: Optional[str] = Field(default=None, max_length=20)
+    type: Optional[str] = Field(default=None, max_length=50)              # boulder / deportiva / tradicional
     length: Optional[int] = None
     bolts: Optional[int] = None
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
 
 
 class ClimbingRouteCreate(ClimbingRouteBase):
@@ -176,20 +176,20 @@ class ClimbingRouteResponse(ClimbingRouteBase):
 
 # -------- KAYAK --------
 class KayakDetail(BaseModel):
-    name: str
-    water_type: Optional[str] = None
-    difficulty: Optional[str] = None
+    name: str = Field(max_length=200)
+    water_type: Optional[str] = Field(default=None, max_length=50)
+    difficulty: Optional[str] = Field(default=None, max_length=50)
     duration: Optional[float] = None
-    kayak_type: Optional[str] = None
+    kayak_type: Optional[str] = Field(default=None, max_length=50)
     rental_available: Optional[bool] = None
-    email: Optional[str] = None
-    whatsapp: Optional[str] = None
-    instagram: Optional[str] = None
+    email: Optional[str] = Field(default=None, max_length=254)
+    whatsapp: Optional[str] = Field(default=None, max_length=30)
+    instagram: Optional[str] = Field(default=None, max_length=100)
     season_start: Optional[int] = None
     season_end: Optional[int] = None
-    photo_1: Optional[str] = None
-    photo_2: Optional[str] = None
-    photo_3: Optional[str] = None
+    photo_1: Optional[str] = Field(default=None, max_length=500)
+    photo_2: Optional[str] = Field(default=None, max_length=500)
+    photo_3: Optional[str] = Field(default=None, max_length=500)
 
 class KayakDetailCreate(KayakDetail):
     spot_id: int
@@ -206,18 +206,18 @@ class KayakDetailResponse(KayakDetail):
 
 # -------- SURF --------
 class SurfSchool(BaseModel):
-    name: str
+    name: str = Field(max_length=200)
     duration: Optional[float] = None
-    class_type: Optional[str] = None
+    class_type: Optional[str] = Field(default=None, max_length=50)
     equipment_include: Optional[bool] = None
-    email: Optional[str] = None
-    whatsapp: Optional[str] = None
-    instagram: Optional[str] = None
+    email: Optional[str] = Field(default=None, max_length=254)
+    whatsapp: Optional[str] = Field(default=None, max_length=30)
+    instagram: Optional[str] = Field(default=None, max_length=100)
     season_start: Optional[int] = None
     season_end: Optional[int] = None
-    photo_1: Optional[str] = None
-    photo_2: Optional[str] = None
-    photo_3: Optional[str] = None
+    photo_1: Optional[str] = Field(default=None, max_length=500)
+    photo_2: Optional[str] = Field(default=None, max_length=500)
+    photo_3: Optional[str] = Field(default=None, max_length=500)
 
 
 class SurfSchoolCreate(SurfSchool):
@@ -269,7 +269,7 @@ class TrekkingDetailCreate(TrekkingDetailOut):
 # -------- MOTORHOME DETAIL --------
 class MotorhomeDetailCreate(BaseModel):
     capacity: Optional[int] = None
-    surface_type: Optional[str] = None
+    surface_type: Optional[str] = Field(default=None, max_length=50)
     has_water: Optional[bool] = None
     has_electricity: Optional[bool] = None
     has_dump_station: Optional[bool] = None
@@ -286,12 +286,12 @@ class MotorhomeDetailResponse(MotorhomeDetailCreate):
 # -------- EXPERIENCES --------
 class ExperienceCreate(BaseModel):
     category_id: int
-    title: str
-    description: Optional[str] = None
+    title: str = Field(max_length=200)
+    description: Optional[str] = Field(default=None, max_length=2000)
     price: Optional[float] = None
-    currency: str = "UYU"
-    schedule: Optional[str] = None
-    contact: Optional[str] = None
+    currency: str = Field(default="UYU", max_length=3)
+    schedule: Optional[str] = Field(default=None, max_length=300)
+    contact: Optional[str] = Field(default=None, max_length=300)
     is_active: bool = True
 
 class ExperienceResponse(BaseModel):
@@ -389,7 +389,7 @@ class ReviewUserResponse(BaseModel):
 
 class ReviewCreate(BaseModel):
     rating: int       # 1 a 5
-    comment: str | None = None
+    comment: str | None = Field(default=None, max_length=1000)
 
 
 # Compartida por reviews de spots, surf y kayak — las tres eran idénticas
@@ -407,7 +407,7 @@ class ReviewResponse(BaseModel):
 
 # -------- SPOT CATEGORY --------
 class SpotCategoryAddRequest(BaseModel):
-    category: str
+    category: str = Field(max_length=50)
     motorhome_detail: Optional[MotorhomeDetailCreate] = None
     camping_detail: Optional[CampingDetailCreate] = None
     glamping_detail: Optional[GlampingDetailCreate] = None
