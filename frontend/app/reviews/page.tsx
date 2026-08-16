@@ -8,6 +8,7 @@ import Footer from "@/components/layout/Footer"
 import { StarDisplay } from "@/components/ui/StarRating"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
+import ConfirmModal from "@/components/ui/ConfirmModal"
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -27,6 +28,8 @@ export default function ReviewsPage() {
   const { data: session, status } = useSession()
   const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const token = session?.id_token
 
@@ -46,14 +49,24 @@ export default function ReviewsPage() {
     else setLoading(false)
   }, [token, status])
 
-  const handleDelete = async (reviewId: any) => {
+  const handleDelete = async () => {
+    if (!deleteTargetId) return
+    setDeleting(true)
     try {
-      await fetch(`${API}/reviews/${reviewId}`, {
+      const res = await fetch(`${API}/reviews/${deleteTargetId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
-      setReviews(prev => prev.filter(r => r.id !== reviewId))
-    } catch {}
+      if (!res.ok) {
+        alert("No se pudo eliminar la review. Intentá de nuevo.")
+      } else {
+        setReviews(prev => prev.filter(r => r.id !== deleteTargetId))
+      }
+    } catch {
+      alert("No se pudo eliminar la review. Intentá de nuevo.")
+    }
+    setDeleting(false)
+    setDeleteTargetId(null)
   }
 
   if (status === "loading" || loading) return <LoadingScreen />
@@ -215,7 +228,7 @@ export default function ReviewsPage() {
                     </div>
                     <div className="review-card-meta">
                       <StarDisplay rating={review.rating} size={14} />
-                      <button className="delete-btn" onClick={() => handleDelete(review.id)}>
+                      <button className="delete-btn" onClick={() => setDeleteTargetId(review.id)}>
                         Eliminar
                       </button>
                     </div>
@@ -234,6 +247,15 @@ export default function ReviewsPage() {
         </div>
         <Footer />
       </div>
+
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="¿Eliminar tu review?"
+        message="Esta acción no se puede deshacer."
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   )
 }

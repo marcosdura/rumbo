@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import Toast from "@/components/ui/Toast"
+import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import { trackEvent } from "@/lib/analytics"
 
@@ -62,6 +63,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const userId = session?.user?.id
   const token = session?.id_token
@@ -129,21 +132,24 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     setSubmitting(false)
   }
 
-  const handleDelete = async (reviewId) => {
-    if (!confirm("¿Eliminar tu review?")) return
+  const handleDelete = async () => {
+    if (!deleteTargetId) return
+    setDeleting(true)
     try {
-      const res = await fetch(`${deleteBase}/${reviewId}`, {
+      const res = await fetch(`${deleteBase}/${deleteTargetId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
         alert("No se pudo eliminar la review. Intentá de nuevo.")
-        return
+      } else {
+        loadReviews()
       }
-      loadReviews()
     } catch {
       alert("No se pudo eliminar la review. Intentá de nuevo.")
     }
+    setDeleting(false)
+    setDeleteTargetId(null)
   }
 
   return (
@@ -372,7 +378,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                     {review.user?.id === userId && (
                       <button
                         className="reviews-delete-btn"
-                        onClick={() => handleDelete(review.id)}
+                        onClick={() => setDeleteTargetId(review.id)}
                       >
                         Eliminar
                       </button>
@@ -406,6 +412,15 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
       </div>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="¿Eliminar tu review?"
+        message="Esta acción no se puede deshacer."
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </>
   )
 }
