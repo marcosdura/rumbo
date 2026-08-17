@@ -1,10 +1,11 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import get_db
 from models import User
 from schemas import ReviewCreate, ReviewResponse
-from auth import get_current_user_required
+from auth import get_current_user_required, get_current_user
 from limiter import limiter
 
 
@@ -39,10 +40,19 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
         db: Session = Depends(get_db),
         limit: int = Query(default=10, ge=1, le=50),
         offset: int = Query(default=0, ge=0),
+        user: Optional[dict] = Depends(get_current_user),
     ):
         base = db.query(review_model).filter(fk_column == parent_id)
         response.headers["X-Total-Count"] = str(base.count())
-        return base.order_by(review_model.created_at.desc()).limit(limit).offset(offset).all()
+        reviews = base.order_by(review_model.created_at.desc()).limit(limit).offset(offset).all()
+        # Auth opcional (get_current_user, no get_current_user_required): el
+        # listado sigue siendo público sin token. Con token, marca cuáles son
+        # del que pregunta — reemplaza exponer el sub de Google de cada autor
+        # en el JSON, que es lo único para lo que el frontend lo usaba.
+        current_sub = user["sub"] if user else None
+        for r in reviews:
+            r.is_mine = (r.user_id == current_sub)
+        return reviews
 
     @router.post("/{parent_id}", status_code=status.HTTP_201_CREATED, response_model=ReviewResponse)
     @limiter.limit("10/minute")

@@ -96,7 +96,8 @@ def get_spot_ids(db: Session = Depends(get_db)):
 
 
 @router.get("/spots/check-name")
-def check_spot_name(name: str, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+async def check_spot_name(request: Request, name: str, db: Session = Depends(get_db)):
     existing = db.query(SpotDB).filter(func.lower(SpotDB.name) == func.lower(name)).first()
     return {"exists": existing is not None}
 

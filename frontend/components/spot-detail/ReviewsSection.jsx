@@ -66,7 +66,6 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
-  const userId = session?.user?.id
   const token = session?.id_token
 
   const baseUrl =
@@ -82,7 +81,9 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const loadReviews = async () => {
     try {
       const [revRes, sumRes] = await Promise.all([
-        fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=0`),
+        fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=0`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }),
         fetch(`${baseUrl}/summary`),
       ])
       const total = parseInt(revRes.headers.get("X-Total-Count") ?? "0", 10)
@@ -98,7 +99,9 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     if (loadingMore) return
     setLoadingMore(true)
     try {
-      const res = await fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=${reviews.length}`)
+      const res = await fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=${reviews.length}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
       const total = res.headers.get("X-Total-Count")
       if (total) setReviewsTotal(parseInt(total, 10))
       const data = await res.json()
@@ -375,7 +378,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                   </div>
                   <div className="review-card-actions">
                     <StarDisplay rating={review.rating} size={14} />
-                    {review.user?.id === userId && (
+                    {review.is_mine && (
                       <button
                         className="reviews-delete-btn"
                         onClick={() => setDeleteTargetId(review.id)}

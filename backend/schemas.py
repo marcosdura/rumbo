@@ -378,8 +378,11 @@ class UserResponse(BaseModel):
 
 
 # -------- REVIEW --------
+# Sin id: es el sub de Google de quien escribió la review — no hace falta
+# exponerlo a cualquiera que pida el listado público, ReviewResponse.is_mine
+# ya resuelve lo único para lo que el frontend lo necesitaba (mostrar el
+# botón "Eliminar" en la review propia).
 class ReviewUserResponse(BaseModel):
-    id: str
     name: str | None = None
     image: str | None = None
 
@@ -400,6 +403,7 @@ class ReviewResponse(BaseModel):
     comment: str | None = None
     created_at: datetime
     user: ReviewUserResponse
+    is_mine: bool = False
 
     class Config:
         from_attributes = True
