@@ -9,8 +9,7 @@ import { StarDisplay } from "@/components/ui/StarRating"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
-
-const API = process.env.NEXT_PUBLIC_API_URL
+import { api } from "@/lib/api"
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()
@@ -35,10 +34,8 @@ export default function ReviewsPage() {
 
   const loadReviews = async () => {
     try {
-      const res = await fetch(`${API}/reviews/user/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (res.ok) setReviews(await res.json())
+      const { data } = await api.get<any[]>("/reviews/user/me", { token })
+      setReviews(data)
     } catch {}
     setLoading(false)
   }
@@ -53,15 +50,8 @@ export default function ReviewsPage() {
     if (!deleteTargetId) return
     setDeleting(true)
     try {
-      const res = await fetch(`${API}/reviews/${deleteTargetId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) {
-        alert("No se pudo eliminar la review. Intentá de nuevo.")
-      } else {
-        setReviews(prev => prev.filter(r => r.id !== deleteTargetId))
-      }
+      await api.del(`/reviews/${deleteTargetId}`, { token })
+      setReviews(prev => prev.filter(r => r.id !== deleteTargetId))
     } catch {
       alert("No se pudo eliminar la review. Intentá de nuevo.")
     }

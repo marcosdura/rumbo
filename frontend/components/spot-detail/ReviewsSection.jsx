@@ -7,8 +7,7 @@ import Toast from "@/components/ui/Toast"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import { trackEvent } from "@/lib/analytics"
-
-const API = process.env.NEXT_PUBLIC_API_URL
+import { api } from "@/lib/api"
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()
@@ -68,29 +67,25 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
   const token = session?.id_token
 
-  const baseUrl =
-    entityType === "surf"  ? `${API}/surf-reviews/${spotId}`  :
-    entityType === "kayak" ? `${API}/kayak-reviews/${spotId}` :
-    `${API}/reviews/${spotId}`
+  const basePath =
+    entityType === "surf"  ? `/surf-reviews/${spotId}`  :
+    entityType === "kayak" ? `/kayak-reviews/${spotId}` :
+    `/reviews/${spotId}`
 
-  const deleteBase =
-    entityType === "surf"  ? `${API}/surf-reviews`  :
-    entityType === "kayak" ? `${API}/kayak-reviews` :
-    `${API}/reviews`
+  const deleteBasePath =
+    entityType === "surf"  ? `/surf-reviews`  :
+    entityType === "kayak" ? `/kayak-reviews` :
+    `/reviews`
 
   const loadReviews = async () => {
     try {
-      const [revRes, sumRes] = await Promise.all([
-        fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=0`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        }),
-        fetch(`${baseUrl}/summary`),
+      const [revResult, sumResult] = await Promise.all([
+        api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
+        api.get(`${basePath}/summary`),
       ])
-      const total = parseInt(revRes.headers.get("X-Total-Count") ?? "0", 10)
-      const revData = await revRes.json()
-      setReviews(Array.isArray(revData) ? revData : [])
-      setReviewsTotal(total)
-      setSummary(await sumRes.json())
+      setReviews(Array.isArray(revResult.data) ? revResult.data : [])
+      setReviewsTotal(revResult.totalCount ?? 0)
+      setSummary(sumResult.data)
     } catch {}
     setLoading(false)
   }
@@ -99,12 +94,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     if (loadingMore) return
     setLoadingMore(true)
     try {
-      const res = await fetch(`${baseUrl}?limit=${REVIEWS_PAGE_SIZE}&offset=${reviews.length}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-      const total = res.headers.get("X-Total-Count")
-      if (total) setReviewsTotal(parseInt(total, 10))
-      const data = await res.json()
+      const { data, totalCount } = await api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: reviews.length } })
+      if (totalCount != null) setReviewsTotal(totalCount)
       setReviews(prev => [...prev, ...(Array.isArray(data) ? data : [])])
     } catch {}
     setLoadingMore(false)
@@ -116,21 +107,12 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     if (!rating) return
     setSubmitting(true)
     try {
-      const res = await fetch(baseUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ rating, comment }),
-      })
-      if (res.ok) {
-        trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
-        setRating(0)
-        setComment("")
-        setShowForm(false)
-        loadReviews()
-      }
+      await api.post(basePath, { rating, comment }, { token })
+      trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
+      setRating(0)
+      setComment("")
+      setShowForm(false)
+      loadReviews()
     } catch {}
     setSubmitting(false)
   }
@@ -139,15 +121,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     if (!deleteTargetId) return
     setDeleting(true)
     try {
-      const res = await fetch(`${deleteBase}/${deleteTargetId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) {
-        alert("No se pudo eliminar la review. Intentá de nuevo.")
-      } else {
-        loadReviews()
-      }
+      await api.del(`${deleteBasePath}/${deleteTargetId}`, { token })
+      loadReviews()
     } catch {
       alert("No se pudo eliminar la review. Intentá de nuevo.")
     }
