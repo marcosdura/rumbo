@@ -45,9 +45,12 @@ como registro de qué se decidió atacar y qué no.
       → `c8bc087`
 - [x] **`camping.py` código muerto** (no montado en `main.py`, duplicado activo en `spots.py`) → borrado
       → `c8bc087`
-- [ ] **`get_sectors_by_spot` definido dos veces en `spots.py`** (línea con ruta sin prefijo `/spots` + la correcta) — encontrado al hacer la limpieza de arriba, no se llegó a tocar
-- [ ] **5 `FilterDrawer` del frontend son el mismo componente repetido** (Trekking/Kayak/Surf/Climbing/Camping, ~330-350 líneas c/u)
-- [ ] **`kayak.py` y `surfschools.py` son el mismo router con nombres cambiados** — candidato a la misma factory que reviews
+- [x] **`get_sectors_by_spot` definido dos veces en `spots.py`** — la ruta sin prefijo `/spots` (dead code, sin uso en el frontend, confirmado por grep) se borró; queda solo la correcta.
+      → `b4896c4`
+- [x] **`kayak.py` y `surfschools.py` eran el mismo router con nombres cambiados** — unificados en `operator_router_factory.py`, mismo patrón que reviews.
+      → `b4896c4`
+- [x] **5 `FilterDrawer` del frontend eran el mismo componente repetido** — el "shell" (estado, animación, JSX de overlay/panel/header/footer, CSS) pasó a `FilterDrawerShell.tsx` compartido. El contenido de cada filtro en sí queda igual que estaba (normalizar los 5 `lib/*-filters.ts` para unificar también eso es un refactor aparte, más grande, quedó fuera a propósito).
+      → `323c7f3`
 - [ ] **`KayakImageGallery.jsx` y `SurfImageGallery.jsx` 100% idénticos**
 - [ ] **Sin cliente API centralizado en el frontend** (21+ archivos con `NEXT_PUBLIC_API_URL` inline, 26 con `fetch()` directo)
 - [ ] **Componentes de 300-1000+ líneas** mezclando fetch/estado/estilos (`AgregarLugar.tsx`, `admin/page.tsx`, `SearchPageContent.tsx`, `profile/page.tsx`, `dashboard/spots/[id]/page.tsx`)
