@@ -37,6 +37,7 @@ import {
   countActiveCampingFilters,
 } from "../../lib/camping-filters"
 import { trackEvent } from "../../lib/analytics"
+import { api } from "../../lib/api"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -135,14 +136,9 @@ export default function SearchPage() {
     const listParams = buildFilterParams()
     listParams.set("limit", String(PAGE_SIZE))
     listParams.set("offset", "0")
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${listParams.toString()}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Error al cargar los spots.")
-        const totalHeader = res.headers.get("X-Total-Count")
-        setTotal(totalHeader ? parseInt(totalHeader, 10) : null)
-        return res.json()
-      })
-      .then(data => {
+    api.get<any[]>(`/spots?${listParams.toString()}`)
+      .then(({ data, totalCount }) => {
+        setTotal(totalCount)
         setSpots(data)
         setLoading(false)
         trackEvent("search", {
@@ -162,9 +158,8 @@ export default function SearchPage() {
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
     // Si falla, el mapa se queda vacío (degrada solo, no bloquea la lista).
     const mapParams = buildFilterParams()
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?${mapParams.toString()}`)
-      .then(res => (res.ok ? res.json() : []))
-      .then(data => setMapSpots(Array.isArray(data) ? data : []))
+    api.get<any[]>(`/spots/pins?${mapParams.toString()}`)
+      .then(({ data }) => setMapSpots(Array.isArray(data) ? data : []))
       .catch(() => setMapSpots([]))
   }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters, retryTick])
 
@@ -175,14 +170,9 @@ export default function SearchPage() {
     const params = buildFilterParams()
     params.set("limit", String(PAGE_SIZE))
     params.set("offset", String(spots.length))
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots?${params.toString()}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Error al cargar más spots.")
-        const totalHeader = res.headers.get("X-Total-Count")
-        if (totalHeader) setTotal(parseInt(totalHeader, 10))
-        return res.json()
-      })
-      .then(data => {
+    api.get<any[]>(`/spots?${params.toString()}`)
+      .then(({ data, totalCount }) => {
+        if (totalCount != null) setTotal(totalCount)
         setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])
         setLoadingMore(false)
       })

@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { CldImage } from "next-cloudinary"
 import Pill from "@/components/ui/Pill"
+import { api, ApiError } from "@/lib/api"
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
@@ -28,37 +29,39 @@ export default function ProfilePage() {
   let cancelled = false
 
   const fetchAll = (idToken: string) => {
-    const headers = { Authorization: `Bearer ${idToken}` }
-    return Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, { headers }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/user/me`, { headers }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }),
+    return Promise.allSettled([
+      api.get<any[]>("/favorites", { token: idToken }),
+      api.get<any[]>("/reviews/user/me", { token: idToken }),
+      api.get<any[]>("/spots/mine", { token: idToken }),
     ])
   }
 
-  const toJson = (res: Response) => (res.ok ? res.json() : [])
+  const is401 = (r: PromiseSettledResult<{ data: any[] }>) =>
+    r.status === "rejected" && r.reason instanceof ApiError && r.reason.status === 401
+  const toData = (r: PromiseSettledResult<{ data: any[] }>) =>
+    r.status === "fulfilled" && Array.isArray(r.value.data) ? r.value.data : []
 
   fetchAll(session.id_token)
-    .then(async (responses) => {
+    .then(async (results) => {
       // Un 401 acá puede ser solo el id_token cruzando su expiración (~1h)
       // mientras el refresh silencioso de NextAuth todavía no corrió (el
       // poll de sesión es cada 5 min). Antes de desloguear, forzamos un
       // refresh de sesión y reintentamos una vez con el token fresco.
-      if (responses.some((res) => res.status === 401)) {
+      if (results.some(is401)) {
         const fresh = await getSession()
         if (fresh?.id_token && fresh.id_token !== session.id_token && !fresh.error) {
-          responses = await fetchAll(fresh.id_token)
+          results = await fetchAll(fresh.id_token)
         }
       }
       if (cancelled) return
-      if (responses.some((res) => res.status === 401)) {
+      if (results.some(is401)) {
         signOut({ redirect: false })
         return
       }
-      const [favData, reviewData, spotsData] = await Promise.all(responses.map(toJson))
-      setFavorites(Array.isArray(favData) ? favData : [])
-      setReviews(Array.isArray(reviewData) ? reviewData : [])
-      setMySpots(Array.isArray(spotsData) ? spotsData : [])
+      const [favData, reviewData, spotsData] = results.map(toData)
+      setFavorites(favData)
+      setReviews(reviewData)
+      setMySpots(spotsData)
     })
     .finally(() => { if (!cancelled) setDataLoading(false) })
 
@@ -82,19 +85,10 @@ export default function ProfilePage() {
     setDeleting(true)
     setDeleteError("")
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${session?.id_token}` },
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        setDeleteError(body.detail ?? "Error al eliminar la cuenta. Intentá de nuevo.")
-        setDeleting(false)
-        return
-      }
+      await api.del("/users/me", { token: session?.id_token })
       await signOut({ callbackUrl: "/?cuenta=eliminada" })
-    } catch {
-      setDeleteError("Error de red. Intentá de nuevo.")
+    } catch (e) {
+      setDeleteError(e instanceof ApiError ? e.message : "Error de red. Intentá de nuevo.")
       setDeleting(false)
     }
   }
