@@ -787,12 +787,6 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
     return {"message": "Category added successfully"}
 
 
-# devuelve los sectores segun el spot
-@router.get("/{spot_id}/sectors", response_model=list[ClimbingSectorResponse])
-def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
-    return db.query(ClimbingSector).filter(ClimbingSector.spot_id == spot_id).all()
-
-
 # agrega detalles del camping
 @router.post("/spots/{spot_id}/camping")
 def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
