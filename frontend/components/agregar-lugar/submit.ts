@@ -2,6 +2,7 @@ import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, Surf
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { trackEvent } from "@/lib/analytics"
+import { api } from "@/lib/api"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
   if (!basic.whatsapp.trim()) return null
@@ -62,33 +63,24 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
       if (creatingNewSpot) {
         setUploadProgress("Guardando lugar...")
-        const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            name: basic.name,
-            description: basic.description,
-            department: basic.department,
-            category_id: selectedCat.id,
-            email: basic.email || null,
-            whatsapp: formatWhatsapp(basic),
-            instagram: basic.instagram || null,
-            price: basic.price ? parseInt(basic.price) : null,
-            lat: basic.lat ? parseFloat(basic.lat) : null,
-            lng: basic.lng ? parseFloat(basic.lng) : null,
-            owner_email: ownerEmail,
-            is_approved: false,
-            is_public: isPublic,
-            public_transport: publicTransport,
-            season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
-            season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
-          }),
-        })
-        if (!spotRes.ok) throw new Error("Error al crear el lugar")
-        const spotData = await spotRes.json()
+        const { data: spotData } = await api.post<{ id: number }>("/spots", {
+          name: basic.name,
+          description: basic.description,
+          department: basic.department,
+          category_id: selectedCat.id,
+          email: basic.email || null,
+          whatsapp: formatWhatsapp(basic),
+          instagram: basic.instagram || null,
+          price: basic.price ? parseInt(basic.price) : null,
+          lat: basic.lat ? parseFloat(basic.lat) : null,
+          lng: basic.lng ? parseFloat(basic.lng) : null,
+          owner_email: ownerEmail,
+          is_approved: false,
+          is_public: isPublic,
+          public_transport: publicTransport,
+          season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
+          season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
+        }, { token })
         spotId = spotData.id
 
         setUploadProgress("Subiendo imágenes del lugar...")
@@ -105,17 +97,12 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         )
 
         await Promise.all(
-          uploadResults.map(({ publicId, index }) => {
-            const urlParams = new URLSearchParams({
-              cloudinary_public_id: publicId,
-              is_main: String(index === 0),
-              order: String(index),
-            })
-            return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
-              method: "POST",
-              headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            })
-          })
+          uploadResults.map(({ publicId, index }) =>
+            api.post(`/images/spots/${spotId}`, undefined, {
+              token,
+              params: { cloudinary_public_id: publicId, is_main: index === 0, order: index },
+            }).catch(() => {})
+          )
         )
       }
 
@@ -137,22 +124,17 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           photoUrls[i] = url
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            spot_id: spotId,
-            name: surf.name,
-            class_type: surf.class_type || null,
-            duration: surf.duration ? parseFloat(surf.duration) : null,
-            equipment_include: surf.equipment_include,
-            season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
-            season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
-            email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
-            photo_1: photoUrls[0], photo_2: photoUrls[1] ?? null, photo_3: photoUrls[2] ?? null,
-          }),
-        })
-        if (!res.ok) throw new Error("Error al guardar la escuelita")
+        await api.post("/surfschool/", {
+          spot_id: spotId,
+          name: surf.name,
+          class_type: surf.class_type || null,
+          duration: surf.duration ? parseFloat(surf.duration) : null,
+          equipment_include: surf.equipment_include,
+          season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
+          season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
+          email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+          photo_1: photoUrls[0], photo_2: photoUrls[1] ?? null, photo_3: photoUrls[2] ?? null,
+        }, { token })
       }
       if (cat === "Kayak") {
         if (!creatingNewSpot && !kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
@@ -174,21 +156,17 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
         for (const k of kayaks) {
           if (!k.name) continue
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            body: JSON.stringify({
-              spot_id: spotId,
-              name: k.name,
-              water_type: k.water_type || null, difficulty: k.difficulty || null,
-              duration: k.duration ? parseFloat(k.duration) : null,
-              kayak_type: k.kayak_type || null, rental_available: k.rental_available,
-              season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
-              season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
-              email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
-              photo_1: kayakPhotoUrls[0], photo_2: kayakPhotoUrls[1] ?? null, photo_3: kayakPhotoUrls[2] ?? null,
-            }),
-          })
+          await api.post("/kayak/", {
+            spot_id: spotId,
+            name: k.name,
+            water_type: k.water_type || null, difficulty: k.difficulty || null,
+            duration: k.duration ? parseFloat(k.duration) : null,
+            kayak_type: k.kayak_type || null, rental_available: k.rental_available,
+            season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
+            season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
+            email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+            photo_1: kayakPhotoUrls[0], photo_2: kayakPhotoUrls[1] ?? null, photo_3: kayakPhotoUrls[2] ?? null,
+          }, { token }).catch(() => {})
         }
       }
       trackEvent("add_spot_complete", { category: cat, creating_new_spot: creatingNewSpot })
@@ -215,30 +193,24 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setUploadProgress("Guardando lugar...")
     const seasonStart = basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null
     const seasonEnd   = basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null
-    const spotRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({
-        name:         basic.name,
-        description:  basic.description,
-        department:   basic.department,
-        category_id:  selectedCat.id,
-        owner_email:  ownerEmail,
-        is_approved:  false,
-        price:        basic.price ? parseInt(basic.price) : null,
-        season_start: seasonStart,
-        season_end:   seasonEnd,
-        email:        basic.email     || null,
-        whatsapp:     formatWhatsapp(basic),
-        instagram:    basic.instagram || null,
-        lat:          basic.lat ? parseFloat(basic.lat) : null,
-        lng:          basic.lng ? parseFloat(basic.lng) : null,
-        is_public:        isPublic,
-        public_transport: publicTransport,
-      }),
-    })
-    if (!spotRes.ok) throw new Error("Error al crear el lugar")
-    const spot = await spotRes.json()
+    const { data: spot } = await api.post<{ id: number }>("/spots", {
+      name:         basic.name,
+      description:  basic.description,
+      department:   basic.department,
+      category_id:  selectedCat.id,
+      owner_email:  ownerEmail,
+      is_approved:  false,
+      price:        basic.price ? parseInt(basic.price) : null,
+      season_start: seasonStart,
+      season_end:   seasonEnd,
+      email:        basic.email     || null,
+      whatsapp:     formatWhatsapp(basic),
+      instagram:    basic.instagram || null,
+      lat:          basic.lat ? parseFloat(basic.lat) : null,
+      lng:          basic.lng ? parseFloat(basic.lng) : null,
+      is_public:        isPublic,
+      public_transport: publicTransport,
+    }, { token })
     const spotId: number = spot.id
 
     // 2. Upload images en paralelo
@@ -257,59 +229,43 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
     // 3. Add images en paralelo
     await Promise.all(
-      uploadResults.map(({ publicId, index }) => {
-        const urlParams = new URLSearchParams({
-          cloudinary_public_id: publicId,
-          is_main: String(index === 0),
-          order: String(index),
-        })
-        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spotId}?${urlParams}`, {
-          method: "POST",
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        })
-      })
+      uploadResults.map(({ publicId, index }) =>
+        api.post(`/images/spots/${spotId}`, undefined, {
+          token,
+          params: { cloudinary_public_id: publicId, is_main: index === 0, order: index },
+        }).catch(() => {})
+      )
     )
 
     // 4. Category-specific records
     if (cat === "Camping" && selectedAmenities.length > 0) {
-      const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
-      if (amenRes.ok) {
-        const all: { id: number; name: string }[] = await amenRes.json()
+      try {
+        const { data: all } = await api.get<{ id: number; name: string }[]>("/amenities/")
         const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
         for (const name of selectedAmenities) {
           const id = nameToId[name]
           if (id) {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, {
-              method: "POST",
-              headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            })
+            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token }).catch(() => {})
           }
         }
+      } catch {
+        // no bloquea el submit si falla
       }
     }
 
     if (cat === "Camping") {
-      const campingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/camping`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ price: basic.price ? parseFloat(basic.price) : null }),
-      })
-      if (!campingRes.ok) throw new Error("Error al guardar los datos del camping")
+      await api.post(`/spots/${spotId}/camping`, { price: basic.price ? parseFloat(basic.price) : null }, { token })
     }
 
     if (cat === "Glamping") {
       for (const unit of glampingUnits) {
         if (!unit.accommodation_type && !unit.capacity && !unit.price_per_night && !unit.min_nights) continue
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/glamping`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            accommodation_type: unit.accommodation_type || null,
-            capacity: unit.capacity ? parseInt(unit.capacity) : null,
-            price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
-            min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
-          }),
-        })
+        await api.post(`/glamping/spots/${spotId}/glamping`, {
+          accommodation_type: unit.accommodation_type || null,
+          capacity: unit.capacity ? parseInt(unit.capacity) : null,
+          price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
+          min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
+        }, { token }).catch(() => {})
       }
 
       const amenityPayload: Record<string, boolean> = {}
@@ -318,31 +274,23 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (field) amenityPayload[field] = true
       }
       if (Object.keys(amenityPayload).length > 0) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/glamping/spots/${spotId}/amenities`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify(amenityPayload),
-        })
+        await api.post(`/glamping/spots/${spotId}/amenities`, amenityPayload, { token }).catch(() => {})
       }
     }
 
     if ((cat === "Camping" || cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Motorhome")) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            category: "Motorhome",
-            motorhome_detail: {
-              capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
-              surface_type: motorhomeDetail.surface_type || null,
-              has_water: motorhomeDetail.has_water,
-              has_electricity: motorhomeDetail.has_electricity,
-              has_dump_station: motorhomeDetail.has_dump_station,
-              max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
-            },
-          }),
-        })
+        await api.post(`/spots/${spotId}/categories`, {
+          category: "Motorhome",
+          motorhome_detail: {
+            capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
+            surface_type: motorhomeDetail.surface_type || null,
+            has_water: motorhomeDetail.has_water,
+            has_electricity: motorhomeDetail.has_electricity,
+            has_dump_station: motorhomeDetail.has_dump_station,
+            max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
+          },
+        }, { token })
       } catch {
         // no bloquea el submit si falla el alta de la categoría adicional
       }
@@ -358,20 +306,16 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       for (let i = 0; i < glampingUnits.length; i++) {
         const unit = glampingUnits[i]
         try {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            body: JSON.stringify({
-              category: "Glamping",
-              glamping_detail: {
-                accommodation_type: unit.accommodation_type || null,
-                capacity: unit.capacity ? parseInt(unit.capacity) : null,
-                price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
-                min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
-              },
-              glamping_amenities: i === 0 && Object.keys(amenityPayload).length > 0 ? amenityPayload : null,
-            }),
-          })
+          await api.post(`/spots/${spotId}/categories`, {
+            category: "Glamping",
+            glamping_detail: {
+              accommodation_type: unit.accommodation_type || null,
+              capacity: unit.capacity ? parseInt(unit.capacity) : null,
+              price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
+              min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
+            },
+            glamping_amenities: i === 0 && Object.keys(amenityPayload).length > 0 ? amenityPayload : null,
+          }, { token })
         } catch {
           // No bloquear el éxito de la creación del spot si esto falla
         }
@@ -380,16 +324,12 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
     if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping")) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/categories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            category: "Camping",
-            camping_detail: {
-              price: campingDetail.price ? parseFloat(campingDetail.price) : null,
-            },
-          }),
-        })
+        await api.post(`/spots/${spotId}/categories`, {
+          category: "Camping",
+          camping_detail: {
+            price: campingDetail.price ? parseFloat(campingDetail.price) : null,
+          },
+        }, { token })
       } catch {
         // No bloquear el éxito de la creación del spot si esto falla
       }
@@ -397,18 +337,12 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
     if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping") && selectedCampingAmenities.length > 0) {
       try {
-        const amenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/amenities/`)
-        if (amenRes.ok) {
-          const all: { id: number; name: string }[] = await amenRes.json()
-          const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
-          for (const name of selectedCampingAmenities) {
-            const id = nameToId[name]
-            if (id) {
-              await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/amenities/${id}`, {
-                method: "POST",
-                headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-              })
-            }
+        const { data: all } = await api.get<{ id: number; name: string }[]>("/amenities/")
+        const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
+        for (const name of selectedCampingAmenities) {
+          const id = nameToId[name]
+          if (id) {
+            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token }).catch(() => {})
           }
         }
       } catch {
@@ -419,29 +353,21 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (cat === "Trekking") {
       for (const r of routes) {
         if (!r.name) continue
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            spot_id: spotId, name: r.name,
-            distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
-            duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
-            elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain)   : null,
-            elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss)   : null,
-            max_altitude:   r.max_altitude   ? parseInt(r.max_altitude)     : null,
-            min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
-            difficulty: r.difficulty || null, route_type: r.route_type || null,
-            technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
-          }),
-        })
+        await api.post("/routes/", {
+          spot_id: spotId, name: r.name,
+          distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
+          duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
+          elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain)   : null,
+          elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss)   : null,
+          max_altitude:   r.max_altitude   ? parseInt(r.max_altitude)     : null,
+          min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
+          difficulty: r.difficulty || null, route_type: r.route_type || null,
+          technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
+        }, { token }).catch(() => {})
       }
       const hasFeatures = Object.values(trekkingFeatures).some(v => v !== null)
       if (hasFeatures) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/trekking-detail`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify(trekkingFeatures),
-        })
+        await api.post(`/spots/${spotId}/trekking-detail`, trekkingFeatures, { token }).catch(() => {})
       }
     }
 
@@ -449,20 +375,15 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       const createdSectorIds: (number | null)[] = []
       for (const sec of sectors) {
         if (!sec.name) { createdSectorIds.push(null); continue }
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
+        try {
+          const { data } = await api.post<{ id: number }>("/sectors/", {
             spot_id: spotId, name: sec.name,
             type: sec.type || null,
             max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
             restrictions: sec.restrictions || null,
-          }),
-        })
-        if (res.ok) {
-          const data = await res.json()
+          }, { token })
           createdSectorIds.push(data.id)
-        } else {
+        } catch {
           createdSectorIds.push(null)
         }
       }
@@ -471,69 +392,53 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         if (!r.name) continue
         const sectorId = createdSectorIds[r.sectorIndex]
         if (!sectorId) continue
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            name: r.name,
-            grade: r.grade || null,
-            type: r.type || null,
-            length: r.length_m ? parseInt(r.length_m) : null,
-            bolts: r.bolts ? parseInt(r.bolts) : null,
-            description: r.description || null,
-            sector_id: sectorId,
-          }),
-        })
+        await api.post("/climbingroutes/", {
+          name: r.name,
+          grade: r.grade || null,
+          type: r.type || null,
+          length: r.length_m ? parseInt(r.length_m) : null,
+          bolts: r.bolts ? parseInt(r.bolts) : null,
+          description: r.description || null,
+          sector_id: sectorId,
+        }, { token }).catch(() => {})
       }
     }
 
     if (cat === "Motorhome") {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/motorhome`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
-          surface_type: motorhomeDetail.surface_type || null,
-          has_water: motorhomeDetail.has_water,
-          has_electricity: motorhomeDetail.has_electricity,
-          has_dump_station: motorhomeDetail.has_dump_station,
-          max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
-        }),
-      })
+      await api.post(`/spots/${spotId}/motorhome`, {
+        capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
+        surface_type: motorhomeDetail.surface_type || null,
+        has_water: motorhomeDetail.has_water,
+        has_electricity: motorhomeDetail.has_electricity,
+        has_dump_station: motorhomeDetail.has_dump_station,
+        max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
+      }, { token }).catch(() => {})
     }
 
     if (cat === "Surf" && surf.name) {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          spot_id: spotId, name: surf.name,
-          class_type: surf.class_type || null,
-          duration: surf.duration ? parseFloat(surf.duration) : null,
-          equipment_include: surf.equipment_include,
-          season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
-          season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
-          email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
-        }),
-      })
+      await api.post("/surfschool/", {
+        spot_id: spotId, name: surf.name,
+        class_type: surf.class_type || null,
+        duration: surf.duration ? parseFloat(surf.duration) : null,
+        equipment_include: surf.equipment_include,
+        season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
+        season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
+        email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+      }, { token }).catch(() => {})
     }
 
     if (cat === "Kayak") {
       for (const k of kayaks) {
         if (!k.name) continue
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({
-            spot_id: spotId, name: k.name,
-            water_type: k.water_type || null, difficulty: k.difficulty || null,
-            duration: k.duration ? parseFloat(k.duration) : null,
-            kayak_type: k.kayak_type || null, rental_available: k.rental_available,
-            season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
-            season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
-            email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
-          }),
-        })
+        await api.post("/kayak/", {
+          spot_id: spotId, name: k.name,
+          water_type: k.water_type || null, difficulty: k.difficulty || null,
+          duration: k.duration ? parseFloat(k.duration) : null,
+          kayak_type: k.kayak_type || null, rental_available: k.rental_available,
+          season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
+          season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
+          email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+        }, { token }).catch(() => {})
       }
     }
 
@@ -544,19 +449,15 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         : exp.schedule_type
           ? EXPERIENCE_SCHEDULE_OPTIONS.find(o => o.value === exp.schedule_type)?.label ?? null
           : null
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/experiences`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          category_id: parseInt(exp.category_id),
-          title: exp.title.trim(),
-          description: exp.description.trim() || null,
-          price: exp.price ? parseFloat(exp.price) : null,
-          currency: "UYU",
-          schedule: scheduleValue,
-          contact: exp.contact.trim() || null,
-        }),
-      })
+      await api.post(`/spots/${spotId}/experiences`, {
+        category_id: parseInt(exp.category_id),
+        title: exp.title.trim(),
+        description: exp.description.trim() || null,
+        price: exp.price ? parseFloat(exp.price) : null,
+        currency: "UYU",
+        schedule: scheduleValue,
+        contact: exp.contact.trim() || null,
+      }, { token }).catch(() => {})
     }
 
     trackEvent("add_spot_complete", { category: cat, creating_new_spot: true })

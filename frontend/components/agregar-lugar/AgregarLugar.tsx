@@ -10,6 +10,7 @@ import {
 } from "./constants"
 import { submitAgregarLugar } from "./submit"
 import { trackEvent } from "@/lib/analytics"
+import { api } from "@/lib/api"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"
@@ -112,10 +113,8 @@ export default function AgregarLugar() {
     if (!session?.id_token) return
     if (session.termsAcceptedAt) return
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/terms`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${session.id_token}` },
-    }).then(() => update({ termsAcceptedAt: new Date().toISOString() }))
+    api.patch("/users/me/terms", undefined, { token: session.id_token })
+      .then(() => update({ termsAcceptedAt: new Date().toISOString() }))
   }, [session?.id_token])
 
   const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
@@ -158,10 +157,9 @@ export default function AgregarLugar() {
       setLoadingSpots(true)
       // /spots/pins en vez de /spots: no pagina (el picker necesita "todos"
       // los de esa actividad) y ya trae id+name, sin el payload pesado.
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=${cat.name}`)
-        .then(res => res.json())
-        .then(data => {
-          setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
+      api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: cat.name } })
+        .then(({ data }) => {
+          setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
         })
         .catch(() => {
           // proceed with empty list if fetch fails
@@ -177,9 +175,8 @@ export default function AgregarLugar() {
     if (mode === "new_route") {
       setLoadingTrekkingSpots(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=Trekking`)
-        const data = await res.json()
-        setAvailableTrekkingSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
+        const { data } = await api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: "Trekking" } })
+        setAvailableTrekkingSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
       } catch {} finally {
         setLoadingTrekkingSpots(false)
       }
@@ -191,9 +188,8 @@ export default function AgregarLugar() {
     if (mode === "new_sector" || mode === "new_route") {
       setLoadingSpots(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/pins?activity=Escalada`)
-        const data = await res.json()
-        setAvailableSpots(data.map((sp: { id: number; name: string }) => ({ id: sp.id, name: sp.name })))
+        const { data } = await api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: "Escalada" } })
+        setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
       } catch {
         // proceed with empty list
       } finally {
@@ -254,13 +250,8 @@ export default function AgregarLugar() {
     if (climbingMode === "new_route") {
       setLoadingSectors(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/?spot_id=${climbingSpotId}`)
-        if (!res.ok) {
-          console.error("Error al cargar sectores, status:", res.status)
-          return
-        }
-        const data = await res.json()
-        setAvailableSectors(data.map((sec: { id: number; name: string }) => ({ id: sec.id, name: sec.name })))
+        const { data } = await api.get<{ id: number; name: string }[]>("/sectors/", { params: { spot_id: climbingSpotId } })
+        setAvailableSectors(data.map((sec) => ({ id: sec.id, name: sec.name })))
       } catch (err) {
         console.error("Error al cargar sectores:", err)
       } finally {
@@ -286,27 +277,20 @@ export default function AgregarLugar() {
       try {
         for (const r of routes) {
           if (!r.name) continue
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/routes/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              spot_id: trekkingSpotId,
-              name: r.name,
-              distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
-              duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
-              elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
-              elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
-              max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
-              min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
-              difficulty: r.difficulty || null,
-              route_type: r.route_type || null,
-              technical_level: r.technical_level || null,
-              physical_demand: r.physical_demand || null,
-            }),
-          })
+          await api.post("/routes/", {
+            spot_id: trekkingSpotId,
+            name: r.name,
+            distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
+            duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
+            elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
+            elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
+            max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
+            min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
+            difficulty: r.difficulty || null,
+            route_type: r.route_type || null,
+            technical_level: r.technical_level || null,
+            physical_demand: r.physical_demand || null,
+          }, { token })
         }
         setSuccess(true)
       } catch {
@@ -322,41 +306,25 @@ export default function AgregarLugar() {
       setError(null)
       try {
         const sec = sectors[0]
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            name: sec.name,
-            type: sec.type || null,
-            max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
-            restrictions: sec.restrictions || null,
-            spot_id: climbingSpotId,
-          }),
-        })
-        if (!res.ok) throw new Error()
-        const newSector = await res.json()
+        const { data: newSector } = await api.post<{ id: number }>("/sectors/", {
+          name: sec.name,
+          type: sec.type || null,
+          max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
+          restrictions: sec.restrictions || null,
+          spot_id: climbingSpotId,
+        }, { token })
 
         for (const r of sectorRoutes) {
           if (!r.name) continue
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              name: r.name,
-              grade: r.grade || null,
-              type: r.type || null,
-              length: r.length_m ? parseInt(r.length_m) : null,
-              bolts: r.bolts ? parseInt(r.bolts) : null,
-              description: r.description || null,
-              sector_id: newSector.id,
-            }),
-          })
+          await api.post("/climbingroutes/", {
+            name: r.name,
+            grade: r.grade || null,
+            type: r.type || null,
+            length: r.length_m ? parseInt(r.length_m) : null,
+            bolts: r.bolts ? parseInt(r.bolts) : null,
+            description: r.description || null,
+            sector_id: newSector.id,
+          }, { token })
         }
         setSuccess(true)
       } catch {
@@ -373,23 +341,15 @@ export default function AgregarLugar() {
       try {
         for (const r of climbingNewRoutes) {
           if (!r.name) continue
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/climbingroutes/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              name: r.name,
-              grade: r.grade || null,
-              type: r.type || null,
-              length: r.length_m ? parseInt(r.length_m) : null,
-              bolts: r.bolts ? parseInt(r.bolts) : null,
-              description: r.description || null,
-              sector_id: climbingSectorId,
-            }),
-          })
-          if (!res.ok) throw new Error()
+          await api.post("/climbingroutes/", {
+            name: r.name,
+            grade: r.grade || null,
+            type: r.type || null,
+            length: r.length_m ? parseInt(r.length_m) : null,
+            bolts: r.bolts ? parseInt(r.bolts) : null,
+            description: r.description || null,
+            sector_id: climbingSectorId,
+          }, { token })
         }
         setSuccess(true)
       } catch {
