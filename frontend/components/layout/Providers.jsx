@@ -3,6 +3,7 @@ import { SessionProvider, useSession, signOut } from "next-auth/react"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
 import { trackEvent } from "@/lib/analytics"
+import { api } from "@/lib/api"
 
 const FATAL_AUTH_ERRORS = ["RefreshTokenError", "NoRefreshToken", "UserNotFound", "SignupError"]
 
@@ -41,12 +42,8 @@ function TermsAcceptHandler() {
     if (localStorage.getItem("rumbo_terms_accepted") !== "true") return
 
     let cancelled = false
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/terms`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${session.id_token}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((user) => {
+    api.patch("/users/me/terms", undefined, { token: session.id_token })
+      .then(({ data: user }) => {
         if (!user || cancelled) return
         localStorage.removeItem("rumbo_terms_accepted")
         update({ termsAcceptedAt: user.terms_accepted_at })

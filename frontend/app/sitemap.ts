@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next"
 import { slugWithId } from "@/lib/slugify"
+import { api } from "@/lib/api"
 
 const BASE_URL = "https://rumbo-eight.vercel.app"
-const API = process.env.NEXT_PUBLIC_API_URL!
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -16,33 +16,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let kayakUrls: MetadataRoute.Sitemap = []
 
   try {
-    const [spotsRes, surfRes, kayakRes] = await Promise.all([
-      fetch(`${API}/spots/ids`,      { next: { revalidate: 3600 } }),
-      fetch(`${API}/surfschool/ids`, { next: { revalidate: 3600 } }),
-      fetch(`${API}/kayak/ids`,      { next: { revalidate: 3600 } }),
+    const [spotsResult, surfResult, kayakResult] = await Promise.allSettled([
+      api.get<{ id: number; slug: string }[]>("/spots/ids",      { next: { revalidate: 3600 } }),
+      api.get<{ id: number; name: string }[]>("/surfschool/ids", { next: { revalidate: 3600 } }),
+      api.get<{ id: number; name: string }[]>("/kayak/ids",      { next: { revalidate: 3600 } }),
     ])
 
-    if (spotsRes.ok) {
-      const spots: { id: number; slug: string }[] = await spotsRes.json()
-      spotUrls = spots.map(({ slug }) => ({
+    if (spotsResult.status === "fulfilled") {
+      spotUrls = spotsResult.value.data.map(({ slug }) => ({
         url: `${BASE_URL}/spots/${slug}`,
         changeFrequency: "weekly",
         priority: 0.8,
       }))
     }
 
-    if (surfRes.ok) {
-      const schools: { id: number; name: string }[] = await surfRes.json()
-      surfUrls = schools.map(({ id, name }) => ({
+    if (surfResult.status === "fulfilled") {
+      surfUrls = surfResult.value.data.map(({ id, name }) => ({
         url: `${BASE_URL}/surf/${slugWithId(name, id)}`,
         changeFrequency: "weekly",
         priority: 0.7,
       }))
     }
 
-    if (kayakRes.ok) {
-      const kayaks: { id: number; name: string }[] = await kayakRes.json()
-      kayakUrls = kayaks.map(({ id, name }) => ({
+    if (kayakResult.status === "fulfilled") {
+      kayakUrls = kayakResult.value.data.map(({ id, name }) => ({
         url: `${BASE_URL}/kayak/${slugWithId(name, id)}`,
         changeFrequency: "weekly",
         priority: 0.7,

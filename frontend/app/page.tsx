@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar"
 import HeroHeader from "@/components/layout/HeroHeader"
 import SpotSection from "@/components/spots/SpotSection"
 import SearchBar from "@/components/spots/SearchBar"
+import { api } from "@/lib/api"
 
 type Spot = { id: number; name: string; department: string; [key: string]: unknown }
 type Section = { data: Spot[]; total: number }
@@ -19,19 +20,16 @@ export default function Home() {
   const [retryTick, setRetryTick] = useState(0)
 
   useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL
     setLoading(true)
     setError(null)
     // 3 pedidos chicos y ya filtrados en vez de traer el catálogo entero y
     // recortarlo a mano acá — antes esto pedía TODOS los spots aprobados
     // solo para mostrar 6 en cada sección.
     const fetchSection = (params: string): Promise<Section> =>
-      fetch(`${API}/spots?${params}`).then(async (res) => {
-        if (!res.ok) throw new Error("Error al cargar los spots.")
-        const total = parseInt(res.headers.get("X-Total-Count") ?? "0", 10)
-        const data = await res.json()
-        return { data: Array.isArray(data) ? data : [], total }
-      })
+      api.get<Spot[]>(`/spots?${params}`).then(({ data, totalCount }) => ({
+        data: Array.isArray(data) ? data : [],
+        total: totalCount ?? 0,
+      }))
 
     Promise.all([
       fetchSection("limit=6"),

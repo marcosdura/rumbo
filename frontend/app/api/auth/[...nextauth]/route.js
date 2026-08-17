@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
+import { api, ApiError } from "@/lib/api"
 
 async function refreshIdToken(token) {
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -46,16 +47,8 @@ export const authOptions = {
         let termsAcceptedAt = null
         let signupError = null
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/upsert`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${account.id_token}` },
-          })
-          if (res.ok) {
-            const user = await res.json()
-            termsAcceptedAt = user.terms_accepted_at ?? null
-          } else {
-            signupError = "SignupError"
-          }
+          const { data: user } = await api.post("/users/upsert", undefined, { token: account.id_token })
+          termsAcceptedAt = user.terms_accepted_at ?? null
         } catch (e) {
           console.error("Error guardando usuario:", e)
           signupError = "SignupError"
@@ -102,16 +95,12 @@ export const authOptions = {
       // no desloguea, solo reintenta en el próximo ciclo.
       if (!token.lastChecked || Date.now() - token.lastChecked > 10 * 60 * 1000) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-            headers: { Authorization: `Bearer ${token.id_token}` },
-          })
-          if (res.status === 404) {
+          await api.get("/users/me", { token: token.id_token })
+          token = { ...token, lastChecked: Date.now() }
+        } catch (e) {
+          if (e instanceof ApiError && e.status === 404) {
             return { ...token, error: "UserNotFound" }
           }
-          if (res.ok) {
-            token = { ...token, lastChecked: Date.now() }
-          }
-        } catch (e) {
           console.error("Error verificando usuario:", e)
         }
       }

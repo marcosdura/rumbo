@@ -26,6 +26,11 @@ export interface ApiOptions {
   body?: unknown
   params?: Record<string, string | number | boolean | undefined | null>
   headers?: Record<string, string>
+  // Passthrough para las directivas de cache de fetch en Server Components
+  // (páginas server-side que ya usaban `cache: "no-store"` o
+  // `next: { revalidate }` antes de esta migración).
+  cache?: RequestCache
+  next?: { revalidate?: number | false; tags?: string[] }
 }
 
 function buildUrl(path: string, params?: ApiOptions["params"]): string {
@@ -45,7 +50,7 @@ function buildUrl(path: string, params?: ApiOptions["params"]): string {
 }
 
 async function request<T>(path: string, method: Method, opts: ApiOptions = {}): Promise<ApiResult<T>> {
-  const { token, body, params, headers = {} } = opts
+  const { token, body, params, headers = {}, cache, next } = opts
 
   const res = await fetch(buildUrl(path, params), {
     method,
@@ -55,7 +60,9 @@ async function request<T>(path: string, method: Method, opts: ApiOptions = {}): 
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
+    ...(cache ? { cache } : {}),
+    ...(next ? { next } : {}),
+  } as RequestInit)
 
   if (!res.ok) {
     let detail = ""

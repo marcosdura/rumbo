@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { api } from "@/lib/api"
 
 interface Experience {
   id: number
@@ -26,9 +27,9 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
   const [experiences, setExperiences] = useState<Experience[]>([])
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/experiences`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setExperiences(Array.isArray(data) ? data : []))
+    api.get<Experience[]>(`/spots/${spotId}/experiences`)
+      .then(({ data }) => setExperiences(Array.isArray(data) ? data : []))
+      .catch(() => {})
   }, [spotId])
 
   if (experiences.length === 0) return null

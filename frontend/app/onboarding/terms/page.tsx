@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { api } from "@/lib/api"
 
 export default function TermsPage() {
   const { data: session, update } = useSession()
@@ -17,12 +18,7 @@ export default function TermsPage() {
     setLoading(true)
     setError("")
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/terms`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${session.id_token}` },
-      })
-      if (!res.ok) throw new Error()
-      const user = await res.json()
+      const { data: user } = await api.patch<{ terms_accepted_at: string }>("/users/me/terms", undefined, { token: session.id_token })
       await update({ termsAcceptedAt: user.terms_accepted_at })
       const requestedCallback = searchParams.get("callbackUrl") || "/"
       const callbackUrl = requestedCallback.startsWith("/") && !requestedCallback.startsWith("//")

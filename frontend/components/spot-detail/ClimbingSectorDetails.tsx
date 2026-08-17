@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import Pill, { type PillVariant } from "@/components/ui/Pill"
+import { api } from "@/lib/api"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const params = useParams()
@@ -16,15 +17,9 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
   useEffect(() => {
     if (!slugProp && !id) { setError(true); return }
-    const url = slugProp
-      ? `${process.env.NEXT_PUBLIC_API_URL}/sectors/by-slug/${slugProp}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/sectors/${id}`
-    fetch(url)
-      .then(res => {
-        if (!res.ok) { setError(true); return null }
-        return res.json()
-      })
-      .then(data => {
+    const path = slugProp ? `/sectors/by-slug/${slugProp}` : `/sectors/${id}`
+    api.get<any>(path)
+      .then(({ data }) => {
         if (!data || data.detail) { setError(true); return }
         setSector(data)
       })
@@ -33,9 +28,8 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
   useEffect(() => {
     if (!sector?.id) return
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/sectors/${sector.id}/routes`)
-      .then(res => res.ok ? res.json() : [])
-      .then(data => setRoutes(Array.isArray(data) ? data : []))
+    api.get<any[]>(`/sectors/${sector.id}/routes`)
+      .then(({ data }) => setRoutes(Array.isArray(data) ? data : []))
       .catch(() => setRoutes([]))
   }, [sector?.id])
 

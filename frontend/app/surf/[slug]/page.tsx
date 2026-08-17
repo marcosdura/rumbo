@@ -8,6 +8,7 @@ import Pill from "@/components/ui/Pill"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
+import { api } from "@/lib/api"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -25,9 +26,12 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Escuela de Surf | Rumbo" }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`)
-  if (!res.ok) return { title: "Escuela de Surf | Rumbo" }
-  const school = await res.json()
+  let school: any
+  try {
+    school = (await api.get<any>(`/surfschool/${id}`)).data
+  } catch {
+    return { title: "Escuela de Surf | Rumbo" }
+  }
   const description = school.spot_name
     ? `Escuela de surf en ${school.spot_name}, ${school.spot_department}.`
     : "Escuela de surf en Uruguay."
@@ -48,14 +52,14 @@ export default async function SurfSchoolPage({ params }: Props) {
   const id = idFromSlug(slug)
   if (id === null) notFound()
 
-  const [res, summaryRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/surfschool/${id}`, { cache: "no-store" }),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/surf-reviews/${id}/summary`, { cache: "no-store" }),
+  const [schoolResult, summaryResult] = await Promise.allSettled([
+    api.get<any>(`/surfschool/${id}`, { cache: "no-store" }),
+    api.get<any>(`/surf-reviews/${id}/summary`, { cache: "no-store" }),
   ])
-  if (!res.ok) notFound()
+  if (schoolResult.status !== "fulfilled") notFound()
 
-  const school = await res.json()
-  const summary = summaryRes.ok ? await summaryRes.json() : { average: null, total: 0 }
+  const school = schoolResult.value.data
+  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 }
 
   const jsonLd = {
     "@context": "https://schema.org",

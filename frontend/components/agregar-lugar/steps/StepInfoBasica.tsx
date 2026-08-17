@@ -11,6 +11,7 @@ import SeasonToggle from "../ui/SeasonToggle"
 import Toggle from "../ui/Toggle"
 import NavRow from "../ui/NavRow"
 import type { BasicInfo } from "../types"
+import { api } from "@/lib/api"
 
 const LocationPicker = dynamic(
   () => import("@/components/forms/LocationPicker"),
@@ -59,8 +60,7 @@ export default function StepInfoBasica({
     debounceRef.current = setTimeout(async () => {
       setCheckingName(true)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/check-name?name=${encodeURIComponent(name)}`)
-        const data = await res.json()
+        const { data } = await api.get<{ exists: boolean }>("/spots/check-name", { params: { name } })
         setNameTaken(!!data.exists)
       } catch {
         setNameTaken(false)

@@ -1,6 +1,7 @@
 import React from "react"
 import { Metadata } from "next"
 import ClimbingSectorDetails from "../../../../../components/spot-detail/ClimbingSectorDetails"
+import { api } from "@/lib/api"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>
@@ -8,9 +9,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sectorSlug } = await params
-  const sector = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/sectors/by-slug/${sectorSlug}`
-  ).then(r => r.json()).catch(() => ({}))
+  const sector: any = await api.get(`/sectors/by-slug/${sectorSlug}`).then(r => r.data).catch(() => ({}))
 
   return {
     title: `${sector.name ?? sectorSlug} | Rumbo`,

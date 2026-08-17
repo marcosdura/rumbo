@@ -4,8 +4,8 @@
 import { create } from "zustand"
 import { signOut, getSession } from "next-auth/react"
 import { trackEvent } from "@/lib/analytics"
+import { api, ApiError } from "@/lib/api"
 
-const API = process.env.NEXT_PUBLIC_API_URL
 const CACHE_KEY = "rumbo_favorites"
 
 // ─── Helpers localStorage ─────────────────────────────────────────────────────
@@ -24,16 +24,19 @@ const readCache = () => {
 // el refresh silencioso de NextAuth todavía no corrió (el poll de sesión es
 // cada 5 min). Antes de desloguear, forzamos un refresh de sesión y
 // reintentamos una vez con el token fresco.
-const fetchWithRefresh = async (url, method, token) => {
-  const req = (t) => fetch(url, { method, headers: { Authorization: `Bearer ${t}` } })
-  let res = await req(token)
-  if (res.status === 401) {
-    const fresh = await getSession()
-    if (fresh?.id_token && fresh.id_token !== token && !fresh.error) {
-      res = await req(fresh.id_token)
+const requestWithRefresh = async (method, path, token) => {
+  const call = (t) => (method === "post" ? api.post(path, undefined, { token: t }) : api.del(path, { token: t }))
+  try {
+    return await call(token)
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      const fresh = await getSession()
+      if (fresh?.id_token && fresh.id_token !== token && !fresh.error) {
+        return await call(fresh.id_token)
+      }
     }
+    throw e
   }
-  return res
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -46,11 +49,7 @@ export const useFavoritesStore = create((set, get) => ({
   loadFavorites: async (token) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch(`${API}/favorites`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error("Error al cargar favoritos")
-      const data = await res.json()
+      const { data } = await api.get("/favorites", { token })
       saveCache(data)
       set({ favorites: data, loading: false })
     } catch (err) {
@@ -67,16 +66,20 @@ export const useFavoritesStore = create((set, get) => ({
     saveCache(next)
 
     try {
-      const res = await fetchWithRefresh(`${API}/favorites/${spot.id}`, "POST", token)
-      if (res.status === 401) {
+      await requestWithRefresh("post", `/favorites/${spot.id}`, token)
+      trackEvent("favorite_add", { spot_id: spot.id })
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
         set({ favorites: prev })
         saveCache(prev)
         signOut({ redirect: false })
         return
       }
-      if (!res.ok && res.status !== 409) throw new Error()
-      trackEvent("favorite_add", { spot_id: spot.id })
-    } catch {
+      if (e instanceof ApiError && e.status === 409) {
+        // ya era favorito — se trata como éxito, no se revierte
+        trackEvent("favorite_add", { spot_id: spot.id })
+        return
+      }
       set({ favorites: prev })
       saveCache(prev)
     }
@@ -90,16 +93,15 @@ export const useFavoritesStore = create((set, get) => ({
     saveCache(next)
 
     try {
-      const res = await fetchWithRefresh(`${API}/favorites/${spotId}`, "DELETE", token)
-      if (res.status === 401) {
+      await requestWithRefresh("del", `/favorites/${spotId}`, token)
+      trackEvent("favorite_remove", { spot_id: spotId })
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
         set({ favorites: prev })
         saveCache(prev)
         signOut({ redirect: false })
         return
       }
-      if (!res.ok) throw new Error()
-      trackEvent("favorite_remove", { spot_id: spotId })
-    } catch {
       // Revertir si falla
       set({ favorites: prev })
       saveCache(prev)

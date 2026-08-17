@@ -8,6 +8,7 @@ import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { formatStat } from "@/lib/formatStat"
+import { api } from "@/lib/api"
 
 
 function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
@@ -17,12 +18,9 @@ function TrekkingRouteDetails({ slug: slugProp, trekkingDetail = null } = {}) {
   const [route, setRoute] = useState(null)
 
   useEffect(() => {
-    const url = slugProp
-      ? `${process.env.NEXT_PUBLIC_API_URL}/routes/by-slug/${slugProp}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/routes/${id}`
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
+    const path = slugProp ? `/routes/by-slug/${slugProp}` : `/routes/${id}`
+    api.get(path)
+      .then(({ data }) => {
         console.log(data)
         setRoute(data)
       })

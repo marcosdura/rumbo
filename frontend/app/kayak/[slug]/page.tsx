@@ -7,6 +7,7 @@ import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import Pill from "@/components/ui/Pill"
 import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
+import { api } from "@/lib/api"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -36,9 +37,12 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Kayak | Rumbo" }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`)
-  if (!res.ok) return { title: "Kayak | Rumbo" }
-  const kayak = await res.json()
+  let kayak: any
+  try {
+    kayak = (await api.get<any>(`/kayak/${id}`)).data
+  } catch {
+    return { title: "Kayak | Rumbo" }
+  }
   const description = kayak.spot_name
     ? `Servicio de kayak en ${kayak.spot_name}, ${kayak.spot_department}.`
     : "Servicio de kayak en Uruguay."
@@ -59,14 +63,14 @@ export default async function KayakDetailPage({ params }: Props) {
   const id = idFromSlug(slug)
   if (id === null) notFound()
 
-  const [res, summaryRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak/${id}`, { cache: "no-store" }),
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/kayak-reviews/${id}/summary`, { cache: "no-store" }),
+  const [kayakResult, summaryResult] = await Promise.allSettled([
+    api.get<any>(`/kayak/${id}`, { cache: "no-store" }),
+    api.get<any>(`/kayak-reviews/${id}/summary`, { cache: "no-store" }),
   ])
-  if (!res.ok) notFound()
+  if (kayakResult.status !== "fulfilled") notFound()
 
-  const kayak = await res.json()
-  const summary = summaryRes.ok ? await summaryRes.json() : { average: null, total: 0 }
+  const kayak = kayakResult.value.data
+  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 }
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
+import { api } from "@/lib/api";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -17,11 +18,12 @@ export async function POST(req: Request) {
   // El spot tiene que ser del usuario (o admin), y ese public_id no puede
   // estar ya en uso por otro spot — sin esto, cualquiera logueado podía
   // pedir una firma válida para pisar la foto de un spot ajeno.
-  const checkUrl = `${process.env.NEXT_PUBLIC_API_URL}/spots/${spotId}/can-upload?public_id=${encodeURIComponent(publicId)}`;
-  const checkRes = await fetch(checkUrl, {
-    headers: { Authorization: `Bearer ${session.id_token}` },
-  });
-  if (!checkRes.ok) {
+  try {
+    await api.get(`/spots/${spotId}/can-upload`, {
+      token: session.id_token,
+      params: { public_id: publicId },
+    });
+  } catch {
     return NextResponse.json({ error: "No autorizado para subir a este spot" }, { status: 403 });
   }
 

@@ -1,6 +1,8 @@
 import { Metadata } from "next"
+import { notFound } from "next/navigation"
 import SpotDetails from "./SpotDetails"
 import JsonLd from "@/components/seo/JsonLd"
+import { api } from "@/lib/api"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -8,9 +10,12 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const spot = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
-  ).then(r => r.json())
+  let spot: any
+  try {
+    spot = (await api.get<any>(`/spots/by-slug/${slug}`)).data
+  } catch {
+    return { title: "Rumbo" }
+  }
 
   const mainImage = spot.images?.find((img: any) => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage
@@ -37,9 +42,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SpotPage({ params }: Props) {
   const { slug } = await params
-  const spot = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/spots/by-slug/${slug}`
-  ).then(r => r.json())
+  let spot: any
+  try {
+    spot = (await api.get<any>(`/spots/by-slug/${slug}`)).data
+  } catch {
+    notFound()
+  }
 
   const mainImage = spot.images?.find((img: any) => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage

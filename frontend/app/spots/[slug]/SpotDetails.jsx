@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { api } from "@/lib/api"
 
 const CATEGORY_EMOJIS = {
   "Camping":   "⛺",
@@ -48,30 +49,29 @@ function SpotDetail({ spot }) {
 
 useEffect(() => {
   if (!spot?.id) return
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${spot.id}/summary`)
-    .then(r => r.json())
-    .then(setReviewSummary)
+  api.get(`/reviews/${spot.id}/summary`)
+    .then(({ data }) => setReviewSummary(data))
 }, [spot?.id])
 
   useEffect(() => {
     if (!spot?.id) return
     if (spot.category?.name === "Trekking") {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/routes`)
-        .then(res => res.json()).then(data => setRoutes(data))
+      api.get(`/spots/${spot.id}/routes`)
+        .then(({ data }) => setRoutes(data))
     }
     if (spot.category?.name === "Escalada") {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/sectors`)
-        .then(res => res.json()).then(data => setSectors(data))
+      api.get(`/spots/${spot.id}/sectors`)
+        .then(({ data }) => setSectors(data))
     }
     if (spot.category?.name === "Kayak") {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/kayak-detail`)
-        .then(res => res.ok ? res.json() : [])
-        .then(data => { if (data) setKayakDetails(data) })
+      api.get(`/spots/${spot.id}/kayak-detail`)
+        .then(({ data }) => { if (data) setKayakDetails(data) })
+        .catch(() => {})
     }
     if (spot.category?.name === "Surf") {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${spot.id}/surf-schools`)
-        .then(res => res.ok ? res.json() : [])
-        .then(data => { if (data) setSurfSchools(data) })
+      api.get(`/spots/${spot.id}/surf-schools`)
+        .then(({ data }) => { if (data) setSurfSchools(data) })
+        .catch(() => {})
     }
   }, [spot.id])
 
