@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import KayakImageGallery from "@/components/spot-detail/KayakImageGallery"
+import PhotoLightbox from "@/components/spot-detail/PhotoLightbox"
 
 export default function KayakPhotos({ photos, name }: { photos: string[]; name: string }) {
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
@@ -66,7 +66,7 @@ export default function KayakPhotos({ photos, name }: { photos: string[]; name: 
       )}
 
       {galleryIndex !== null && (
-        <KayakImageGallery photos={photos} name={name} startIndex={galleryIndex} onClose={close} />
+        <PhotoLightbox photos={photos} name={name} startIndex={galleryIndex} onClose={close} />
       )}
     </>
   )

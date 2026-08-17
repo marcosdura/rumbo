@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 
-export default function SurfImageGallery({ photos, name, startIndex = 0, onClose }) {
+export default function PhotoLightbox({ photos, name, startIndex = 0, onClose }) {
   const [current, setCurrent] = useState(startIndex)
 
   const prev = useCallback(() =>

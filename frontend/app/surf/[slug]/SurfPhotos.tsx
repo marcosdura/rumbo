@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import SurfImageGallery from "@/components/spot-detail/SurfImageGallery"
+import PhotoLightbox from "@/components/spot-detail/PhotoLightbox"
 
 export default function SurfPhotos({ photos, name }: { photos: string[]; name: string }) {
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
@@ -73,7 +73,7 @@ export default function SurfPhotos({ photos, name }: { photos: string[]; name: s
       )}
 
       {galleryIndex !== null && (
-        <SurfImageGallery photos={photos} name={name} startIndex={galleryIndex} onClose={close} />
+        <PhotoLightbox photos={photos} name={name} startIndex={galleryIndex} onClose={close} />
       )}
     </>
   )
