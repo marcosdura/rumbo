@@ -26,10 +26,14 @@ como registro de qué se decidió atacar y qué no.
 - [x] **Sin `max_length` en texto libre / sin límite de body** — `Field(max_length=...)` en los schemas de entrada + middleware de 1MB en `main.py`.
       → `05b0163`
 - [ ] **El dueño puede editar un spot ya aprobado sin volver a pasar por revisión** (riesgo de "bait-and-switch")
-- [ ] **`get_remote_address` sin confirmar la configuración de proxy del hosting** — depende de la topología de Railway, no resoluble solo desde el repo
-- [ ] **El `sub` de Google se expone en cada review pública** (bajo impacto, dato de más)
-- [ ] **`GET /spots/check-name` público sin rate limit** — enumeración de nombres (bajo impacto)
-- [ ] **Dependencia `openai` sin uso real + `package.json` suelto en `backend/`** (limpieza, no vulnerabilidad)
+- [x] **`get_remote_address` sin confirmar proxy del hosting** — investigado a fondo: sin `--proxy-headers` en uvicorn (no hay Procfile en el repo, no confirmable), `request.client.host` es la IP del proxy de Railway, no la del usuario — muy probable que todos compartieran el mismo balde de rate limit. Se arregló leyendo `X-Forwarded-For` directo del header, sin depender de la config de uvicorn.
+      → `d09ecfb`
+- [x] **El `sub` de Google se expone en cada review pública** — reemplazado por `is_mine: bool` calculado server-side (auth opcional), el único uso real era decidir si mostrar "Eliminar".
+      → `d09ecfb`
+- [x] **`GET /spots/check-name` sin rate limit** — `@limiter.limit("20/minute")`, generoso porque ya está debounced del lado del frontend.
+      → `d09ecfb`
+- [x] **Dependencia `openai` sin uso + `package.json` suelto en `backend/`** — confirmado sin uso real, `openai` fuera de `requirements.txt`; `package.json`/`package-lock.json` (declaraban `cloudinary` de Node en la carpeta del backend Python) borrados.
+      → `d09ecfb`
 
 ## 02 — Modularización
 
