@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
+import { api } from "@/lib/api"
 
 type SpotImage = { cloudinary_public_id: string; is_main: boolean; order: number }
 type Review = {
@@ -71,10 +72,9 @@ export default function SpotDashboardPage() {
 
   useEffect(() => {
     if (!token) return
-    const headers = { Authorization: `Bearer ${token}` }
     Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, { headers }).then(r => r.json()),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${spotId}`).then(r => r.json()),
+      api.get<Spot[]>("/spots/mine", { token }).then(r => r.data),
+      api.get<Review[]>(`/reviews/${spotId}`).then(r => r.data),
     ]).then(([mySpots, reviewsData]) => {
       const found = Array.isArray(mySpots) ? mySpots.find((s: Spot) => String(s.id) === spotId) : null
       if (!found) { router.push("/profile"); return }
@@ -105,23 +105,18 @@ export default function SpotDashboardPage() {
     setSaveOk(false)
     setSaveError(null)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${spot.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({
-          name: editName,
-          description: editDescription,
-          email: editEmail || null,
-          whatsapp: editWhatsapp || null,
-          instagram: editInstagram || null,
-          price: editPrice !== "" ? parseFloat(editPrice) : null,
-          season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
-          season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
-          is_public: editIsPublic,
-          public_transport: editPublicTransport,
-        }),
-      })
-      if (!res.ok) throw new Error("Error al guardar")
+      await api.patch(`/admin/spots/${spot.id}`, {
+        name: editName,
+        description: editDescription,
+        email: editEmail || null,
+        whatsapp: editWhatsapp || null,
+        instagram: editInstagram || null,
+        price: editPrice !== "" ? parseFloat(editPrice) : null,
+        season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
+        season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
+        is_public: editIsPublic,
+        public_transport: editPublicTransport,
+      }, { token })
       setSpot(prev => prev ? {
         ...prev,
         name: editName, description: editDescription,
@@ -143,11 +138,7 @@ export default function SpotDashboardPage() {
   async function handleSetMain(publicId: string) {
     if (!spot) return
     setPhotoLoading(true)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${spot.id}/main-image`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ cloudinary_public_id: publicId }),
-    })
+    await api.patch(`/admin/spots/${spot.id}/main-image`, { cloudinary_public_id: publicId }, { token }).catch(() => {})
     setSpot(prev => prev ? {
       ...prev,
       images: prev.images.map(img => ({ ...img, is_main: img.cloudinary_public_id === publicId })),
@@ -158,10 +149,7 @@ export default function SpotDashboardPage() {
   async function handleDeletePhoto(publicId: string) {
     if (!spot || !confirm("¿Eliminar esta foto?")) return
     setPhotoLoading(true)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/images/${encodeURIComponent(publicId)}`, {
-      method: "DELETE",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
     setSpot(prev => prev ? { ...prev, images: prev.images.filter(img => img.cloudinary_public_id !== publicId) } : null)
     setPhotoLoading(false)
   }
@@ -190,20 +178,13 @@ export default function SpotDashboardPage() {
           spotId: spot.id,
         })
       ))
-      await Promise.all(results.map(({ publicId }, i) => {
-        const p = new URLSearchParams({
-          cloudinary_public_id: publicId,
-          is_main: "false",
-          order: String(currentCount + i),
+      await Promise.all(results.map(({ publicId }, i) =>
+        api.post(`/images/spots/${spot.id}`, undefined, {
+          token,
+          params: { cloudinary_public_id: publicId, is_main: false, order: currentCount + i },
         })
-        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${spot.id}?${p}`, {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-      }))
-      const updated = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/mine`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(r => r.json())
+      ))
+      const { data: updated } = await api.get<Spot[]>("/spots/mine", { token })
       const found = Array.isArray(updated) ? updated.find((s: Spot) => String(s.id) === spotId) : null
       if (found) setSpot(found)
     } catch {

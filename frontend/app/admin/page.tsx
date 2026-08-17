@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
+import { api, ApiError } from "@/lib/api"
 
 type AdminSpot = {
   id: number
@@ -45,24 +46,19 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token) return
     setLoadError(null)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (r.status === 403) throw new Error("No tenés permisos de administrador con esta cuenta.")
-        if (!r.ok) throw new Error("Error al cargar los spots.")
-        return r.json()
+    api.get<AdminSpot[]>("/admin/spots", { token })
+      .then(({ data }) => { setSpots(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(e => {
+        setLoadError(e instanceof ApiError && e.status === 403
+          ? "No tenés permisos de administrador con esta cuenta."
+          : "Error al cargar los spots.")
+        setLoading(false)
       })
-      .then(data => { setSpots(Array.isArray(data) ? data : []); setLoading(false) })
-      .catch(e => { setLoadError(e instanceof Error ? e.message : "Error al cargar los spots."); setLoading(false) })
   }, [token])
 
   async function handleApprove(id: number, approved: boolean) {
     setActionLoading(id)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${id}/approve?approved=${approved}`, {
-      method: "PATCH",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    await api.patch(`/admin/spots/${id}/approve`, undefined, { token, params: { approved } }).catch(() => {})
     setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: approved } : s))
     setActionLoading(null)
   }
@@ -70,10 +66,7 @@ export default function AdminPage() {
   async function handleDelete(id: number) {
     if (deleteConfirmText !== "CONFIRMAR") return
     setActionLoading(id)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/spots/${id}`, {
-      method: "DELETE",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    await api.del(`/spots/${id}`, { token }).catch(() => {})
     setSpots(prev => prev.filter(s => s.id !== id))
     setActionLoading(null)
     setDeleteConfirmId(null)
@@ -82,24 +75,14 @@ export default function AdminPage() {
 
   async function handleReactivate(id: number) {
     setActionLoading(id)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${id}/reactivate`, {
-      method: "PATCH",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    await api.patch(`/admin/spots/${id}/reactivate`, undefined, { token }).catch(() => {})
     setSpots(prev => prev.map(s => s.id === id ? { ...s, owner_deleted_at: null } : s))
     setActionLoading(null)
   }
 
   async function handleSetMainPhoto(spotId: number, publicId: string) {
     setPhotoLoading(true)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${spotId}/main-image`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ cloudinary_public_id: publicId }),
-    })
+    await api.patch(`/admin/spots/${spotId}/main-image`, { cloudinary_public_id: publicId }, { token }).catch(() => {})
     setSpots(prev => prev.map(s => {
       if (s.id !== spotId) return s
       return {
@@ -113,10 +96,7 @@ export default function AdminPage() {
   async function handleDeletePhoto(spotId: number, publicId: string) {
     if (!confirm("¿Eliminar esta foto?")) return
     setPhotoLoading(true)
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/images/${encodeURIComponent(publicId)}`, {
-      method: "DELETE",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
     setSpots(prev => prev.map(s => {
       if (s.id !== spotId) return s
       return { ...s, images: s.images.filter(img => img.cloudinary_public_id !== publicId) }
@@ -397,21 +377,18 @@ export default function AdminPage() {
                           })
                         ))
 
-                        await Promise.all(results.map(({ publicId }, i) => {
-                          const params = new URLSearchParams({
-                            cloudinary_public_id: publicId,
-                            is_main: "false",
-                            order: String((selectedSpot.images?.length ?? 0) + i),
+                        await Promise.all(results.map(({ publicId }, i) =>
+                          api.post(`/images/spots/${selectedSpot.id}`, undefined, {
+                            token,
+                            params: {
+                              cloudinary_public_id: publicId,
+                              is_main: false,
+                              order: (selectedSpot.images?.length ?? 0) + i,
+                            },
                           })
-                          return fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/spots/${selectedSpot.id}?${params}`, {
-                            method: "POST",
-                            headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-                          })
-                        }))
+                        ))
 
-                        const updated = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots`, {
-                          headers: token ? { Authorization: `Bearer ${token}` } : {},
-                        }).then(r => r.json())
+                        const { data: updated } = await api.get<AdminSpot[]>("/admin/spots", { token })
                         setSpots(updated)
                       } catch {
                         alert("Error al subir fotos")
@@ -600,11 +577,7 @@ export default function AdminPage() {
               <button
                 onClick={async () => {
                   if (!editingSpot) return
-                  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/spots/${editingSpot.id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-                    body: JSON.stringify({ name: editingSpot.name, description: editingSpot.description }),
-                  })
+                  await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token }).catch(() => {})
                   setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
                   setEditingSpot(null)
                 }}
