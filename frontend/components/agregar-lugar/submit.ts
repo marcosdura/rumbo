@@ -10,6 +10,129 @@ function formatWhatsapp(basic: BasicInfo): string | null {
   return `+${country.dial} ${normalizePhoneDigits(basic.whatsapp.trim(), country)}`
 }
 
+// ─── Submits "especiales" ──────────────────────────────────────────────────
+// Los 3 flujos de "agregar contenido a un spot existente" (ruta de trekking
+// nueva / sector de escalada nuevo / ruta de escalada nueva) no crean un
+// spot — solo el/los sub-recursos. Viven acá junto al resto de la lógica de
+// envío, no en el componente, mismo criterio que submitAgregarLugar.
+
+interface SubmitNewTrekkingRouteParams {
+  trekkingSpotId: number | null
+  token: string | undefined
+  routes: RouteItem[]
+  setSubmitting: (v: boolean) => void
+  setError: (v: string | null) => void
+  setSuccess: (v: boolean) => void
+}
+
+export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParams): Promise<void> {
+  const { trekkingSpotId, token, routes, setSubmitting, setError, setSuccess } = params
+  setSubmitting(true)
+  setError(null)
+  try {
+    for (const r of routes) {
+      if (!r.name) continue
+      await api.post("/routes/", {
+        spot_id: trekkingSpotId,
+        name: r.name,
+        distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
+        duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
+        elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
+        elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
+        max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
+        min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
+        difficulty: r.difficulty || null,
+        route_type: r.route_type || null,
+        technical_level: r.technical_level || null,
+        physical_demand: r.physical_demand || null,
+      }, { token })
+    }
+    setSuccess(true)
+  } catch {
+    setError("No se pudo guardar la ruta. Intentá de nuevo.")
+  } finally {
+    setSubmitting(false)
+  }
+}
+
+interface SubmitNewClimbingSectorParams {
+  climbingSpotId: number | null
+  token: string | undefined
+  sectors: SectorItem[]
+  sectorRoutes: ClimbingRouteItem[]
+  setSubmitting: (v: boolean) => void
+  setError: (v: string | null) => void
+  setSuccess: (v: boolean) => void
+}
+
+export async function submitNewClimbingSector(params: SubmitNewClimbingSectorParams): Promise<void> {
+  const { climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess } = params
+  setSubmitting(true)
+  setError(null)
+  try {
+    const sec = sectors[0]
+    const { data: newSector } = await api.post<{ id: number }>("/sectors/", {
+      name: sec.name,
+      type: sec.type || null,
+      max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
+      restrictions: sec.restrictions || null,
+      spot_id: climbingSpotId,
+    }, { token })
+
+    for (const r of sectorRoutes) {
+      if (!r.name) continue
+      await api.post("/climbingroutes/", {
+        name: r.name,
+        grade: r.grade || null,
+        type: r.type || null,
+        length: r.length_m ? parseInt(r.length_m) : null,
+        bolts: r.bolts ? parseInt(r.bolts) : null,
+        description: r.description || null,
+        sector_id: newSector.id,
+      }, { token })
+    }
+    setSuccess(true)
+  } catch {
+    setError("No se pudo guardar el sector. Intentá de nuevo.")
+  } finally {
+    setSubmitting(false)
+  }
+}
+
+interface SubmitNewClimbingRouteParams {
+  climbingSectorId: number | null
+  token: string | undefined
+  climbingNewRoutes: ClimbingRouteItem[]
+  setSubmitting: (v: boolean) => void
+  setError: (v: string | null) => void
+  setSuccess: (v: boolean) => void
+}
+
+export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParams): Promise<void> {
+  const { climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess } = params
+  setSubmitting(true)
+  setError(null)
+  try {
+    for (const r of climbingNewRoutes) {
+      if (!r.name) continue
+      await api.post("/climbingroutes/", {
+        name: r.name,
+        grade: r.grade || null,
+        type: r.type || null,
+        length: r.length_m ? parseInt(r.length_m) : null,
+        bolts: r.bolts ? parseInt(r.bolts) : null,
+        description: r.description || null,
+        sector_id: climbingSectorId,
+      }, { token })
+    }
+    setSuccess(true)
+  } catch {
+    setError("No se pudo guardar la ruta. Intentá de nuevo.")
+  } finally {
+    setSubmitting(false)
+  }
+}
+
 interface SubmitParams {
   selectedCat: Category
   isService: boolean

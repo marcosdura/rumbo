@@ -8,9 +8,11 @@ import {
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
   defaultClimbingRouteItem, defaultExperience,
 } from "./constants"
-import { submitAgregarLugar } from "./submit"
+import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute } from "./submit"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
+import AgregarLugarHeader from "./AgregarLugarHeader"
+import SubmittingOverlay from "./SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"
@@ -272,92 +274,15 @@ export default function AgregarLugar() {
 
   async function handleSubmit() {
     if (isTrekking && trekkingMode === "new_route") {
-      setSubmitting(true)
-      setError(null)
-      try {
-        for (const r of routes) {
-          if (!r.name) continue
-          await api.post("/routes/", {
-            spot_id: trekkingSpotId,
-            name: r.name,
-            distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
-            duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
-            elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
-            elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
-            max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
-            min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
-            difficulty: r.difficulty || null,
-            route_type: r.route_type || null,
-            technical_level: r.technical_level || null,
-            physical_demand: r.physical_demand || null,
-          }, { token })
-        }
-        setSuccess(true)
-      } catch {
-        setError("No se pudo guardar la ruta. Intentá de nuevo.")
-      } finally {
-        setSubmitting(false)
-      }
-      return
+      return submitNewTrekkingRoute({ trekkingSpotId, token, routes, setSubmitting, setError, setSuccess })
     }
 
     if (isEscalada && climbingMode === "new_sector") {
-      setSubmitting(true)
-      setError(null)
-      try {
-        const sec = sectors[0]
-        const { data: newSector } = await api.post<{ id: number }>("/sectors/", {
-          name: sec.name,
-          type: sec.type || null,
-          max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
-          restrictions: sec.restrictions || null,
-          spot_id: climbingSpotId,
-        }, { token })
-
-        for (const r of sectorRoutes) {
-          if (!r.name) continue
-          await api.post("/climbingroutes/", {
-            name: r.name,
-            grade: r.grade || null,
-            type: r.type || null,
-            length: r.length_m ? parseInt(r.length_m) : null,
-            bolts: r.bolts ? parseInt(r.bolts) : null,
-            description: r.description || null,
-            sector_id: newSector.id,
-          }, { token })
-        }
-        setSuccess(true)
-      } catch {
-        setError("No se pudo guardar el sector. Intentá de nuevo.")
-      } finally {
-        setSubmitting(false)
-      }
-      return
+      return submitNewClimbingSector({ climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess })
     }
 
     if (isEscalada && climbingMode === "new_route") {
-      setSubmitting(true)
-      setError(null)
-      try {
-        for (const r of climbingNewRoutes) {
-          if (!r.name) continue
-          await api.post("/climbingroutes/", {
-            name: r.name,
-            grade: r.grade || null,
-            type: r.type || null,
-            length: r.length_m ? parseInt(r.length_m) : null,
-            bolts: r.bolts ? parseInt(r.bolts) : null,
-            description: r.description || null,
-            sector_id: climbingSectorId,
-          }, { token })
-        }
-        setSuccess(true)
-      } catch {
-        setError("No se pudo guardar la ruta. Intentá de nuevo.")
-      } finally {
-        setSubmitting(false)
-      }
-      return
+      return submitNewClimbingRoute({ climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess })
     }
 
     await submitAgregarLugar({
@@ -420,37 +345,7 @@ export default function AgregarLugar() {
     setExperiences([])
   }
 
-  const pageHeader = (
-    <div style={{
-      background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)",
-      borderRadius: 20,
-      padding: "24px 28px",
-      marginBottom: 28,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={reset}
-            style={{ background: "none", border: "none", fontSize: 13, color: "rgba(255,255,255,0.6)", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
-          >
-            Empezar de cero
-          </button>
-        )}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, justifyContent: "center" }}>
-        <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8 }} />
-        <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "var(--font-nunito)" }}>rumbo</span>
-      </div>
-      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", maxWidth: 480, margin: "0 auto", lineHeight: 1.5, textAlign: "center" }}>
-        Completá este formulario para agregar tu lugar a la plataforma. Revisaremos la información antes de publicarlo.
-      </p>
-      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 12, textAlign: "center", marginBottom: 0 }}>
-        Paso {step} de {summaryStep}
-      </p>
-    </div>
-  )
+  const pageHeader = <AgregarLugarHeader step={step} summaryStep={summaryStep} onReset={reset} />
 
   if (!session) {
     return (
@@ -884,42 +779,7 @@ export default function AgregarLugar() {
           />
         )}
 
-        {submitting && (
-          <div style={{
-            position: "fixed", inset: 0, zIndex: 9999,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
-            <div style={{
-              background: "#fff", borderRadius: 20, padding: "36px 40px",
-              maxWidth: 380, width: "90%", textAlign: "center",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
-            }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: "50%",
-                border: "4px solid #e0ddd6",
-                borderTopColor: "#2d6a4f",
-                margin: "0 auto 20px",
-                animation: "spin 0.9s linear infinite",
-              }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-              <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", margin: "0 0 8px" }}>
-                Enviando tu lugar...
-              </p>
-              <p style={{ fontSize: 13, color: "#7a7669", margin: "0 0 16px", lineHeight: 1.5 }}>
-                {uploadProgress ?? "Procesando..."}
-              </p>
-              <div style={{
-                background: "#fef3cd", border: "1px solid #f0d98a",
-                borderRadius: 10, padding: "10px 14px",
-                fontSize: 12, color: "#78590a", lineHeight: 1.5,
-              }}>
-                ⚠️ No cierres esta página hasta que termine el proceso.
-              </div>
-            </div>
-          </div>
-        )}
+        {submitting && <SubmittingOverlay uploadProgress={uploadProgress} />}
 
         {step === summaryStep && (
           <StepResumen
