@@ -1,27 +1,14 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { uploadImageToCloudinary } from "@/lib/uploadImage"
-import Pill from "@/components/ui/Pill"
 import { api, ApiError } from "@/lib/api"
-
-type AdminSpot = {
-  id: number
-  name: string
-  description?: string
-  department: string
-  is_approved: boolean
-  owner_email: string | null
-  owner_deleted_at: string | null
-  slug: string | null
-  created_at: string
-  category: { name: string } | null
-  images: { cloudinary_public_id: string; is_main: boolean; order: number }[]
-  review_count?: number
-}
-
-type AdminMode = "spots" | "fotos" | "cuentas-eliminadas"
+import type { AdminSpot, AdminMode, SortBy } from "./types"
+import SpotsTab from "./SpotsTab"
+import PhotosTab from "./PhotosTab"
+import DeactivatedTab from "./DeactivatedTab"
+import DeleteConfirmModal from "./DeleteConfirmModal"
+import EditSpotModal from "./EditSpotModal"
 
 export default function AdminPage() {
   const { data: session } = useSession()
@@ -36,12 +23,10 @@ export default function AdminPage() {
   const [photoLoading, setPhotoLoading] = useState(false)
   const [searchSpots, setSearchSpots] = useState("")
   const [searchPhotos, setSearchPhotos] = useState("")
-  const [sortBy, setSortBy] = useState<"name" | "category" | "department" | "date_desc" | "date_asc">("date_desc")
+  const [sortBy, setSortBy] = useState<SortBy>("date_desc")
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
-  const [uploadingPhotos, setUploadingPhotos] = useState(false)
-  const photoUploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!token) return
@@ -104,6 +89,13 @@ export default function AdminPage() {
     setPhotoLoading(false)
   }
 
+  async function handleSaveEdit() {
+    if (!editingSpot) return
+    await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token }).catch(() => {})
+    setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
+    setEditingSpot(null)
+  }
+
   // Los spots cuyo dueño borró la cuenta se dejan de mostrar en la gestión
   // normal — viven aparte, en la pestaña "Cuentas eliminadas".
   const activeSpots = spots.filter(s => !s.owner_deleted_at)
@@ -130,7 +122,6 @@ export default function AdminPage() {
       if (sortBy === "date_asc") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       return 0
     })
-  const selectedSpot = spots.find(s => s.id === photoSpotId) ?? null
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
@@ -182,413 +173,66 @@ export default function AdminPage() {
         </div>
 
         {mode === "spots" && (
-          <div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              {(["pending", "approved", "all"] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  style={{
-                    padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    cursor: "pointer", fontFamily: "inherit",
-                    border: `1px solid ${filter === f ? "#2d6a4f" : "#e0ddd6"}`,
-                    background: filter === f ? "#2d6a4f" : "#fff",
-                    color: filter === f ? "#fff" : "#3d3d3a",
-                  }}
-                >
-                  {f === "pending" ? `Pendientes (${pending})` : f === "approved" ? "Aprobados" : "Todos"}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-              <input
-                type="text"
-                placeholder="Buscar por nombre, categoría, departamento..."
-                value={searchSpots}
-                onChange={e => setSearchSpots(e.target.value)}
-                style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
-              />
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value as "name" | "category" | "department")}
-                style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
-              >
-                <option value="date_desc">Más recientes primero</option>
-                <option value="date_asc">Más antiguos primero</option>
-                <option value="name">Ordenar por nombre</option>
-                <option value="category">Ordenar por categoría</option>
-                <option value="department">Ordenar por departamento</option>
-              </select>
-            </div>
-
-            {filter === "pending" && displayed.length > 1 && (
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-                <button
-                  onClick={async () => {
-                    for (const s of displayed) {
-                      await handleApprove(s.id, true)
-                    }
-                  }}
-                  style={{ padding: "7px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none" }}
-                >
-                  Aprobar todos ({displayed.length})
-                </button>
-              </div>
-            )}
-
-            {loadError ? (
-              <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
-            ) : loading ? (
-              <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
-            ) : displayed.length === 0 ? (
-              <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta categoría.</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {displayed.map(spot => {
-                  const mainImage = spot.images?.find(i => i.is_main) || spot.images?.[0]
-                  return (
-                    <div key={spot.id} className="spot-row">
-                      <div style={{ width: 64, height: 50, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#f0ede8" }}>
-                        {mainImage ? (
-                          <img
-                            src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_128,h_100,c_fill/${mainImage.cloudinary_public_id}`}
-                            alt={spot.name}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        ) : (
-                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏔️</div>
-                        )}
-                      </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
-                          <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
-                            {spot.is_approved ? "Aprobado" : "Pendiente"}
-                          </Pill>
-                        </div>
-                        <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
-                          {spot.category?.name} · {spot.department}
-                        </p>
-                        <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 11, color: "#9a9690" }}>
-                            📷 {spot.images?.length ?? 0} foto{spot.images?.length !== 1 ? "s" : ""}
-                          </span>
-                          <span style={{ fontSize: 11, color: "#9a9690" }}>
-                            ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
-                          </span>
-                          {spot.owner_email && (
-                            <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
-                              ✉️ {spot.owner_email}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                        {!spot.is_approved ? (
-                          <button onClick={() => handleApprove(spot.id, true)} disabled={actionLoading === spot.id}
-                            className="action-btn-sm" style={{ background: "#2d6a4f", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                            Aprobar
-                          </button>
-                        ) : (
-                          <button onClick={() => handleApprove(spot.id, false)} disabled={actionLoading === spot.id}
-                            className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                            Desaprobar
-                          </button>
-                        )}
-                        <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank" rel="noopener noreferrer"
-                          className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
-                          Ver
-                        </a>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.slug ?? spot.id}`)}
-                          className="action-btn-sm"
-                          style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
-                        >
-                          🔗
-                        </button>
-                        <button
-                          onClick={() => setEditingSpot({ id: spot.id, name: spot.name, description: spot.description ?? "" })}
-                          className="action-btn-sm"
-                          style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
-                        >
-                          ✏️
-                        </button>
-                        <button onClick={() => { setDeleteConfirmId(spot.id); setDeleteConfirmText("") }} disabled={actionLoading === spot.id}
-                          className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <SpotsTab
+            displayed={displayed}
+            pending={pending}
+            filter={filter}
+            setFilter={setFilter}
+            searchSpots={searchSpots}
+            setSearchSpots={setSearchSpots}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            loadError={loadError}
+            loading={loading}
+            actionLoading={actionLoading}
+            onApprove={handleApprove}
+            onEdit={setEditingSpot}
+            onDeleteRequest={(id) => { setDeleteConfirmId(id); setDeleteConfirmText("") }}
+          />
         )}
 
         {mode === "fotos" && (
-          <div>
-            <div style={{ marginBottom: 16 }}>
-              <input
-                type="text"
-                placeholder="Buscar spot..."
-                value={searchPhotos}
-                onChange={e => setSearchPhotos(e.target.value)}
-                style={{ width: "100%", maxWidth: 400, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8, display: "block" }}
-              />
-              <select
-                style={{ padding: "9px 12px", borderRadius: 12, border: "1px solid #e0ddd6", fontSize: 14, background: "#fff", fontFamily: "inherit", width: "100%", maxWidth: 400 }}
-                value={photoSpotId ?? ""}
-                onChange={e => setPhotoSpotId(Number(e.target.value) || null)}
-              >
-                <option value="">— Seleccioná un spot —</option>
-                {spots
-                  .filter(s => s.name.toLowerCase().includes(searchPhotos.toLowerCase()))
-                  .map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.category?.name})</option>
-                  ))}
-              </select>
-            </div>
-
-            {selectedSpot && (
-              <div>
-                <div style={{ marginBottom: 16 }}>
-                  <input
-                    ref={photoUploadRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: "none" }}
-                    onChange={async (e) => {
-                      if (!selectedSpot) return
-                      const files = Array.from(e.target.files ?? [])
-                      if (!files.length) return
-                      setUploadingPhotos(true)
-                      try {
-                        const results = await Promise.all(files.map((file, i) =>
-                          uploadImageToCloudinary(file, {
-                            category: selectedSpot.category?.name ?? "Spot",
-                            spotName: selectedSpot.name,
-                            index: (selectedSpot.images?.length ?? 0) + i,
-                            spotId: selectedSpot.id,
-                          })
-                        ))
-
-                        await Promise.all(results.map(({ publicId }, i) =>
-                          api.post(`/images/spots/${selectedSpot.id}`, undefined, {
-                            token,
-                            params: {
-                              cloudinary_public_id: publicId,
-                              is_main: false,
-                              order: (selectedSpot.images?.length ?? 0) + i,
-                            },
-                          })
-                        ))
-
-                        const { data: updated } = await api.get<AdminSpot[]>("/admin/spots", { token })
-                        setSpots(updated)
-                      } catch {
-                        alert("Error al subir fotos")
-                      } finally {
-                        setUploadingPhotos(false)
-                        if (photoUploadRef.current) photoUploadRef.current.value = ""
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => photoUploadRef.current?.click()}
-                    disabled={uploadingPhotos}
-                    style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none", opacity: uploadingPhotos ? 0.6 : 1 }}
-                  >
-                    {uploadingPhotos ? "Subiendo..." : "+ Agregar fotos"}
-                  </button>
-                </div>
-
-                <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 12 }}>
-                  {selectedSpot.images.length} foto{selectedSpot.images.length !== 1 ? "s" : ""} · La primera es la principal
-                </p>
-                <div className="photo-grid">
-                  {[...selectedSpot.images]
-                    .sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0))
-                    .map(img => (
-                      <div key={img.cloudinary_public_id} className="photo-card">
-                        <img
-                          src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_280,h_200,c_fill/${img.cloudinary_public_id}`}
-                          alt=""
-                        />
-                        {img.is_main && (
-                          <div style={{ position: "absolute", top: 6, left: 6, background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
-                            Principal
-                          </div>
-                        )}
-                        <div style={{ padding: "8px 8px 6px", display: "flex", gap: 5 }}>
-                          {!img.is_main && (
-                            <button
-                              onClick={() => handleSetMainPhoto(selectedSpot.id, img.cloudinary_public_id)}
-                              disabled={photoLoading}
-                              style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }}
-                            >
-                              Hacer principal
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeletePhoto(selectedSpot.id, img.cloudinary_public_id)}
-                            disabled={photoLoading}
-                            style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "#dc2626", border: "1px solid #fecaca" }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <PhotosTab
+            spots={spots}
+            token={token}
+            searchPhotos={searchPhotos}
+            setSearchPhotos={setSearchPhotos}
+            photoSpotId={photoSpotId}
+            setPhotoSpotId={setPhotoSpotId}
+            photoLoading={photoLoading}
+            onSetMainPhoto={handleSetMainPhoto}
+            onDeletePhoto={handleDeletePhoto}
+            onSpotsRefreshed={setSpots}
+          />
         )}
 
         {mode === "cuentas-eliminadas" && (
-          <div>
-            <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, lineHeight: 1.5 }}>
-              Estos spots quedaron sin dueño porque la cuenta que los creó se eliminó.
-              No se muestran públicamente. Contactá el email antes de reactivar o
-              eliminar el spot definitivamente.
-            </p>
-
-            {loadError ? (
-              <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
-            ) : loading ? (
-              <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
-            ) : deactivatedSpots.length === 0 ? (
-              <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta situación.</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {deactivatedSpots.map(spot => (
-                  <div key={spot.id} className="spot-row">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
-                        <Pill variant="yellow" size="sm">Desactivado</Pill>
-                      </div>
-                      <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
-                        {spot.category?.name} · {spot.department}
-                      </p>
-                      <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                        {spot.owner_email && (
-                          <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
-                            ✉️ {spot.owner_email} (cuenta borrada)
-                          </a>
-                        )}
-                        {spot.owner_deleted_at && (
-                          <span style={{ fontSize: 11, color: "#9a9690" }}>
-                            Desactivado el {new Date(spot.owner_deleted_at).toLocaleDateString("es-UY")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                      <button onClick={() => handleReactivate(spot.id)} disabled={actionLoading === spot.id}
-                        className="action-btn-sm" style={{ background: "#2d6a4f", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                        Reactivar
-                      </button>
-                      <button onClick={() => { setDeleteConfirmId(spot.id); setDeleteConfirmText("") }} disabled={actionLoading === spot.id}
-                        className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                        Eliminar definitivamente
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <DeactivatedTab
+            deactivatedSpots={deactivatedSpots}
+            loadError={loadError}
+            loading={loading}
+            actionLoading={actionLoading}
+            onReactivate={handleReactivate}
+            onDeleteRequest={(id) => { setDeleteConfirmId(id); setDeleteConfirmText("") }}
+          />
         )}
       </div>
 
-      {deleteConfirmId !== null && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
-        }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: "28px 32px", maxWidth: 400, width: "90%", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
-            <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>¿Eliminar este spot?</p>
-            <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 20, lineHeight: 1.5 }}>
-              Esta acción no se puede deshacer. Escribí <strong>CONFIRMAR</strong> para continuar.
-            </p>
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={e => setDeleteConfirmText(e.target.value)}
-              placeholder="CONFIRMAR"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", marginBottom: 16, boxSizing: "border-box" }}
-            />
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => { setDeleteConfirmId(null); setDeleteConfirmText("") }}
-                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirmId)}
-                disabled={deleteConfirmText !== "CONFIRMAR" || actionLoading === deleteConfirmId}
-                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: deleteConfirmText === "CONFIRMAR" ? "#dc2626" : "#f0ede8", color: deleteConfirmText === "CONFIRMAR" ? "#fff" : "#b0ac9e", fontSize: 13, fontWeight: 600, cursor: deleteConfirmText === "CONFIRMAR" ? "pointer" : "not-allowed", fontFamily: "inherit" }}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        open={deleteConfirmId !== null}
+        confirmText={deleteConfirmText}
+        setConfirmText={setDeleteConfirmText}
+        loading={actionLoading === deleteConfirmId}
+        onCancel={() => { setDeleteConfirmId(null); setDeleteConfirmText("") }}
+        onConfirm={() => deleteConfirmId !== null && handleDelete(deleteConfirmId)}
+      />
 
-      {editingSpot !== null && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: "28px 32px", maxWidth: 480, width: "90%", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
-            <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", marginBottom: 20 }}>Editar spot</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#7a7669", marginBottom: 4 }}>Nombre</p>
-                <input
-                  value={editingSpot.name}
-                  onChange={e => setEditingSpot(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" }}
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#7a7669", marginBottom: 4 }}>Descripción</p>
-                <textarea
-                  value={editingSpot.description}
-                  onChange={e => setEditingSpot(prev => prev ? { ...prev, description: e.target.value } : null)}
-                  rows={4}
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
-                />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => setEditingSpot(null)}
-                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={async () => {
-                  if (!editingSpot) return
-                  await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token }).catch(() => {})
-                  setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
-                  setEditingSpot(null)
-                }}
-                style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#2d6a4f", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Guardar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <EditSpotModal
+        editingSpot={editingSpot}
+        setEditingSpot={setEditingSpot}
+        onCancel={() => setEditingSpot(null)}
+        onSave={handleSaveEdit}
+      />
     </div>
   )
 }
