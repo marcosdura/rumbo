@@ -1,37 +1,18 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
 import { api } from "@/lib/api"
-
-type SpotImage = { cloudinary_public_id: string; is_main: boolean; order: number }
-type Review = {
-  id: number; rating: number; comment: string | null; created_at: string
-  user: { name: string | null; image: string | null }
-}
-type Spot = {
-  id: number; name: string; slug: string | null; description: string
-  department: string; email: string | null; whatsapp: string | null
-  instagram: string | null; price: number | null
-  season_start: number | null; season_end: number | null
-  is_public: boolean | null; public_transport: string | null
-  is_approved: boolean; category: { name: string } | null
-  images: SpotImage[]; average_rating: number | null; review_count: number
-}
-
-type Tab = "info" | "fotos" | "reviews"
-
-const MONTHS = [
-  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-  "Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre",
-]
-
-const MAX_PHOTOS = 10
+import { s, MAX_PHOTOS } from "./styles"
+import type { Spot, Review, Tab } from "./types"
+import InfoTab from "./InfoTab"
+import PhotosTab from "./PhotosTab"
+import ReviewsTab from "./ReviewsTab"
 
 export default function SpotDashboardPage() {
   const { data: session, status } = useSession()
@@ -50,7 +31,6 @@ export default function SpotDashboardPage() {
   const [photoLoading, setPhotoLoading] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
-  const photoUploadRef = useRef<HTMLInputElement>(null)
 
   // Campos editables
   const [editName, setEditName] = useState("")
@@ -191,28 +171,7 @@ export default function SpotDashboardPage() {
       setPhotoError("Error al subir fotos. Intentá de nuevo.")
     } finally {
       setUploadingPhotos(false)
-      if (photoUploadRef.current) photoUploadRef.current.value = ""
     }
-  }
-
-  const s = {
-    card: { background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" },
-    label: { fontSize: 12, fontWeight: 600 as const, color: "#7a7669", marginBottom: 4, display: "block" as const },
-    input: { width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" as const, background: "#fff" },
-    tab: (active: boolean) => ({
-      padding: "7px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600 as const,
-      cursor: "pointer" as const, fontFamily: "inherit",
-      border: `1px solid ${active ? "#2d6a4f" : "#e0ddd6"}`,
-      background: active ? "#2d6a4f" : "#fff",
-      color: active ? "#fff" : "#3d3d3a",
-    }),
-    pill: (active: boolean, danger = false) => ({
-      padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500 as const,
-      cursor: "pointer" as const, fontFamily: "inherit",
-      border: `1px solid ${active ? (danger ? "#dc2626" : "#2d6a4f") : "#e0ddd6"}`,
-      background: active ? (danger ? "#dc2626" : "#2d6a4f") : "#f7f5f0",
-      color: active ? "#fff" : "#3d3d3a",
-    }),
   }
 
   if (status === "loading" || loading) {
@@ -302,238 +261,40 @@ export default function SpotDashboardPage() {
           ))}
         </div>
 
-        {/* Tab: Info */}
         {tab === "info" && (
-          <div style={{ ...s.card, padding: 24 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-              <div>
-                <label style={s.label}>Nombre</label>
-                <input value={editName} onChange={e => setEditName(e.target.value)} style={s.input} />
-              </div>
-
-              <div>
-                <label style={s.label}>Descripción</label>
-                <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={5} style={{ ...s.input, resize: "vertical" }} />
-              </div>
-
-              {/* Separador */}
-              <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Contacto</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div>
-                    <label style={s.label}>Email</label>
-                    <input value={editEmail} onChange={e => setEditEmail(e.target.value)} style={s.input} type="email" placeholder="email@ejemplo.com" />
-                  </div>
-                  <div>
-                    <label style={s.label}>WhatsApp</label>
-                    <input value={editWhatsapp} onChange={e => setEditWhatsapp(e.target.value)} style={s.input} placeholder="+598 99 000 000" />
-                  </div>
-                  <div>
-                    <label style={s.label}>Instagram</label>
-                    <input value={editInstagram} onChange={e => setEditInstagram(e.target.value)} style={s.input} placeholder="@usuario" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Precio y temporada */}
-              <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Precio y temporada</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div>
-                    <label style={s.label}>Precio (UYU) — poné 0 si es gratis</label>
-                    <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
-                  </div>
-                  <div>
-                    <label style={s.label}>Temporada</label>
-                    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                      {([
-                        { value: "all_year", label: "🗓️ Todo el año" },
-                        { value: "seasonal", label: "📅 Temporada específica" },
-                      ] as { value: "all_year" | "seasonal"; label: string }[]).map(opt => (
-                        <button key={opt.value} type="button" onClick={() => setEditSeasonType(opt.value)} style={s.pill(editSeasonType === opt.value)}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                    {editSeasonType === "seasonal" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <div>
-                          <label style={s.label}>Desde</label>
-                          <select value={editSeasonStart} onChange={e => setEditSeasonStart(e.target.value)} style={s.input}>
-                            <option value="">Mes...</option>
-                            {MONTHS.map((m, i) => <option key={i+1} value={String(i+1)}>{m}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={s.label}>Hasta</label>
-                          <select value={editSeasonEnd} onChange={e => setEditSeasonEnd(e.target.value)} style={s.input}>
-                            <option value="">Mes...</option>
-                            {MONTHS.map((m, i) => <option key={i+1} value={String(i+1)}>{m}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Acceso */}
-              <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Acceso</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div>
-                    <label style={s.label}>¿El lugar es público o privado?</label>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {([
-                        { value: true, label: "🏛️ Público" },
-                        { value: false, label: "🔒 Privado" },
-                      ] as { value: boolean; label: string }[]).map(opt => (
-                        <button key={String(opt.value)} type="button" onClick={() => setEditIsPublic(opt.value)} style={s.pill(editIsPublic === opt.value)}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label style={s.label}>¿Accesible en transporte público?</label>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {([
-                        { value: "si", label: "✅ Sí" },
-                        { value: "no", label: "❌ No" },
-                        { value: "nose", label: "🤷 No sé" },
-                      ] as { value: string; label: string }[]).map(opt => (
-                        <button key={opt.value} type="button" onClick={() => setEditPublicTransport(prev => prev === opt.value ? null : opt.value)} style={s.pill(editPublicTransport === opt.value)}>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guardar */}
-              <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none", opacity: saving ? 0.7 : 1 }}
-                >
-                  {saving ? "Guardando..." : "Guardar cambios"}
-                </button>
-                {saveOk && <span style={{ fontSize: 13, color: "#2d6a4f", fontWeight: 600 }}>✓ Guardado correctamente</span>}
-                {saveError && <span style={{ fontSize: 13, color: "#dc2626" }}>{saveError}</span>}
-              </div>
-
-            </div>
-          </div>
+          <InfoTab
+            editName={editName} setEditName={setEditName}
+            editDescription={editDescription} setEditDescription={setEditDescription}
+            editEmail={editEmail} setEditEmail={setEditEmail}
+            editWhatsapp={editWhatsapp} setEditWhatsapp={setEditWhatsapp}
+            editInstagram={editInstagram} setEditInstagram={setEditInstagram}
+            editPrice={editPrice} setEditPrice={setEditPrice}
+            editSeasonType={editSeasonType} setEditSeasonType={setEditSeasonType}
+            editSeasonStart={editSeasonStart} setEditSeasonStart={setEditSeasonStart}
+            editSeasonEnd={editSeasonEnd} setEditSeasonEnd={setEditSeasonEnd}
+            editIsPublic={editIsPublic} setEditIsPublic={setEditIsPublic}
+            editPublicTransport={editPublicTransport} setEditPublicTransport={setEditPublicTransport}
+            saving={saving} saveOk={saveOk} saveError={saveError}
+            onSave={handleSave}
+          />
         )}
 
-        {/* Tab: Fotos */}
         {tab === "fotos" && (
-          <div style={{ ...s.card, padding: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <p style={{ fontSize: 13, color: "#7a7669", margin: 0 }}>
-                {photoCount} de {MAX_PHOTOS} fotos · {atPhotoLimit ? "Límite alcanzado" : `Podés agregar ${MAX_PHOTOS - photoCount} más`}
-              </p>
-              <button
-                onClick={() => { setPhotoError(null); photoUploadRef.current?.click() }}
-                disabled={uploadingPhotos || atPhotoLimit}
-                style={{
-                  padding: "7px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                  cursor: atPhotoLimit ? "not-allowed" : "pointer",
-                  fontFamily: "inherit", background: atPhotoLimit ? "#f0ede8" : "#2d6a4f",
-                  color: atPhotoLimit ? "#b0ac9e" : "#fff", border: "none",
-                  opacity: uploadingPhotos ? 0.6 : 1,
-                }}
-              >
-                {uploadingPhotos ? "Subiendo..." : atPhotoLimit ? "Límite alcanzado" : "+ Agregar fotos"}
-              </button>
-              <input
-                ref={photoUploadRef}
-                type="file" accept="image/*" multiple style={{ display: "none" }}
-                onChange={e => {
-                  const files = Array.from(e.target.files ?? [])
-                  if (files.length) handleUploadPhotos(files)
-                }}
-              />
-            </div>
-            {photoError && (
-              <p style={{ fontSize: 13, color: "#dc2626", margin: "0 0 12px" }}>{photoError}</p>
-            )}
-            <div className="photo-grid">
-              {sortedImages.map(img => (
-                <div key={img.cloudinary_public_id} className="photo-card">
-                  <img
-                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_280,h_220,c_fill/${img.cloudinary_public_id}`}
-                    alt=""
-                  />
-                  {img.is_main && (
-                    <div style={{ position: "absolute", top: 6, left: 6, background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
-                      Principal
-                    </div>
-                  )}
-                  <div style={{ padding: "8px 8px 6px", display: "flex", gap: 5 }}>
-                    {!img.is_main && (
-                      <button
-                        onClick={() => handleSetMain(img.cloudinary_public_id)}
-                        disabled={photoLoading}
-                        style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }}
-                      >
-                        Principal
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeletePhoto(img.cloudinary_public_id)}
-                      disabled={photoLoading}
-                      style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "#dc2626", border: "1px solid #fecaca" }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <PhotosTab
+            sortedImages={sortedImages}
+            photoCount={photoCount}
+            atPhotoLimit={atPhotoLimit}
+            photoError={photoError}
+            uploadingPhotos={uploadingPhotos}
+            photoLoading={photoLoading}
+            setPhotoError={setPhotoError}
+            onUploadFiles={handleUploadPhotos}
+            onSetMain={handleSetMain}
+            onDeletePhoto={handleDeletePhoto}
+          />
         )}
 
-        {/* Tab: Reviews */}
-        {tab === "reviews" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {reviews.length === 0 ? (
-              <div style={{ ...s.card, padding: 24, textAlign: "center" }}>
-                <p style={{ fontSize: 14, color: "#9a9690", margin: 0 }}>Todavía no hay reseñas para este spot.</p>
-              </div>
-            ) : reviews.map(review => (
-              <div key={review.id} style={{ ...s.card, padding: "16px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
-                    {review.user.image
-                      ? <img src={review.user.image} alt="" referrerPolicy="no-referrer" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : "👤"
-                    }
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", margin: "0 0 2px" }}>
-                      {review.user.name ?? "Usuario"}
-                    </p>
-                    <div style={{ display: "flex", gap: 2 }}>
-                      {[1,2,3,4,5].map(n => (
-                        <span key={n} style={{ fontSize: 13, color: n <= review.rating ? "#f59e0b" : "#e0ddd6" }}>★</span>
-                      ))}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 11, color: "#9a9690", flexShrink: 0 }}>
-                    {new Date(review.created_at).toLocaleDateString("es-UY", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
-                </div>
-                {review.comment && (
-                  <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0, lineHeight: 1.6 }}>{review.comment}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {tab === "reviews" && <ReviewsTab reviews={reviews} />}
 
       </div>
     </div>
