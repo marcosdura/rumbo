@@ -51,9 +51,12 @@ como registro de qué se decidió atacar y qué no.
       → `b4896c4`
 - [x] **5 `FilterDrawer` del frontend eran el mismo componente repetido** — el "shell" (estado, animación, JSX de overlay/panel/header/footer, CSS) pasó a `FilterDrawerShell.tsx` compartido. El contenido de cada filtro en sí queda igual que estaba (normalizar los 5 `lib/*-filters.ts` para unificar también eso es un refactor aparte, más grande, quedó fuera a propósito).
       → `323c7f3`
-- [ ] **`KayakImageGallery.jsx` y `SurfImageGallery.jsx` 100% idénticos**
-- [ ] **Sin cliente API centralizado en el frontend** (21+ archivos con `NEXT_PUBLIC_API_URL` inline, 26 con `fetch()` directo)
-- [ ] **Componentes de 300-1000+ líneas** mezclando fetch/estado/estilos (`AgregarLugar.tsx`, `admin/page.tsx`, `SearchPageContent.tsx`, `profile/page.tsx`, `dashboard/spots/[id]/page.tsx`)
+- [x] **`KayakImageGallery.jsx` y `SurfImageGallery.jsx` 100% idénticos** — fusionados en `PhotoLightbox.jsx`, un solo componente, ambos call sites actualizados.
+      → `cb66ce7`
+- [x] **Sin cliente API centralizado en el frontend** — `frontend/lib/api.ts` (`api.get/post/patch/put/del`, URL base + auth + Content-Type + querystring + `ApiError` con el detail del backend + `totalCount` de `X-Total-Count`, passthrough de `cache`/`next` para Server Components). Los 98 `fetch()` de los 29 archivos que hablaban con el backend propio se migraron; `lib/uploadImage.ts`, `api/resolve-url/route.ts` y `LocationPicker.jsx` quedaron afuera a propósito (hablan con Cloudinary/URLs externas, no con nuestro backend).
+      → `2fa764e`, `c710209`, `38723ce`, `ec12e56`, `86c7a8a`, `7a97768`
+- [x] **Componentes de 300-1000+ líneas** — los 5 bajaron de tamaño partiendo JSX/CSS/tabs en subcomponentes, sin tocar estilos ni comportamiento: `AgregarLugar.tsx` 1016→836 (header/overlay/submits especiales a archivos propios), `admin/page.tsx` 621→238 (tabs + modales), `SearchPageContent.tsx` 645→457 (CSS a `search.css`), `profile/page.tsx` 513→222 (secciones), `dashboard/spots/[id]/page.tsx` 560→302 (tabs; el estado editable se dejó a propósito en el padre — los tabs se montan/desmontan y moverlo hubiera perdido cambios sin guardar al cambiar de pestaña).
+      → `8727727`, `29e4e20`, `0124097`, `f4a0a9e`, `55606e6`
 
 ## 03 — Eficiencia
 
