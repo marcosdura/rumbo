@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { cache } from "react"
 import { notFound } from "next/navigation"
 import SpotDetails from "./SpotDetails"
 import JsonLd from "@/components/seo/JsonLd"
@@ -8,11 +9,19 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
+// generateMetadata y el componente de página piden el mismo spot por
+// separado — cache() de React dedupea ambas llamadas dentro del mismo
+// render en vez de pegarle dos veces al backend por cada carga.
+const getSpotBySlug = cache(async (slug: string) => {
+  const { data } = await api.get<any>(`/spots/by-slug/${slug}`)
+  return data
+})
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   let spot: any
   try {
-    spot = (await api.get<any>(`/spots/by-slug/${slug}`)).data
+    spot = await getSpotBySlug(slug)
   } catch {
     return { title: "Rumbo" }
   }
@@ -44,7 +53,7 @@ export default async function SpotPage({ params }: Props) {
   const { slug } = await params
   let spot: any
   try {
-    spot = (await api.get<any>(`/spots/by-slug/${slug}`)).data
+    spot = await getSpotBySlug(slug)
   } catch {
     notFound()
   }
