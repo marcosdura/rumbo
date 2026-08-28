@@ -74,6 +74,11 @@ export default function SearchPage() {
     setCampingFilters(EMPTY_CAMPING_FILTERS)
   }, [activity])
 
+  // Compartido entre el efecto principal y "Cargar más": si cambian los
+  // filtros mientras cualquiera de los dos está en vuelo, se cancela el
+  // anterior en vez de dejar que una respuesta vieja pise el estado nuevo.
+  const fetchControllerRef = useRef<AbortController | null>(null)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const [atTop, setAtTop]       = useState(true)
   const [atBottom, setAtBottom] = useState(false)
@@ -134,10 +139,14 @@ export default function SearchPage() {
     setLoading(true)
     setError(null)
 
+    fetchControllerRef.current?.abort()
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+
     const listParams = buildFilterParams()
     listParams.set("limit", String(PAGE_SIZE))
     listParams.set("offset", "0")
-    api.get<any[]>(`/spots?${listParams.toString()}`)
+    api.get<any[]>(`/spots?${listParams.toString()}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         setTotal(totalCount)
         setSpots(data)
@@ -151,6 +160,7 @@ export default function SearchPage() {
         })
       })
       .catch(e => {
+        if (e?.name === "AbortError") return
         setError(e instanceof Error ? e.message : "Error al cargar los spots.")
         setLoading(false)
       })
@@ -159,25 +169,36 @@ export default function SearchPage() {
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
     // Si falla, el mapa se queda vacío (degrada solo, no bloquea la lista).
     const mapParams = buildFilterParams()
-    api.get<any[]>(`/spots/pins?${mapParams.toString()}`)
+    api.get<any[]>(`/spots/pins?${mapParams.toString()}`, { signal: controller.signal })
       .then(({ data }) => setMapSpots(Array.isArray(data) ? data : []))
-      .catch(() => setMapSpots([]))
+      .catch(e => {
+        if (e?.name === "AbortError") return
+        setMapSpots([])
+      })
+
+    return () => controller.abort()
   }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters, retryTick])
 
   const loadMore = () => {
     if (loadingMore) return
     setLoadingMore(true)
     setLoadMoreError(null)
+
+    fetchControllerRef.current?.abort()
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+
     const params = buildFilterParams()
     params.set("limit", String(PAGE_SIZE))
     params.set("offset", String(spots.length))
-    api.get<any[]>(`/spots?${params.toString()}`)
+    api.get<any[]>(`/spots?${params.toString()}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         if (totalCount != null) setTotal(totalCount)
         setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])
         setLoadingMore(false)
       })
       .catch(e => {
+        if (e?.name === "AbortError") return
         setLoadMoreError(e instanceof Error ? e.message : "Error al cargar más spots.")
         setLoadingMore(false)
       })

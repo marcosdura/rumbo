@@ -31,6 +31,9 @@ export interface ApiOptions {
   // `next: { revalidate }` antes de esta migración).
   cache?: RequestCache
   next?: { revalidate?: number | false; tags?: string[] }
+  // Para cancelar el fetch (ej. filtros que cambian rápido) — un fetch
+  // abortado rechaza con AbortError, que cae solo en los catch() existentes.
+  signal?: AbortSignal
 }
 
 function buildUrl(path: string, params?: ApiOptions["params"]): string {
@@ -50,7 +53,7 @@ function buildUrl(path: string, params?: ApiOptions["params"]): string {
 }
 
 async function request<T>(path: string, method: Method, opts: ApiOptions = {}): Promise<ApiResult<T>> {
-  const { token, body, params, headers = {}, cache, next } = opts
+  const { token, body, params, headers = {}, cache, next, signal } = opts
 
   const res = await fetch(buildUrl(path, params), {
     method,
@@ -62,6 +65,7 @@ async function request<T>(path: string, method: Method, opts: ApiOptions = {}): 
     body: body !== undefined ? JSON.stringify(body) : undefined,
     ...(cache ? { cache } : {}),
     ...(next ? { next } : {}),
+    ...(signal ? { signal } : {}),
   } as RequestInit)
 
   if (!res.ok) {
