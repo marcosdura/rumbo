@@ -67,8 +67,10 @@ como registro de qué se decidió atacar y qué no.
 - [ ] **`get_spot_by_slug` no trae `climbing_sectors`/`kayak_detail`/`surf_schools` con `selectinload`** — el frontend compensa con fetches sueltos sin `AbortController`
 - [ ] **17 archivos con `<img>` crudo en vez de `CldImage`/`next/image`**
 - [ ] **Cero cache para `/categories` y `/amenities`** (catálogos casi estáticos, se golpean en cada request)
-- [ ] **Fetch de filtros de búsqueda sin `AbortController` ni debounce** (race conditions al cambiar de filtro rápido)
-- [ ] **Doble fetch sin `cache()` en `/spots/[slug]`** (`generateMetadata` + página piden lo mismo por separado)
+- [x] **Fetch de filtros de búsqueda sin `AbortController`** — `AbortController` compartido entre el efecto principal y "Cargar más" en `SearchPageContent.tsx`: cambiar de filtro rápido cancela el fetch anterior en vez de dejar que una respuesta vieja pise el estado nuevo. El "debounce" del ítem original no aplicaba: no hay ningún input de texto en este componente que dispare fetch por tecla (los filtros aplican solo al tocar "Aplicar filtros"), así que no había dónde engancharlo sin inventar un caso de uso que no existe.
+      → `7300caa`
+- [x] **Doble fetch sin `cache()` en `/spots/[slug]`** — `generateMetadata` y la página comparten un solo `getSpotBySlug` envuelto en `cache()` de React (patrón documentado por Next para este caso exacto), en vez de pedir el mismo spot dos veces.
+      → `ffb0ef9`
 
 ## 04 — UI / UX
 
