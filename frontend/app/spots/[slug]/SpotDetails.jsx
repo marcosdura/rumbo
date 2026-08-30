@@ -39,41 +39,22 @@ const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
 function SpotDetail({ spot }) {
-  const [routes, setRoutes] = useState([])
-  const [sectors, setSectors] = useState([])
-  const [kayakDetails, setKayakDetails] = useState([])
-  const [surfSchools, setSurfSchools] = useState([])
+  const routes = spot.routes ?? []
+  const sectors = spot.climbing_sectors ?? []
+  const kayakDetails = spot.kayak_detail ?? []
+  const surfSchools = spot.surf_schools ?? []
   const [showShare, setShowShare] = useState(false)
   const [reviewSummary, setReviewSummary] = useState(null)
   const router = useRouter()
 
 useEffect(() => {
   if (!spot?.id) return
-  api.get(`/reviews/${spot.id}/summary`)
+  const controller = new AbortController()
+  api.get(`/reviews/${spot.id}/summary`, { signal: controller.signal })
     .then(({ data }) => setReviewSummary(data))
+    .catch(e => { if (e?.name !== "AbortError") throw e })
+  return () => controller.abort()
 }, [spot?.id])
-
-  useEffect(() => {
-    if (!spot?.id) return
-    if (spot.category?.name === "Trekking") {
-      api.get(`/spots/${spot.id}/routes`)
-        .then(({ data }) => setRoutes(data))
-    }
-    if (spot.category?.name === "Escalada") {
-      api.get(`/spots/${spot.id}/sectors`)
-        .then(({ data }) => setSectors(data))
-    }
-    if (spot.category?.name === "Kayak") {
-      api.get(`/spots/${spot.id}/kayak-detail`)
-        .then(({ data }) => { if (data) setKayakDetails(data) })
-        .catch(() => {})
-    }
-    if (spot.category?.name === "Surf") {
-      api.get(`/spots/${spot.id}/surf-schools`)
-        .then(({ data }) => { if (data) setSurfSchools(data) })
-        .catch(() => {})
-    }
-  }, [spot.id])
 
   const stayCards = {
     Camping: spot.camping_detail ? (
