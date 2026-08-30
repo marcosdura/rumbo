@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
+import CloudinaryPhoto from "./CloudinaryPhoto"
 
 export default function PhotoLightbox({ photos, name, startIndex = 0, onClose }) {
   const [current, setCurrent] = useState(startIndex)
@@ -55,12 +56,7 @@ export default function PhotoLightbox({ photos, name, startIndex = 0, onClose })
         onClick={(e) => e.stopPropagation()}
         style={{ position: "relative", width: "min(90vw, 960px)", height: "min(70vh, 640px)", borderRadius: 12, overflow: "hidden" }}
       >
-        <img
-          key={current}
-          src={photos[current]}
-          alt={`${name} ${current + 1}`}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-        />
+        <CloudinaryPhoto key={current} src={photos[current]} alt={`${name} ${current + 1}`} />
       </div>
 
       {photos.length > 1 && (
@@ -80,13 +76,14 @@ export default function PhotoLightbox({ photos, name, startIndex = 0, onClose })
               key={i}
               onClick={() => setCurrent(i)}
               style={{
+                position: "relative",
                 flexShrink: 0, width: 72, height: 52, borderRadius: 8, overflow: "hidden", cursor: "pointer",
                 border: i === current ? "2px solid #fff" : "2px solid transparent",
                 opacity: i === current ? 1 : 0.5,
                 transition: "opacity 0.15s, border-color 0.15s",
               }}
             >
-              <img src={src} alt={`${name} ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <CloudinaryPhoto src={src} alt={`${name} ${i + 1}`} />
             </div>
           ))}
         </div>

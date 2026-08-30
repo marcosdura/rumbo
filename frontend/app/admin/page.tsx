@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import Image from "next/image"
 import { api, ApiError } from "@/lib/api"
 import type { AdminSpot, AdminMode, SortBy } from "./types"
 import SpotsTab from "./SpotsTab"
@@ -139,7 +140,7 @@ export default function AdminPage() {
 
       <nav className="admin-nav">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 32, height: 32, objectFit: "contain", borderRadius: 8 }} />
+          <Image src="/RumboLogo.png" alt="Rumbo" width={32} height={32} style={{ objectFit: "contain", borderRadius: 8 }} />
           <div>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>rumbo</span>
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginLeft: 8, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>modo admin</span>

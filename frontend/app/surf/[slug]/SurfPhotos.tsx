@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import PhotoLightbox from "@/components/spot-detail/PhotoLightbox"
+import CloudinaryPhoto from "@/components/spot-detail/CloudinaryPhoto"
 
 export default function SurfPhotos({ photos, name }: { photos: string[]; name: string }) {
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
@@ -21,11 +22,11 @@ export default function SurfPhotos({ photos, name }: { photos: string[]; name: s
   return (
     <>
       <style>{`
-        .surf-photo-grid-1 { height: 340px; border-radius: 18px; overflow: hidden; cursor: pointer; }
+        .surf-photo-grid-1 { height: 340px; border-radius: 18px; overflow: hidden; cursor: pointer; position: relative; }
         .surf-photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
         .surf-photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 300px; }
         .surf-photo-sub { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
-        .surf-photo-item { overflow: hidden; border-radius: 14px; cursor: pointer; }
+        .surf-photo-item { overflow: hidden; border-radius: 14px; cursor: pointer; position: relative; }
         .surf-photo-item img, .surf-photo-grid-1 img {
           width: 100%; height: 100%; object-fit: cover; display: block;
           transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
@@ -43,7 +44,7 @@ export default function SurfPhotos({ photos, name }: { photos: string[]; name: s
 
       {photos.length === 1 && (
         <div className="surf-photo-grid-1" onClick={() => open(0)}>
-          <img src={photos[0]} alt={name} />
+          <CloudinaryPhoto src={photos[0]} alt={name} />
         </div>
       )}
 
@@ -51,7 +52,7 @@ export default function SurfPhotos({ photos, name }: { photos: string[]; name: s
         <div className="surf-photo-grid-2">
           {photos.map((src, i) => (
             <div key={i} className="surf-photo-item" onClick={() => open(i)}>
-              <img src={src} alt={`${name} ${i + 1}`} />
+              <CloudinaryPhoto src={src} alt={`${name} ${i + 1}`} />
             </div>
           ))}
         </div>
@@ -60,12 +61,12 @@ export default function SurfPhotos({ photos, name }: { photos: string[]; name: s
       {photos.length >= 3 && (
         <div className="surf-photo-grid-3">
           <div className="surf-photo-item" onClick={() => open(0)}>
-            <img src={photos[0]} alt={name} />
+            <CloudinaryPhoto src={photos[0]} alt={name} />
           </div>
           <div className="surf-photo-sub">
             {photos.slice(1, 3).map((src, i) => (
               <div key={i} className="surf-photo-item" onClick={() => open(i + 1)}>
-                <img src={src} alt={`${name} ${i + 2}`} />
+                <CloudinaryPhoto src={src} alt={`${name} ${i + 2}`} />
               </div>
             ))}
           </div>

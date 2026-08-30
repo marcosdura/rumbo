@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 interface Props {
   step: number
   summaryStep: number
@@ -27,7 +29,7 @@ export default function AgregarLugarHeader({ step, summaryStep, onReset }: Props
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, justifyContent: "center" }}>
-        <img src="/RumboLogo.png" alt="Rumbo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8 }} />
+        <Image src="/RumboLogo.png" alt="Rumbo" width={36} height={36} style={{ objectFit: "contain", borderRadius: 8 }} />
         <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "var(--font-nunito)" }}>rumbo</span>
       </div>
       <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", maxWidth: 480, margin: "0 auto", lineHeight: 1.5, textAlign: "center" }}>
