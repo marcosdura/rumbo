@@ -14,6 +14,7 @@ from typing import Optional, List
 from database import engine
 from models import Base
 from slugs import generate_slug
+from routers.sectors import _attach_sector_stats
 import cloudinary
 import cloudinary.uploader
 import os
@@ -530,11 +531,15 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
+            selectinload(SpotDB.camping_detail),
             selectinload(SpotDB.glamping_detail),
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
+            selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
+            selectinload(SpotDB.kayak_detail),
+            selectinload(SpotDB.surf_schools),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
         .first()
@@ -581,6 +586,9 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "routes": spot.routes,
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "experiences": spot.experiences,
+        "climbing_sectors": [_attach_sector_stats(sec) for sec in spot.climbing_sectors],
+        "kayak_detail": spot.kayak_detail,
+        "surf_schools": spot.surf_schools,
         "average_rating": average_rating,
         "review_count": review_count,
         "is_public": spot.is_public,
@@ -652,11 +660,15 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
             selectinload(SpotDB.images),
             selectinload(SpotDB.trekking_detail),
+            selectinload(SpotDB.camping_detail),
             selectinload(SpotDB.glamping_detail),
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
+            selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
+            selectinload(SpotDB.kayak_detail),
+            selectinload(SpotDB.surf_schools),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -690,6 +702,9 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "routes": spot.routes,
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "experiences": spot.experiences,
+        "climbing_sectors": [_attach_sector_stats(sec) for sec in spot.climbing_sectors],
+        "kayak_detail": spot.kayak_detail,
+        "surf_schools": spot.surf_schools,
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "is_public": spot.is_public,

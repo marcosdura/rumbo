@@ -352,6 +352,9 @@ class SpotResponse(BaseModel):
     routes: list[RouteResponse] = []
     images: list[SpotImageResponse] = []
     experiences: list[ExperienceResponse] = []
+    climbing_sectors: list[ClimbingSectorResponse] = []
+    kayak_detail: list[KayakDetailResponse] = []
+    surf_schools: list[SurfSchoolResponse] = []
     average_rating: float | None = None
     review_count: int = 0
     owner_email: str | None = None
