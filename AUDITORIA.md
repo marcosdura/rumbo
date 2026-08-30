@@ -64,9 +64,11 @@ como registro de qué se decidió atacar y qué no.
       → `9dfec4f`, fix de Postgres en `7c2eff1`
 - [x] **Faltaban índices en columnas de filtro/orden/FKs**
       → `9dfec4f`
-- [ ] **`get_spot_by_slug` no trae `climbing_sectors`/`kayak_detail`/`surf_schools` con `selectinload`** — el frontend compensa con fetches sueltos sin `AbortController`
-- [ ] **17 archivos con `<img>` crudo en vez de `CldImage`/`next/image`**
-- [ ] **Cero cache para `/categories` y `/amenities`** (catálogos casi estáticos, se golpean en cada request)
+- [x] **`get_spot_by_slug` no trae `climbing_sectors`/`kayak_detail`/`surf_schools` con `selectinload`** — de paso apareció un bug real: `camping_detail` se accedía sin eager-load en ese mismo endpoint y en su gemelo `get_spot` (N+1 en cada spot de Camping). Se agregaron las 4 relaciones a `selectinload()` en ambos endpoints y los 3 campos nuevos a `SpotResponse` (no existían, por eso el frontend estaba forzado a pedirlos aparte). `SpotDetails.jsx` ahora usa `spot.routes`/`spot.climbing_sectors`/`spot.kayak_detail`/`spot.surf_schools` embebidos en vez de 4 fetches sueltos; el único que queda (reviews-summary) se cancela con `AbortController`.
+      → `896c57c`, `7d60795`
+- [x] **17 archivos con `<img>` crudo en vez de `CldImage`/`next/image`** — el alcance real eran 5: `RumboLogo.png` (2 archivos) a `next/image`, y las fotos de kayak/surf (3 archivos, guardadas como URL completa de Cloudinary en vez de `cloudinary_public_id`) a `CldImage` extrayendo el public_id de la URL. Los otros 12 quedaron afuera a propósito: 5 son avatares de Google (requieren `remotePatterns` + `referrerPolicy` sin confirmar en `next/image`) y 4 son previews `blob:` durante la subida (URLs locales, no remotas — imposibles de migrar).
+      → `3d7fa9b`
+- [ ] **Cero cache para `/categories` y `/amenities`** — investigado y descartado sin tocar código: `/categories` no la llama nadie del frontend (la UI usa constantes hardcodeadas), `/amenities` solo se llama al publicar un lugar con amenities, no en cada carga de página. No hay tráfico real que cachear hoy.
 - [x] **Fetch de filtros de búsqueda sin `AbortController`** — `AbortController` compartido entre el efecto principal y "Cargar más" en `SearchPageContent.tsx`: cambiar de filtro rápido cancela el fetch anterior en vez de dejar que una respuesta vieja pise el estado nuevo. El "debounce" del ítem original no aplicaba: no hay ningún input de texto en este componente que dispare fetch por tecla (los filtros aplican solo al tocar "Aplicar filtros"), así que no había dónde engancharlo sin inventar un caso de uso que no existe.
       → `7300caa`
 - [x] **Doble fetch sin `cache()` en `/spots/[slug]`** — `generateMetadata` y la página comparten un solo `getSpotBySlug` envuelto en `cache()` de React (patrón documentado por Next para este caso exacto), en vez de pedir el mismo spot dos veces.
