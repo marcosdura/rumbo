@@ -193,11 +193,6 @@ export default function LegalPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        .fade-up   { opacity: 0; transform: translateY(18px); animation: fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
-        .fade-up-1 { animation-delay: 0.05s; }
-        .fade-up-2 { animation-delay: 0.15s; }
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-
         .legal-wrapper {
           max-width: 720px;
           margin: 0 auto;
