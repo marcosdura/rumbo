@@ -40,7 +40,7 @@ export default function StepTrekkingCaracteristicas({
                   transition: "background 0.15s, border-color 0.15s",
                 }}
               >
-                <span style={{ fontSize: 14, color: hasError ? "#dc2626" : "#1b1b19" }}>
+                <span style={{ fontSize: 14, color: hasError ? "var(--danger)" : "#1b1b19" }}>
                   {emoji} {label}
                   {key !== "signal" && <span style={{ color: "#e53e3e", marginLeft: 3, fontSize: 12 }}>*</span>}
                 </span>

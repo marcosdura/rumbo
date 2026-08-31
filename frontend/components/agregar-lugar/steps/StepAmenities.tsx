@@ -43,7 +43,7 @@ export default function StepAmenities({
       <p style={s.subtitle}>
         Seleccioná los servicios disponibles en tu {isGlamping ? "glamping" : "camping"}.
       </p>
-      <p style={{ fontSize: 13, color: showMinError ? "#dc2626" : "#9a9690", marginBottom: 20, fontWeight: showMinError ? 600 : 400 }}>
+      <p style={{ fontSize: 13, color: showMinError ? "var(--danger)" : "var(--muted)", marginBottom: 20, fontWeight: showMinError ? 600 : 400 }}>
         Seleccioná al menos {MIN_AMENITIES} ({selectedAmenities.length}/{MIN_AMENITIES})
       </p>
       {categories.map(grp => (
@@ -63,8 +63,8 @@ export default function StepAmenities({
                   style={{
                     display: "flex", alignItems: "center", gap: 5,
                     padding: "6px 12px", borderRadius: 20,
-                    border: `1px solid ${sel ? "#2d6a4f" : "#e0ddd6"}`,
-                    background: sel ? "#2d6a4f" : "#f7f5f0",
+                    border: `1px solid ${sel ? "var(--primary)" : "var(--border)"}`,
+                    background: sel ? "var(--primary)" : "#f7f5f0",
                     color: sel ? "#fff" : "#1b1b19",
                     fontSize: 13, cursor: "pointer", fontFamily: "inherit",
                   }}

@@ -20,9 +20,9 @@ export default function StepClimbingSectorSelector({
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {loadingSectors ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando sectores...</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando sectores...</p>
           ) : availableSectors.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>Este spot no tiene sectores registrados aún.</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>Este spot no tiene sectores registrados aún.</p>
           ) : (
             <select
               style={s.input}

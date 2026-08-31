@@ -29,13 +29,13 @@ interface Props {
 
 const SECTION_BASE: React.CSSProperties = {
   background: "#f9f8f5",
-  border: "1px solid #e0ddd6",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: "16px",
 }
 const SECTION_ACTIVE: React.CSSProperties = {
   background: "#f0f7f3",
-  border: "1px solid #2d6a4f",
+  border: "1px solid var(--primary)",
 }
 
 export default function StepCategoriasAdicionales({
@@ -295,7 +295,7 @@ export default function StepCategoriasAdicionales({
                   <p style={s.cardTitle}>Amenities del glamping</p>
                   {GLAMPING_AMENITY_CATEGORIES.map(cat => (
                     <div key={cat.id} style={{ marginBottom: 10 }}>
-                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
                         {cat.emoji} {cat.label}
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -342,7 +342,7 @@ export default function StepCategoriasAdicionales({
                   <p style={s.cardTitle}>Amenities del camping</p>
                   {AMENITY_CATEGORIES.map(cat => (
                     <div key={cat.id} style={{ marginBottom: 10 }}>
-                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
                         {cat.emoji} {cat.label}
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

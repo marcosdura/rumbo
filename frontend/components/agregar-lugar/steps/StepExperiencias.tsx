@@ -44,7 +44,7 @@ export default function StepExperiencias({
         <h2 style={{ ...s.title, marginBottom: 0 }}>Experiencias</h2>
         <span
           onClick={onNext}
-          style={{ fontSize: 13, color: "#9a9690", cursor: "pointer", textDecoration: "underline", marginTop: 4, flexShrink: 0 }}
+          style={{ fontSize: 13, color: "var(--muted)", cursor: "pointer", textDecoration: "underline", marginTop: 4, flexShrink: 0 }}
         >
           Omitir
         </span>
@@ -55,7 +55,7 @@ export default function StepExperiencias({
 
       <div style={s.form}>
         {experiences.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9a9690" }}>
+          <p style={{ fontSize: 13, color: "var(--muted)" }}>
             Todavía no agregaste experiencias. Si tu lugar ofrece actividades como trekking, cabalgatas o pesca, podés agregarlas acá.
           </p>
         ) : (
@@ -120,8 +120,8 @@ function ExperienceCard({
                   onClick={() => upd(setExperiences, index, "category_id", String(cat.id))}
                   style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 13,
-                    border: `1px solid ${selected ? "#2d6a4f" : "#e0ddd6"}`,
-                    background: selected ? "#2d6a4f" : "#fff",
+                    border: `1px solid ${selected ? "var(--primary)" : "var(--border)"}`,
+                    background: selected ? "var(--primary)" : "#fff",
                     color: selected ? "#fff" : "#1b1b19",
                     cursor: "pointer", fontFamily: "inherit",
                   }}
@@ -174,7 +174,7 @@ function ExperienceCard({
         {/* Schedule */}
         <div>
           <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", marginBottom: 8 }}>
-            Horario / Frecuencia <span style={{ fontSize: 12, color: "#9a9690", fontWeight: 400 }}>(opcional)</span>
+            Horario / Frecuencia <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {EXPERIENCE_SCHEDULE_OPTIONS.map(opt => {
@@ -193,8 +193,8 @@ function ExperienceCard({
                   }
                   style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 13,
-                    border: `1px solid ${selected ? "#2d6a4f" : "#e0ddd6"}`,
-                    background: selected ? "#2d6a4f" : "#fff",
+                    border: `1px solid ${selected ? "var(--primary)" : "var(--border)"}`,
+                    background: selected ? "var(--primary)" : "#fff",
                     color: selected ? "#fff" : "#1b1b19",
                     cursor: "pointer", fontFamily: "inherit",
                   }}

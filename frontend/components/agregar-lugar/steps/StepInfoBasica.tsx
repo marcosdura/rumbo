@@ -110,7 +110,7 @@ export default function StepInfoBasica({
             style={{ ...s.input, ...(fieldErrors.has("name") ? errorInputBorder : {}) }}
             type="text" value={basic.name} onChange={e => upd("name", e.target.value)}
           />
-          {checkingName && <p style={{ fontSize: 12, color: "#9a9690", margin: "4px 0 0" }}>Verificando nombre...</p>}
+          {checkingName && <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>Verificando nombre...</p>}
         </Field>
         <Field label="Descripción" required={true} hasError={fieldErrors.has("description")} errorText="La descripción es obligatoria">
           <textarea
@@ -241,8 +241,8 @@ export default function StepInfoBasica({
                 onClick={() => setIsPublic(opt.value)}
                 style={{
                   padding: "6px 16px", borderRadius: 20,
-                  border: `1px solid ${isPublic === opt.value ? "#2d6a4f" : fieldErrors.has("isPublic") ? "#e53e3e" : "#e0ddd6"}`,
-                  background: isPublic === opt.value ? "#2d6a4f" : "#f7f5f0",
+                  border: `1px solid ${isPublic === opt.value ? "var(--primary)" : fieldErrors.has("isPublic") ? "#e53e3e" : "var(--border)"}`,
+                  background: isPublic === opt.value ? "var(--primary)" : "#f7f5f0",
                   color: isPublic === opt.value ? "#fff" : "#1b1b19",
                   fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
                 }}
@@ -257,7 +257,7 @@ export default function StepInfoBasica({
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
             ¿Es accesible en transporte público?{" "}
-            <span style={{ fontSize: 12, color: "#9a9690", fontWeight: 400 }}>(opcional)</span>
+            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {([
@@ -271,8 +271,8 @@ export default function StepInfoBasica({
                 onClick={() => setPublicTransport(prev => prev === opt.value ? null : opt.value)}
                 style={{
                   padding: "6px 16px", borderRadius: 20,
-                  border: `1px solid ${publicTransport === opt.value ? "#2d6a4f" : "#e0ddd6"}`,
-                  background: publicTransport === opt.value ? "#2d6a4f" : "#f7f5f0",
+                  border: `1px solid ${publicTransport === opt.value ? "var(--primary)" : "var(--border)"}`,
+                  background: publicTransport === opt.value ? "var(--primary)" : "#f7f5f0",
                   color: publicTransport === opt.value ? "#fff" : "#1b1b19",
                   fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
                 }}

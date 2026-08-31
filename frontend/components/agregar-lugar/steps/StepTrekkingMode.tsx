@@ -25,7 +25,7 @@ export default function StepTrekkingMode({
               ...s.card,
               display: "flex", alignItems: "center", gap: 16,
               cursor: "pointer", textAlign: "left", width: "100%",
-              border: "1px solid #e0ddd6",
+              border: "1px solid var(--border)",
             }}
           >
             <span style={{ fontSize: 32 }}>{opt.emoji}</span>

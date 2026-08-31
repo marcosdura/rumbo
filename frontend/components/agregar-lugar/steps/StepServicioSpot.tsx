@@ -31,9 +31,9 @@ export default function StepServicioSpot({
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {loadingSpots ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando lugares...</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando lugares...</p>
           ) : availableSpots.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>
               No hay lugares disponibles aún. Podés agregar el tuyo abajo.
             </p>
           ) : (
@@ -51,7 +51,7 @@ export default function StepServicioSpot({
           <button
             type="button"
             onClick={() => setCreatingNewSpot(true)}
-            style={{ background: "none", border: "none", color: "#2d6a4f", fontSize: 13, cursor: "pointer", textDecoration: "underline", padding: 0, fontFamily: "inherit", textAlign: "left" }}
+            style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer", textDecoration: "underline", padding: 0, fontFamily: "inherit", textAlign: "left" }}
           >
             + Mi {selectedCat.name === "Surf" ? "playa" : "río/lago"} no está en la lista
           </button>

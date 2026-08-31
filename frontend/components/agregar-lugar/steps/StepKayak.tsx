@@ -121,9 +121,9 @@ export default function StepKayak({
             <Toggle label="Alquiler disponible" checked={k.rental_available} onChange={v => updKayak(i, "rental_available", v)} />
 
             {i === 0 && (
-              <div style={{ borderTop: "1px solid #e0ddd6", paddingTop: 16 }}>
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: photoError ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos del servicio</p>
-                <p style={{ fontSize: 12, color: "#9a9690", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
                 {photoError && <p style={errorHintText}>Subí la foto de portada para continuar</p>}
                 {([
                   { label: "Foto de portada",  req: true,  idx: 0 },
@@ -148,14 +148,14 @@ export default function StepKayak({
                     ) : (
                       <div
                         onClick={() => refs[idx].current?.click()}
-                        style={{ width: 88, height: 64, borderRadius: 10, border: "2px dashed #e0ddd6", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#f7f5f0", flexShrink: 0 }}
+                        style={{ width: 88, height: 64, borderRadius: 10, border: "2px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#f7f5f0", flexShrink: 0 }}
                       >
                         <span style={{ fontSize: 22, color: "#c8c4bc" }}>+</span>
                       </div>
                     )}
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{label}</p>
-                      <p style={{ fontSize: 12, color: req ? "#e53e3e" : "#9a9690", margin: "2px 0 0" }}>{req ? "(obligatoria)" : "(opcional)"}</p>
+                      <p style={{ fontSize: 12, color: req ? "#e53e3e" : "var(--muted)", margin: "2px 0 0" }}>{req ? "(obligatoria)" : "(opcional)"}</p>
                       {!kayakPhotoPreviews[idx] && (
                         <button type="button" onClick={() => refs[idx].current?.click()} style={{ ...s.btnAdd, marginTop: 6, padding: "4px 12px", fontSize: 12 }}>
                           Seleccionar
@@ -174,7 +174,7 @@ export default function StepKayak({
           <button
             type="button"
             onClick={onSkip}
-            style={{ background: "none", border: "none", color: "#9a9690", fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
+            style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
           >
             Saltar este paso
           </button>

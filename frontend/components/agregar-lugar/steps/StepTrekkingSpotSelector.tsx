@@ -19,9 +19,9 @@ export default function StepTrekkingSpotSelector({
       <h2 style={s.title}>¿A qué spot querés agregar la ruta?</h2>
       <div style={s.form}>
         {loadingSpots ? (
-          <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando spots...</p>
+          <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando spots...</p>
         ) : availableSpots.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9a9690" }}>No hay spots de trekking disponibles.</p>
+          <p style={{ fontSize: 13, color: "var(--muted)" }}>No hay spots de trekking disponibles.</p>
         ) : (
           <select
             style={s.input}

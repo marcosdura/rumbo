@@ -20,9 +20,9 @@ export default function StepClimbingSpotSelector({
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {loadingSpots ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>Cargando lugares...</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando lugares...</p>
           ) : availableSpots.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9a9690" }}>No hay spots de escalada registrados aún.</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>No hay spots de escalada registrados aún.</p>
           ) : (
             <select
               style={s.input}

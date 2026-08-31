@@ -150,12 +150,12 @@ export default function StepResumen({
                 <img
                   src={src}
                   alt={`Imagen ${i + 1}`}
-                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, border: "1px solid #e0ddd6" }}
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, border: "1px solid var(--border)" }}
                 />
                 {i === 0 && (
                   <span style={{
                     position: "absolute", bottom: 4, left: 4,
-                    background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 600,
+                    background: "var(--primary)", color: "#fff", fontSize: 10, fontWeight: 600,
                     padding: "2px 6px", borderRadius: 999,
                   }}>
                     Principal
@@ -214,14 +214,14 @@ export default function StepResumen({
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {additionalCategories.includes("Motorhome") && motorhomeDetail && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>🚐 Motorhome</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", margin: "0 0 6px" }}>🚐 Motorhome</p>
                 {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
                 {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
               </div>
             )}
             {additionalCategories.includes("Glamping") && glampingUnits && glampingUnits.length > 0 && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>🛖 Glamping</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", margin: "0 0 6px" }}>🛖 Glamping</p>
                 {glampingUnits.map((unit, i) => (
                   <p key={i} style={{ fontSize: 13, color: "#3d3d3a", margin: "0 0 4px" }}>
                     {unit.accommodation_type || `Tipo ${i + 1}`} — {[unit.capacity && `${unit.capacity} pers.`, unit.price_per_night && `$${unit.price_per_night}/noche`].filter(Boolean).join(" · ")}
@@ -236,7 +236,7 @@ export default function StepResumen({
             )}
             {additionalCategories.includes("Camping") && campingDetail?.price && (
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#2d6a4f", margin: "0 0 6px" }}>⛺ Camping</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", margin: "0 0 6px" }}>⛺ Camping</p>
                 <SummaryRow label="Precio por noche" value={`$${campingDetail.price}`} />
                 {selectedCampingAmenities && selectedCampingAmenities.length > 0 && (
                   <p style={{ fontSize: 12, color: "#7a7669", margin: "4px 0 0" }}>
@@ -258,7 +258,7 @@ export default function StepResumen({
               return (
                 <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 13, color: "#3d3d3a" }}>{emoji} {label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: val ? "#2d6a4f" : "#dc2626" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: val ? "var(--primary)" : "var(--danger)" }}>
                     {val ? "✓ Sí" : "✗ No"}
                   </span>
                 </div>
@@ -363,7 +363,7 @@ export default function StepResumen({
           {surfPhotoPreviews && surfPhotoPreviews.some(p => p) && (
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               {surfPhotoPreviews.filter(Boolean).map((src, i) => (
-                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #e0ddd6" }} />
+                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)" }} />
               ))}
             </div>
           )}
@@ -392,7 +392,7 @@ export default function StepResumen({
           {kayakPhotoPreviews && kayakPhotoPreviews.some(p => p) && (
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               {kayakPhotoPreviews.filter(Boolean).map((src, i) => (
-                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #e0ddd6" }} />
+                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)" }} />
               ))}
             </div>
           )}
