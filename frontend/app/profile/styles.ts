@@ -1,10 +1,7 @@
+import { card } from "@/lib/theme"
+
 export const s = {
-  card: {
-    background: "#fff",
-    border: "1px solid #e0ddd6",
-    borderRadius: 20,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-  },
+  card,
   infoIcon: {
     width: 36, height: 36, borderRadius: 10,
     background: "#f7f5f0", border: "1px solid #e0ddd6",

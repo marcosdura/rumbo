@@ -3,11 +3,24 @@
 :root {
   --background: #f5f4f0;
   --foreground: #1b1b19;
+
+  /* Paleta de marca — antes hardcodeada como hex literal en 60+ archivos */
+  --primary: #2d6a4f;
+  --primary-dark: #1b4332;
+  --border: #e0ddd6;
+  --muted: #9a9690;
+  --danger: #dc2626;
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -186,6 +199,16 @@ input[type="number"] {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* ─── fade-up compartido (reemplaza las copias por página) ──────────────── */
+
+.fade-up   { opacity: 0; transform: translateY(18px); animation: fadeUp 0.65s cubic-bezier(0.22,1,0.36,1) forwards; }
+.fade-up-1 { animation-delay: 0.05s; }
+.fade-up-2 { animation-delay: 0.15s; }
+.fade-up-3 { animation-delay: 0.25s; }
+.fade-up-4 { animation-delay: 0.35s; }
+.fade-up-5 { animation-delay: 0.45s; }
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
 /* ─── Sector Card (base) ───────────────────────────────────────────────── */
 

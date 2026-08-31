@@ -1,3 +1,5 @@
+import { card } from "@/lib/theme"
+
 export const MONTHS = [
   "Enero","Febrero","Marzo","Abril","Mayo","Junio",
   "Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre",
@@ -6,7 +8,7 @@ export const MONTHS = [
 export const MAX_PHOTOS = 10
 
 export const s = {
-  card: { background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" },
+  card,
   label: { fontSize: 12, fontWeight: 600 as const, color: "#7a7669", marginBottom: 4, display: "block" as const },
   input: { width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" as const, background: "#fff" },
   tab: (active: boolean) => ({
