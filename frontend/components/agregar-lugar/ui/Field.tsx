@@ -14,7 +14,7 @@ export default function Field({
         {label}{" "}
         {required
           ? <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
-          : <span style={{ fontSize: 12, color: "#9a9690", fontWeight: 400 }}>(opcional)</span>
+          : <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
         }
         {sublabel && (
           <div style={{ fontSize: 11, fontWeight: 400, color: "#7a7669", marginTop: 2 }}>{sublabel}</div>

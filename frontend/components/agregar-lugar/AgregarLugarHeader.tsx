@@ -11,7 +11,7 @@ interface Props {
 export default function AgregarLugarHeader({ step, summaryStep, onReset }: Props) {
   return (
     <div style={{
-      background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)",
+      background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)",
       borderRadius: 20,
       padding: "24px 28px",
       marginBottom: 28,

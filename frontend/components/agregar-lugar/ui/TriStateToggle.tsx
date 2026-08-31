@@ -7,8 +7,8 @@ export default function TriStateToggle({
   onChange: (v: boolean | null) => void
 }) {
   const opts: { label: string; v: boolean | null; activeColor: string; activeBg: string }[] = [
-    { label: "Sí",    v: true,  activeColor: "#2d6a4f", activeBg: "#2d6a4f" },
-    { label: "No",    v: false, activeColor: "#dc2626", activeBg: "#dc2626" },
+    { label: "Sí",    v: true,  activeColor: "var(--primary)", activeBg: "var(--primary)" },
+    { label: "No",    v: false, activeColor: "var(--danger)", activeBg: "var(--danger)" },
     { label: "No sé", v: null,  activeColor: "#7a7669", activeBg: "#7a7669" },
   ]
   return (
@@ -23,9 +23,9 @@ export default function TriStateToggle({
             style={{
               padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500,
               cursor: "pointer", fontFamily: "inherit",
-              border: `1px solid ${active ? opt.activeBg : "#e0ddd6"}`,
+              border: `1px solid ${active ? opt.activeBg : "var(--border)"}`,
               background: active ? opt.activeBg : "#f7f5f0",
-              color: active ? "#fff" : "#9a9690",
+              color: active ? "#fff" : "var(--muted)",
             }}
           >
             {opt.label}

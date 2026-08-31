@@ -19,8 +19,8 @@ export default function SubmittingOverlay({ uploadProgress }: Props) {
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: "50%",
-          border: "4px solid #e0ddd6",
-          borderTopColor: "#2d6a4f",
+          border: "4px solid var(--border)",
+          borderTopColor: "var(--primary)",
           margin: "0 auto 20px",
           animation: "spin 0.9s linear infinite",
         }} />

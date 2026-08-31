@@ -354,7 +354,7 @@ export default function AgregarLugar() {
         <div style={{ ...s.container, textAlign: "center", paddingTop: 48 }}>
           {pageHeader}
           <div style={{
-            background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
+            background: "#fff", border: "1px solid var(--border)", borderRadius: 20,
             padding: "32px 28px", marginTop: 32, boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
           }}>
             <p style={{ fontSize: 22, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>
@@ -370,7 +370,7 @@ export default function AgregarLugar() {
               }}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
-                background: "#fff", border: "1px solid #e0ddd6", borderRadius: 12,
+                background: "#fff", border: "1px solid var(--border)", borderRadius: 12,
                 padding: "12px 24px", fontSize: 15, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit", color: "#1b1b19",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
@@ -378,9 +378,9 @@ export default function AgregarLugar() {
             >
               Continuar con Google
             </button>
-            <p style={{ fontSize: 12, color: "#9a9690", marginTop: 20 }}>
+            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 20 }}>
               Al continuar aceptás nuestros{" "}
-              <a href="/legal/terms" style={{ color: "#2d6a4f" }}>Términos y condiciones</a>
+              <a href="/legal/terms" style={{ color: "var(--primary)" }}>Términos y condiciones</a>
             </p>
           </div>
         </div>

@@ -29,17 +29,17 @@ export const s: Record<string, CSSProperties> = {
   },
   catCard: {
     display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-    padding: "24px 16px", background: "#fff", border: "1px solid #e0ddd6",
+    padding: "24px 16px", background: "#fff", border: "1px solid var(--border)",
     borderRadius: 20, cursor: "pointer", fontSize: 15, fontWeight: 500, color: "#1b1b19",
   },
   form: { display: "flex", flexDirection: "column", gap: 14 },
   input: {
-    width: "100%", padding: "9px 12px", border: "1px solid #e0ddd6",
+    width: "100%", padding: "9px 12px", border: "1px solid var(--border)",
     borderRadius: 12, fontSize: 14, background: "#fff", color: "#1b1b19",
     outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   },
   card: {
-    background: "#fff", border: "1px solid #e0ddd6", borderRadius: 20,
+    background: "#fff", border: "1px solid var(--border)", borderRadius: 20,
     padding: "18px 20px", marginBottom: 16,
   },
   cardTitle: { fontWeight: 600, fontSize: 15, color: "#1b1b19", marginBottom: 12 },
@@ -48,25 +48,25 @@ export const s: Record<string, CSSProperties> = {
     marginTop: 24, gap: 12,
   },
   btnPrimary: {
-    background: "#2d6a4f", color: "#fff", border: "none", borderRadius: 12,
+    background: "var(--primary)", color: "#fff", border: "none", borderRadius: 12,
     padding: "10px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
   },
   btnSecondary: {
-    background: "#fff", color: "#1b1b19", border: "1px solid #e0ddd6", borderRadius: 12,
+    background: "#fff", color: "#1b1b19", border: "1px solid var(--border)", borderRadius: 12,
     padding: "10px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
   },
   btnAdd: {
-    background: "transparent", color: "#2d6a4f", border: "1px solid #2d6a4f", borderRadius: 12,
+    background: "transparent", color: "var(--primary)", border: "1px solid var(--primary)", borderRadius: 12,
     padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginTop: 4,
   },
   dropzone: {
-    border: "2px dashed #e0ddd6", borderRadius: 16, padding: "36px 24px",
+    border: "2px dashed var(--border)", borderRadius: 16, padding: "36px 24px",
     textAlign: "center", cursor: "pointer", background: "#fff", marginBottom: 16,
   },
   previewGrid: { display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 16 },
   previewImg: { width: 100, height: 80, objectFit: "cover", display: "block" },
   mainBadge: {
-    position: "absolute", bottom: 4, left: 4, background: "#2d6a4f",
+    position: "absolute", bottom: 4, left: 4, background: "var(--primary)",
     color: "#fff", fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
   },
   errorText: { color: "#c0392b", fontSize: 13, marginTop: 10 },
@@ -84,8 +84,8 @@ export function amenityChipStyle(selected: boolean): CSSProperties {
   return {
     display: "flex", alignItems: "center", gap: 5,
     padding: "6px 12px", borderRadius: 20,
-    border: `1px solid ${selected ? "#2d6a4f" : "#e0ddd6"}`,
-    background: selected ? "#2d6a4f" : "#f7f5f0",
+    border: `1px solid ${selected ? "var(--primary)" : "var(--border)"}`,
+    background: selected ? "var(--primary)" : "#f7f5f0",
     color: selected ? "#fff" : "#1b1b19",
     fontSize: 13, cursor: "pointer", fontFamily: "inherit",
   }
@@ -100,7 +100,7 @@ export function errorRowStyle(hasError: boolean): CSSProperties {
   }
 }
 
-export const errorRowTextColor = (hasError: boolean) => (hasError ? "#dc2626" : "#1b1b19")
+export const errorRowTextColor = (hasError: boolean) => (hasError ? "var(--danger)" : "#1b1b19")
 
 export const errorInputBorder: CSSProperties = { borderColor: "#e53e3e" }
 

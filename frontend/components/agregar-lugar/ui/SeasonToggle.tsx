@@ -25,7 +25,7 @@ export default function SeasonToggle({
     <div>
       <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", marginBottom: 8 }}>
         Temporada{" "}
-        <span style={{ fontSize: 12, color: "#9a9690", fontWeight: 400 }}>(opcional)</span>
+        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: type === "seasonal" ? 12 : 0 }}>
         {(["all_year", "seasonal"] as const).map(t => (
@@ -35,8 +35,8 @@ export default function SeasonToggle({
             onClick={() => onTypeChange(t)}
             style={{
               padding: "6px 16px", borderRadius: 20,
-              border: `1px solid ${type === t ? "#2d6a4f" : "#e0ddd6"}`,
-              background: type === t ? "#2d6a4f" : "#f7f5f0",
+              border: `1px solid ${type === t ? "var(--primary)" : "var(--border)"}`,
+              background: type === t ? "var(--primary)" : "#f7f5f0",
               color: type === t ? "#fff" : "#1b1b19",
               fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
             }}
