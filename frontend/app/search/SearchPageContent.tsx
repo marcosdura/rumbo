@@ -232,8 +232,8 @@ export default function SearchPage() {
           {/* Header fijo */}
           <div className="fade-up fade-up-1 search-header">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Resultados de búsqueda
               </p>
             </div>
@@ -286,7 +286,7 @@ export default function SearchPage() {
               </div>
             )}
 
-            <div className="fade-up fade-up-2" style={{ height: 1, background: "#e0ddd6", marginTop: 16 }} />
+            <div className="fade-up fade-up-2" style={{ height: 1, background: "var(--border)", marginTop: 16 }} />
           </div>
 
           {/* Mobile map toggle */}
@@ -315,18 +315,18 @@ export default function SearchPage() {
             >
               {error ? (
                 <div style={{
-                  background: "#fff", border: "1px solid #e0ddd6",
+                  background: "#fff", border: "1px solid var(--border)",
                   borderRadius: 20, padding: "60px 40px",
                   textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                 }}>
-                  <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 16 }}>{error}</p>
+                  <p style={{ color: "var(--danger)", fontSize: 14, marginBottom: 16 }}>{error}</p>
                   <button
                     onClick={() => setRetryTick(t => t + 1)}
                     style={{
                       fontFamily: "'DM Sans', sans-serif",
                       fontSize: 13, fontWeight: 600,
-                      color: "#2d6a4f", background: "#fff",
-                      border: "1px solid #2d6a4f", borderRadius: 10,
+                      color: "var(--primary)", background: "#fff",
+                      border: "1px solid var(--primary)", borderRadius: 10,
                       padding: "10px 20px", cursor: "pointer",
                     }}
                   >
@@ -341,7 +341,7 @@ export default function SearchPage() {
                 </div>
               ) : spots.length === 0 ? (
                 <div style={{
-                  background: "#fff", border: "1px solid #e0ddd6",
+                  background: "#fff", border: "1px solid var(--border)",
                   borderRadius: 20, padding: "60px 40px",
                   textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                 }}>
@@ -349,7 +349,7 @@ export default function SearchPage() {
                   <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", marginBottom: 6 }}>
                     No se encontraron spots
                   </p>
-                  <p style={{ fontSize: 13, color: "#9a9690" }}>
+                  <p style={{ fontSize: 13, color: "var(--muted)" }}>
                     Probá con otros filtros
                   </p>
                 </div>
@@ -370,7 +370,7 @@ export default function SearchPage() {
                   {hasMore && (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 20 }}>
                       {loadMoreError && (
-                        <p style={{ color: "#dc2626", fontSize: 13, margin: 0 }}>{loadMoreError}</p>
+                        <p style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>{loadMoreError}</p>
                       )}
                       <button
                         onClick={loadMore}
@@ -378,7 +378,7 @@ export default function SearchPage() {
                         style={{
                           padding: "10px 24px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                           fontFamily: "'DM Sans', sans-serif", cursor: loadingMore ? "default" : "pointer",
-                          background: "#fff", color: "#1b4332", border: "1px solid #b7dfc8",
+                          background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
                           opacity: loadingMore ? 0.6 : 1,
                         }}
                       >
@@ -404,20 +404,20 @@ export default function SearchPage() {
 
         {/* Mapa */}
         <div className={`search-map-panel${mapExpanded ? " map-visible-mobile" : ""}`}>
-          <div className="map-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid #e0ddd6", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div className="map-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 
             {!loading && mapSpots.length === 0 && (
               <div style={{
                 position: "absolute", top: "50%", left: "50%",
                 transform: "translate(-50%, -50%)",
                 zIndex: 1000, pointerEvents: "none",
-                background: "#fff", border: "1px solid #e0ddd6",
+                background: "#fff", border: "1px solid var(--border)",
                 borderRadius: 16, padding: "14px 22px", textAlign: "center",
               }}>
                 <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
                   No hay spots en esta zona
                 </p>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#9a9690", margin: "4px 0 0" }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
                   Probá con otros filtros
                 </p>
               </div>

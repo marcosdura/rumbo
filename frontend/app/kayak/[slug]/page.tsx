@@ -128,7 +128,7 @@ export default async function KayakDetailPage({ params }: Props) {
 
         .kayak-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -140,8 +140,8 @@ export default async function KayakDetailPage({ params }: Props) {
           gap: 8px;
           margin-bottom: 16px;
         }
-        .kayak-section-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0; }
-        .kayak-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #2d6a4f; margin: 0; }
+        .kayak-section-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+        .kayak-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin: 0; }
 
         .kayak-contact-row {
           display: flex;
@@ -154,7 +154,7 @@ export default async function KayakDetailPage({ params }: Props) {
         .kayak-contact-link {
           font-size: 13px;
           font-weight: 600;
-          color: #2d6a4f;
+          color: var(--primary);
           text-decoration: none;
           display: flex;
           align-items: center;
@@ -206,7 +206,7 @@ export default async function KayakDetailPage({ params }: Props) {
             </h1>
           </div>
 
-          <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", marginBottom: 28 }} />
+          <hr style={{ border: "none", borderTop: "1px solid var(--border)", marginBottom: 28 }} />
 
           <div className="kayak-detail-grid">
 

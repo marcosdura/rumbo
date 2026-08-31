@@ -68,7 +68,7 @@ export default function ReviewsPage() {
         <Navbar />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{
-            background: "#fff", border: "1px solid #e0ddd6",
+            background: "#fff", border: "1px solid var(--border)",
             borderRadius: 20, padding: "60px 48px",
             textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             maxWidth: 400,
@@ -77,7 +77,7 @@ export default function ReviewsPage() {
             <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
               Iniciá sesión
             </p>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#9a9690", lineHeight: 1.6 }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "var(--muted)", lineHeight: 1.6 }}>
               Iniciá sesión para ver tus reviews
             </p>
           </div>
@@ -93,7 +93,7 @@ export default function ReviewsPage() {
 
         .review-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 16px;
           padding: 18px 20px;
           transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s;
@@ -112,11 +112,11 @@ export default function ReviewsPage() {
           text-decoration: none;
           transition: color 0.15s;
         }
-        .review-spot-link:hover { color: #2d6a4f; }
+        .review-spot-link:hover { color: var(--primary); }
 
         .delete-btn {
           font-size: 12px;
-          color: #9a9690;
+          color: var(--muted);
           background: none;
           border: none;
           cursor: pointer;
@@ -124,10 +124,10 @@ export default function ReviewsPage() {
           font-family: 'DM Sans', sans-serif;
           transition: color 0.15s;
         }
-        .delete-btn:hover { color: #dc2626; }
+        .delete-btn:hover { color: var(--danger); }
 
         .explore-btn:hover {
-          background: #2d6a4f !important;
+          background: var(--primary) !important;
           transform: translateY(-1px);
         }
 
@@ -152,8 +152,8 @@ export default function ReviewsPage() {
           {/* Header */}
           <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Tu actividad
               </p>
             </div>
@@ -168,12 +168,12 @@ export default function ReviewsPage() {
           </div>
 
           {/* Divider */}
-          <div className="fade-up fade-up-1" style={{ height: 1, background: "#e0ddd6", marginBottom: 28 }} />
+          <div className="fade-up fade-up-1" style={{ height: 1, background: "var(--border)", marginBottom: 28 }} />
 
           {/* Estado vacío */}
           {reviews.length === 0 && (
             <div className="fade-up fade-up-2" style={{
-              background: "#fff", border: "1px solid #e0ddd6",
+              background: "#fff", border: "1px solid var(--border)",
               borderRadius: 20, padding: "64px 40px",
               textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             }}>
@@ -181,14 +181,14 @@ export default function ReviewsPage() {
               <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
                 Todavía no escribiste reviews
               </p>
-              <p style={{ fontSize: 14, color: "#9a9690", marginBottom: 24, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 24, lineHeight: 1.6 }}>
                 Visitá un spot y contá tu experiencia
               </p>
               <Link href="/search" className="explore-btn" style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "10px 22px", borderRadius: 12,
                 fontSize: 14, fontWeight: 600,
-                background: "#1b4332", color: "#fff",
+                background: "var(--primary-dark)", color: "#fff",
                 textDecoration: "none",
                 transition: "background 0.2s, transform 0.2s",
               }}>
@@ -207,7 +207,7 @@ export default function ReviewsPage() {
                       <Link href={`/spots/${review.spot_slug || review.spot_id}`} className="review-spot-link">
                         {review.spot_name || `Spot #${review.spot_id}`}
                       </Link>
-                      <p style={{ fontSize: 11, color: "#9a9690", marginTop: 3 }}>
+                      <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 3 }}>
                         {timeAgo(review.created_at)}
                       </p>
                     </div>

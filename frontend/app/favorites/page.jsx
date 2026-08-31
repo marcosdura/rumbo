@@ -32,7 +32,7 @@ export default function FavoritosPage() {
           <div style={{ display: "flex", gap: 8 }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{
-                width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f",
+                width: 8, height: 8, borderRadius: "50%", background: "var(--primary)",
                 animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
               }} />
             ))}
@@ -50,7 +50,7 @@ export default function FavoritosPage() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{
             background: "#fff",
-            border: "1px solid #e0ddd6",
+            border: "1px solid var(--border)",
             borderRadius: 20,
             padding: "60px 48px",
             textAlign: "center",
@@ -66,7 +66,7 @@ export default function FavoritosPage() {
             </p>
             <p style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14, color: "#9a9690", lineHeight: 1.6,
+              fontSize: 14, color: "var(--muted)", lineHeight: 1.6,
             }}>
               Guardá los spots que más te gustan y accedé a tu colección desde cualquier lugar
             </p>
@@ -110,8 +110,8 @@ export default function FavoritosPage() {
           {/* Header */}
           <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Tu colección
               </p>
             </div>
@@ -127,13 +127,13 @@ export default function FavoritosPage() {
           </div>
 
           {/* Divider */}
-          <div className="fade-up fade-up-1" style={{ height: 1, background: "#e0ddd6", marginBottom: 28 }} />
+          <div className="fade-up fade-up-1" style={{ height: 1, background: "var(--border)", marginBottom: 28 }} />
 
           {/* Estado vacío */}
           {favorites.length === 0 && (
             <div className="fade-up fade-up-2" style={{
               background: "#fff",
-              border: "1px solid #e0ddd6",
+              border: "1px solid var(--border)",
               borderRadius: 20,
               padding: "64px 40px",
               textAlign: "center",
@@ -146,19 +146,19 @@ export default function FavoritosPage() {
               }}>
                 Todavía no tenés favoritos
               </p>
-              <p style={{ fontSize: 14, color: "#9a9690", marginBottom: 24, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 24, lineHeight: 1.6 }}>
                 Explorá los spots y guardá los que más te gustan
               </p>
               <Link href="/search" style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "10px 22px", borderRadius: 12,
                 fontSize: 14, fontWeight: 600,
-                background: "#1b4332", color: "#fff",
+                background: "var(--primary-dark)", color: "#fff",
                 textDecoration: "none",
                 transition: "background 0.2s, transform 0.2s",
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#2d6a4f"; e.currentTarget.style.transform = "translateY(-1px)" }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#1b4332"; e.currentTarget.style.transform = "translateY(0)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--primary)"; e.currentTarget.style.transform = "translateY(-1px)" }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--primary-dark)"; e.currentTarget.style.transform = "translateY(0)" }}
               >
                 Explorar spots →
               </Link>

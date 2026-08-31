@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)",
+      background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -54,7 +54,7 @@ export default function TermsPage() {
         }
 
         .terms-header {
-          background: linear-gradient(135deg, #1b4332, #2d6a4f);
+          background: linear-gradient(135deg, var(--primary-dark), var(--primary));
           padding: 32px 36px 28px;
           display: flex;
           align-items: center;
@@ -80,7 +80,7 @@ export default function TermsPage() {
 
         .terms-scroll {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 14px;
           padding: 20px 22px;
           max-height: 320px;
@@ -100,7 +100,7 @@ export default function TermsPage() {
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #2d6a4f;
+          color: var(--primary);
           margin: 18px 0 6px;
         }
         .terms-section-title:first-child { margin-top: 0; }
@@ -113,12 +113,12 @@ export default function TermsPage() {
           margin-bottom: 24px;
           padding: 16px;
           background: #fff;
-          border: 1.5px solid #e0ddd6;
+          border: 1.5px solid var(--border);
           border-radius: 14px;
           transition: border-color 0.2s, background 0.2s;
         }
-        .terms-checkbox-row:hover { border-color: #2d6a4f; background: #f0f7f3; }
-        .terms-checkbox-row.checked { border-color: #2d6a4f; background: #f0f7f3; }
+        .terms-checkbox-row:hover { border-color: var(--primary); background: #f0f7f3; }
+        .terms-checkbox-row.checked { border-color: var(--primary); background: #f0f7f3; }
 
         .terms-checkbox {
           width: 20px;
@@ -133,7 +133,7 @@ export default function TermsPage() {
           transition: border-color 0.2s, background 0.2s;
           background: #fff;
         }
-        .terms-checkbox.checked { border-color: #2d6a4f; background: #2d6a4f; }
+        .terms-checkbox.checked { border-color: var(--primary); background: var(--primary); }
 
         .terms-btn {
           width: 100%;
@@ -145,17 +145,17 @@ export default function TermsPage() {
           font-family: 'DM Sans', sans-serif;
           cursor: pointer;
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-          background: #1b4332;
+          background: var(--primary-dark);
           color: #fff;
           letter-spacing: 0.02em;
         }
         .terms-btn:disabled {
           background: #c8c4bc;
-          color: #9a9690;
+          color: var(--muted);
           cursor: not-allowed;
         }
         .terms-btn:not(:disabled):hover {
-          background: #2d6a4f;
+          background: var(--primary);
           transform: translateY(-1px);
           box-shadow: 0 6px 20px rgba(27, 67, 50, 0.3);
         }
@@ -222,7 +222,7 @@ export default function TermsPage() {
           </label>
 
           {error && (
-            <p style={{ fontSize: 13, color: "#dc2626", marginBottom: 16, textAlign: "center" }}>{error}</p>
+            <p style={{ fontSize: 13, color: "var(--danger)", marginBottom: 16, textAlign: "center" }}>{error}</p>
           )}
 
           <button
@@ -233,9 +233,9 @@ export default function TermsPage() {
             {loading ? "Procesando..." : "Continuar a Rumbo →"}
           </button>
 
-          <p style={{ fontSize: 12, color: "#9a9690", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
             ¿Tenés preguntas? Escribinos a{" "}
-            <a href="mailto:rumbo.uy.app@gmail.com" style={{ color: "#2d6a4f" }}>
+            <a href="mailto:rumbo.uy.app@gmail.com" style={{ color: "var(--primary)" }}>
               rumbo.uy.app@gmail.com
             </a>
           </p>

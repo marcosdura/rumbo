@@ -80,7 +80,7 @@ export default function Home() {
       <Navbar />
 
       {/* Hero — scrollea con la página */}
-      <div id="hero-section" style={{ background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "24px 24px 52px", textAlign: "center" }}>
+      <div id="hero-section" style={{ background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "24px 24px 52px", textAlign: "center" }}>
         <HeroHeader />
 
         <p className="fade-up fade-up-1" style={{
@@ -121,16 +121,16 @@ export default function Home() {
 
           {error ? (
             <div style={{ textAlign: "center", padding: "64px 24px" }}>
-              <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 16 }}>{error}</p>
+              <p style={{ color: "var(--danger)", fontSize: 14, marginBottom: 16 }}>{error}</p>
               <button
                 onClick={() => setRetryTick((t) => t + 1)}
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
                   fontSize: 13,
                   fontWeight: 600,
-                  color: "#2d6a4f",
+                  color: "var(--primary)",
                   background: "#fff",
-                  border: "1px solid #2d6a4f",
+                  border: "1px solid var(--primary)",
                   borderRadius: 10,
                   padding: "10px 20px",
                   cursor: "pointer",

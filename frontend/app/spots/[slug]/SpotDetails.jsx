@@ -106,10 +106,10 @@ useEffect(() => {
           font-weight: 500;
           color: #3d3d3a;
         }
-        .rating-badge .star { color: #2d6a4f; font-size: 20px; }
+        .rating-badge .star { color: var(--primary); font-size: 20px; }
         .rating-badge strong { font-weight: 600; }
         .rating-badge .reviews-link {
-          color: #9a9690;
+          color: var(--muted);
           text-decoration: underline;
           text-underline-offset: 2px;
           cursor: pointer;
@@ -127,7 +127,7 @@ useEffect(() => {
           font-family: 'DM Sans', sans-serif;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           color: #3d3d3a;
         }
@@ -138,7 +138,7 @@ useEffect(() => {
 
         .spot-divider {
           border: none;
-          border-top: 1px solid #e0ddd6;
+          border-top: 1px solid var(--border);
           margin: 0 0 28px 0;
         }
 
@@ -183,7 +183,7 @@ useEffect(() => {
           position: sticky;
           top: 24px;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -195,7 +195,7 @@ useEffect(() => {
           gap: 6px;
           font-size: 13px;
           font-weight: 500;
-          color: #9a9690;
+          color: var(--muted);
           background: none;
           border: none;
           cursor: pointer;
@@ -311,7 +311,7 @@ useEffect(() => {
                 lineHeight: 1.4,
               }}>
                 <span style={{ fontSize: 14, flexShrink: 0 }}>{spot.is_public ? "✅" : "⚠️"}</span>
-                <span style={{ color: spot.is_public ? "#1b4332" : "#7f1d1d" }}>
+                <span style={{ color: spot.is_public ? "var(--primary-dark)" : "#7f1d1d" }}>
                   {spot.is_public
                     ? "Lugar de acceso público — Te pedimos que respetes el entorno, cuides la naturaleza y dejes el lugar como lo encontraste."
                     : "Lugar de acceso privado — Antes de visitar, contactá al lugar para confirmar disponibilidad y condiciones de acceso."}

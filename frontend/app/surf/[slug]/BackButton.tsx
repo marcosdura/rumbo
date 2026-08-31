@@ -13,7 +13,7 @@ export default function BackButton() {
         gap: 5,
         fontSize: 13,
         fontWeight: 500,
-        color: "#9a9690",
+        color: "var(--muted)",
         background: "none",
         border: "none",
         cursor: "pointer",
@@ -23,7 +23,7 @@ export default function BackButton() {
         transition: "color 0.15s",
       }}
       onMouseEnter={e => (e.currentTarget.style.color = "#1b1b19")}
-      onMouseLeave={e => (e.currentTarget.style.color = "#9a9690")}
+      onMouseLeave={e => (e.currentTarget.style.color = "var(--muted)")}
     >
       ← Volver
     </button>

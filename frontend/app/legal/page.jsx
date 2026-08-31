@@ -212,7 +212,7 @@ export default function LegalPage() {
         /* Acordeón */
         .legal-item {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -257,13 +257,13 @@ export default function LegalPage() {
         }
 
         .legal-chevron {
-          color: #9a9690;
+          color: var(--muted);
           flex-shrink: 0;
           transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .legal-chevron.is-open {
           transform: rotate(180deg);
-          color: #2d6a4f;
+          color: var(--primary);
         }
 
         .legal-body {
@@ -273,7 +273,7 @@ export default function LegalPage() {
 
         .legal-placeholder {
           font-size: 14px;
-          color: #9a9690;
+          color: var(--muted);
           font-style: italic;
           margin: 20px 0 0;
           line-height: 1.6;
@@ -297,7 +297,7 @@ export default function LegalPage() {
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #2d6a4f;
+          color: var(--primary);
           margin: 20px 0 8px;
         }
         .legal-subtitle:first-of-type { margin-top: 0; }
@@ -339,8 +339,8 @@ export default function LegalPage() {
           {/* Header */}
           <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Información
               </p>
             </div>
@@ -348,7 +348,7 @@ export default function LegalPage() {
           </div>
 
           {/* Divider */}
-          <div className="fade-up fade-up-1" style={{ height: 1, background: "#e0ddd6", marginBottom: 28 }} />
+          <div className="fade-up fade-up-1" style={{ height: 1, background: "var(--border)", marginBottom: 28 }} />
 
           {/* Acordeones */}
           <div className="fade-up fade-up-2" style={{ display: "flex", flexDirection: "column", gap: 10, overflowAnchor: "none" }}>
