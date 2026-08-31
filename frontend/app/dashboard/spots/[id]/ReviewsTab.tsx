@@ -12,7 +12,7 @@ export default function ReviewsTab({ reviews }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {reviews.length === 0 ? (
         <div style={{ ...s.card, padding: 24, textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "#9a9690", margin: 0 }}>Todavía no hay reseñas para este spot.</p>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>Todavía no hay reseñas para este spot.</p>
         </div>
       ) : reviews.map(review => (
         <div key={review.id} style={{ ...s.card, padding: "16px 20px" }}>
@@ -29,11 +29,11 @@ export default function ReviewsTab({ reviews }: Props) {
               </p>
               <div style={{ display: "flex", gap: 2 }}>
                 {[1,2,3,4,5].map(n => (
-                  <span key={n} style={{ fontSize: 13, color: n <= review.rating ? "#f59e0b" : "#e0ddd6" }}>★</span>
+                  <span key={n} style={{ fontSize: 13, color: n <= review.rating ? "#f59e0b" : "var(--border)" }}>★</span>
                 ))}
               </div>
             </div>
-            <span style={{ fontSize: 11, color: "#9a9690", flexShrink: 0 }}>
+            <span style={{ fontSize: 11, color: "var(--muted)", flexShrink: 0 }}>
               {new Date(review.created_at).toLocaleDateString("es-UY", { day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>

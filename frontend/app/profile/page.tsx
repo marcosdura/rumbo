@@ -115,7 +115,7 @@ export default function ProfilePage() {
           padding: 16px;
         }
         .delete-modal {
-          background: #f5f4f0; border: 1px solid #e0ddd6; border-radius: 20px;
+          background: #f5f4f0; border: 1px solid var(--border); border-radius: 20px;
           box-shadow: 0 8px 40px rgba(0,0,0,0.18);
           padding: 28px; width: 100%; max-width: 440px;
           font-family: 'DM Sans', sans-serif;
@@ -127,7 +127,7 @@ export default function ProfilePage() {
           outline: none; background: #fff;
           transition: border-color 0.15s;
         }
-        .delete-confirm-input:focus { border-color: #dc2626; }
+        .delete-confirm-input:focus { border-color: var(--danger); }
         .delete-btn-confirm {
           padding: 11px 20px; border-radius: 12px; border: none;
           font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
@@ -136,7 +136,7 @@ export default function ProfilePage() {
         .delete-btn-confirm:disabled { cursor: not-allowed; }
         .delete-btn-cancel {
           padding: 11px 20px; border-radius: 12px;
-          border: 1px solid #e0ddd6; background: #fff;
+          border: 1px solid var(--border); background: #fff;
           font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
           cursor: pointer; color: #3d3d3a;
           transition: background 0.15s;
@@ -171,8 +171,8 @@ export default function ProfilePage() {
         {/* Header */}
          <div className="fade-up fade-up-1" style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
               Tu cuenta
             </p>
           </div>

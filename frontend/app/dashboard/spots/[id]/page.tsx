@@ -179,7 +179,7 @@ export default function SpotDashboardPage() {
       <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
         <Navbar />
         <div style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
-          <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>Cargando...</p>
         </div>
       </div>
     )
@@ -196,7 +196,7 @@ export default function SpotDashboardPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
-        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid #e0ddd6; position: relative; background: #f0ede8; }
+        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); position: relative; background: #f0ede8; }
         .photo-card img { width: 100%; height: 110px; object-fit: cover; display: block; }
       `}</style>
 
@@ -206,7 +206,7 @@ export default function SpotDashboardPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <Link href="/profile" style={{ fontSize: 13, color: "#9a9690", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+          <Link href="/profile" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
             ← Volver al perfil
           </Link>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -219,13 +219,13 @@ export default function SpotDashboardPage() {
                   {spot.is_approved ? "✓ Aprobado" : "⏳ Pendiente de aprobación"}
                 </Pill>
                 {spot.category && (
-                  <span style={{ fontSize: 12, color: "#9a9690" }}>{spot.category.name} · {spot.department}</span>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>{spot.category.name} · {spot.department}</span>
                 )}
               </div>
             </div>
             {spot.slug && (
               <a href={`/spots/${spot.slug}`} target="_blank" rel="noopener noreferrer"
-                style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid #e0ddd6", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
+                style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
                 Ver spot →
               </a>
             )}
@@ -239,12 +239,12 @@ export default function SpotDashboardPage() {
             { label: "Calificación", value: spot.average_rating ? `${spot.average_rating} ★` : "—", emoji: "⭐" },
           ].map(stat => (
             <div key={stat.label} style={{ ...s.card, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f7f5f0", border: "1px solid #e0ddd6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f7f5f0", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
                 {stat.emoji}
               </div>
               <div>
                 <p style={{ fontSize: 22, fontFamily: "'Playfair Display', serif", fontWeight: 600, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
-                <p style={{ fontSize: 11, color: "#9a9690", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{stat.label}</p>
+                <p style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{stat.label}</p>
               </div>
             </div>
           ))}

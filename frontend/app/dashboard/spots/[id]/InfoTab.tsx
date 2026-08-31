@@ -43,7 +43,7 @@ export default function InfoTab({
 
         {/* Separador */}
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Contacto</p>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Contacto</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
               <label style={s.label}>Email</label>
@@ -62,7 +62,7 @@ export default function InfoTab({
 
         {/* Precio y temporada */}
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Precio y temporada</p>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Precio y temporada</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
               <label style={s.label}>Precio (UYU) — poné 0 si es gratis</label>
@@ -104,7 +104,7 @@ export default function InfoTab({
 
         {/* Acceso */}
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", margin: "0 0 12px" }}>Acceso</p>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Acceso</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
               <label style={s.label}>¿El lugar es público o privado?</label>
@@ -141,12 +141,12 @@ export default function InfoTab({
           <button
             onClick={onSave}
             disabled={saving}
-            style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none", opacity: saving ? 0.7 : 1 }}
+            style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none", opacity: saving ? 0.7 : 1 }}
           >
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>
-          {saveOk && <span style={{ fontSize: 13, color: "#2d6a4f", fontWeight: 600 }}>✓ Guardado correctamente</span>}
-          {saveError && <span style={{ fontSize: 13, color: "#dc2626" }}>{saveError}</span>}
+          {saveOk && <span style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>✓ Guardado correctamente</span>}
+          {saveError && <span style={{ fontSize: 13, color: "var(--danger)" }}>{saveError}</span>}
         </div>
 
       </div>

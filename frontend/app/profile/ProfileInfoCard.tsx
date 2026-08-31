@@ -22,7 +22,7 @@ export default function ProfileInfoCard({ userName, userEmail, userImage, joinDa
             <img src={userImage} alt={userName ?? ""} referrerPolicy="no-referrer"
               style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
           ) : (
-            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "linear-gradient(135deg, #52b788, #1b4332)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 600, color: "#fff" }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "linear-gradient(135deg, #52b788, var(--primary-dark))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 600, color: "#fff" }}>
               {initials}
             </div>
           )}
@@ -31,7 +31,7 @@ export default function ProfileInfoCard({ userName, userEmail, userImage, joinDa
           <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 3px" }}>
             {userName}
           </p>
-          <p style={{ fontSize: 12, color: "#9a9690", margin: 0 }}>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
             Miembro desde {joinDate}
           </p>
         </div>

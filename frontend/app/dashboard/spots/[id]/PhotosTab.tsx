@@ -35,7 +35,7 @@ export default function PhotosTab({
           style={{
             padding: "7px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
             cursor: atPhotoLimit ? "not-allowed" : "pointer",
-            fontFamily: "inherit", background: atPhotoLimit ? "#f0ede8" : "#2d6a4f",
+            fontFamily: "inherit", background: atPhotoLimit ? "#f0ede8" : "var(--primary)",
             color: atPhotoLimit ? "#b0ac9e" : "#fff", border: "none",
             opacity: uploadingPhotos ? 0.6 : 1,
           }}
@@ -52,7 +52,7 @@ export default function PhotosTab({
         />
       </div>
       {photoError && (
-        <p style={{ fontSize: 13, color: "#dc2626", margin: "0 0 12px" }}>{photoError}</p>
+        <p style={{ fontSize: 13, color: "var(--danger)", margin: "0 0 12px" }}>{photoError}</p>
       )}
       <div className="photo-grid">
         {sortedImages.map(img => (
@@ -62,7 +62,7 @@ export default function PhotosTab({
               alt=""
             />
             {img.is_main && (
-              <div style={{ position: "absolute", top: 6, left: 6, background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
+              <div style={{ position: "absolute", top: 6, left: 6, background: "var(--primary)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
                 Principal
               </div>
             )}
@@ -71,7 +71,7 @@ export default function PhotosTab({
                 <button
                   onClick={() => onSetMain(img.cloudinary_public_id)}
                   disabled={photoLoading}
-                  style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }}
+                  style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "var(--primary-dark)", border: "1px solid #b7dfc8" }}
                 >
                   Principal
                 </button>
@@ -79,7 +79,7 @@ export default function PhotosTab({
               <button
                 onClick={() => onDeletePhoto(img.cloudinary_public_id)}
                 disabled={photoLoading}
-                style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "#dc2626", border: "1px solid #fecaca" }}
+                style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "var(--danger)", border: "1px solid #fecaca" }}
               >
                 ✕
               </button>

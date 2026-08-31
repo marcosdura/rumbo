@@ -36,7 +36,7 @@ export default function DeleteAccountModal({
         </ul>
 
         <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", marginBottom: 6 }}>
-          Para confirmar, escribí <span style={{ fontWeight: 700, color: "#dc2626" }}>CONFIRMAR</span> en el campo de abajo
+          Para confirmar, escribí <span style={{ fontWeight: 700, color: "var(--danger)" }}>CONFIRMAR</span> en el campo de abajo
         </label>
         <input
           ref={inputRef}
@@ -47,13 +47,13 @@ export default function DeleteAccountModal({
           className="delete-confirm-input"
           style={{
             border: confirmText.length > 0 && confirmText !== "CONFIRMAR"
-              ? "1px solid #dc2626"
-              : "1px solid #e0ddd6",
+              ? "1px solid var(--danger)"
+              : "1px solid var(--border)",
           }}
         />
 
         {deleteError && (
-          <p style={{ fontSize: 13, color: "#dc2626", margin: "8px 0 0" }}>{deleteError}</p>
+          <p style={{ fontSize: 13, color: "var(--danger)", margin: "8px 0 0" }}>{deleteError}</p>
         )}
 
         <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
@@ -65,8 +65,8 @@ export default function DeleteAccountModal({
             disabled={confirmText !== "CONFIRMAR" || deleting}
             onClick={onConfirm}
             style={{
-              background: confirmText === "CONFIRMAR" ? "#dc2626" : "#d1cdc7",
-              color: confirmText === "CONFIRMAR" ? "#fff" : "#9a9690",
+              background: confirmText === "CONFIRMAR" ? "var(--danger)" : "#d1cdc7",
+              color: confirmText === "CONFIRMAR" ? "#fff" : "var(--muted)",
               opacity: deleting ? 0.7 : 1,
             }}
           >

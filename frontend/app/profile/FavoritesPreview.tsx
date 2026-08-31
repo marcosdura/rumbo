@@ -15,13 +15,13 @@ export default function FavoritesPreview({ favorites }: Props) {
     <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f" }} />
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)" }} />
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
             Últimos favoritos
           </p>
         </div>
         {favorites.length > 3 && (
-          <Link href="/favorites" style={{ fontSize: 12, color: "#2d6a4f", fontWeight: 600, textDecoration: "none" }}>
+          <Link href="/favorites" style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
             Ver todos ({favorites.length}) →
           </Link>
         )}

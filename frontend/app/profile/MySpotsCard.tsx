@@ -14,8 +14,8 @@ export default function MySpotsCard({ mySpots }: Props) {
   return (
     <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f" }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)" }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
           Tus lugares
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function MySpotsCard({ mySpots }: Props) {
                   <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
                     {spot.is_approved ? "Aprobado" : "Pendiente"}
                   </Pill>
-                  <span style={{ fontSize: 12, color: "#9a9690" }}>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
                     ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -52,7 +52,7 @@ export default function MySpotsCard({ mySpots }: Props) {
                 href={`/dashboard/spots/${spot.id}`}
                 style={{
                   padding: "6px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                  background: "#f7f5f0", border: "1px solid #e0ddd6", color: "#3d3d3a",
+                  background: "#f7f5f0", border: "1px solid var(--border)", color: "#3d3d3a",
                   textDecoration: "none", flexShrink: 0,
                 }}
               >
