@@ -33,11 +33,11 @@ function NavArrow({ dir, enabled, onClick }) {
       style={{
         width: 28, height: 28,
         borderRadius: "50%",
-        border: `1px solid ${on ? "#1b4332" : enabled ? "#e0ddd6" : "#ede9e1"}`,
-        background: on ? "#1b4332" : "#fff",
+        border: `1px solid ${on ? "var(--primary-dark)" : enabled ? "var(--border)" : "#ede9e1"}`,
+        background: on ? "var(--primary-dark)" : "#fff",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 13,
-        color: on ? "#fff" : enabled ? "#9a9690" : "#d4d0c8",
+        color: on ? "#fff" : enabled ? "var(--muted)" : "#d4d0c8",
         flexShrink: 0,
         cursor: enabled ? "pointer" : "default",
         transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -87,7 +87,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       <h2 className="spot-section-title" style={{
         fontFamily: "'Playfair Display', serif",
         fontWeight: 600,
-        color: hovered ? "#2d6a4f" : "#1b1b19",
+        color: hovered ? "var(--primary)" : "#1b1b19",
         margin: 0, lineHeight: 1.2,
         transition: "color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
       }}>
@@ -175,7 +175,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           scroll-snap-align: start;
           height: 256px;
           border-radius: 20px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           display: flex;
           flex-direction: column;
@@ -220,8 +220,8 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       {/* Header */}
       <div style={{ marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
             {label}
           </p>
         </div>
@@ -242,7 +242,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: "#e0ddd6", marginBottom: 12 }} />
+      <div style={{ height: 1, background: "var(--border)", marginBottom: 12 }} />
 
       {/* Scroll gallery */}
       <div className={`spots-scroll-wrap${!canRight && canLeft ? " at-end" : ""}`}>

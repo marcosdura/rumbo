@@ -46,12 +46,12 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
   const label = categoryName || 'Spot'
 
-  const bg      = isSelected ? '#1b4332'
-                : isActive   ? '#2d6a4f'
+  const bg      = isSelected ? 'var(--primary-dark)'
+                : isActive   ? 'var(--primary)'
                 : '#fff'
-  const border  = isSelected ? '#2d6a4f'
-                : isActive   ? '#2d6a4f'
-                : '#e0ddd6'
+  const border  = isSelected ? 'var(--primary)'
+                : isActive   ? 'var(--primary)'
+                : 'var(--border)'
   const color   = isSelected || isActive ? '#d8f3dc' : '#3d3d3a'
   const shadow  = isSelected
                   ? '0 4px 18px rgba(27,67,50,0.35), 0 0 0 3px rgba(45,106,79,0.2)'
@@ -70,8 +70,8 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
       min-width: 18px;
       height: 18px;
       border-radius: 999px;
-      background: ${badge.isCount ? '#1b4332' : '#fff'};
-      border: 1.5px solid ${badge.isCount ? '#1b4332' : '#e0ddd6'};
+      background: ${badge.isCount ? 'var(--primary-dark)' : '#fff'};
+      border: 1.5px solid ${badge.isCount ? 'var(--primary-dark)' : 'var(--border)'};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -166,7 +166,7 @@ const createPopupHtml = (spot, categories) => {
     <span style="
       display:inline-flex; align-items:center; gap:4px;
       padding:3px 8px; border-radius:999px;
-      background:#e8f5ee; color:#1b4332; border:1px solid #b7dfc8;
+      background:#e8f5ee; color:var(--primary-dark); border:1px solid #b7dfc8;
       font-size:10px; font-weight:600; letter-spacing:0.03em;
       font-family:'DM Sans', sans-serif;
     ">${CATEGORY_EMOJI[cat.name] ?? ''} ${cat.name}</span>
@@ -178,12 +178,12 @@ const createPopupHtml = (spot, categories) => {
         <p style="font-family:'Playfair Display', serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
           ${escapeHtml(spot.name)}
         </p>
-        <p style="font-size:12px; color:#9a9690; margin:0 0 10px;">
+        <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
           ${escapeHtml(spot.department)}
         </p>
         <div style="display:flex; align-items:center; justify-content:space-between;">
           <div style="display:flex; gap:6px; flex-wrap:wrap;">${pillsHtml}</div>
-          <span style="font-size:12px; font-weight:600; color:#2d6a4f; margin-left:auto;">Ver →</span>
+          <span style="font-size:12px; font-weight:600; color:var(--primary); margin-left:auto;">Ver →</span>
         </div>
       </div>
     </a>
@@ -287,7 +287,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
       <style>{`
         .leaflet-popup-content-wrapper {
           background: #fff !important;
-          border: 1px solid #e0ddd6 !important;
+          border: 1px solid var(--border) !important;
           border-radius: 16px !important;
           box-shadow: 0 8px 28px rgba(0,0,0,0.09) !important;
           padding: 0 !important;
@@ -300,7 +300,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
           box-shadow: none !important;
         }
         .leaflet-popup-close-button {
-          color: #9a9690 !important;
+          color: var(--muted) !important;
           font-size: 16px !important;
           padding: 6px 8px !important;
         }
@@ -316,7 +316,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
         .marker-cluster div {
           background: #fff !important;
           color: #3d3d3a !important;
-          border: 1.5px solid #e0ddd6 !important;
+          border: 1.5px solid var(--border) !important;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
           font-family: 'DM Sans', sans-serif !important;
           font-size: 12px !important;
@@ -328,8 +328,8 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
           z-index: 10000 !important;
         }
         .marker-cluster div:hover {
-          background: #2d6a4f !important;
-          border-color: #2d6a4f !important;
+          background: var(--primary) !important;
+          border-color: var(--primary) !important;
           color: #d8f3dc !important;
           box-shadow: 0 4px 14px rgba(27,67,50,0.25) !important;
         }
@@ -338,7 +338,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
         .marker-cluster-large div {
           background: #fff !important;
           color: #3d3d3a !important;
-          border: 1.5px solid #e0ddd6 !important;
+          border: 1.5px solid var(--border) !important;
         }
         .leaflet-zoom-animated {
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;

@@ -144,7 +144,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           display: inline-flex;
           align-items: center;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 999px;
           padding: 5px 6px;
           gap: 4px;
@@ -154,7 +154,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         .search-divider {
           width: 1px;
           height: 24px;
-          background: #e0ddd6;
+          background: var(--border);
           flex-shrink: 0;
         }
 
@@ -173,7 +173,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         .search-field-label {
           font-size: 11px;
           font-weight: 600;
-          color: #2d6a4f;
+          color: var(--primary);
           margin-bottom: 2px;
           letter-spacing: 0.08em;
           text-transform: uppercase;
@@ -212,7 +212,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           top: calc(100% + 10px);
           min-width: 200px;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 16px;
           box-shadow: 0 8px 28px rgba(0,0,0,0.09);
           z-index: 9999;
@@ -245,16 +245,16 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
         .search-dropdown-item:hover {
           background: #f0f7f3;
-          color: #1b4332;
+          color: var(--primary-dark);
         }
         /* keyboard highlight (best match / arrow navigation) */
         .search-dropdown-item.highlighted {
           background: #dff0e8;
-          color: #1b4332;
+          color: var(--primary-dark);
         }
         .search-dropdown-item.selected {
           background: #e8f5ee;
-          color: #1b4332;
+          color: var(--primary-dark);
           font-weight: 600;
         }
 
@@ -274,7 +274,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           justify-content: center;
           gap: 6px;
           margin-left: 2px;
-          background: #1b4332;
+          background: var(--primary-dark);
           border: none;
           color: #fff;
           font-size: 13px;
@@ -286,7 +286,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .search-btn:hover {
-          background: #2d6a4f;
+          background: var(--primary);
           transform: translateY(-1px);
           box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
         }
@@ -311,7 +311,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           transition: background 0.15s;
           line-height: 1;
         }
-        .clear-btn:hover { background: #9a9690; }
+        .clear-btn:hover { background: var(--muted); }
 
         /* Hero variant */
         .search-bar.hero {
@@ -395,7 +395,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
                       onMouseDown={(e) => { e.preventDefault(); selectActivity(a) }}
                     >
                       {activity === a && (
-                        <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                        <span style={{ fontSize: 10, color: "var(--primary)" }}>●</span>
                       )}
                       {ACTIVITY_EMOJI[a] ? `${ACTIVITY_EMOJI[a]} ${a}` : a}
                     </div>
@@ -448,7 +448,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
                       onMouseDown={(e) => { e.preventDefault(); selectDepartment(d) }}
                     >
                       {department === d && (
-                        <span style={{ fontSize: 10, color: "#2d6a4f" }}>●</span>
+                        <span style={{ fontSize: 10, color: "var(--primary)" }}>●</span>
                       )}
                       {d}
                     </div>

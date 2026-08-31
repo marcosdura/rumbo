@@ -27,7 +27,7 @@ function MapCard({ lat, lng, name }) {
   return (
     <div style={{
       background: "#fff",
-      border: "1px solid #e0ddd6",
+      border: "1px solid var(--border)",
       borderRadius: 20,
       padding: "20px",
       display: "flex",
@@ -41,7 +41,7 @@ function MapCard({ lat, lng, name }) {
           align-items: center;
           justify-content: center;
           gap: 6px;
-          background: #1b4332;
+          background: var(--primary-dark);
           border: none;
           color: #fff;
           font-size: 13px;
@@ -56,7 +56,7 @@ function MapCard({ lat, lng, name }) {
         }
         @media (hover: hover) {
           .mapcard-btn:hover {
-            background: #2d6a4f;
+            background: var(--primary);
             transform: translateY(-1px);
             box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
           }
@@ -69,10 +69,10 @@ function MapCard({ lat, lng, name }) {
       `}</style>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
         <h3 style={{
           fontSize: 11, fontWeight: 600, letterSpacing: "0.1em",
-          textTransform: "uppercase", color: "#2d6a4f", margin: 0,
+          textTransform: "uppercase", color: "var(--primary)", margin: 0,
           fontFamily: "'DM Sans', sans-serif",
         }}>
           Ubicación
@@ -83,7 +83,7 @@ function MapCard({ lat, lng, name }) {
       <div
         key={mapKey}
         className="mapcard-map-wrap"
-        style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e0ddd6" }}
+        style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)" }}
       >
         <MapContainer
           center={position}

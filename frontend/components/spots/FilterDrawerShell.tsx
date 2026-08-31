@@ -101,7 +101,7 @@ export default function FilterDrawerShell<T>({
         .fd-close-btn {
           width: 30px; height: 30px;
           border-radius: 50%;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #f5f4f0;
           color: #7a7669;
           font-size: 14px;
@@ -132,7 +132,7 @@ export default function FilterDrawerShell<T>({
           font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #2d6a4f;
+          color: var(--primary);
           margin: 0 0 12px;
           display: flex;
           align-items: center;
@@ -143,7 +143,7 @@ export default function FilterDrawerShell<T>({
           display: block;
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: #2d6a4f;
+          background: var(--primary);
           flex-shrink: 0;
         }
 
@@ -152,7 +152,7 @@ export default function FilterDrawerShell<T>({
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: #9a9690;
+          color: var(--muted);
           margin: 0 0 8px;
         }
 
@@ -167,7 +167,7 @@ export default function FilterDrawerShell<T>({
           font-weight: 500;
           padding: 7px 16px;
           border-radius: 20px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           color: #3d3d3a;
           cursor: pointer;
@@ -177,13 +177,13 @@ export default function FilterDrawerShell<T>({
         }
         .fd-pill:hover {
           background: #f0f7f3;
-          color: #1b4332;
+          color: var(--primary-dark);
           border-color: #b7dfc8;
         }
         .fd-pill.active {
-          background: #2d6a4f;
+          background: var(--primary);
           color: #fff;
-          border-color: #2d6a4f;
+          border-color: var(--primary);
         }
 
         .fd-toggles {
@@ -197,7 +197,7 @@ export default function FilterDrawerShell<T>({
           font-weight: 500;
           padding: 10px 18px;
           border-radius: 20px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           color: #3d3d3a;
           cursor: pointer;
@@ -209,13 +209,13 @@ export default function FilterDrawerShell<T>({
         }
         .fd-toggle:hover {
           background: #f0f7f3;
-          color: #1b4332;
+          color: var(--primary-dark);
           border-color: #b7dfc8;
         }
         .fd-toggle.active {
-          background: #2d6a4f;
+          background: var(--primary);
           color: #fff;
-          border-color: #2d6a4f;
+          border-color: var(--primary);
         }
 
         .fd-footer {
@@ -231,7 +231,7 @@ export default function FilterDrawerShell<T>({
           font-weight: 600;
           padding: 10px 20px;
           border-radius: 12px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           color: #7a7669;
           cursor: pointer;
@@ -246,13 +246,13 @@ export default function FilterDrawerShell<T>({
           padding: 10px 20px;
           border-radius: 12px;
           border: none;
-          background: #2d6a4f;
+          background: var(--primary);
           color: #fff;
           cursor: pointer;
           flex: 1;
           transition: background 0.15s;
         }
-        .fd-btn-apply:hover { background: #1b4332; }
+        .fd-btn-apply:hover { background: var(--primary-dark); }
 
         @media (max-width: 768px) {
           .fd-panel {
