@@ -21,7 +21,7 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
             <input
               value={editingSpot.name}
               onChange={e => setEditingSpot(prev => prev ? { ...prev, name: e.target.value } : null)}
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" }}
             />
           </div>
           <div>
@@ -30,20 +30,20 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
               value={editingSpot.description}
               onChange={e => setEditingSpot(prev => prev ? { ...prev, description: e.target.value } : null)}
               rows={4}
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
             />
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={onCancel}
-            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid var(--border)", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
           >
             Cancelar
           </button>
           <button
             onClick={onSave}
-            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#2d6a4f", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "var(--primary)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
           >
             Guardar
           </button>

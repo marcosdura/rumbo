@@ -34,8 +34,8 @@ export default function SpotsTab({
             style={{
               padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit",
-              border: `1px solid ${filter === f ? "#2d6a4f" : "#e0ddd6"}`,
-              background: filter === f ? "#2d6a4f" : "#fff",
+              border: `1px solid ${filter === f ? "var(--primary)" : "var(--border)"}`,
+              background: filter === f ? "var(--primary)" : "#fff",
               color: filter === f ? "#fff" : "#3d3d3a",
             }}
           >
@@ -50,12 +50,12 @@ export default function SpotsTab({
           placeholder="Buscar por nombre, categoría, departamento..."
           value={searchSpots}
           onChange={e => setSearchSpots(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+          style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
         />
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as SortBy)}
-          style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+          style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
         >
           <option value="date_desc">Más recientes primero</option>
           <option value="date_asc">Más antiguos primero</option>
@@ -73,7 +73,7 @@ export default function SpotsTab({
                 await onApprove(s.id, true)
               }
             }}
-            style={{ padding: "7px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none" }}
+            style={{ padding: "7px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none" }}
           >
             Aprobar todos ({displayed.length})
           </button>
@@ -81,11 +81,11 @@ export default function SpotsTab({
       )}
 
       {loadError ? (
-        <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
+        <p style={{ color: "var(--danger)", fontSize: 14 }}>{loadError}</p>
       ) : loading ? (
-        <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>Cargando...</p>
       ) : displayed.length === 0 ? (
-        <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta categoría.</p>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>No hay spots en esta categoría.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {displayed.map(spot => {
@@ -115,14 +115,14 @@ export default function SpotsTab({
                     {spot.category?.name} · {spot.department}
                   </p>
                   <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, color: "#9a9690" }}>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
                       📷 {spot.images?.length ?? 0} foto{spot.images?.length !== 1 ? "s" : ""}
                     </span>
-                    <span style={{ fontSize: 11, color: "#9a9690" }}>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
                       ⭐ {spot.review_count ?? 0} reseña{spot.review_count !== 1 ? "s" : ""}
                     </span>
                     {spot.owner_email && (
-                      <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
+                      <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "var(--primary)", textDecoration: "none" }}>
                         ✉️ {spot.owner_email}
                       </a>
                     )}
@@ -132,35 +132,35 @@ export default function SpotsTab({
                 <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
                   {!spot.is_approved ? (
                     <button onClick={() => onApprove(spot.id, true)} disabled={actionLoading === spot.id}
-                      className="action-btn-sm" style={{ background: "#2d6a4f", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                      className="action-btn-sm" style={{ background: "var(--primary)", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                       Aprobar
                     </button>
                   ) : (
                     <button onClick={() => onApprove(spot.id, false)} disabled={actionLoading === spot.id}
-                      className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                      className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                       Desaprobar
                     </button>
                   )}
                   <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank" rel="noopener noreferrer"
-                    className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+                    className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                     Ver
                   </a>
                   <button
                     onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.slug ?? spot.id}`)}
                     className="action-btn-sm"
-                    style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
+                    style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)" }}
                   >
                     🔗
                   </button>
                   <button
                     onClick={() => onEdit({ id: spot.id, name: spot.name, description: spot.description ?? "" })}
                     className="action-btn-sm"
-                    style={{ background: "#fff", color: "#3d3d3a", border: "1px solid #e0ddd6" }}
+                    style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)" }}
                   >
                     ✏️
                   </button>
                   <button onClick={() => onDeleteRequest(spot.id)} disabled={actionLoading === spot.id}
-                    className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                    className="action-btn-sm" style={{ background: "#fff", color: "var(--danger)", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                     Eliminar
                   </button>
                 </div>

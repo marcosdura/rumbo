@@ -26,19 +26,19 @@ export default function DeleteConfirmModal({ open, confirmText, setConfirmText, 
           value={confirmText}
           onChange={e => setConfirmText(e.target.value)}
           placeholder="CONFIRMAR"
-          style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 14, fontFamily: "inherit", marginBottom: 16, boxSizing: "border-box" }}
+          style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 14, fontFamily: "inherit", marginBottom: 16, boxSizing: "border-box" }}
         />
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={onCancel}
-            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e0ddd6", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid var(--border)", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
             disabled={confirmText !== "CONFIRMAR" || loading}
-            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: confirmText === "CONFIRMAR" ? "#dc2626" : "#f0ede8", color: confirmText === "CONFIRMAR" ? "#fff" : "#b0ac9e", fontSize: 13, fontWeight: 600, cursor: confirmText === "CONFIRMAR" ? "pointer" : "not-allowed", fontFamily: "inherit" }}
+            style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: confirmText === "CONFIRMAR" ? "var(--danger)" : "#f0ede8", color: confirmText === "CONFIRMAR" ? "#fff" : "#b0ac9e", fontSize: 13, fontWeight: 600, cursor: confirmText === "CONFIRMAR" ? "pointer" : "not-allowed", fontFamily: "inherit" }}
           >
             Eliminar
           </button>

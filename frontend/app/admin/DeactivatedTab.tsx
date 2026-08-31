@@ -22,11 +22,11 @@ export default function DeactivatedTab({ deactivatedSpots, loadError, loading, a
       </p>
 
       {loadError ? (
-        <p style={{ color: "#dc2626", fontSize: 14 }}>{loadError}</p>
+        <p style={{ color: "var(--danger)", fontSize: 14 }}>{loadError}</p>
       ) : loading ? (
-        <p style={{ color: "#9a9690", fontSize: 14 }}>Cargando...</p>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>Cargando...</p>
       ) : deactivatedSpots.length === 0 ? (
-        <p style={{ color: "#9a9690", fontSize: 14 }}>No hay spots en esta situación.</p>
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>No hay spots en esta situación.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {deactivatedSpots.map(spot => (
@@ -41,12 +41,12 @@ export default function DeactivatedTab({ deactivatedSpots, loadError, loading, a
                 </p>
                 <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
                   {spot.owner_email && (
-                    <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "#2d6a4f", textDecoration: "none" }}>
+                    <a href={`mailto:${spot.owner_email}`} style={{ fontSize: 11, color: "var(--primary)", textDecoration: "none" }}>
                       ✉️ {spot.owner_email} (cuenta borrada)
                     </a>
                   )}
                   {spot.owner_deleted_at && (
-                    <span style={{ fontSize: 11, color: "#9a9690" }}>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
                       Desactivado el {new Date(spot.owner_deleted_at).toLocaleDateString("es-UY")}
                     </span>
                   )}
@@ -55,11 +55,11 @@ export default function DeactivatedTab({ deactivatedSpots, loadError, loading, a
 
               <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 <button onClick={() => onReactivate(spot.id)} disabled={actionLoading === spot.id}
-                  className="action-btn-sm" style={{ background: "#2d6a4f", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                  className="action-btn-sm" style={{ background: "var(--primary)", color: "#fff", border: "none", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                   Reactivar
                 </button>
                 <button onClick={() => onDeleteRequest(spot.id)} disabled={actionLoading === spot.id}
-                  className="action-btn-sm" style={{ background: "#fff", color: "#dc2626", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                  className="action-btn-sm" style={{ background: "#fff", color: "var(--danger)", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                   Eliminar definitivamente
                 </button>
               </div>

@@ -35,10 +35,10 @@ export default function PhotosTab({
           placeholder="Buscar spot..."
           value={searchPhotos}
           onChange={e => setSearchPhotos(e.target.value)}
-          style={{ width: "100%", maxWidth: 400, padding: "8px 12px", borderRadius: 10, border: "1px solid #e0ddd6", fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8, display: "block" }}
+          style={{ width: "100%", maxWidth: 400, padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8, display: "block" }}
         />
         <select
-          style={{ padding: "9px 12px", borderRadius: 12, border: "1px solid #e0ddd6", fontSize: 14, background: "#fff", fontFamily: "inherit", width: "100%", maxWidth: 400 }}
+          style={{ padding: "9px 12px", borderRadius: 12, border: "1px solid var(--border)", fontSize: 14, background: "#fff", fontFamily: "inherit", width: "100%", maxWidth: 400 }}
           value={photoSpotId ?? ""}
           onChange={e => setPhotoSpotId(Number(e.target.value) || null)}
         >
@@ -99,7 +99,7 @@ export default function PhotosTab({
             <button
               onClick={() => photoUploadRef.current?.click()}
               disabled={uploadingPhotos}
-              style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#2d6a4f", color: "#fff", border: "none", opacity: uploadingPhotos ? 0.6 : 1 }}
+              style={{ padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none", opacity: uploadingPhotos ? 0.6 : 1 }}
             >
               {uploadingPhotos ? "Subiendo..." : "+ Agregar fotos"}
             </button>
@@ -118,7 +118,7 @@ export default function PhotosTab({
                     alt=""
                   />
                   {img.is_main && (
-                    <div style={{ position: "absolute", top: 6, left: 6, background: "#2d6a4f", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
+                    <div style={{ position: "absolute", top: 6, left: 6, background: "var(--primary)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>
                       Principal
                     </div>
                   )}
@@ -127,7 +127,7 @@ export default function PhotosTab({
                       <button
                         onClick={() => onSetMainPhoto(selectedSpot.id, img.cloudinary_public_id)}
                         disabled={photoLoading}
-                        style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8" }}
+                        style={{ flex: 1, padding: "4px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#e8f5ee", color: "var(--primary-dark)", border: "1px solid #b7dfc8" }}
                       >
                         Hacer principal
                       </button>
@@ -135,7 +135,7 @@ export default function PhotosTab({
                     <button
                       onClick={() => onDeletePhoto(selectedSpot.id, img.cloudinary_public_id)}
                       disabled={photoLoading}
-                      style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "#dc2626", border: "1px solid #fecaca" }}
+                      style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "var(--danger)", border: "1px solid #fecaca" }}
                     >
                       ✕
                     </button>

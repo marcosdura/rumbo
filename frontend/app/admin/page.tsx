@@ -127,14 +127,14 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        .admin-nav { background: linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .admin-nav { background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
         .admin-pill { padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #fff; }
-        .admin-pill.active { background: #fff; color: #1b4332; border-color: #fff; }
+        .admin-pill.active { background: #fff; color: var(--primary-dark); border-color: #fff; }
         .admin-pill:not(.active):hover { background: rgba(255,255,255,0.22); }
-        .spot-row { background: #fff; border: 1px solid #e0ddd6; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+        .spot-row { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
         .action-btn-sm { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
-        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid #e0ddd6; position: relative; background: #f0ede8; }
+        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); position: relative; background: #f0ede8; }
         .photo-card img { width: 100%; height: 100px; object-fit: cover; display: block; }
       `}</style>
 
@@ -166,7 +166,7 @@ export default function AdminPage() {
               key={m.id}
               onClick={() => setMode(m.id)}
               className={`admin-pill${mode === m.id ? " active" : ""}`}
-              style={{ background: mode === m.id ? "#1b4332" : "#fff", color: mode === m.id ? "#fff" : "#3d3d3a", border: `1px solid ${mode === m.id ? "#1b4332" : "#e0ddd6"}` }}
+              style={{ background: mode === m.id ? "var(--primary-dark)" : "#fff", color: mode === m.id ? "#fff" : "#3d3d3a", border: `1px solid ${mode === m.id ? "var(--primary-dark)" : "var(--border)"}` }}
             >
               {m.label}
             </button>
