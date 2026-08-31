@@ -38,7 +38,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-            border: 1px solid #e0ddd6;
+            border: 1px solid var(--border);
             background: #fff;
             color: #3d3d3a;
           }
@@ -49,7 +49,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
           .fav-btn-detail.active {
             background: #ffcccc;
             border-color: #f78080;
-            color: #dc2626;
+            color: var(--danger);
           }
           .fav-btn-detail.active:hover {
             background: #fce8e8;
@@ -83,7 +83,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
 
           display: flex;
           align-items: center;

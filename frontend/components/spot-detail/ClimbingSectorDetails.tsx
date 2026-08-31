@@ -58,14 +58,14 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
         <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
           Sector no encontrado
         </p>
-        <p style={{ fontSize: 14, color: "#9a9690", margin: 0 }}>
+        <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>
           El sector que buscás no existe o fue eliminado.
         </p>
         <button
           onClick={() => router.back()}
           style={{
             marginTop: 8, padding: "10px 20px", borderRadius: 12,
-            border: "1px solid #e0ddd6", background: "#fff",
+            border: "1px solid var(--border)", background: "#fff",
             fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
             cursor: "pointer", color: "#3d3d3a",
           }}
@@ -90,7 +90,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
         .back-btn {
           display: inline-flex; align-items: center; gap: 6px;
-          font-size: 13px; font-weight: 500; color: #9a9690;
+          font-size: 13px; font-weight: 500; color: var(--muted);
           background: none; border: none; cursor: pointer;
           font-family: 'DM Sans', sans-serif;
           transition: color 0.15s;
@@ -103,7 +103,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           padding: 9px 16px; border-radius: 12px;
           font-size: 13px; font-weight: 500;
           font-family: 'DM Sans', sans-serif;
-          border: 1px solid #e0ddd6; background: #fff;
+          border: 1px solid var(--border); background: #fff;
           color: #3d3d3a; cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
         }
@@ -163,8 +163,8 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           <div className="fade-up fade-up-1 header-row" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                   Sector de Escalada
                 </p>
               </div>
@@ -185,13 +185,13 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
               { icon: "⛰️", val: sector.max_altitude ? `${sector.max_altitude} m` : "—", lbl: "Altitud" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
-                background: "#fff", border: "1px solid #e0ddd6",
+                background: "#fff", border: "1px solid var(--border)",
                 borderRadius: 16, padding: "20px 16px",
                 textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}>
                 <p style={{ fontSize: 24, marginBottom: 6 }}>{icon}</p>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{val}</p>
-                <p style={{ fontSize: 10, fontWeight: 600, color: "#9a9690", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
+                <p style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
               </div>
             ))}
           </div>
@@ -204,7 +204,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {badges.length === 0 ? (
-                <p style={{ fontSize: 13, color: "#9a9690", margin: 0 }}>Sin características registradas.</p>
+                <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>Sin características registradas.</p>
               ) : (
                 badges.map((b, i) => (
                   <Pill key={i} variant={b.variant} size="lg" hover>
@@ -217,19 +217,19 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
           {/* Tabla de rutas */}
           <div className="fade-up fade-up-4" style={{
-            background: "#fff", border: "1px solid #e0ddd6",
+            background: "#fff", border: "1px solid var(--border)",
             borderRadius: 20, padding: "24px 28px",
             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Rutas — {routes.length} en total
               </p>
             </div>
 
             {routes.length === 0 ? (
-              <p style={{ fontSize: 14, color: "#9a9690", textAlign: "center", padding: "32px 0" }}>
+              <p style={{ fontSize: 14, color: "var(--muted)", textAlign: "center", padding: "32px 0" }}>
                 No hay rutas registradas para este sector.
               </p>
             ) : (
@@ -240,11 +240,11 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                   gap: 16, padding: "0 16px 10px",
                   borderBottom: "1px solid #ede9e1", marginBottom: 4,
                 }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Nombre</p>
-                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Grado</p>
-                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Bolts</p>
-                  <p className="route-header-largo" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Largo</p>
-                  <p className="route-header-descripcion" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9a9690", margin: 0 }}>Descripción</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 }}>Nombre</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 }}>Grado</p>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 }}>Bolts</p>
+                  <p className="route-header-largo" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 }}>Largo</p>
+                  <p className="route-header-descripcion" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 }}>Descripción</p>
                 </div>
 
                 {/* Filas */}
@@ -264,7 +264,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                       <p className="route-col-largo" style={{ fontSize: 14, color: "#3d3d3a", margin: 0 }}>
                         {route.length ? `${route.length} m` : "—"}
                       </p>
-                      <p className="route-col-descripcion" style={{ fontSize: 13, color: "#9a9690", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p className="route-col-descripcion" style={{ fontSize: 13, color: "var(--muted)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {route.description || "—"}
                       </p>
                     </div>

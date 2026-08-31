@@ -39,7 +39,7 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
       <style>{`
         .exp-card {
           background: #f7f5f0;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 14px;
           padding: 14px 16px;
           transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
@@ -68,7 +68,7 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
                 {exp.category && (
                   <span style={{
                     fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20,
-                    background: "#e8f5ee", color: "#1b4332", border: "1px solid #b7dfc8",
+                    background: "#e8f5ee", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
                     flexShrink: 0,
                   }}>
                     {CATEGORY_EMOJIS[exp.category.name] ?? ""} {exp.category.name}
@@ -79,13 +79,13 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
                 </p>
               </div>
               {exp.price != null && (
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#2d6a4f", margin: 0, flexShrink: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--primary)", margin: 0, flexShrink: 0 }}>
                   {exp.price === 0 ? (
                     "Gratis"
                   ) : (
                     <>
                       ${exp.price}{" "}
-                      <span style={{ fontSize: 11, fontWeight: 400, color: "#9a9690" }}>{exp.currency}</span>
+                      <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>{exp.currency}</span>
                     </>
                   )}
                 </p>
@@ -120,7 +120,7 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
       </div>
 
       {/* CTA contacto */}
-      <p style={{ fontSize: 12, color: "#9a9690", margin: "14px 0 0", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 12, color: "var(--muted)", margin: "14px 0 0", lineHeight: 1.5 }}>
         Para más información sobre horarios, disponibilidad o reservas, contactá directamente al lugar.
       </p>
     </div>

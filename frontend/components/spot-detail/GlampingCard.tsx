@@ -30,7 +30,7 @@ export default function GlampingCard({ glampingDetail, glampingAmenities }: Glam
         {glampingDetail.map((unit, index) => (
           <div key={unit.id ?? index}>
             {multi && (
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#2d6a4f", margin: "0 0 8px" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)", margin: "0 0 8px" }}>
                 {unit.accommodation_type
                   ? unit.accommodation_type.charAt(0).toUpperCase() + unit.accommodation_type.slice(1)
                   : `Tipo ${index + 1}`}
@@ -51,7 +51,7 @@ export default function GlampingCard({ glampingDetail, glampingAmenities }: Glam
               )}
             </div>
             {multi && index < glampingDetail.length - 1 && (
-              <hr style={{ border: "none", borderTop: "1px solid #e0ddd6", margin: "14px 0 0" }} />
+              <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "14px 0 0" }} />
             )}
           </div>
         ))}

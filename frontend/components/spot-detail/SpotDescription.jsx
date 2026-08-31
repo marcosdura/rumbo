@@ -30,7 +30,7 @@ function SpotDescription({ description }) {
       <style>{`
         .spot-desc-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -51,7 +51,7 @@ function SpotDescription({ description }) {
           border: none;
           padding: 10px 0 0;
           margin: 0;
-          color: #2d6a4f;
+          color: var(--primary);
           font-weight: 600;
           font-size: 13px;
           cursor: pointer;
@@ -62,8 +62,8 @@ function SpotDescription({ description }) {
       `}</style>
       <div className="spot-desc-card">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
             Descripción
           </h2>
         </div>

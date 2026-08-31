@@ -39,7 +39,7 @@ function Avatar({ user, size = 36 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: "linear-gradient(135deg, #52b788, #1b4332)",
+      background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.38, fontWeight: 600, color: "#fff",
     }}>
@@ -135,7 +135,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
       <style>{`
         .reviews-wrap {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -157,13 +157,13 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           gap: 6px;
           padding: 9px 18px;
           border-radius: 12px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           font-size: 14px;
           font-family: 'DM Sans', sans-serif;
           font-weight: 500;
           cursor: pointer;
-          color: #1b4332;
+          color: var(--primary-dark);
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           white-space: nowrap;
           flex-shrink: 0;
@@ -178,7 +178,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         /* Review card */
         .review-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 16px;
           padding: 16px 20px;
         }
@@ -204,7 +204,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
         .reviews-delete-btn {
           font-size: 11px;
-          color: #9a9690;
+          color: var(--muted);
           background: none;
           border: none;
           cursor: pointer;
@@ -213,7 +213,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           padding: 0;
         }
         @media (hover: hover) {
-          .reviews-delete-btn:hover { color: #dc2626; }
+          .reviews-delete-btn:hover { color: var(--danger); }
         }
 
         /* Form actions */
@@ -242,8 +242,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         <div className="reviews-header">
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
                 Reseñas
               </span>
             </div>
@@ -257,7 +257,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 </span>
                 <div>
                   <StarDisplay rating={Math.round(summary.average)} />
-                  <p style={{ fontSize: 12, color: "#9a9690", marginTop: 2 }}>
+                  <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
                     {summary.total} review{summary.total !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -277,14 +277,14 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
         {/* Formulario */}
         {showForm && (
-          <div style={{ background: "#f7f5f0", border: "1px solid #e0ddd6", borderRadius: 16, padding: 20, marginBottom: 20 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2d6a4f", marginBottom: 10 }}>
+          <div style={{ background: "#f7f5f0", border: "1px solid var(--border)", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", marginBottom: 10 }}>
               Tu rating
             </p>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
               style={{
-                width: "100%", border: "1px solid #e0ddd6", borderRadius: 12,
+                width: "100%", border: "1px solid var(--border)", borderRadius: 12,
                 padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
                 color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
                 transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
@@ -293,15 +293,15 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               placeholder="Contá tu experiencia (opcional)..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              onFocus={e => e.target.style.borderColor = "#2d6a4f"}
-              onBlur={e => e.target.style.borderColor = "#e0ddd6"}
+              onFocus={e => e.target.style.borderColor = "var(--primary)"}
+              onBlur={e => e.target.style.borderColor = "var(--border)"}
             />
             <div className="reviews-form-actions">
               <button
                 style={{
                   padding: "9px 16px", borderRadius: 12, fontSize: 14,
                   fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
-                  background: "none", color: "#9a9690", border: "1px solid #e0ddd6", cursor: "pointer",
+                  background: "none", color: "var(--muted)", border: "1px solid var(--border)", cursor: "pointer",
                 }}
                 onClick={() => { setShowForm(false); setRating(0); setComment("") }}
               >
@@ -311,7 +311,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 style={{
                   padding: "9px 20px", borderRadius: 12, fontSize: 14,
                   fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-                  background: "#1b4332", color: "#fff", border: "none",
+                  background: "var(--primary-dark)", color: "#fff", border: "none",
                   cursor: !rating || submitting ? "not-allowed" : "pointer",
                   opacity: !rating || submitting ? 0.45 : 1,
                   transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -327,11 +327,11 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
         {/* Lista */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "48px 20px", color: "#9a9690", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
             Cargando...
           </div>
         ) : reviews.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 20px", color: "#9a9690", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
             <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>💬</p>
             Todavía no hay reviews. ¡Sé el primero!
           </div>
@@ -346,7 +346,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                       <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
                         {review.user?.name || "Usuario"}
                       </p>
-                      <p style={{ fontSize: 11, color: "#9a9690", marginTop: 2 }}>
+                      <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
                         {timeAgo(review.created_at)}
                       </p>
                     </div>
@@ -378,7 +378,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 style={{
                   marginTop: 6, padding: "10px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                   fontFamily: "inherit", cursor: loadingMore ? "default" : "pointer",
-                  background: "#fff", color: "#1b4332", border: "1px solid #b7dfc8",
+                  background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
                   opacity: loadingMore ? 0.6 : 1,
                 }}
               >

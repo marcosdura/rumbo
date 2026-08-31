@@ -5,7 +5,7 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
   return (
     <div className="sectors-outer" style={{
       background: "#fff",
-      border: "1px solid #e0ddd6",
+      border: "1px solid var(--border)",
       borderRadius: 20,
       padding: "24px 28px",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
@@ -15,7 +15,7 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
         /* ── SectorCard ── */
         .sector-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 16px;
           padding: 20px;
           transition: box-shadow 0.2s, transform 0.2s;
@@ -50,7 +50,7 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
         }
         .sector-stat-cell {
           background: #f7f5f0;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 10px 8px;
           text-align: center;
@@ -65,7 +65,7 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
         .sector-stat-lbl {
           font-size: 10px;
           font-weight: 600;
-          color: #9a9690;
+          color: var(--muted);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           margin: 4px 0 0;
@@ -130,8 +130,8 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
       `}</style>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
           Sectores de Escalada
         </p>
       </div>

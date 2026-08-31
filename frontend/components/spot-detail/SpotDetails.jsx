@@ -128,7 +128,7 @@ function SpotDetails({ spot }) {
         .detail-link {
           font-size: 14px;
           font-weight: 600;
-          color: #2d6a4f;
+          color: var(--primary);
           text-decoration: none;
           display: flex;
           align-items: center;
@@ -149,8 +149,8 @@ function SpotDetails({ spot }) {
 
         {/* Detalles */}
         <div className="detail-section-label">
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
             Detalles
           </h2>
         </div>
@@ -172,8 +172,8 @@ function SpotDetails({ spot }) {
 
         {/* Contacto */}
         <div className="detail-contact-label">
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
             Contacto
           </h2>
         </div>

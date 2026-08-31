@@ -13,7 +13,7 @@ const waterTypeLabel = {
 }
 
 const difficultyConfig = {
-  facil:      { label: "Fácil",      color: "#1b4332", bg: "#e8f5ee", border: "#b7dfc8" },
+  facil:      { label: "Fácil",      color: "var(--primary-dark)", bg: "#e8f5ee", border: "#b7dfc8" },
   intermedio: { label: "Intermedio", color: "#78590a", bg: "#fef9e7", border: "#f0d98a" },
   dificil:    { label: "Difícil",    color: "#7c1d1d", bg: "#fdf0f0", border: "#f5c0c0" },
 }
@@ -27,7 +27,7 @@ const kayakTypeLabel = {
 function KayakCard({ kayak, copiedId, onCopy }) {
   const [hovered, setHovered] = useState(false)
 
-  const diff  = difficultyConfig[kayak.difficulty] || { label: kayak.difficulty, color: "#9a9690", bg: "#f7f5f0", border: "#e0ddd6" }
+  const diff  = difficultyConfig[kayak.difficulty] || { label: kayak.difficulty, color: "var(--muted)", bg: "#f7f5f0", border: "var(--border)" }
   const water = waterTypeLabel[kayak.water_type]   || { label: kayak.water_type, icon: "💧" }
   const hasContact = kayak.email || kayak.whatsapp || kayak.instagram
   const whatsappUrl = kayak.whatsapp ? `https://wa.me/${kayak.whatsapp.replace(/\D/g, "")}` : null
@@ -104,7 +104,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
           {/* Contacto */}
           {hasContact && (
             <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a9690", margin: 0 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", margin: 0 }}>
                 Contacto
               </p>
 
@@ -113,7 +113,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
                   <span
                     onClick={(e) => { e.preventDefault(); onCopy(kayak.email, kayak.id) }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer" }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer" }}
                     title="Copiar email"
                   >
                     {copiedId === kayak.id ? "¡Copiado! ✓" : kayak.email}
@@ -126,7 +126,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, "_blank", "noopener,noreferrer") }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                   >
                     {kayak.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                   </span>
@@ -138,7 +138,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(instagramUrl, "_blank", "noopener,noreferrer") }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                   >
                     @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                   </span>
@@ -167,7 +167,7 @@ export default function KayakDetail({ kayaks }) {
   return (
     <div style={{
       background: "#fff",
-      border: "1px solid #e0ddd6",
+      border: "1px solid var(--border)",
       borderRadius: 20,
       padding: "24px 28px",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
@@ -176,7 +176,7 @@ export default function KayakDetail({ kayaks }) {
       <style>{`
         .kayak-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           overflow: hidden;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -196,8 +196,8 @@ export default function KayakDetail({ kayaks }) {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
           Alquiler de Kayaks
         </p>
       </div>

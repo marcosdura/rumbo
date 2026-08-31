@@ -81,7 +81,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
           {/* Contacto */}
           {hasContact && (
             <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9a9690", margin: 0 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", margin: 0 }}>
                 Contacto
               </p>
 
@@ -90,7 +90,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
                   <span
                     onClick={(e) => { e.preventDefault(); onCopy(school.email, school.id) }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer" }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer" }}
                     title="Copiar email"
                   >
                     {copiedId === school.id ? "¡Copiado! ✓" : school.email}
@@ -103,7 +103,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, "_blank", "noopener,noreferrer") }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                   >
                     {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                   </span>
@@ -115,7 +115,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
                   <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(instagramUrl, "_blank", "noopener,noreferrer") }}
-                    style={{ fontSize: 13, fontWeight: 600, color: "#2d6a4f", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                   >
                     @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                   </span>
@@ -144,7 +144,7 @@ export default function SurfSchoolDetail({ surfSchools }) {
   return (
     <div style={{
       background: "#fff",
-      border: "1px solid #e0ddd6",
+      border: "1px solid var(--border)",
       borderRadius: 20,
       padding: "24px 28px",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
@@ -153,7 +153,7 @@ export default function SurfSchoolDetail({ surfSchools }) {
       <style>{`
         .surf-school-card {
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 20px;
           overflow: hidden;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -173,8 +173,8 @@ export default function SurfSchoolDetail({ surfSchools }) {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#2d6a4f", margin: 0 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
           Escuelas de Surf
         </p>
       </div>
