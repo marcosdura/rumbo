@@ -14,7 +14,7 @@ export default function LoadingScreen() {
         <div style={{ display: "flex", gap: 8 }}>
           {[0, 1, 2].map(i => (
             <div key={i} style={{
-              width: 8, height: 8, borderRadius: "50%", background: "#2d6a4f",
+              width: 8, height: 8, borderRadius: "50%", background: "var(--primary)",
               animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
             }} />
           ))}

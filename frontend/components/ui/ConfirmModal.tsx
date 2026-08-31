@@ -37,14 +37,14 @@ export default function ConfirmModal({
           padding: 16px;
         }
         .confirm-modal {
-          background: #f5f4f0; border: 1px solid #e0ddd6; border-radius: 20px;
+          background: #f5f4f0; border: 1px solid var(--border); border-radius: 20px;
           box-shadow: 0 8px 40px rgba(0,0,0,0.18);
           padding: 26px; width: 100%; max-width: 400px;
           font-family: 'DM Sans', sans-serif;
         }
         .confirm-modal-cancel-btn {
           padding: 11px 20px; border-radius: 12px;
-          border: 1px solid #e0ddd6; background: #fff;
+          border: 1px solid var(--border); background: #fff;
           font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
           cursor: pointer; color: #3d3d3a;
           transition: background 0.15s;
@@ -53,7 +53,7 @@ export default function ConfirmModal({
         .confirm-modal-confirm-btn {
           padding: 11px 20px; border-radius: 12px; border: none;
           font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-          cursor: pointer; background: #dc2626; color: #fff;
+          cursor: pointer; background: var(--danger); color: #fff;
           transition: opacity 0.15s;
         }
         .confirm-modal-confirm-btn:disabled { cursor: not-allowed; opacity: 0.7; }

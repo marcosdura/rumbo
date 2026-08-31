@@ -12,7 +12,7 @@ export default function Footer() {
         .sf-footer {
           font-family: 'DM Sans', sans-serif;
           background: #fff;
-          border-top: 1px solid #e0ddd6;
+          border-top: 1px solid var(--border);
           border-radius: 20px 20px 0 0;
           padding: 40px 40px 24px;
           margin-top: 80px;
@@ -35,7 +35,7 @@ export default function Footer() {
 
         .sf-brand-desc {
           font-size: 13px;
-          color: #9a9690;
+          color: var(--muted);
           line-height: 1.7;
           margin-bottom: 18px;
         }
@@ -45,7 +45,7 @@ export default function Footer() {
         .sf-social-btn {
           width: 34px; height: 34px;
           border-radius: 50%;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
@@ -54,13 +54,13 @@ export default function Footer() {
         }
         .sf-social-btn svg {
           width: 14px; height: 14px;
-          fill: #9a9690;
+          fill: var(--muted);
           transition: fill 0.2s;
         }
         @media (hover: hover) {
           .sf-social-btn:hover {
-            background: #1b4332;
-            border-color: #1b4332;
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(27,67,50,0.2);
           }
@@ -72,7 +72,7 @@ export default function Footer() {
           font-weight: 600;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #2d6a4f;
+          color: var(--primary);
           margin-bottom: 14px;
           display: flex;
           align-items: center;
@@ -83,7 +83,7 @@ export default function Footer() {
           display: block;
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: #2d6a4f;
+          background: var(--primary);
           flex-shrink: 0;
         }
 
@@ -98,7 +98,7 @@ export default function Footer() {
           transition: color 0.15s;
         }
         @media (hover: hover) {
-          .sf-col-links a:hover { color: #1b4332; }
+          .sf-col-links a:hover { color: var(--primary-dark); }
         }
 
         .sf-divider {
@@ -125,7 +125,7 @@ export default function Footer() {
         .sf-dot {
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: #2d6a4f;
+          background: var(--primary);
           flex-shrink: 0;
         }
 
@@ -141,9 +141,9 @@ export default function Footer() {
         .sf-badge-green {
           font-size: 11px; font-weight: 600;
           padding: 3px 10px; border-radius: 999px;
-          background: #1b4332;
+          background: var(--primary-dark);
           color: #d8f3dc;
-          border: 1px solid #2d6a4f;
+          border: 1px solid var(--primary);
         }
 
         @media (max-width: 640px) {

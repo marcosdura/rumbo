@@ -33,7 +33,7 @@ function Avatar({ user, size = 28 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "linear-gradient(135deg, #52b788, #1b4332)",
+      background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.38, fontWeight: 600, color: "#fff",
       border: "2px solid #b7dfc8", flexShrink: 0,
@@ -87,7 +87,7 @@ function Navbar() {
 
         .navbar-root {
           font-family: 'DM Sans', sans-serif;
-          background: linear-gradient(160deg, #1b4332 0%, #2d6a4f 65%, #40916c 100%);
+          background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%);
           border-bottom: 1px solid rgba(255,255,255,0.08);
           position: sticky;
           top: 0;
@@ -171,7 +171,7 @@ function Navbar() {
         .icon-btn.is-open   .icon-line:nth-child(3) { transform: rotate(-45deg); }
         /* Con fondo claro al abrir, las líneas se oscurecen para contrastar */
         .icon-btn.is-active .icon-line,
-        .icon-btn.is-open   .icon-line { background: #1b4332; }
+        .icon-btn.is-open   .icon-line { background: var(--primary-dark); }
 
         /* Ícono SVG del botón de búsqueda */
         .search-svg {
@@ -198,7 +198,7 @@ function Navbar() {
           top: calc(100% + 10px);
           left: 16px; right: 16px;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 18px;
           padding: 14px 16px;
           z-index: 200;
@@ -216,7 +216,7 @@ function Navbar() {
           right: 24px;
           width: 230px;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 18px;
           padding: 6px;
           z-index: 200;
@@ -238,8 +238,8 @@ function Navbar() {
           font-family: 'DM Sans', sans-serif;
         }
         .menu-link:hover  { background: #f7f5f0; color: #1b1b19; }
-        .menu-link.active { background: #e8f5ee; color: #1b4332; font-weight: 600; }
-        .menu-link.danger { color: #dc2626; }
+        .menu-link.active { background: #e8f5ee; color: var(--primary-dark); font-weight: 600; }
+        .menu-link.danger { color: var(--danger); }
         .menu-link.danger:hover { background: #fdf0f0; color: #b91c1c; }
 
         .menu-link-icon { font-size: 15px; width: 20px; text-align: center; }
@@ -247,13 +247,13 @@ function Navbar() {
 
         .menu-user-info  { padding: 10px 12px 8px; display: flex; align-items: center; gap: 10px; }
         .menu-user-name  { font-size: 13px; font-weight: 600; color: #1b1b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .menu-user-email { font-size: 11px; color: #9a9690; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+        .menu-user-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
         .signin-btn {
           display: flex; align-items: center; gap: 10px;
           padding: 9px 12px; border-radius: 10px;
           font-size: 14px; font-weight: 600;
-          color: #1b4332; background: #e8f5ee; border: 1px solid #b7dfc8;
+          color: var(--primary-dark); background: #e8f5ee; border: 1px solid #b7dfc8;
           width: 100%; text-align: left; cursor: pointer;
           font-family: 'DM Sans', sans-serif;
           transition: background 0.15s;

@@ -8,15 +8,15 @@ export type PillVariant =
 export type PillSize = "sm" | "md" | "lg"
 
 const VARIANTS: Record<PillVariant, { bg: string; color: string; border: string }> = {
-  neutral:        { bg: "#f7f5f0", color: "#4a443b", border: "#e0ddd6" },
+  neutral:        { bg: "#f7f5f0", color: "#4a443b", border: "var(--border)" },
   beige:          { bg: "#eae6df", color: "#4a443b", border: "#d0c9bc" },
-  green:          { bg: "#e8f5ee", color: "#1b4332", border: "#b7dfc8" },
-  "dark-green":   { bg: "#1b4332", color: "#d8f3dc", border: "#2d6a4f" },
-  "subtle-green": { bg: "#f0f7f3", color: "#2d6a4f", border: "#c0ddd0" },
+  green:          { bg: "#e8f5ee", color: "var(--primary-dark)", border: "#b7dfc8" },
+  "dark-green":   { bg: "var(--primary-dark)", color: "#d8f3dc", border: "var(--primary)" },
+  "subtle-green": { bg: "#f0f7f3", color: "var(--primary)", border: "#c0ddd0" },
   yellow:         { bg: "#fef9e7", color: "#78590a", border: "#f0d98a" },
   red:            { bg: "#fdf0f0", color: "#7c1d1d", border: "#f5c0c0" },
   orange:         { bg: "#fff4e6", color: "#7c4a03", border: "#f5c97a" },
-  muted:          { bg: "#f7f5f0", color: "#9a9690", border: "#e0ddd6" },
+  muted:          { bg: "#f7f5f0", color: "var(--muted)", border: "var(--border)" },
 }
 
 // Tinte de hover por variant. green/red son pixel-idénticos a los
