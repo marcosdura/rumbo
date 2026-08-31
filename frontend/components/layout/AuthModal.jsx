@@ -52,7 +52,7 @@ export default function AuthModal({ onClose }) {
         .auth-modal {
           font-family: 'DM Sans', sans-serif;
           background: #fff;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           border-radius: 24px;
           padding: 40px 36px 32px;
           width: 100%;
@@ -72,14 +72,14 @@ export default function AuthModal({ onClose }) {
           top: 14px; right: 14px;
           width: 32px; height: 32px;
           border-radius: 50%;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 14px;
-          color: #9a9690;
+          color: var(--muted);
           transition: background 0.15s, color 0.15s;
         }
         .auth-close:hover { background: #f7f5f0; color: #1b1b19; }
@@ -108,12 +108,12 @@ export default function AuthModal({ onClose }) {
           margin-bottom: 12px;
           padding: 16px;
           background: #fff;
-          border: 1.5px solid #e0ddd6;
+          border: 1.5px solid var(--border);
           border-radius: 14px;
           transition: border-color 0.2s, background 0.2s;
         }
-        .auth-checkbox-row:hover { border-color: #2d6a4f; background: #f0f7f3; }
-        .auth-checkbox-row.checked { border-color: #2d6a4f; background: #f0f7f3; }
+        .auth-checkbox-row:hover { border-color: var(--primary); background: #f0f7f3; }
+        .auth-checkbox-row.checked { border-color: var(--primary); background: #f0f7f3; }
 
         .auth-checkbox {
           width: 20px;
@@ -128,7 +128,7 @@ export default function AuthModal({ onClose }) {
           transition: border-color 0.2s, background 0.2s;
           background: #fff;
         }
-        .auth-checkbox.checked { border-color: #2d6a4f; background: #2d6a4f; }
+        .auth-checkbox.checked { border-color: var(--primary); background: var(--primary); }
 
         .auth-google-btn {
           width: 100%;
@@ -138,7 +138,7 @@ export default function AuthModal({ onClose }) {
           gap: 10px;
           padding: 13px;
           border-radius: 14px;
-          border: 1px solid #e0ddd6;
+          border: 1px solid var(--border);
           background: #fff;
           font-size: 14px;
           font-weight: 600;
@@ -169,7 +169,7 @@ export default function AuthModal({ onClose }) {
           {/* Icono */}
           <div style={{
             width: 60, height: 60, borderRadius: "50%",
-            background: "linear-gradient(135deg, #52b788, #1b4332)",
+            background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 26, margin: "0 auto 20px",
             border: "3px solid #b7dfc8",
@@ -226,7 +226,7 @@ export default function AuthModal({ onClose }) {
               href="/legal"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#2d6a4f", fontWeight: 600 }}
+              style={{ color: "var(--primary)", fontWeight: 600 }}
             >
               Términos y condiciones
             </a>
