@@ -240,7 +240,7 @@ export default async function KayakDetailPage({ params }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {waterInfo && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de agua</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Tipo de agua</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         {waterInfo.icon} {waterInfo.label}
                       </span>
@@ -248,13 +248,13 @@ export default async function KayakDetailPage({ params }: Props) {
                   )}
                   {diffInfo && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Dificultad</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Dificultad</span>
                       <Pill variant={diffInfo.variant}>{diffInfo.label}</Pill>
                     </div>
                   )}
                   {kayak.duration != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Duración</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Duración</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         ⏱️ {kayak.duration} {kayak.duration === 1 ? "hora" : "horas"}
                       </span>
@@ -262,7 +262,7 @@ export default async function KayakDetailPage({ params }: Props) {
                   )}
                   {kayak.kayak_type && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de kayak</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Tipo de kayak</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         🛶 {KAYAK_TYPE[kayak.kayak_type] || kayak.kayak_type}
                       </span>
@@ -270,14 +270,14 @@ export default async function KayakDetailPage({ params }: Props) {
                   )}
                   {kayak.rental_available != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Alquiler</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Alquiler</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         🏪 {kayak.rental_available ? "Disponible" : "No disponible"}
                       </span>
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                    <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Temporada</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                       {isSeasonal
                         ? `${MONTHS_FULL[kayak.season_start]} – ${MONTHS_FULL[kayak.season_end]}`
@@ -297,13 +297,13 @@ export default async function KayakDetailPage({ params }: Props) {
                   <div>
                     {kayak.email && (
                       <div className="kayak-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>✉️ Email</span>
                         <a href={`mailto:${kayak.email}`} className="kayak-contact-link">{kayak.email}</a>
                       </div>
                     )}
                     {kayak.whatsapp && (
                       <div className="kayak-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>💬 WhatsApp</span>
                         <a href={whatsappUrl!} target="_blank" rel="noopener noreferrer" className="kayak-contact-link">
                           {kayak.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                         </a>
@@ -311,7 +311,7 @@ export default async function KayakDetailPage({ params }: Props) {
                     )}
                     {kayak.instagram && (
                       <div className="kayak-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>📷 Instagram</span>
                         <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" className="kayak-contact-link">
                           @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                         </a>

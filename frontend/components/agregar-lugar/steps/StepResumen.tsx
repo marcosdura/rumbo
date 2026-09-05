@@ -228,7 +228,7 @@ export default function StepResumen({
                   </p>
                 ))}
                 {selectedGlampingAmenities && selectedGlampingAmenities.length > 0 && (
-                  <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
                     Amenities: {selectedGlampingAmenities.join(", ")}
                   </p>
                 )}
@@ -239,7 +239,7 @@ export default function StepResumen({
                 <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", margin: "0 0 6px" }}>⛺ Camping</p>
                 <SummaryRow label="Precio por noche" value={`$${campingDetail.price}`} />
                 {selectedCampingAmenities && selectedCampingAmenities.length > 0 && (
-                  <p style={{ fontSize: 12, color: "#7a7669", margin: "4px 0 0" }}>
+                  <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: "4px 0 0" }}>
                     Amenities: {selectedCampingAmenities.join(", ")}
                   </p>
                 )}
@@ -274,7 +274,7 @@ export default function StepResumen({
             {routes.filter(r => r.name).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
-                <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
                   {[r.distance_km && `${r.distance_km} km`, r.difficulty].filter(Boolean).join(" · ")}
                 </p>
               </div>
@@ -289,7 +289,7 @@ export default function StepResumen({
             {sectors.filter(sec => sec.name).map((sec, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{sec.name}</p>
-                <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
                   {[sec.type, sec.max_altitude && `${sec.max_altitude} m`].filter(Boolean).join(" · ")}
                 </p>
               </div>
@@ -304,7 +304,7 @@ export default function StepResumen({
             {sectorRoutes.filter(r => r.name).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
-                <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
                   {sectors?.[r.sectorIndex]?.name || "Sector sin nombre"}
                   {r.grade && ` · ${r.grade}`}
                 </p>
@@ -335,7 +335,7 @@ export default function StepResumen({
                   {climbingNewRoutes.filter(r => r.name).map((r, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                       <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
-                      <p style={{ fontSize: 12, color: "#7a7669", margin: 0, textAlign: "right", flexShrink: 0 }}>
+                      <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
                         {[r.grade, r.type].filter(Boolean).join(" · ")}
                       </p>
                     </div>

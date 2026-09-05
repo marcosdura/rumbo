@@ -112,7 +112,7 @@ export default function PhotosTab({
             <p style={{ fontSize: 13, color: "var(--danger)", margin: "0 0 12px" }}>{photoError}</p>
           )}
 
-          <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 12 }}>
+          <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 12 }}>
             {selectedSpot.images.length} foto{selectedSpot.images.length !== 1 ? "s" : ""} · La primera es la principal
           </p>
           <div className="photo-grid">

@@ -26,7 +26,7 @@ export default function SummaryCard({
             onClick={onEdit}
             style={{
               background: "none", border: "1px solid var(--border)", padding: "3px 10px",
-              fontSize: 12, color: "#7a7669", cursor: "pointer",
+              fontSize: 12, color: "var(--muted-strong)", cursor: "pointer",
               fontFamily: "inherit", borderRadius: 8,
             }}
           >

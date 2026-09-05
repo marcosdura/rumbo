@@ -17,7 +17,7 @@ export default function Field({
           : <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
         }
         {sublabel && (
-          <div style={{ fontSize: 11, fontWeight: 400, color: "#7a7669", marginTop: 2 }}>{sublabel}</div>
+          <div style={{ fontSize: 11, fontWeight: 400, color: "var(--muted-strong)", marginTop: 2 }}>{sublabel}</div>
         )}
       </div>
       {children}

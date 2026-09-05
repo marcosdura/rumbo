@@ -34,7 +34,7 @@ export default function StepClimbingMode({
             <span style={{ fontSize: 32 }}>{m.emoji}</span>
             <div>
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1b1b19", margin: 0 }}>{m.title}</p>
-              <p style={{ fontSize: 13, color: "#7a7669", margin: "2px 0 0" }}>{m.desc}</p>
+              <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: "2px 0 0" }}>{m.desc}</p>
             </div>
           </button>
         ))}

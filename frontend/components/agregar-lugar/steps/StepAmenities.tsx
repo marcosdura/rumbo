@@ -48,7 +48,7 @@ export default function StepAmenities({
       </p>
       {categories.map(grp => (
         <div key={grp.id} style={{ marginBottom: 20 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#7a7669", marginBottom: 8 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--muted-strong)", marginBottom: 8 }}>
             {grp.emoji} {grp.label}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

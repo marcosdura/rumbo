@@ -102,7 +102,7 @@ function SpotDetails({ spot }) {
 
         .detail-label {
           font-size: 14px;
-          color: #7a7669;
+          color: var(--muted-strong);
           font-weight: 400;
           display: flex;
           align-items: center;

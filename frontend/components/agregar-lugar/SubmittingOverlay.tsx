@@ -28,7 +28,7 @@ export default function SubmittingOverlay({ uploadProgress }: Props) {
         <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", margin: "0 0 8px" }}>
           Enviando tu lugar...
         </p>
-        <p style={{ fontSize: 13, color: "#7a7669", margin: "0 0 16px", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: "0 0 16px", lineHeight: 1.5 }}>
           {uploadProgress ?? "Procesando..."}
         </p>
         <div style={{

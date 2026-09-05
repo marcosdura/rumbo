@@ -201,7 +201,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
           padding-right: 26px;
         }
         .search-field-input::placeholder {
-          color: #b0aca5;
+          color: var(--muted);
           font-weight: 400;
         }
 
@@ -260,7 +260,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         .search-dropdown-empty {
           font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
-          color: #b0aca5;
+          color: var(--muted);
           padding: 14px 16px;
           text-align: center;
           font-style: italic;

@@ -94,7 +94,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
 
         .spot-card-rating {
           font-size: 13px;
-          color: #7a7669;
+          color: var(--muted-strong);
           margin: 0 0 6px;
           display: flex;
           align-items: center;

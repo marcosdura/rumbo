@@ -243,7 +243,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {classInfo && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Tipo de clase</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Tipo de clase</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         {classInfo.icon} {classInfo.label}
                       </span>
@@ -251,7 +251,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                   )}
                   {school.duration != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Duración</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Duración</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         ⏱️ {school.duration} {school.duration === 1 ? "hora" : "horas"}
                       </span>
@@ -259,7 +259,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                   )}
                   {school.equipment_include != null && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Equipo</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Equipo</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         🩳 {school.equipment_include ? "Incluido" : "No incluido"}
                       </span>
@@ -267,13 +267,13 @@ export default async function SurfSchoolPage({ params }: Props) {
                   )}
                   {!isSeasonal && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Temporada</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>Todo el año</span>
                     </div>
                   )}
                   {isSeasonal && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: "#7a7669" }}>Temporada</span>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Temporada</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         {MONTHS_FULL[school.season_start]} – {MONTHS_FULL[school.season_end]}
                       </span>
@@ -292,13 +292,13 @@ export default async function SurfSchoolPage({ params }: Props) {
                   <div>
                     {school.email && (
                       <div className="surf-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>✉️ Email</span>
                         <a href={`mailto:${school.email}`} className="surf-contact-link">{school.email}</a>
                       </div>
                     )}
                     {school.whatsapp && (
                       <div className="surf-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>💬 WhatsApp</span>
                         <a href={whatsappUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link">
                           {school.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                         </a>
@@ -306,7 +306,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                     )}
                     {school.instagram && (
                       <div className="surf-contact-row">
-                        <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
+                        <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>📷 Instagram</span>
                         <a href={instagramUrl!} target="_blank" rel="noopener noreferrer" className="surf-contact-link">
                           @{instagramHandle} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                         </a>

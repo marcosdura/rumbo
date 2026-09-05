@@ -92,7 +92,7 @@ export default function LocationPicker({ lat, lng, onLocationSelect }) {
           Ubicación <span style={{ color: "#e53e3e", fontSize: 13 }}>*</span>
         </p>
       </div>
-      <p style={{ fontSize: 12, color: "#7a7669", margin: "0 0 12px" }}>
+      <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: "0 0 12px" }}>
         Hacé clic en el mapa para colocar el marcador, o arrastralo para ajustarlo
       </p>
 

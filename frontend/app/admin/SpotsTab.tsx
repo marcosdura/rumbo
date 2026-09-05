@@ -102,7 +102,7 @@ export default function SpotsTab({
                       {spot.is_approved ? "Aprobado" : "Pendiente"}
                     </Pill>
                   </div>
-                  <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
                     {spot.category?.name} · {spot.department}
                   </p>
                   <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>

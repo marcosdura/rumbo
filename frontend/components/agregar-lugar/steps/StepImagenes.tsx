@@ -81,7 +81,7 @@ export default function StepImagenes({
             style={{ display: "none" }}
             onChange={handleFiles}
           />
-          <span style={{ color: "#7a7669", fontSize: 14 }}>
+          <span style={{ color: "var(--muted-strong)", fontSize: 14 }}>
             {images.length > 0
               ? `+ Agregar más imágenes (${images.length}/10)`
               : "Hacé clic para seleccionar imágenes"}

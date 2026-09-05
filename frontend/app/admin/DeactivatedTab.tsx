@@ -15,7 +15,7 @@ interface Props {
 export default function DeactivatedTab({ deactivatedSpots, loadError, loading, actionLoading, onReactivate, onDeleteRequest }: Props) {
   return (
     <div>
-      <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 16, lineHeight: 1.5 }}>
         Estos spots quedaron sin dueño porque la cuenta que los creó se eliminó.
         No se muestran públicamente. Contactá el email antes de reactivar o
         eliminar el spot definitivamente.
@@ -36,7 +36,7 @@ export default function DeactivatedTab({ deactivatedSpots, loadError, loading, a
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
                   <Pill variant="yellow" size="sm">Desactivado</Pill>
                 </div>
-                <p style={{ fontSize: 12, color: "#7a7669", margin: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
                   {spot.category?.name} · {spot.department}
                 </p>
                 <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>

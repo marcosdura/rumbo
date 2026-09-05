@@ -9,7 +9,7 @@ export default function TriStateToggle({
   const opts: { label: string; v: boolean | null; activeColor: string; activeBg: string }[] = [
     { label: "Sí",    v: true,  activeColor: "var(--primary)", activeBg: "var(--primary)" },
     { label: "No",    v: false, activeColor: "var(--danger)", activeBg: "var(--danger)" },
-    { label: "No sé", v: null,  activeColor: "#7a7669", activeBg: "#7a7669" },
+    { label: "No sé", v: null,  activeColor: "var(--muted-strong)", activeBg: "var(--muted-strong)" },
   ]
   return (
     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>

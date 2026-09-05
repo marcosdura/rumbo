@@ -23,7 +23,7 @@ export default function StepServicioSpot({
       <h2 style={s.title}>
         {selectedCat.name === "Surf" ? "¿En qué playa operás?" : "¿En qué río o laguna operás?"}
       </h2>
-      <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 20 }}>
+      <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
         {selectedCat.name === "Surf"
           ? "Seleccioná la playa donde funciona tu escuela de surf."
           : "Seleccioná el río o laguna donde ofrecés el servicio de kayak."}

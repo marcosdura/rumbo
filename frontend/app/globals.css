@@ -8,7 +8,12 @@
   --primary: #2d6a4f;
   --primary-dark: #1b4332;
   --border: #e0ddd6;
-  --muted: #9a9690;
+  /* Dos niveles de texto secundario, los dos pasando WCAG AA (4.5:1).
+     Antes eran #9a9690 (2.94:1 sobre blanco) y #7a7669 (4.13:1 sobre el
+     fondo de página) — los dos por debajo del mínimo. Se mantiene la
+     jerarquía: --muted es el tenue, --muted-strong el fuerte. */
+  --muted: #726e64;
+  --muted-strong: #5f5b53;
   --danger: #dc2626;
   --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
 }
@@ -20,6 +25,7 @@
   --color-primary-dark: var(--primary-dark);
   --color-border: var(--border);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -266,7 +272,7 @@ input[type="number"] {
 .sector-stat-lbl {
   font-size: 9px;
   font-weight: 600;
-  color: #9a9690;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0;
@@ -363,7 +369,7 @@ input[type="number"] {
   min-width: 140px;
 }
 .detail-cell-label {
-  font-size: 11px; font-weight: 600; color: #9a9690;
+  font-size: 11px; font-weight: 600; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px;
 }
 .detail-cell-value {

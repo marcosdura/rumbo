@@ -70,7 +70,7 @@ export const s: Record<string, CSSProperties> = {
     color: "#fff", fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
   },
   errorText: { color: "#c0392b", fontSize: 13, marginTop: 10 },
-  subtitle: { fontSize: 13, color: "#7a7669", marginBottom: 16 },
+  subtitle: { fontSize: 13, color: "var(--muted-strong)", marginBottom: 16 },
   deleteBtn: {
     position: "absolute", top: 10, right: 10,
     background: "#fdf0f0", border: "1px solid #f5c0c0", color: "#c0392b",

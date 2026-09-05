@@ -103,12 +103,12 @@ export default function ExperienciasSection({ spotId }: { spotId: number }) {
             {(exp.schedule || exp.contact) && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
                 {exp.schedule && (
-                  <span style={{ fontSize: 12, color: "#7a7669", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--muted-strong)", display: "flex", alignItems: "center", gap: 4 }}>
                     🗓️ {exp.schedule}
                   </span>
                 )}
                 {exp.contact && (
-                  <span style={{ fontSize: 12, color: "#7a7669", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--muted-strong)", display: "flex", alignItems: "center", gap: 4 }}>
                     📞 {exp.contact}
                   </span>
                 )}

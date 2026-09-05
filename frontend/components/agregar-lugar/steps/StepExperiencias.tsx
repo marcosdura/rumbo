@@ -160,7 +160,7 @@ function ExperienceCard({
         {/* Price */}
         <Field label="Precio" required={false} sublabel="Dejá vacío si el precio varía o se consulta">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 13, color: "#7a7669", flexShrink: 0 }}>$ UYU</span>
+            <span style={{ fontSize: 13, color: "var(--muted-strong)", flexShrink: 0 }}>$ UYU</span>
             <input
               style={s.input}
               type="number"

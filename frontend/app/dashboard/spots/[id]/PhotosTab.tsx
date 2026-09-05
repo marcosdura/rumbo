@@ -26,7 +26,7 @@ export default function PhotosTab({
   return (
     <div style={{ ...s.card, padding: 24 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <p style={{ fontSize: 13, color: "#7a7669", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: 0 }}>
           {photoCount} de {MAX_PHOTOS} fotos · {atPhotoLimit ? "Límite alcanzado" : `Podés agregar ${MAX_PHOTOS - photoCount} más`}
         </p>
         <button

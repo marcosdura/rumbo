@@ -92,7 +92,7 @@ export default function Footer() {
         }
         .sf-col-links a {
           font-size: 13px;
-          color: #7a7669;
+          color: var(--muted-strong);
           text-decoration: none;
           transition: color 0.15s;
         }
@@ -116,7 +116,7 @@ export default function Footer() {
 
         .sf-copy {
           font-size: 12px;
-          color: #b0aca5;
+          color: var(--muted);
           display: flex;
           align-items: center;
           gap: 8px;

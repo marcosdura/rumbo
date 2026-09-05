@@ -360,7 +360,7 @@ export default function AgregarLugar() {
             <p style={{ fontSize: 22, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>
               Necesitás una cuenta para continuar
             </p>
-            <p style={{ fontSize: 14, color: "#7a7669", marginBottom: 28, lineHeight: 1.6, maxWidth: 380, margin: "0 auto 28px" }}>
+            <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 28, lineHeight: 1.6, maxWidth: 380, margin: "0 auto 28px" }}>
               Guardamos tu email para poder contactarte si necesitamos verificar o completar la información del lugar que enviás.
             </p>
             <button
@@ -396,7 +396,7 @@ export default function AgregarLugar() {
           {pageHeader}
           <div style={{ marginTop: 48 }}>
             <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>¡Gracias!</p>
-            <p style={{ fontSize: 16, color: "#7a7669", marginBottom: 36 }}>Tu lugar fue enviado y será revisado pronto.</p>
+            <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36 }}>Tu lugar fue enviado y será revisado pronto.</p>
             <button style={s.btnPrimary} onClick={reset}>Enviar otro lugar</button>
           </div>
         </div>

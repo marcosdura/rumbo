@@ -283,7 +283,7 @@ export default function LegalPage() {
 
         .legal-intro {
           font-size: 14px;
-          color: #7a7669;
+          color: var(--muted-strong);
           font-style: italic;
           margin: 0 0 20px;
           line-height: 1.6;

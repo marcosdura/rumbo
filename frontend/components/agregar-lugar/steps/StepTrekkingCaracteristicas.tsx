@@ -23,7 +23,7 @@ export default function StepTrekkingCaracteristicas({
       <h2 style={s.title}>Características del lugar</h2>
       <div style={s.card}>
         <p style={s.cardTitle}>Características del lugar</p>
-        <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 16, marginTop: -6 }}>
+        <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 16, marginTop: -6 }}>
           Indicá si el lugar cuenta con cada característica. Señal móvil es opcional.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

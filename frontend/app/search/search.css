@@ -23,7 +23,7 @@
   background: #a8a39a;
   border-radius: 6px;
 }
-.cards-scroll::-webkit-scrollbar-thumb:hover { background: #7a7669; }
+.cards-scroll::-webkit-scrollbar-thumb:hover { background: var(--muted-strong); }
 
 .search-layout {
   flex: 1; display: flex; overflow: hidden;

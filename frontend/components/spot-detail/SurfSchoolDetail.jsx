@@ -87,7 +87,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
 
               {school.email && (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, color: "#7a7669" }}>✉️ Email</span>
+                  <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>✉️ Email</span>
                   <span
                     onClick={(e) => { e.preventDefault(); onCopy(school.email, school.id) }}
                     style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer" }}
@@ -100,7 +100,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
 
               {school.whatsapp && (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, color: "#7a7669" }}>💬 WhatsApp</span>
+                  <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>💬 WhatsApp</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, "_blank", "noopener,noreferrer") }}
                     style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
@@ -112,7 +112,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
 
               {school.instagram && (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, color: "#7a7669" }}>📷 Instagram</span>
+                  <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>📷 Instagram</span>
                   <span
                     onClick={(e) => { e.preventDefault(); window.open(instagramUrl, "_blank", "noopener,noreferrer") }}
                     style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}

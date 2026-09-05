@@ -227,7 +227,7 @@ export default function AuthModal({ onClose }) {
 
           {/* Aviso de términos */}
           <p style={{
-            fontSize: 12, color: "#b0aca5",
+            fontSize: 12, color: "var(--muted)",
             textAlign: "center", margin: "0 0 20px",
           }}>
             Al continuar aceptás nuestros{" "}
@@ -256,7 +256,7 @@ export default function AuthModal({ onClose }) {
           </button>
 
           <p style={{
-            fontSize: 12, color: "#b0aca5",
+            fontSize: 12, color: "var(--muted)",
             textAlign: "center", marginTop: 16, lineHeight: 1.5,
           }}>
             Tu información está segura y no compartimos tus datos.

@@ -26,7 +26,7 @@ export default function StatsRow({ reviewsCount, favoritesCount }: Props) {
                 <p style={s.statLabel}>{stat.label}</p>
               </div>
             </div>
-            <span style={{ fontSize: 14, color: "#b0aca5" }}>→</span>
+            <span style={{ fontSize: 14, color: "var(--muted)" }}>→</span>
           </div>
         </Link>
       ))}

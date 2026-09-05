@@ -105,7 +105,7 @@ export default function FilterDrawerShell<T>({
           border-radius: 50%;
           border: 1px solid var(--border);
           background: #f5f4f0;
-          color: #7a7669;
+          color: var(--muted-strong);
           font-size: 14px;
           cursor: pointer;
           display: flex; align-items: center; justify-content: center;
@@ -235,7 +235,7 @@ export default function FilterDrawerShell<T>({
           border-radius: 12px;
           border: 1px solid var(--border);
           background: #fff;
-          color: #7a7669;
+          color: var(--muted-strong);
           cursor: pointer;
           transition: background 0.15s, color 0.15s;
           flex-shrink: 0;
