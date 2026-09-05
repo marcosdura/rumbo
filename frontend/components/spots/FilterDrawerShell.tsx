@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from "react"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 // Los 5 drawers de filtro (Trekking/Kayak/Surf/Climbing/Camping) eran el
 // mismo "shell" copiado 5 veces — mismo estado pending/visible/animatingIn,
@@ -26,6 +27,7 @@ export default function FilterDrawerShell<T>({
   const [pending, setPending]         = useState<T>(appliedFilters)
   const [visible, setVisible]         = useState(false)
   const [animatingIn, setAnimatingIn] = useState(false)
+  const panelRef = useModalA11y(isOpen, onClose)
 
   useEffect(() => {
     if (isOpen) {
@@ -287,13 +289,18 @@ export default function FilterDrawerShell<T>({
       <div className={`fd-overlay${animatingIn ? " active" : ""}`} onClick={onClose} />
 
       <div
+        ref={panelRef}
         className={`fd-panel${animatingIn ? " active" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="filter-drawer-title"
+        tabIndex={-1}
         style={{ "--fd-width": `${width}px` } as React.CSSProperties}
       >
         <div className="fd-handle" />
 
         <div className="fd-header">
-          <p className="fd-header-title">Filtrar resultados</p>
+          <p className="fd-header-title" id="filter-drawer-title">Filtrar resultados</p>
           <button className="fd-close-btn" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
 

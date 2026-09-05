@@ -3,9 +3,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import CloudinaryPhoto from "./CloudinaryPhoto"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 export default function PhotoLightbox({ photos, name, startIndex = 0, onClose }) {
   const [current, setCurrent] = useState(startIndex)
+  // Escape, focus trap, restauración de foco y scroll lock salen del hook.
+  const panelRef = useModalA11y(true, onClose)
 
   const prev = useCallback(() =>
     setCurrent((c) => (c - 1 + photos.length) % photos.length), [photos.length])
@@ -13,23 +16,23 @@ export default function PhotoLightbox({ photos, name, startIndex = 0, onClose })
   const next = useCallback(() =>
     setCurrent((c) => (c + 1) % photos.length), [photos.length])
 
+  // Las flechas sí son propias del lightbox.
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape") onClose()
       if (e.key === "ArrowLeft") prev()
       if (e.key === "ArrowRight") next()
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [onClose, prev, next])
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    return () => { document.body.style.overflow = "" }
-  }, [])
+  }, [prev, next])
 
   return createPortal(
     <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Fotos de ${name}`}
+      tabIndex={-1}
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
@@ -40,6 +43,7 @@ export default function PhotoLightbox({ photos, name, startIndex = 0, onClose })
     >
       <button
         onClick={onClose}
+        aria-label="Cerrar"
         style={{
           position: "absolute", top: 16, right: 16,
           background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%",

@@ -3,9 +3,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { CldImage } from "next-cloudinary"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 function ImageGallery({ images, name, startIndex = 0, onClose }) {
   const [current, setCurrent] = useState(startIndex)
+  // Escape, focus trap, restauración de foco y scroll lock salen del hook.
+  const panelRef = useModalA11y(true, onClose)
 
   const prev = useCallback(() =>
     setCurrent((c) => (c - 1 + images.length) % images.length), [images.length])
@@ -13,23 +16,23 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
   const next = useCallback(() =>
     setCurrent((c) => (c + 1) % images.length), [images.length])
 
+  // Las flechas sí son propias de la galería.
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape") onClose()
       if (e.key === "ArrowLeft") prev()
       if (e.key === "ArrowRight") next()
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [onClose, prev, next])
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    return () => { document.body.style.overflow = "" }
-  }, [])
+  }, [prev, next])
 
   return createPortal(
     <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Fotos de ${name}`}
+      tabIndex={-1}
       onClick={onClose}
       style={{
         position: "fixed",
@@ -45,6 +48,7 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
     >
       <button
         onClick={onClose}
+        aria-label="Cerrar"
         style={{
           position: "absolute",
           top: 16,
