@@ -85,7 +85,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
       onMouseLeave={() => href && setHovered(false)}
     >
       <h2 className="spot-section-title" style={{
-        fontFamily: "'Playfair Display', serif",
+        fontFamily: "var(--font-playfair-display), serif",
         fontWeight: 600,
         color: hovered ? "var(--primary)" : "#1b1b19",
         margin: 0, lineHeight: 1.2,
@@ -103,7 +103,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
   )
 
   return (
-    <section style={{ paddingTop: 24, fontFamily: "'DM Sans', sans-serif" }}>
+    <section style={{ paddingTop: 24, fontFamily: "var(--font-dm-sans), sans-serif" }}>
 
       <style>{`
         .spot-section-title { font-size: 30px; }
@@ -192,7 +192,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
         .ver-todo-label {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 14px;
           font-weight: 600;
           color: #1b1b19;

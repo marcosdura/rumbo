@@ -51,7 +51,7 @@ function MapCard({ lat, lng, name }) {
           cursor: pointer;
           letter-spacing: 0.03em;
           text-decoration: none;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
         @media (hover: hover) {
@@ -73,7 +73,7 @@ function MapCard({ lat, lng, name }) {
         <h3 style={{
           fontSize: 11, fontWeight: 600, letterSpacing: "0.1em",
           textTransform: "uppercase", color: "var(--primary)", margin: 0,
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--font-dm-sans), sans-serif",
         }}>
           Ubicación
         </h3>

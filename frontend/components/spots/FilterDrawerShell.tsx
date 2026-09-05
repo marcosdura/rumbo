@@ -73,7 +73,7 @@ export default function FilterDrawerShell<T>({
           display: flex;
           flex-direction: column;
           box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           opacity: 0;
           transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22,1,0.36,1);
         }
@@ -162,7 +162,7 @@ export default function FilterDrawerShell<T>({
           gap: 8px;
         }
         .fd-pill {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 500;
           padding: 7px 16px;
@@ -192,7 +192,7 @@ export default function FilterDrawerShell<T>({
           gap: 8px;
         }
         .fd-toggle {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 500;
           padding: 10px 18px;
@@ -226,7 +226,7 @@ export default function FilterDrawerShell<T>({
           border-top: 1px solid #ede9e1;
         }
         .fd-btn-clear {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 600;
           padding: 10px 20px;
@@ -240,7 +240,7 @@ export default function FilterDrawerShell<T>({
         }
         .fd-btn-clear:hover { background: #f5f4f0; color: #1b1b19; }
         .fd-btn-apply {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 700;
           padding: 10px 20px;

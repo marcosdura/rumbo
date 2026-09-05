@@ -100,7 +100,7 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
           color: ${color};
           white-space: nowrap;
           box-shadow: ${shadow};
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           cursor: pointer;
           transform: ${scale};
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
@@ -168,14 +168,14 @@ const createPopupHtml = (spot, categories) => {
       padding:3px 8px; border-radius:999px;
       background:#e8f5ee; color:var(--primary-dark); border:1px solid #b7dfc8;
       font-size:10px; font-weight:600; letter-spacing:0.03em;
-      font-family:'DM Sans', sans-serif;
+      font-family: var(--font-dm-sans), sans-serif;
     ">${CATEGORY_EMOJI[cat.name] ?? ''} ${cat.name}</span>
   `).join('')
 
   return `
     <a href="/spots/${spot.slug}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-      <div style="cursor:pointer; font-family:'DM Sans', sans-serif; min-width:180px; padding:2px 0;">
-        <p style="font-family:'Playfair Display', serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
+      <div style="cursor:pointer; font-family: var(--font-dm-sans), sans-serif; min-width:180px; padding:2px 0;">
+        <p style="font-family: var(--font-playfair-display), serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
           ${escapeHtml(spot.name)}
         </p>
         <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
@@ -318,7 +318,7 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
           color: #3d3d3a !important;
           border: 1.5px solid var(--border) !important;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-          font-family: 'DM Sans', sans-serif !important;
+          font-family: var(--font-dm-sans), sans-serif !important;
           font-size: 12px !important;
           font-weight: 500 !important;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;

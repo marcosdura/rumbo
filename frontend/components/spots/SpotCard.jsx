@@ -37,10 +37,9 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .spot-card {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           background: #fff;
           border: 1px solid var(--border);
           border-radius: 20px;
@@ -86,7 +85,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
         .spot-card-body { padding: 10px 12px 12px; }
 
         .spot-card-name {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 15px;
           font-weight: 600;
           color: #1b1b19;

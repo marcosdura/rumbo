@@ -137,10 +137,9 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .search-bar {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           display: inline-flex;
           align-items: center;
           background: #fff;
@@ -188,7 +187,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
 
         .search-field-input {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 500;
           color: #1b1b19;
@@ -232,7 +231,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
 
         .search-dropdown-item {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           font-weight: 400;
           color: #3d3d3a;
@@ -259,7 +258,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
 
         .search-dropdown-empty {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px;
           color: #b0aca5;
           padding: 14px 16px;
@@ -268,7 +267,7 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
         }
 
         .search-btn {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           display: flex;
           align-items: center;
           justify-content: center;
