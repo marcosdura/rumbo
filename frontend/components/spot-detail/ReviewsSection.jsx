@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
-import Toast from "@/components/ui/Toast"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import { trackEvent } from "@/lib/analytics"
@@ -64,6 +63,12 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const [showAuth, setShowAuth] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  // Un error por operación: cargar la lista no es lo mismo que paginarla,
+  // publicar o borrar — cada uno se muestra donde el usuario está mirando.
+  const [loadError, setLoadError] = useState(false)
+  const [moreError, setMoreError] = useState(false)
+  const [submitError, setSubmitError] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const token = session?.id_token
 
@@ -78,6 +83,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     `/reviews`
 
   const loadReviews = async () => {
+    setLoadError(false)
     try {
       const [revResult, sumResult] = await Promise.all([
         api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
@@ -86,18 +92,25 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
       setReviews(Array.isArray(revResult.data) ? revResult.data : [])
       setReviewsTotal(revResult.totalCount ?? 0)
       setSummary(sumResult.data)
-    } catch {}
+    } catch {
+      // Sin esto la lista queda vacía y la UI dice "todavía no hay reviews",
+      // que es mentira: no se pudieron cargar.
+      setLoadError(true)
+    }
     setLoading(false)
   }
 
   const loadMoreReviews = async () => {
     if (loadingMore) return
     setLoadingMore(true)
+    setMoreError(false)
     try {
       const { data, totalCount } = await api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: reviews.length } })
       if (totalCount != null) setReviewsTotal(totalCount)
       setReviews(prev => [...prev, ...(Array.isArray(data) ? data : [])])
-    } catch {}
+    } catch {
+      setMoreError(true)
+    }
     setLoadingMore(false)
   }
 
@@ -106,6 +119,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const handleSubmit = async () => {
     if (!rating) return
     setSubmitting(true)
+    setSubmitError(false)
     try {
       await api.post(basePath, { rating, comment }, { token })
       trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
@@ -113,21 +127,27 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
       setComment("")
       setShowForm(false)
       loadReviews()
-    } catch {}
+    } catch {
+      // El form queda abierto con lo escrito, así reintentar es apretar
+      // "Publicar" de nuevo.
+      setSubmitError(true)
+    }
     setSubmitting(false)
   }
 
   const handleDelete = async () => {
     if (!deleteTargetId) return
     setDeleting(true)
+    setDeleteError(null)
     try {
       await api.del(`${deleteBasePath}/${deleteTargetId}`, { token })
       loadReviews()
+      setDeleteTargetId(null)
     } catch {
-      alert("No se pudo eliminar la review. Intentá de nuevo.")
+      // El modal se queda abierto mostrando el error, para poder reintentar.
+      setDeleteError("No se pudo eliminar la review. Intentá de nuevo.")
     }
     setDeleting(false)
-    setDeleteTargetId(null)
   }
 
   return (
@@ -296,6 +316,11 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               onFocus={e => e.target.style.borderColor = "var(--primary)"}
               onBlur={e => e.target.style.borderColor = "var(--border)"}
             />
+            {submitError && (
+              <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>
+                No se pudo publicar la review. Revisá tu conexión y probá de nuevo.
+              </p>
+            )}
             <div className="reviews-form-actions">
               <button
                 style={{
@@ -329,6 +354,21 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         {loading ? (
           <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
             Cargando...
+          </div>
+        ) : loadError ? (
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
+            <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>⚠️</p>
+            <p style={{ margin: "0 0 14px" }}>No se pudieron cargar las reviews.</p>
+            <button
+              onClick={() => { setLoading(true); loadReviews() }}
+              style={{
+                padding: "9px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                fontFamily: "inherit", cursor: "pointer",
+                background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
+              }}
+            >
+              Reintentar
+            </button>
           </div>
         ) : reviews.length === 0 ? (
           <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
@@ -371,6 +411,12 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               </div>
             ))}
 
+            {moreError && (
+              <p style={{ fontSize: 13, color: "var(--danger)", margin: "6px 0 0", textAlign: "center" }}>
+                No se pudieron cargar más reviews. Probá de nuevo.
+              </p>
+            )}
+
             {reviews.length < reviewsTotal && (
               <button
                 onClick={loadMoreReviews}
@@ -395,9 +441,10 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         open={deleteTargetId !== null}
         title="¿Eliminar tu review?"
         message="Esta acción no se puede deshacer."
+        error={deleteError}
         loading={deleting}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTargetId(null)}
+        onCancel={() => { setDeleteTargetId(null); setDeleteError(null) }}
       />
     </>
   )

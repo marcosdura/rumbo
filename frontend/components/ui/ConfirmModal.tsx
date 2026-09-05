@@ -18,6 +18,7 @@ type Props = {
   confirmLabel?: string
   cancelLabel?: string
   confirmPhrase?: string
+  error?: string | null
   loading?: boolean
   onConfirm: () => void
   onCancel: () => void
@@ -30,6 +31,7 @@ export default function ConfirmModal({
   confirmLabel = "Eliminar",
   cancelLabel = "Cancelar",
   confirmPhrase,
+  error,
   loading = false,
   onConfirm,
   onCancel,
@@ -124,6 +126,10 @@ export default function ConfirmModal({
               }}
             />
           </>
+        )}
+
+        {error && (
+          <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>{error}</p>
         )}
 
         <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
