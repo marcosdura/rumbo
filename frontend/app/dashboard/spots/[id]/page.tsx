@@ -176,7 +176,7 @@ export default function SpotDashboardPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <Navbar />
         <div style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
           <p style={{ color: "var(--muted)", fontSize: 14 }}>Cargando...</p>
@@ -192,9 +192,8 @@ export default function SpotDashboardPage() {
   const atPhotoLimit = photoCount >= MAX_PHOTOS
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
         .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); position: relative; background: #f0ede8; }
         .photo-card img { width: 100%; height: 110px; object-fit: cover; display: block; }
@@ -211,7 +210,7 @@ export default function SpotDashboardPage() {
           </Link>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 26, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
                 {spot.name}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -243,7 +242,7 @@ export default function SpotDashboardPage() {
                 {stat.emoji}
               </div>
               <div>
-                <p style={{ fontSize: 22, fontFamily: "'Playfair Display', serif", fontWeight: 600, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
+                <p style={{ fontSize: 22, fontFamily: "var(--font-playfair-display), serif", fontWeight: 600, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
                 <p style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{stat.label}</p>
               </div>
             </div>

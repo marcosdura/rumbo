@@ -28,7 +28,7 @@ export default function ProfileInfoCard({ userName, userEmail, userImage, joinDa
           )}
         </div>
         <div>
-          <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 3px" }}>
+          <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 3px" }}>
             {userName}
           </p>
           <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>

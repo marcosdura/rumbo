@@ -125,7 +125,7 @@ export default function AdminPage() {
     })
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
         .admin-nav { background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
         .admin-pill { padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #fff; }

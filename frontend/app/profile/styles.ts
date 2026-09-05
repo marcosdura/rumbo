@@ -16,7 +16,7 @@ export const s = {
     fontSize: 14, color: "#1b1b19", fontWeight: 400,
   },
   statNumber: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "var(--font-playfair-display), serif",
     fontSize: 28, fontWeight: 600, color: "#1b1b19",
     lineHeight: 1, marginBottom: 4,
   },
@@ -28,7 +28,7 @@ export const s = {
     display: "flex", alignItems: "center", gap: 10,
     padding: "11px 14px", borderRadius: 12,
     fontSize: 14, fontWeight: 400,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--font-dm-sans), sans-serif",
     cursor: "pointer",
     border: "1px solid var(--border)",
     background: "#fff",

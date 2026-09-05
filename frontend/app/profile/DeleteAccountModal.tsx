@@ -21,7 +21,7 @@ export default function DeleteAccountModal({
   return (
     <div className="delete-modal-overlay" onClick={onCancel}>
       <div className="delete-modal" onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
+        <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
           ¿Eliminar tu cuenta?
         </h2>
 

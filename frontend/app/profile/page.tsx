@@ -99,9 +99,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .action-link:hover { background: #f7f5f0 !important; }
         .action-btn-danger:hover { background: #fdf0f0 !important; }
@@ -118,26 +117,26 @@ export default function ProfilePage() {
           background: #f5f4f0; border: 1px solid var(--border); border-radius: 20px;
           box-shadow: 0 8px 40px rgba(0,0,0,0.18);
           padding: 28px; width: 100%; max-width: 440px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
         .delete-confirm-input {
           width: 100%; box-sizing: border-box;
           padding: 10px 14px; border-radius: 10px;
-          font-family: 'DM Sans', sans-serif; font-size: 14px;
+          font-family: var(--font-dm-sans), sans-serif; font-size: 14px;
           outline: none; background: #fff;
           transition: border-color 0.15s;
         }
         .delete-confirm-input:focus { border-color: var(--danger); }
         .delete-btn-confirm {
           padding: 11px 20px; border-radius: 12px; border: none;
-          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+          font-family: var(--font-dm-sans), sans-serif; font-size: 14px; font-weight: 500;
           cursor: pointer; transition: background 0.15s, opacity 0.15s;
         }
         .delete-btn-confirm:disabled { cursor: not-allowed; }
         .delete-btn-cancel {
           padding: 11px 20px; border-radius: 12px;
           border: 1px solid var(--border); background: #fff;
-          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+          font-family: var(--font-dm-sans), sans-serif; font-size: 14px; font-weight: 500;
           cursor: pointer; color: #3d3d3a;
           transition: background 0.15s;
         }
@@ -176,7 +175,7 @@ export default function ProfilePage() {
               Tu cuenta
             </p>
           </div>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+          <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 32, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
             Perfil
           </h1>
         </div>
