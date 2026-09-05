@@ -117,7 +117,23 @@ export default function TermsPage() {
           transition: border-color 0.2s, background 0.2s;
         }
         .terms-checkbox-row:hover { border-color: var(--primary); background: #f0f7f3; }
-        .terms-checkbox-row.checked { border-color: var(--primary); background: #f0f7f3; }
+        .terms-checkbox-row:has(.terms-checkbox-input:checked) { border-color: var(--primary); background: #f0f7f3; }
+        .terms-checkbox-row:has(.terms-checkbox-input:focus-visible) {
+          outline: 2px solid var(--primary);
+          outline-offset: 2px;
+        }
+
+        /* Oculto pero enfocable: display:none lo sacaría del orden de foco. */
+        .terms-checkbox-input {
+          position: absolute;
+          width: 1px; height: 1px;
+          padding: 0; margin: -1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          clip-path: inset(50%);
+          white-space: nowrap;
+          border: 0;
+        }
 
         .terms-checkbox {
           width: 20px;
@@ -132,7 +148,7 @@ export default function TermsPage() {
           transition: border-color 0.2s, background 0.2s;
           background: #fff;
         }
-        .terms-checkbox.checked { border-color: var(--primary); background: var(--primary); }
+        .terms-checkbox-input:checked + .terms-checkbox { border-color: var(--primary); background: var(--primary); }
 
         .terms-btn {
           width: 100%;
@@ -204,11 +220,17 @@ export default function TermsPage() {
             <p>Estos términos se rigen por la legislación de la República Oriental del Uruguay. Para cualquier disputa, las partes se someten a la jurisdicción de los tribunales competentes de Montevideo.</p>
           </div>
 
-          <label
-            className={`terms-checkbox-row${accepted ? " checked" : ""}`}
-            onClick={() => setAccepted(v => !v)}
-          >
-            <div className={`terms-checkbox${accepted ? " checked" : ""}`}>
+          {/* El <label> envuelve al input, así que el click ya lo togglea
+              solo: un onClick acá además haría doble toggle y no cambiaría
+              nunca. */}
+          <label className="terms-checkbox-row">
+            <input
+              type="checkbox"
+              className="terms-checkbox-input"
+              checked={accepted}
+              onChange={e => setAccepted(e.target.checked)}
+            />
+            <div className="terms-checkbox" aria-hidden="true">
               {accepted && (
                 <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
                   <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

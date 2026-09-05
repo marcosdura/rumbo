@@ -114,7 +114,23 @@ export default function AuthModal({ onClose }) {
           transition: border-color 0.2s, background 0.2s;
         }
         .auth-checkbox-row:hover { border-color: var(--primary); background: #f0f7f3; }
-        .auth-checkbox-row.checked { border-color: var(--primary); background: #f0f7f3; }
+        .auth-checkbox-row:has(.auth-checkbox-input:checked) { border-color: var(--primary); background: #f0f7f3; }
+        .auth-checkbox-row:has(.auth-checkbox-input:focus-visible) {
+          outline: 2px solid var(--primary);
+          outline-offset: 2px;
+        }
+
+        /* Oculto pero enfocable: display:none lo sacaría del orden de foco. */
+        .auth-checkbox-input {
+          position: absolute;
+          width: 1px; height: 1px;
+          padding: 0; margin: -1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          clip-path: inset(50%);
+          white-space: nowrap;
+          border: 0;
+        }
 
         .auth-checkbox {
           width: 20px;
@@ -129,7 +145,7 @@ export default function AuthModal({ onClose }) {
           transition: border-color 0.2s, background 0.2s;
           background: #fff;
         }
-        .auth-checkbox.checked { border-color: var(--primary); background: var(--primary); }
+        .auth-checkbox-input:checked + .auth-checkbox { border-color: var(--primary); background: var(--primary); }
 
         .auth-google-btn {
           width: 100%;
@@ -209,11 +225,17 @@ export default function AuthModal({ onClose }) {
           <div style={{ height: 1, background: "#ede9e1", marginBottom: 20 }} />
 
           {/* Checkbox: recordar sesión */}
-          <label
-            className={`auth-checkbox-row${rememberMe ? " checked" : ""}`}
-            onClick={() => setRememberMe(v => !v)}
-          >
-            <div className={`auth-checkbox${rememberMe ? " checked" : ""}`}>
+          {/* El <label> envuelve al input, así que el click ya lo togglea
+              solo: un onClick acá además haría doble toggle y no cambiaría
+              nunca. */}
+          <label className="auth-checkbox-row">
+            <input
+              type="checkbox"
+              className="auth-checkbox-input"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+            />
+            <div className="auth-checkbox" aria-hidden="true">
               {rememberMe && (
                 <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
                   <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
