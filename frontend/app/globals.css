@@ -278,6 +278,30 @@ input[type="number"] {
   gap: 8px;
 }
 
+/* ─── Grid de fotos (dashboard del spot propio + panel admin) ───────────── */
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.photo-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+  background: #f0ede8;
+}
+
+.photo-card img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+}
+
 /* ─── Amenities / detail card (Camping, Glamping, Motorhome, Trekking) ──── */
 
 .amenities-card {
