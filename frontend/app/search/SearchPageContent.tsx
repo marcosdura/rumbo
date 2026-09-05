@@ -239,7 +239,7 @@ export default function SearchPage() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
+              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 30, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
                 {title}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -323,7 +323,7 @@ export default function SearchPage() {
                   <button
                     onClick={() => setRetryTick(t => t + 1)}
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "var(--font-dm-sans), sans-serif",
                       fontSize: 13, fontWeight: 600,
                       color: "var(--primary)", background: "#fff",
                       border: "1px solid var(--primary)", borderRadius: 10,
@@ -346,7 +346,7 @@ export default function SearchPage() {
                   textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                 }}>
                   <p style={{ fontSize: 36, marginBottom: 12, opacity: 0.2 }}>🗺️</p>
-                  <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", marginBottom: 6 }}>
+                  <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", marginBottom: 6 }}>
                     No se encontraron spots
                   </p>
                   <p style={{ fontSize: 13, color: "var(--muted)" }}>
@@ -377,7 +377,7 @@ export default function SearchPage() {
                         disabled={loadingMore}
                         style={{
                           padding: "10px 24px", borderRadius: 12, fontSize: 13, fontWeight: 600,
-                          fontFamily: "'DM Sans', sans-serif", cursor: loadingMore ? "default" : "pointer",
+                          fontFamily: "var(--font-dm-sans), sans-serif", cursor: loadingMore ? "default" : "pointer",
                           background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
                           opacity: loadingMore ? 0.6 : 1,
                         }}
@@ -414,10 +414,10 @@ export default function SearchPage() {
                 background: "#fff", border: "1px solid var(--border)",
                 borderRadius: 16, padding: "14px 22px", textAlign: "center",
               }}>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+                <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
                   No hay spots en esta zona
                 </p>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
                   Probá con otros filtros
                 </p>
               </div>

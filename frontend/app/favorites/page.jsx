@@ -59,13 +59,13 @@ export default function FavoritosPage() {
           }}>
             <p style={{ fontSize: 40, marginBottom: 16, opacity: 0.25 }}>🔒</p>
             <p style={{
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "var(--font-playfair-display), serif",
               fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8,
             }}>
               Iniciá sesión
             </p>
             <p style={{
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--font-dm-sans), sans-serif",
               fontSize: 14, color: "var(--muted)", lineHeight: 1.6,
             }}>
               Guardá los spots que más te gustan y accedé a tu colección desde cualquier lugar
@@ -78,9 +78,8 @@ export default function FavoritosPage() {
 
   // si esta logueado
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         @keyframes pulse {
           0%, 100% { opacity: 1; }
@@ -88,7 +87,7 @@ export default function FavoritosPage() {
         }
 
         .favs-wrapper { max-width: 1152px; margin: 0 auto; padding: 40px 24px 64px; min-height: calc(100vh - 200px); }
-        .favs-title   { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .favs-title   { font-family: var(--font-playfair-display), serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
         .favs-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
 
         @media (max-width: 768px) {
@@ -141,7 +140,7 @@ export default function FavoritosPage() {
             }}>
               <p style={{ fontSize: 44, marginBottom: 16, opacity: 0.25 }}>❤️</p>
               <p style={{
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "var(--font-playfair-display), serif",
                 fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8,
               }}>
                 Todavía no tenés favoritos

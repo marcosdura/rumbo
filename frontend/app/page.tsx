@@ -73,7 +73,6 @@ export default function Home() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
       `}</style>
 
       {/* Navbar: fixed en home, oculto hasta que el hero salga del viewport */}
@@ -84,7 +83,7 @@ export default function Home() {
         <HeroHeader />
 
         <p className="fade-up fade-up-1" style={{
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--font-dm-sans), sans-serif",
           color: "#95d5b2",
           fontSize: 13,
           fontWeight: 600,
@@ -94,7 +93,7 @@ export default function Home() {
         }}>Uruguay al natural</p>
 
         <h1 className="fade-up fade-up-2" style={{
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "var(--font-playfair-display), serif",
           color: "#fff",
           fontSize: "clamp(32px, 5vw, 52px)",
           fontWeight: 600,
@@ -104,7 +103,7 @@ export default function Home() {
         }}>Encontrá tu próxima aventura</h1>
 
         <p className="fade-up fade-up-2" style={{
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--font-dm-sans), sans-serif",
           color: "#b7e4c7",
           fontSize: "clamp(15px, 2vw, 18px)",
           fontWeight: 300,
@@ -116,7 +115,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ flex: 1, fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ flex: 1, fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 64px" }}>
 
           {error ? (
@@ -125,7 +124,7 @@ export default function Home() {
               <button
                 onClick={() => setRetryTick((t) => t + 1)}
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans), sans-serif",
                   fontSize: 13,
                   fontWeight: 600,
                   color: "var(--primary)",

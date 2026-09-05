@@ -39,10 +39,9 @@ export default function TermsPage() {
       alignItems: "center",
       justifyContent: "center",
       padding: "24px 16px",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--font-dm-sans), sans-serif",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .terms-card {
           background: #f5f4f0;
@@ -142,7 +141,7 @@ export default function TermsPage() {
           border: none;
           font-size: 15px;
           font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           cursor: pointer;
           transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
           background: var(--primary-dark);
@@ -175,7 +174,7 @@ export default function TermsPage() {
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#95d5b2", marginBottom: 4 }}>
               Antes de continuar
             </div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#fff", margin: 0, lineHeight: 1.2 }}>
+            <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#fff", margin: 0, lineHeight: 1.2 }}>
               Términos y Condiciones
             </h1>
           </div>

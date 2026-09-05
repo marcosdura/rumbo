@@ -74,10 +74,10 @@ export default function ReviewsPage() {
             maxWidth: 400,
           }}>
             <p style={{ fontSize: 40, marginBottom: 16, opacity: 0.25 }}>💬</p>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
+            <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
               Iniciá sesión
             </p>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "var(--muted)", lineHeight: 1.6 }}>
+            <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 14, color: "var(--muted)", lineHeight: 1.6 }}>
               Iniciá sesión para ver tus reviews
             </p>
           </div>
@@ -87,9 +87,8 @@ export default function ReviewsPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .review-card {
           background: #fff;
@@ -105,7 +104,7 @@ export default function ReviewsPage() {
         }
 
         .review-spot-link {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 17px;
           font-weight: 600;
           color: #1b1b19;
@@ -121,7 +120,7 @@ export default function ReviewsPage() {
           border: none;
           cursor: pointer;
           padding: 0;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: color 0.15s;
         }
         .delete-btn:hover { color: var(--danger); }
@@ -132,7 +131,7 @@ export default function ReviewsPage() {
         }
 
         .reviews-wrapper { max-width: 768px; margin: 0 auto; padding: 40px 24px 64px; min-height: calc(100vh - 200px); }
-        .reviews-title   { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .reviews-title   { font-family: var(--font-playfair-display), serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
         .review-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .review-card-meta   { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
@@ -178,7 +177,7 @@ export default function ReviewsPage() {
               textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             }}>
               <p style={{ fontSize: 44, marginBottom: 16, opacity: 0.25 }}>💬</p>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
+              <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 8 }}>
                 Todavía no escribiste reviews
               </p>
               <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 24, lineHeight: 1.6 }}>

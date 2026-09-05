@@ -189,9 +189,8 @@ export default function LegalPage() {
   })
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .legal-wrapper {
           max-width: 720px;
@@ -201,7 +200,7 @@ export default function LegalPage() {
         }
 
         .legal-page-title {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 36px;
           font-weight: 600;
           color: #1b1b19;
@@ -228,7 +227,7 @@ export default function LegalPage() {
           background: none;
           border: none;
           cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           text-align: left;
           transition: background 0.15s;
           gap: 12px;

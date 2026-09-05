@@ -102,7 +102,6 @@ export default async function KayakDetailPage({ params }: Props) {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
       <JsonLd data={jsonLd} />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .kayak-detail-inner {
           max-width: 1152px;
@@ -201,7 +200,7 @@ export default async function KayakDetailPage({ params }: Props) {
                 <Pill variant="dark-green" hover>{kayak.spot_department}</Pill>
               )}
             </div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
+            <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
               {kayak.name}
             </h1>
           </div>

@@ -77,9 +77,8 @@ useEffect(() => {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        .spot-page { font-family: 'DM Sans', sans-serif; }
+        .spot-page { font-family: var(--font-dm-sans), sans-serif; }
 
         .img-reveal {
           opacity: 0;
@@ -124,7 +123,7 @@ useEffect(() => {
           border-radius: 12px;
           font-size: 13px;
           font-weight: 500;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           border: 1px solid var(--border);
@@ -156,7 +155,7 @@ useEffect(() => {
         }
 
         .spot-title {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 38px;
           font-weight: 600;
           color: #1b1b19;
@@ -200,7 +199,7 @@ useEffect(() => {
           border: none;
           cursor: pointer;
           padding: 0 0 24px 0;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
 
         @media (max-width: 768px) {
@@ -302,7 +301,7 @@ useEffect(() => {
                 border: `1px solid ${spot.is_public ? "#b7dfc8" : "#f5c0c0"}`,
                 borderRadius: 12,
                 padding: "10px 14px",
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--font-dm-sans), sans-serif",
                 fontSize: 12,
                 marginBottom: 24,
                 display: "flex",
