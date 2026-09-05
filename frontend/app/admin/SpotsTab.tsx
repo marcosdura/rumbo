@@ -1,6 +1,7 @@
 "use client"
 
 import Pill from "@/components/ui/Pill"
+import { pill, input } from "@/lib/theme"
 import type { AdminSpot, SortBy } from "./types"
 
 interface Props {
@@ -28,17 +29,7 @@ export default function SpotsTab({
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {(["pending", "approved", "all"] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit",
-              border: `1px solid ${filter === f ? "var(--primary)" : "var(--border)"}`,
-              background: filter === f ? "var(--primary)" : "#fff",
-              color: filter === f ? "#fff" : "#3d3d3a",
-            }}
-          >
+          <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
             {f === "pending" ? `Pendientes (${pending})` : f === "approved" ? "Aprobados" : "Todos"}
           </button>
         ))}
@@ -50,12 +41,12 @@ export default function SpotsTab({
           placeholder="Buscar por nombre, categoría, departamento..."
           value={searchSpots}
           onChange={e => setSearchSpots(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+          style={{ ...input, flex: 1, minWidth: 200, width: "auto" }}
         />
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as SortBy)}
-          style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+          style={{ ...input, width: "auto" }}
         >
           <option value="date_desc">Más recientes primero</option>
           <option value="date_asc">Más antiguos primero</option>

@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
+import ConfirmModal from "@/components/ui/ConfirmModal"
 import { api } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
 import type { Spot, Review, Tab } from "./types"
@@ -31,6 +32,7 @@ export default function SpotDashboardPage() {
   const [photoLoading, setPhotoLoading] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null)
 
   // Campos editables
   const [editName, setEditName] = useState("")
@@ -127,11 +129,12 @@ export default function SpotDashboardPage() {
   }
 
   async function handleDeletePhoto(publicId: string) {
-    if (!spot || !confirm("¿Eliminar esta foto?")) return
+    if (!spot) return
     setPhotoLoading(true)
     await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
     setSpot(prev => prev ? { ...prev, images: prev.images.filter(img => img.cloudinary_public_id !== publicId) } : null)
     setPhotoLoading(false)
+    setPhotoToDelete(null)
   }
 
   async function handleUploadPhotos(files: File[]) {
@@ -193,12 +196,6 @@ export default function SpotDashboardPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
-      <style>{`
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
-        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); position: relative; background: #f0ede8; }
-        .photo-card img { width: 100%; height: 110px; object-fit: cover; display: block; }
-      `}</style>
-
       <Navbar />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
@@ -289,13 +286,22 @@ export default function SpotDashboardPage() {
             setPhotoError={setPhotoError}
             onUploadFiles={handleUploadPhotos}
             onSetMain={handleSetMain}
-            onDeletePhoto={handleDeletePhoto}
+            onDeletePhoto={setPhotoToDelete}
           />
         )}
 
         {tab === "reviews" && <ReviewsTab reviews={reviews} />}
 
       </div>
+
+      <ConfirmModal
+        open={photoToDelete !== null}
+        title="¿Eliminar esta foto?"
+        message="La foto se borra de Cloudinary y no se puede recuperar."
+        loading={photoLoading}
+        onCancel={() => setPhotoToDelete(null)}
+        onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete)}
+      />
     </div>
   )
 }

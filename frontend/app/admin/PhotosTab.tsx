@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { api } from "@/lib/api"
+import { card, input } from "@/lib/theme"
 import type { AdminSpot } from "./types"
 
 interface Props {
@@ -14,15 +15,16 @@ interface Props {
   setPhotoSpotId: (id: number | null) => void
   photoLoading: boolean
   onSetMainPhoto: (spotId: number, publicId: string) => Promise<void>
-  onDeletePhoto: (spotId: number, publicId: string) => Promise<void>
+  onDeletePhotoRequest: (spotId: number, publicId: string) => void
   onSpotsRefreshed: (spots: AdminSpot[]) => void
 }
 
 export default function PhotosTab({
   spots, token, searchPhotos, setSearchPhotos, photoSpotId, setPhotoSpotId,
-  photoLoading, onSetMainPhoto, onDeletePhoto, onSpotsRefreshed,
+  photoLoading, onSetMainPhoto, onDeletePhotoRequest, onSpotsRefreshed,
 }: Props) {
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const photoUploadRef = useRef<HTMLInputElement>(null)
 
   const selectedSpot = spots.find(s => s.id === photoSpotId) ?? null
@@ -35,10 +37,10 @@ export default function PhotosTab({
           placeholder="Buscar spot..."
           value={searchPhotos}
           onChange={e => setSearchPhotos(e.target.value)}
-          style={{ width: "100%", maxWidth: 400, padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8, display: "block" }}
+          style={{ ...input, maxWidth: 400, marginBottom: 8, display: "block" }}
         />
         <select
-          style={{ padding: "9px 12px", borderRadius: 12, border: "1px solid var(--border)", fontSize: 14, background: "#fff", fontFamily: "inherit", width: "100%", maxWidth: 400 }}
+          style={{ ...input, maxWidth: 400 }}
           value={photoSpotId ?? ""}
           onChange={e => setPhotoSpotId(Number(e.target.value) || null)}
         >
@@ -52,7 +54,7 @@ export default function PhotosTab({
       </div>
 
       {selectedSpot && (
-        <div>
+        <div style={{ ...card, padding: 24 }}>
           <div style={{ marginBottom: 16 }}>
             <input
               ref={photoUploadRef}
@@ -64,6 +66,7 @@ export default function PhotosTab({
                 if (!selectedSpot) return
                 const files = Array.from(e.target.files ?? [])
                 if (!files.length) return
+                setPhotoError(null)
                 setUploadingPhotos(true)
                 try {
                   const results = await Promise.all(files.map((file, i) =>
@@ -89,7 +92,7 @@ export default function PhotosTab({
                   const { data: updated } = await api.get<AdminSpot[]>("/admin/spots", { token })
                   onSpotsRefreshed(updated)
                 } catch {
-                  alert("Error al subir fotos")
+                  setPhotoError("Error al subir fotos. Intentá de nuevo.")
                 } finally {
                   setUploadingPhotos(false)
                   if (photoUploadRef.current) photoUploadRef.current.value = ""
@@ -104,6 +107,10 @@ export default function PhotosTab({
               {uploadingPhotos ? "Subiendo..." : "+ Agregar fotos"}
             </button>
           </div>
+
+          {photoError && (
+            <p style={{ fontSize: 13, color: "var(--danger)", margin: "0 0 12px" }}>{photoError}</p>
+          )}
 
           <p style={{ fontSize: 13, color: "#7a7669", marginBottom: 12 }}>
             {selectedSpot.images.length} foto{selectedSpot.images.length !== 1 ? "s" : ""} · La primera es la principal
@@ -133,7 +140,7 @@ export default function PhotosTab({
                       </button>
                     )}
                     <button
-                      onClick={() => onDeletePhoto(selectedSpot.id, img.cloudinary_public_id)}
+                      onClick={() => onDeletePhotoRequest(selectedSpot.id, img.cloudinary_public_id)}
                       disabled={photoLoading}
                       style={{ padding: "4px 8px", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "var(--danger)", border: "1px solid #fecaca" }}
                     >

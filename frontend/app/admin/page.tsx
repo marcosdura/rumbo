@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import Image from "next/image"
+import Link from "next/link"
+import Navbar from "@/components/layout/Navbar"
+import Pill from "@/components/ui/Pill"
+import ConfirmModal from "@/components/ui/ConfirmModal"
+import { tab } from "@/lib/theme"
 import { api, ApiError } from "@/lib/api"
 import type { AdminSpot, AdminMode, SortBy } from "./types"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
-import DeleteConfirmModal from "./DeleteConfirmModal"
 import EditSpotModal from "./EditSpotModal"
 
 export default function AdminPage() {
@@ -26,7 +29,7 @@ export default function AdminPage() {
   const [searchPhotos, setSearchPhotos] = useState("")
   const [sortBy, setSortBy] = useState<SortBy>("date_desc")
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
-  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [photoToDelete, setPhotoToDelete] = useState<{ spotId: number; publicId: string } | null>(null)
   const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
 
   useEffect(() => {
@@ -50,13 +53,11 @@ export default function AdminPage() {
   }
 
   async function handleDelete(id: number) {
-    if (deleteConfirmText !== "CONFIRMAR") return
     setActionLoading(id)
     await api.del(`/spots/${id}`, { token }).catch(() => {})
     setSpots(prev => prev.filter(s => s.id !== id))
     setActionLoading(null)
     setDeleteConfirmId(null)
-    setDeleteConfirmText("")
   }
 
   async function handleReactivate(id: number) {
@@ -80,7 +81,6 @@ export default function AdminPage() {
   }
 
   async function handleDeletePhoto(spotId: number, publicId: string) {
-    if (!confirm("¿Eliminar esta foto?")) return
     setPhotoLoading(true)
     await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
     setSpots(prev => prev.map(s => {
@@ -88,6 +88,7 @@ export default function AdminPage() {
       return { ...s, images: s.images.filter(img => img.cloudinary_public_id !== publicId) }
     }))
     setPhotoLoading(false)
+    setPhotoToDelete(null)
   }
 
   async function handleSaveEdit() {
@@ -127,47 +128,47 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        .admin-nav { background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .admin-pill { padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #fff; }
-        .admin-pill.active { background: #fff; color: var(--primary-dark); border-color: #fff; }
-        .admin-pill:not(.active):hover { background: rgba(255,255,255,0.22); }
-        .spot-row { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+        .spot-row { background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-card); padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
         .action-btn-sm { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
-        .photo-card { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); position: relative; background: #f0ede8; }
-        .photo-card img { width: 100%; height: 100px; object-fit: cover; display: block; }
       `}</style>
 
-      <nav className="admin-nav">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Image src="/RumboLogo.png" alt="Rumbo" width={32} height={32} style={{ objectFit: "contain", borderRadius: 8 }} />
-          <div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>rumbo</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginLeft: 8, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>modo admin</span>
+      <Navbar />
+
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 60px" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <Link href="/" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+            ← Volver al inicio
+          </Link>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 26, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+                Panel de administración
+              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Pill variant="dark-green" size="sm">modo admin</Pill>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                  {activeSpots.length} spot{activeSpots.length !== 1 ? "s" : ""}
+                  {pending > 0 ? ` · ${pending} pendiente${pending !== 1 ? "s" : ""}` : ""}
+                </span>
+              </div>
+            </div>
+            <a href="/agregar-lugar"
+              style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
+              + Agregar lugar
+            </a>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <a href="/agregar-lugar" style={{ padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, color: "#fff", border: "1px solid rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.12)", textDecoration: "none" }}>
-            + Agregar lugar
-          </a>
-          <a href="/" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>← Volver</a>
-        </div>
-      </nav>
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "28px 24px" }}>
-
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           {([
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
             { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className={`admin-pill${mode === m.id ? " active" : ""}`}
-              style={{ background: mode === m.id ? "var(--primary-dark)" : "#fff", color: mode === m.id ? "#fff" : "#3d3d3a", border: `1px solid ${mode === m.id ? "var(--primary-dark)" : "var(--border)"}` }}
-            >
+            <button key={m.id} onClick={() => setMode(m.id)} style={tab(mode === m.id)}>
               {m.label}
             </button>
           ))}
@@ -188,7 +189,7 @@ export default function AdminPage() {
             actionLoading={actionLoading}
             onApprove={handleApprove}
             onEdit={setEditingSpot}
-            onDeleteRequest={(id) => { setDeleteConfirmId(id); setDeleteConfirmText("") }}
+            onDeleteRequest={setDeleteConfirmId}
           />
         )}
 
@@ -202,7 +203,7 @@ export default function AdminPage() {
             setPhotoSpotId={setPhotoSpotId}
             photoLoading={photoLoading}
             onSetMainPhoto={handleSetMainPhoto}
-            onDeletePhoto={handleDeletePhoto}
+            onDeletePhotoRequest={(spotId, publicId) => setPhotoToDelete({ spotId, publicId })}
             onSpotsRefreshed={setSpots}
           />
         )}
@@ -214,18 +215,28 @@ export default function AdminPage() {
             loading={loading}
             actionLoading={actionLoading}
             onReactivate={handleReactivate}
-            onDeleteRequest={(id) => { setDeleteConfirmId(id); setDeleteConfirmText("") }}
+            onDeleteRequest={setDeleteConfirmId}
           />
         )}
       </div>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         open={deleteConfirmId !== null}
-        confirmText={deleteConfirmText}
-        setConfirmText={setDeleteConfirmText}
+        title="¿Eliminar este spot?"
+        message="Esta acción no se puede deshacer."
+        confirmPhrase="CONFIRMAR"
         loading={actionLoading === deleteConfirmId}
-        onCancel={() => { setDeleteConfirmId(null); setDeleteConfirmText("") }}
+        onCancel={() => setDeleteConfirmId(null)}
         onConfirm={() => deleteConfirmId !== null && handleDelete(deleteConfirmId)}
+      />
+
+      <ConfirmModal
+        open={photoToDelete !== null}
+        title="¿Eliminar esta foto?"
+        message="La foto se borra de Cloudinary y no se puede recuperar."
+        loading={photoLoading}
+        onCancel={() => setPhotoToDelete(null)}
+        onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete.spotId, photoToDelete.publicId)}
       />
 
       <EditSpotModal
