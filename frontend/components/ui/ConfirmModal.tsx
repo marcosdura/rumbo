@@ -1,15 +1,23 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
+
 // Modal de confirmación genérico, mismo estilo visual que el modal de
-// "eliminar cuenta" en profile/page.tsx (overlay + card + botones), pero
-// sin el paso de escribir "CONFIRMAR" — esa fricción extra es para acciones
+// "eliminar cuenta" en profile/page.tsx (overlay + card + botones).
+//
+// Por defecto no pide escribir nada: esa fricción extra es para acciones
 // irreversibles de cuenta/spot, no para algo liviano como borrar una review.
+// Para esos casos está `confirmPhrase`: cuando viene, el modal muestra el
+// campo y deshabilita el botón hasta que el texto coincida — es el patrón que
+// usaba el DeleteConfirmModal propio del panel admin, que este componente
+// reemplaza.
 type Props = {
   open: boolean
   title: string
   message?: string
   confirmLabel?: string
   cancelLabel?: string
+  confirmPhrase?: string
   loading?: boolean
   onConfirm: () => void
   onCancel: () => void
@@ -21,11 +29,29 @@ export default function ConfirmModal({
   message,
   confirmLabel = "Eliminar",
   cancelLabel = "Cancelar",
+  confirmPhrase,
   loading = false,
   onConfirm,
   onCancel,
 }: Props) {
+  const [typed, setTyped] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Al abrir: campo vacío y foco puesto, para no arrastrar lo escrito en una
+  // confirmación anterior.
+  useEffect(() => {
+    if (!open) return
+    setTyped("")
+    if (confirmPhrase) {
+      const t = setTimeout(() => inputRef.current?.focus(), 50)
+      return () => clearTimeout(t)
+    }
+  }, [open, confirmPhrase])
+
   if (!open) return null
+
+  const phraseOk = !confirmPhrase || typed === confirmPhrase
+  const confirmDisabled = loading || !phraseOk
 
   return (
     <div className="confirm-modal-overlay" onClick={onCancel}>
@@ -42,6 +68,13 @@ export default function ConfirmModal({
           padding: 26px; width: 100%; max-width: 400px;
           font-family: var(--font-dm-sans), sans-serif;
         }
+        .confirm-modal-input {
+          width: 100%; box-sizing: border-box;
+          padding: 10px 14px; border-radius: 10px;
+          font-family: var(--font-dm-sans), sans-serif; font-size: 14px;
+          outline: none; background: #fff;
+          transition: border-color 0.15s;
+        }
         .confirm-modal-cancel-btn {
           padding: 11px 20px; border-radius: 12px;
           border: 1px solid var(--border); background: #fff;
@@ -54,7 +87,7 @@ export default function ConfirmModal({
           padding: 11px 20px; border-radius: 12px; border: none;
           font-family: var(--font-dm-sans), sans-serif; font-size: 14px; font-weight: 500;
           cursor: pointer; background: var(--danger); color: #fff;
-          transition: opacity 0.15s;
+          transition: opacity 0.15s, background 0.15s;
         }
         .confirm-modal-confirm-btn:disabled { cursor: not-allowed; opacity: 0.7; }
       `}</style>
@@ -70,11 +103,39 @@ export default function ConfirmModal({
           </p>
         )}
 
+        {confirmPhrase && (
+          <>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", margin: "16px 0 6px" }}>
+              Para confirmar, escribí{" "}
+              <span style={{ fontWeight: 700, color: "var(--danger)" }}>{confirmPhrase}</span>
+              {" "}en el campo de abajo
+            </label>
+            <input
+              ref={inputRef}
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={confirmPhrase}
+              className="confirm-modal-input"
+              style={{
+                border: typed.length > 0 && typed !== confirmPhrase
+                  ? "1px solid var(--danger)"
+                  : "1px solid var(--border)",
+              }}
+            />
+          </>
+        )}
+
         <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
           <button className="confirm-modal-cancel-btn" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </button>
-          <button className="confirm-modal-confirm-btn" onClick={onConfirm} disabled={loading}>
+          <button
+            className="confirm-modal-confirm-btn"
+            onClick={onConfirm}
+            disabled={confirmDisabled}
+            style={phraseOk ? undefined : { background: "#d1cdc7", color: "var(--muted)" }}
+          >
             {loading ? "Eliminando..." : confirmLabel}
           </button>
         </div>
