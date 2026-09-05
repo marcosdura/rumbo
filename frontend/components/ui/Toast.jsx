@@ -14,7 +14,6 @@ export default function Toast({ message, onClose }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
 
        .toast-wrap {
           position: fixed;
@@ -26,7 +25,7 @@ export default function Toast({ message, onClose }) {
         }
 
         .toast {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 16px;
           font-weight: 500;
           color: #1a1a1a;

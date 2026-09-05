@@ -78,7 +78,7 @@ export default function Pill({
         borderRadius: 999,
         fontSize: s.fontSize,
         fontWeight: 600,
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "var(--font-dm-sans), sans-serif",
         letterSpacing: "0.03em",
         userSelect: "none",
         color: color ?? base.color,

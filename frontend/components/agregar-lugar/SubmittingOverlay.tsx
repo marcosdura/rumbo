@@ -10,7 +10,7 @@ export default function SubmittingOverlay({ uploadProgress }: Props) {
       position: "fixed", inset: 0, zIndex: 9999,
       background: "rgba(0,0,0,0.55)",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--font-dm-sans), sans-serif",
     }}>
       <div style={{
         background: "#fff", borderRadius: 20, padding: "36px 40px",

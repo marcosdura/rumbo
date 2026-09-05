@@ -30,7 +30,6 @@ export default function AuthModal({ onClose }) {
   return createPortal(
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .auth-overlay {
           position: fixed;
@@ -50,7 +49,7 @@ export default function AuthModal({ onClose }) {
         }
 
         .auth-modal {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           background: #fff;
           border: 1px solid var(--border);
           border-radius: 24px;
@@ -142,7 +141,7 @@ export default function AuthModal({ onClose }) {
           background: #fff;
           font-size: 14px;
           font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           color: #1b1b19;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
@@ -179,7 +178,7 @@ export default function AuthModal({ onClose }) {
 
           {/* Título */}
           <h2 style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "var(--font-playfair-display), serif",
             fontSize: 24, fontWeight: 600,
             color: "#1b1b19", textAlign: "center", margin: "0 0 16px",
           }}>

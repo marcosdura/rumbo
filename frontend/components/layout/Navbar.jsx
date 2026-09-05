@@ -83,10 +83,9 @@ function Navbar() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .navbar-root {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%);
           border-bottom: 1px solid rgba(255,255,255,0.08);
           position: sticky;
@@ -99,7 +98,7 @@ function Navbar() {
         }
 
         .navbar-logo {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-weight: 600;
           font-size: 22px;
           color: #fff;
@@ -235,7 +234,7 @@ function Navbar() {
           transition: background 0.15s, color 0.15s;
           cursor: pointer; border: none; background: none;
           width: 100%; text-align: left;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
         .menu-link:hover  { background: #f7f5f0; color: #1b1b19; }
         .menu-link.active { background: #e8f5ee; color: var(--primary-dark); font-weight: 600; }
@@ -255,7 +254,7 @@ function Navbar() {
           font-size: 14px; font-weight: 600;
           color: var(--primary-dark); background: #e8f5ee; border: 1px solid #b7dfc8;
           width: 100%; text-align: left; cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: background 0.15s;
         }
         .signin-btn:hover { background: #d8f3dc; }
@@ -271,7 +270,7 @@ function Navbar() {
 
         /* Botón iniciar sesión — desktop */
         .signin-nav-btn {
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 13px; font-weight: 600;
           color: #fff;
           background: rgba(255,255,255,0.15);
