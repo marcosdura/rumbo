@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { createPortal } from "react-dom"
 import { signIn } from "next-auth/react"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 const PERKS = [
   { emoji: "⭐", text: "Guardar spots favoritos" },
@@ -12,6 +13,7 @@ const PERKS = [
 
 export default function AuthModal({ onClose }) {
   const [rememberMe, setRememberMe] = useState(true)
+  const panelRef = useModalA11y(true, onClose)
 
   const handleGoogleSignIn = () => {
     localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
@@ -161,9 +163,17 @@ export default function AuthModal({ onClose }) {
       `}</style>
 
       <div className="auth-overlay" onClick={onClose}>
-        <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          ref={panelRef}
+          className="auth-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
+          tabIndex={-1}
+          onClick={(e) => e.stopPropagation()}
+        >
 
-          <button className="auth-close" onClick={onClose}>✕</button>
+          <button className="auth-close" onClick={onClose} aria-label="Cerrar">✕</button>
 
           {/* Icono */}
           <div style={{
@@ -177,7 +187,7 @@ export default function AuthModal({ onClose }) {
           </div>
 
           {/* Título */}
-          <h2 style={{
+          <h2 id="auth-modal-title" style={{
             fontFamily: "var(--font-playfair-display), serif",
             fontSize: 24, fontWeight: 600,
             color: "#1b1b19", textAlign: "center", margin: "0 0 16px",

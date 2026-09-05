@@ -1,6 +1,7 @@
 "use client"
 
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 interface EditingSpot { id: number; name: string; description: string }
 
@@ -16,6 +17,8 @@ interface Props {
 // #f5f4f0 con borde, título en Playfair, botones a la derecha, cierra al
 // clickear afuera.
 export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, onSave }: Props) {
+  const panelRef = useModalA11y(editingSpot !== null, onCancel)
+
   if (editingSpot === null) return null
 
   return (
@@ -49,8 +52,16 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
         }
       `}</style>
 
-      <div className="edit-modal" onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 18px" }}>
+      <div
+        ref={panelRef}
+        className="edit-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-spot-modal-title"
+        tabIndex={-1}
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 id="edit-spot-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 18px" }}>
           Editar spot
         </h2>
 

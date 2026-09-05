@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 // Modal de confirmación genérico, mismo estilo visual que el modal de
 // "eliminar cuenta" en profile/page.tsx (overlay + card + botones).
@@ -38,17 +39,15 @@ export default function ConfirmModal({
 }: Props) {
   const [typed, setTyped] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  // El foco inicial va al campo de "CONFIRMAR" cuando lo hay; si no, el hook
+  // enfoca el primer elemento del panel.
+  const panelRef = useModalA11y(open, onCancel, confirmPhrase ? inputRef : undefined)
 
-  // Al abrir: campo vacío y foco puesto, para no arrastrar lo escrito en una
-  // confirmación anterior.
+  // Al abrir, campo vacío: no arrastrar lo escrito en una confirmación
+  // anterior.
   useEffect(() => {
-    if (!open) return
-    setTyped("")
-    if (confirmPhrase) {
-      const t = setTimeout(() => inputRef.current?.focus(), 50)
-      return () => clearTimeout(t)
-    }
-  }, [open, confirmPhrase])
+    if (open) setTyped("")
+  }, [open])
 
   if (!open) return null
 
@@ -94,8 +93,16 @@ export default function ConfirmModal({
         .confirm-modal-confirm-btn:disabled { cursor: not-allowed; opacity: 0.7; }
       `}</style>
 
-      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 10px" }}>
+      <div
+        ref={panelRef}
+        className="confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="confirm-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 10px" }}>
           {title}
         </h2>
 

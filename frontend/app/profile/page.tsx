@@ -95,7 +95,7 @@ export default function ProfilePage() {
     setConfirmText("")
     setDeleteError("")
     setShowDeleteModal(true)
-    setTimeout(() => confirmInputRef.current?.focus(), 50)
+    // El foco inicial lo pone useModalA11y dentro del modal.
   }
 
   return (

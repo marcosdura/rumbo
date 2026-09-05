@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 function ShareModal({ name, onClose }) {
   const [copied, setCopied] = useState(false)
+  const panelRef = useModalA11y(true, onClose)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -70,9 +72,17 @@ function ShareModal({ name, onClose }) {
       `}</style>
 
       <div className="share-modal-overlay" onClick={onClose}>
-        <div className="share-modal" onClick={e => e.stopPropagation()}>
+        <div
+          ref={panelRef}
+          className="share-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-modal-title"
+          tabIndex={-1}
+          onClick={e => e.stopPropagation()}
+        >
 
-          <button className="share-modal-close" onClick={onClose}>✕</button>
+          <button className="share-modal-close" onClick={onClose} aria-label="Cerrar">✕</button>
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -81,7 +91,7 @@ function ShareModal({ name, onClose }) {
               Compartir
             </p>
           </div>
-          <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 20px" }}>
+          <h2 id="share-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 20px" }}>
             {name}
           </h2>
 

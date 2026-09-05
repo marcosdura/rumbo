@@ -1,6 +1,7 @@
 "use client"
 
 import type { RefObject } from "react"
+import { useModalA11y } from "@/lib/useModalA11y"
 
 interface Props {
   open: boolean
@@ -16,12 +17,22 @@ interface Props {
 export default function DeleteAccountModal({
   open, confirmText, setConfirmText, deleteError, deleting, inputRef, onCancel, onConfirm,
 }: Props) {
+  const panelRef = useModalA11y(open, onCancel, inputRef)
+
   if (!open) return null
 
   return (
     <div className="delete-modal-overlay" onClick={onCancel}>
-      <div className="delete-modal" onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
+      <div
+        ref={panelRef}
+        className="delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-modal-title"
+        tabIndex={-1}
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 id="delete-account-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
           ¿Eliminar tu cuenta?
         </h2>
 
