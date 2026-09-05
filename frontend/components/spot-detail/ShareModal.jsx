@@ -38,7 +38,7 @@ function ShareModal({ name, onClose }) {
           box-shadow: 0 20px 60px rgba(0,0,0,0.15);
           position: relative;
           animation: smSlideUp 0.22s cubic-bezier(0.22,1,0.36,1);
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
         @keyframes smSlideUp {
           from { opacity: 0; transform: translateY(12px); }
@@ -60,7 +60,7 @@ function ShareModal({ name, onClose }) {
           width: 100%; padding: 14px 16px;
           border-radius: 14px; border: 1px solid var(--border);
           background: #fff; cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 14px; font-weight: 500; color: #1b1b19;
           transition: all 0.15s;
           text-align: left;
@@ -81,7 +81,7 @@ function ShareModal({ name, onClose }) {
               Compartir
             </p>
           </div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 20px" }}>
+          <h2 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 20px" }}>
             {name}
           </h2>
 

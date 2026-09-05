@@ -9,7 +9,7 @@ function TrekkingRoutes({ routes, spotSlug }) {
       borderRadius: 20,
       padding: "24px 28px",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--font-dm-sans), sans-serif",
     }}>
       <style>{`
         /* ── RouteCard ── */
@@ -36,7 +36,7 @@ function TrekkingRoutes({ routes, spotSlug }) {
           margin-bottom: 16px;
         }
         .route-card-title {
-          font-family: 'Playfair Display', serif;
+          font-family: var(--font-playfair-display), serif;
           font-size: 18px;
           font-weight: 600;
           color: #1b1b19;

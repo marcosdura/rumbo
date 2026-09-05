@@ -51,11 +51,11 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   }
 
   if (error) return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <Navbar />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <p style={{ fontSize: 36, opacity: 0.2 }}>🧗</p>
-        <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+        <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
           Sector no encontrado
         </p>
         <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>
@@ -66,7 +66,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           style={{
             marginTop: 8, padding: "10px 20px", borderRadius: 12,
             border: "1px solid var(--border)", background: "#fff",
-            fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13, fontWeight: 600, fontFamily: "var(--font-dm-sans), sans-serif",
             cursor: "pointer", color: "#3d3d3a",
           }}
         >
@@ -84,15 +84,14 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   ].filter(Boolean) as { icon: string; label: string; variant: PillVariant }[]
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         .back-btn {
           display: inline-flex; align-items: center; gap: 6px;
           font-size: 13px; font-weight: 500; color: var(--muted);
           background: none; border: none; cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: color 0.15s;
           padding: 0; margin-bottom: 24px;
         }
@@ -102,7 +101,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
           display: flex; align-items: center; gap: 6px;
           padding: 9px 16px; border-radius: 12px;
           font-size: 13px; font-weight: 500;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           border: 1px solid var(--border); background: #fff;
           color: #3d3d3a; cursor: pointer;
           transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
@@ -168,7 +167,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                   Sector de Escalada
                 </p>
               </div>
-              <h1 className="spot-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+              <h1 className="spot-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
                 {sector.name}
               </h1>
             </div>
@@ -190,7 +189,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                 textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}>
                 <p style={{ fontSize: 24, marginBottom: 6 }}>{icon}</p>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{val}</p>
+                <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{val}</p>
                 <p style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{lbl}</p>
               </div>
             ))}

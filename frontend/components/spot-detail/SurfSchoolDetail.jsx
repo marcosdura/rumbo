@@ -148,7 +148,7 @@ export default function SurfSchoolDetail({ surfSchools }) {
       borderRadius: 20,
       padding: "24px 28px",
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--font-dm-sans), sans-serif",
     }}>
       <style>{`
         .surf-school-card {

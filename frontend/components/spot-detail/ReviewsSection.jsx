@@ -139,7 +139,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
 
         /* Header: título+rating a la izq, botón a la der */
@@ -160,7 +160,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           border: 1px solid var(--border);
           background: #fff;
           font-size: 14px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-weight: 500;
           cursor: pointer;
           color: var(--primary-dark);
@@ -208,7 +208,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           background: none;
           border: none;
           cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: color 0.15s;
           padding: 0;
         }
@@ -247,12 +247,12 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 Reseñas
               </span>
             </div>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+            <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
               Reviews
             </p>
             {summary?.total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1 }}>
+                <span style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1 }}>
                   {summary.average}
                 </span>
                 <div>
@@ -285,7 +285,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
             <textarea
               style={{
                 width: "100%", border: "1px solid var(--border)", borderRadius: 12,
-                padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                padding: "12px 14px", fontSize: 14, fontFamily: "var(--font-dm-sans), sans-serif",
                 color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
                 transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
               }}
@@ -300,7 +300,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               <button
                 style={{
                   padding: "9px 16px", borderRadius: 12, fontSize: 14,
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
+                  fontFamily: "var(--font-dm-sans), sans-serif", fontWeight: 400,
                   background: "none", color: "var(--muted)", border: "1px solid var(--border)", cursor: "pointer",
                 }}
                 onClick={() => { setShowForm(false); setRating(0); setComment("") }}
@@ -310,7 +310,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               <button
                 style={{
                   padding: "9px 20px", borderRadius: 12, fontSize: 14,
-                  fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600, fontFamily: "var(--font-dm-sans), sans-serif",
                   background: "var(--primary-dark)", color: "#fff", border: "none",
                   cursor: !rating || submitting ? "not-allowed" : "pointer",
                   opacity: !rating || submitting ? 0.45 : 1,

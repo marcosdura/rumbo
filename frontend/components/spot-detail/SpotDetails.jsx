@@ -145,7 +145,7 @@ function SpotDetails({ spot }) {
         }
       `}</style>
 
-      <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
 
         {/* Detalles */}
         <div className="detail-section-label">

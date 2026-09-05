@@ -34,7 +34,7 @@ function SpotDescription({ description }) {
           border-radius: 20px;
           padding: 24px 28px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
         }
         @media (max-width: 768px) {
           .spot-desc-card { padding: 20px 16px; }
@@ -55,7 +55,7 @@ function SpotDescription({ description }) {
           font-weight: 600;
           font-size: 13px;
           cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
+          font-family: var(--font-dm-sans), sans-serif;
           transition: opacity 0.15s;
         }
         .spot-desc-toggle:hover { opacity: 0.7; }

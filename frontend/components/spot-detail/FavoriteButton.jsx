@@ -34,7 +34,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
             padding: 9px 16px;
             border-radius: 12px;
             font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
+            font-family: var(--font-dm-sans), sans-serif;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
