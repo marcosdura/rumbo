@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import Footer from "@/components/layout/Footer"
-import { StarDisplay } from "@/components/ui/StarRating"
+import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
@@ -29,6 +29,13 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true)
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  // Edición inline: id de la review abierta, más sus campos en edición.
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editRating, setEditRating] = useState(0)
+  const [editComment, setEditComment] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   const token = session?.id_token
 
@@ -49,14 +56,52 @@ export default function ReviewsPage() {
   const handleDelete = async () => {
     if (!deleteTargetId) return
     setDeleting(true)
+    setDeleteError(null)
     try {
       await api.del(`/reviews/${deleteTargetId}`, { token })
       setReviews(prev => prev.filter(r => r.id !== deleteTargetId))
+      setDeleteTargetId(null)
     } catch {
-      alert("No se pudo eliminar la review. Intentá de nuevo.")
+      // El modal queda abierto con el error adentro, para poder reintentar.
+      setDeleteError("No se pudo eliminar la review. Intentá de nuevo.")
     }
     setDeleting(false)
-    setDeleteTargetId(null)
+  }
+
+  const startEditing = (review: any) => {
+    setEditingId(review.id)
+    setEditRating(review.rating)
+    setEditComment(review.comment ?? "")
+    setSaveError(false)
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
+    setEditRating(0)
+    setEditComment("")
+    setSaveError(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editRating) return
+    setSaving(true)
+    setSaveError(false)
+    try {
+      const { data } = await api.patch<any>(
+        `/reviews/${editingId}`,
+        { rating: editRating, comment: editComment },
+        { token },
+      )
+      setReviews(prev => prev.map(r =>
+        r.id === editingId
+          ? { ...r, rating: data.rating, comment: data.comment, updated_at: data.updated_at }
+          : r
+      ))
+      cancelEditing()
+    } catch {
+      setSaveError(true)
+    }
+    setSaving(false)
   }
 
   if (status === "loading" || loading) return <LoadingScreen />
@@ -113,7 +158,8 @@ export default function ReviewsPage() {
         }
         .review-spot-link:hover { color: var(--primary); }
 
-        .delete-btn {
+        .delete-btn,
+        .edit-btn {
           font-size: 12px;
           color: var(--muted);
           background: none;
@@ -124,6 +170,7 @@ export default function ReviewsPage() {
           transition: color 0.15s;
         }
         .delete-btn:hover { color: var(--danger); }
+        .edit-btn:hover { color: var(--primary); }
 
         .explore-btn:hover {
           background: var(--primary) !important;
@@ -208,20 +255,81 @@ export default function ReviewsPage() {
                       </Link>
                       <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 3 }}>
                         {timeAgo(review.created_at)}
+                        {review.updated_at && " · editado"}
                       </p>
                     </div>
                     <div className="review-card-meta">
                       <StarDisplay rating={review.rating} size={14} />
-                      <button className="delete-btn" onClick={() => setDeleteTargetId(review.id)}>
-                        Eliminar
-                      </button>
+                      {editingId !== review.id && (
+                        <>
+                          <button className="edit-btn" onClick={() => startEditing(review)}>
+                            Editar
+                          </button>
+                          <button className="delete-btn" onClick={() => setDeleteTargetId(review.id)}>
+                            Eliminar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {review.comment && (
-                    <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>
-                      {review.comment}
-                    </p>
+                  {editingId === review.id ? (
+                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", marginBottom: 8 }}>
+                        Editar tu review
+                      </p>
+                      <StarPicker value={editRating} onChange={setEditRating} />
+                      <textarea
+                        rows={3}
+                        value={editComment}
+                        onChange={e => setEditComment(e.target.value)}
+                        placeholder="Contá tu experiencia (opcional)..."
+                        style={{
+                          width: "100%", border: "1px solid var(--border)", borderRadius: 12,
+                          padding: "10px 12px", fontSize: 14,
+                          fontFamily: "var(--font-dm-sans), sans-serif",
+                          color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
+                          marginTop: 12, boxSizing: "border-box",
+                        }}
+                      />
+                      {saveError && (
+                        <p style={{ fontSize: 13, color: "var(--danger)", margin: "10px 0 0" }}>
+                          No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo.
+                        </p>
+                      )}
+                      <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                        <button
+                          onClick={cancelEditing}
+                          style={{
+                            padding: "8px 16px", borderRadius: 12, fontSize: 13,
+                            fontFamily: "var(--font-dm-sans), sans-serif",
+                            background: "none", color: "var(--muted)",
+                            border: "1px solid var(--border)", cursor: "pointer",
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={!editRating || saving}
+                          style={{
+                            padding: "8px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                            fontFamily: "var(--font-dm-sans), sans-serif",
+                            background: "var(--primary-dark)", color: "#fff", border: "none",
+                            cursor: !editRating || saving ? "not-allowed" : "pointer",
+                            opacity: !editRating || saving ? 0.45 : 1,
+                          }}
+                        >
+                          {saving ? "Guardando..." : "Guardar cambios"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    review.comment && (
+                      <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>
+                        {review.comment}
+                      </p>
+                    )
                   )}
                 </div>
               ))}
@@ -236,9 +344,10 @@ export default function ReviewsPage() {
         open={deleteTargetId !== null}
         title="¿Eliminar tu review?"
         message="Esta acción no se puede deshacer."
+        error={deleteError}
         loading={deleting}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteTargetId(null)}
+        onCancel={() => { setDeleteTargetId(null); setDeleteError(null) }}
       />
     </div>
   )

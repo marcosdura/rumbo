@@ -60,6 +60,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  // null = el form está creando. Con id = está editando esa reseña.
+  const [editingId, setEditingId] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -87,7 +89,10 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     try {
       const [revResult, sumResult] = await Promise.all([
         api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
-        api.get(`${basePath}/summary`),
+        // Con token el summary devuelve además my_review: es la única forma de
+        // saber si el usuario ya reseñó, porque su reseña puede estar en una
+        // página que todavía no se cargó.
+        api.get(`${basePath}/summary`, { token }),
       ])
       setReviews(Array.isArray(revResult.data) ? revResult.data : [])
       setReviewsTotal(revResult.totalCount ?? 0)
@@ -116,20 +121,39 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
   useEffect(() => { loadReviews() }, [spotId])
 
+  // Abre el form en modo edición, precargado con lo que la reseña ya tiene.
+  const startEditing = (review) => {
+    setEditingId(review.id)
+    setRating(review.rating)
+    setComment(review.comment ?? "")
+    setSubmitError(false)
+    setShowForm(true)
+  }
+
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingId(null)
+    setRating(0)
+    setComment("")
+    setSubmitError(false)
+  }
+
   const handleSubmit = async () => {
     if (!rating) return
     setSubmitting(true)
     setSubmitError(false)
     try {
-      await api.post(basePath, { rating, comment }, { token })
-      trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
-      setRating(0)
-      setComment("")
-      setShowForm(false)
+      if (editingId) {
+        await api.patch(`${deleteBasePath}/${editingId}`, { rating, comment }, { token })
+      } else {
+        await api.post(basePath, { rating, comment }, { token })
+        trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
+      }
+      closeForm()
       loadReviews()
     } catch {
       // El form queda abierto con lo escrito, así reintentar es apretar
-      // "Publicar" de nuevo.
+      // el botón de nuevo.
       setSubmitError(true)
     }
     setSubmitting(false)
@@ -222,7 +246,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           flex-shrink: 0;
         }
 
-        .reviews-delete-btn {
+        .reviews-delete-btn,
+        .reviews-edit-btn {
           font-size: 11px;
           color: var(--muted);
           background: none;
@@ -234,6 +259,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         }
         @media (hover: hover) {
           .reviews-delete-btn:hover { color: var(--danger); }
+          .reviews-edit-btn:hover { color: var(--primary); }
         }
 
         /* Form actions */
@@ -288,9 +314,15 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
           {!showForm && (
             <button
               className="reviews-write-btn"
-              onClick={() => { if (!token) { setShowAuth(true); return } setShowForm(true) }}
+              onClick={() => {
+                if (!token) { setShowAuth(true); return }
+                // Ya reseñó: en vez de ofrecerle escribir otra (que el backend
+                // ahora rechaza con 409), se le abre la suya para editar.
+                if (summary?.my_review) { startEditing(summary.my_review); return }
+                setShowForm(true)
+              }}
             >
-              ✏️ Escribir review
+              {summary?.my_review ? "✏️ Editar mi review" : "✏️ Escribir review"}
             </button>
           )}
         </div>
@@ -299,7 +331,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         {showForm && (
           <div style={{ background: "#f7f5f0", border: "1px solid var(--border)", borderRadius: 16, padding: 20, marginBottom: 20 }}>
             <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", marginBottom: 10 }}>
-              Tu rating
+              {editingId ? "Editar tu review" : "Tu rating"}
             </p>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
@@ -318,7 +350,9 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
             />
             {submitError && (
               <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>
-                No se pudo publicar la review. Revisá tu conexión y probá de nuevo.
+                {editingId
+                  ? "No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo."
+                  : "No se pudo publicar la review. Revisá tu conexión y probá de nuevo."}
               </p>
             )}
             <div className="reviews-form-actions">
@@ -328,7 +362,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                   fontFamily: "var(--font-dm-sans), sans-serif", fontWeight: 400,
                   background: "none", color: "var(--muted)", border: "1px solid var(--border)", cursor: "pointer",
                 }}
-                onClick={() => { setShowForm(false); setRating(0); setComment("") }}
+                onClick={closeForm}
               >
                 Cancelar
               </button>
@@ -344,7 +378,9 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 onClick={handleSubmit}
                 disabled={!rating || submitting}
               >
-                {submitting ? "Enviando..." : "Publicar review"}
+                {submitting
+                  ? "Enviando..."
+                  : editingId ? "Guardar cambios" : "Publicar review"}
               </button>
             </div>
           </div>
@@ -388,18 +424,27 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                       </p>
                       <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
                         {timeAgo(review.created_at)}
+                        {review.updated_at && " · editado"}
                       </p>
                     </div>
                   </div>
                   <div className="review-card-actions">
                     <StarDisplay rating={review.rating} size={14} />
                     {review.is_mine && (
-                      <button
-                        className="reviews-delete-btn"
-                        onClick={() => setDeleteTargetId(review.id)}
-                      >
-                        Eliminar
-                      </button>
+                      <>
+                        <button
+                          className="reviews-edit-btn"
+                          onClick={() => startEditing(review)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="reviews-delete-btn"
+                          onClick={() => setDeleteTargetId(review.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
