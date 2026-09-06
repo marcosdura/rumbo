@@ -358,12 +358,22 @@ class Favorite(Base):
 class Review(Base):
     __tablename__ = "reviews"
 
+    # Una reseña por usuario y por lugar. Sin esto una sola persona podía
+    # dejar reseñas ilimitadas sobre el mismo spot, todas contando para el
+    # promedio y el total — que es lo que ordena el listado.
+    # El nombre no puede ser "uq_user_spot": ese ya lo usa Favorite, y en
+    # Postgres una constraint UNIQUE crea un índice, cuyos nombres son
+    # únicos por esquema.
+    __table_args__ = (UniqueConstraint("user_id", "spot_id", name="uq_review_user_spot"),)
+
     id         = Column(Integer, primary_key=True, index=True)
     spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
     user_id    = Column(String, ForeignKey("users.id"), nullable=False)
     rating     = Column(Integer, nullable=False)   # 1 a 5
     comment    = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # NULL = nunca se editó. Se muestra como "editado" en la UI.
+    updated_at = Column(DateTime(timezone=True), nullable=True)
 
     spot = relationship("SpotDB", back_populates="reviews")
     user = relationship("User", back_populates="reviews")
@@ -372,12 +382,15 @@ class Review(Base):
 class SurfReview(Base):
     __tablename__ = "surf_reviews"
 
+    __table_args__ = (UniqueConstraint("user_id", "surf_beach_id", name="uq_surfreview_user_beach"),)
+
     id            = Column(Integer, primary_key=True, index=True)
     surf_beach_id = Column(Integer, ForeignKey("surf_beach.id"), nullable=False, index=True)
     user_id       = Column(String, ForeignKey("users.id"), nullable=False)
     rating        = Column(Integer, nullable=False)
     comment       = Column(String, nullable=True)
     created_at    = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at    = Column(DateTime(timezone=True), nullable=True)
 
     surf_school = relationship("SurfSchool", back_populates="reviews")
     user        = relationship("User", back_populates="surf_reviews")
@@ -386,12 +399,15 @@ class SurfReview(Base):
 class KayakReview(Base):
     __tablename__ = "kayak_reviews"
 
+    __table_args__ = (UniqueConstraint("user_id", "kayak_details_id", name="uq_kayakreview_user_detail"),)
+
     id               = Column(Integer, primary_key=True, index=True)
     kayak_details_id = Column(Integer, ForeignKey("kayak_details.id"), nullable=False, index=True)
     user_id          = Column(String, ForeignKey("users.id"), nullable=False)
     rating           = Column(Integer, nullable=False)
     comment          = Column(String, nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at       = Column(DateTime(timezone=True), nullable=True)
 
     kayak_detail = relationship("KayakDetail", back_populates="reviews")
     user         = relationship("User", back_populates="kayak_reviews")

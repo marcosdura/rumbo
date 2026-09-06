@@ -405,6 +405,8 @@ class ReviewResponse(BaseModel):
     rating: int
     comment: str | None = None
     created_at: datetime
+    # NULL = nunca se editó. La UI muestra "editado" solo cuando tiene valor.
+    updated_at: datetime | None = None
     user: ReviewUserResponse
     is_mine: bool = False
 

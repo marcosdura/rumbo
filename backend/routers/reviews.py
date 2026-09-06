@@ -36,6 +36,7 @@ def get_user_reviews(db: Session = Depends(get_db), user: dict = Depends(get_cur
             "rating": r.rating,
             "comment": r.comment,
             "created_at": r.created_at.isoformat(),
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         }
         for r in reviews
     ]
