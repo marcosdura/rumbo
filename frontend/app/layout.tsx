@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Nunito, Playfair_Display, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
@@ -52,6 +52,19 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_UY",
   },
+  // Para que iOS abra en modo standalone al agregar a pantalla de inicio.
+  appleWebApp: {
+    capable: true,
+    title: "Rumbo",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+// themeColor va en su propio export, no dentro de metadata (ver
+// docs/01-app/03-api-reference/04-functions/generate-viewport.md).
+// Es el --primary-dark de globals.css, el verde de la barra superior.
+export const viewport: Viewport = {
+  themeColor: "#1b4332",
 };
 
 export default async function RootLayout({
