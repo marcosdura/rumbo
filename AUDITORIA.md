@@ -25,7 +25,7 @@ como registro de qué se decidió atacar y qué no.
       → `d878270`
 - [x] **Sin `max_length` en texto libre / sin límite de body** — `Field(max_length=...)` en los schemas de entrada + middleware de 1MB en `main.py`.
       → `05b0163`
-- [ ] **El dueño puede editar un spot ya aprobado sin volver a pasar por revisión** (riesgo de "bait-and-switch")
+- [ ] **El dueño puede editar un spot ya aprobado sin volver a pasar por revisión** (riesgo de "bait-and-switch") — **decisión pendiente, no es falta de implementación**. Verificado: `dashboard/spots/[id]` guarda con `PATCH /admin/spots/{id}` y el spot queda con `is_approved` en `true` sin revisión. El escenario es publicar algo inocuo, esperar la aprobación y después cambiarle el contenido. Falta decidir el criterio antes de codear: ¿cualquier edición vuelve a "pendiente", o solo las de campos sensibles (nombre, descripción, fotos) y no las de contacto/precio? ¿Se despublica mientras espera, o sigue visible con la versión aprobada? Eso cambia por completo qué hay que construir.
 - [x] **`get_remote_address` sin confirmar proxy del hosting** — investigado a fondo: sin `--proxy-headers` en uvicorn (no hay Procfile en el repo, no confirmable), `request.client.host` es la IP del proxy de Railway, no la del usuario — muy probable que todos compartieran el mismo balde de rate limit. Se arregló leyendo `X-Forwarded-For` directo del header, sin depender de la config de uvicorn.
       → `d09ecfb`
 - [x] **El `sub` de Google se expone en cada review pública** — reemplazado por `is_mine: bool` calculado server-side (auth opcional), el único uso real era decidir si mostrar "Eliminar".
