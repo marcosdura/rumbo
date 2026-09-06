@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { createPortal } from "react-dom"
-import { signIn } from "next-auth/react"
+import { signInWithGoogle } from "@/lib/auth"
 import { useModalA11y } from "@/lib/useModalA11y"
 
 const PERKS = [
@@ -15,19 +15,7 @@ export default function AuthModal({ onClose }) {
   const [rememberMe, setRememberMe] = useState(true)
   const panelRef = useModalA11y(true, onClose)
 
-  const handleGoogleSignIn = () => {
-    localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
-    localStorage.setItem("rumbo_terms_accepted", "true")
-    // Se confirma como evento "login" recién cuando la sesión aparece
-    // (LoginTracker en Providers.jsx) — así no contamos clicks cancelados.
-    localStorage.setItem("rumbo_pending_login_track", "1")
-    // "select_account" solo deja elegir cuenta; sin "consent" Google no
-    // reemite refresh_token salvo que sea la primera vez que esa cuenta
-    // autoriza la app — causaba el deslogueo cada 1h en cualquier login
-    // repetido por este modal. "consent" fuerza la pantalla de permisos y
-    // con eso Google sí devuelve un refresh_token nuevo cada vez.
-    signIn("google", {}, { prompt: "select_account consent" })
-  }
+  const handleGoogleSignIn = () => signInWithGoogle({ rememberMe })
 
   return createPortal(
     <>

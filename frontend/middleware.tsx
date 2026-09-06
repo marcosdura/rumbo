@@ -9,21 +9,12 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
-    pathname.startsWith("/onboarding/") ||
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next()
   }
 
   const token = await getToken({ req: request })
-
-  // Aceptación de términos ahora se resuelve en el modal de login (AuthModal)
-  // antes del signIn — ya no se fuerza el redirect a /onboarding/terms.
-  // if (token && !token.termsAcceptedAt) {
-  //   return NextResponse.redirect(
-  //     new URL(`/onboarding/terms?callbackUrl=${encodeURIComponent(pathname)}`, request.url)
-  //   )
-  // }
 
   // Admin: solo el email autorizado
   if (pathname.startsWith("/admin")) {

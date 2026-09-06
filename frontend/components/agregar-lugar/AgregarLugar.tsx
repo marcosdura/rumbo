@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession, signIn } from "next-auth/react"
+import { useSession } from "next-auth/react"
+import { signInWithGoogle } from "@/lib/auth"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
@@ -364,10 +365,7 @@ export default function AgregarLugar() {
               Guardamos tu email para poder contactarte si necesitamos verificar o completar la información del lugar que enviás.
             </p>
             <button
-              onClick={() => {
-                localStorage.setItem("rumbo_pending_login_track", "1")
-                signIn("google", { callbackUrl: "/agregar-lugar" })
-              }}
+              onClick={() => signInWithGoogle({ callbackUrl: "/agregar-lugar" })}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
                 background: "#fff", border: "1px solid var(--border)", borderRadius: 12,
@@ -380,7 +378,7 @@ export default function AgregarLugar() {
             </button>
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 20 }}>
               Al continuar aceptás nuestros{" "}
-              <a href="/legal/terms" style={{ color: "var(--primary)" }}>Términos y condiciones</a>
+              <a href="/legal" style={{ color: "var(--primary)" }}>Términos y condiciones</a>
             </p>
           </div>
         </div>

@@ -49,6 +49,11 @@ const SECTIONS = [
           <li><strong>Datos técnicos:</strong> dirección IP, tipo de dispositivo y navegador</li>
         </ul>
 
+        <h4 className="legal-subtitle">Datos de ubicación</h4>
+        <p className="legal-p">
+          La plataforma puede mostrar mapas y coordenadas de spots públicos. Los datos de ubicación de tu dispositivo solo se usan para mejorar resultados de búsqueda y nunca se comparten con terceros sin tu consentimiento. Podés desactivar el acceso a tu ubicación desde la configuración de tu dispositivo.
+        </p>
+
         <h4 className="legal-subtitle">Para qué usamos tus datos</h4>
         <ul className="legal-list">
           <li>Autenticarte y mantener tu sesión activa entre visitas</li>
@@ -85,7 +90,8 @@ const SECTIONS = [
           <li>Darte de baja de comunicaciones en cualquier momento</li>
         </ul>
         <p className="legal-p">
-          Para ejercer cualquiera de estos derechos, contactanos directamente desde la plataforma.
+          Para ejercer cualquiera de estos derechos, contactanos directamente desde la plataforma o escribinos a{" "}
+          <a href="mailto:rumbo.uy.app@gmail.com" style={{ color: "var(--primary)" }}>rumbo.uy.app@gmail.com</a>.
         </p>
       </div>
     ),
