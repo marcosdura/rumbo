@@ -966,8 +966,26 @@ def delete_image(public_id: str, db: Session = Depends(get_db), user: dict = Dep
     spot = db.query(SpotDB).filter(SpotDB.id == img.spot_id).first()
     if not is_admin(user) and (not spot or spot.owner_email != user.get("email")):
         raise HTTPException(status_code=403, detail="No autorizado")
+
     db.delete(img)
     db.commit()
+
+    # Borrar la fila sin destruir el archivo dejaba la foto viva en Cloudinary
+    # para siempre: ocupando cuota y, peor, servida públicamente por su URL a
+    # cualquiera que la tuviera. delete_spot ya hacía esto bien; este camino
+    # (borrar una foto suelta desde el panel admin o el dashboard del dueño)
+    # se lo había salteado.
+    #
+    # Va después del commit y no antes, al revés que en delete_spot: si el
+    # destroy falla, preferimos un huérfano en Cloudinary (invisible, queda
+    # logueado) antes que una fila apuntando a un archivo que ya no existe,
+    # que sería una imagen rota en la página pública del spot.
+    try:
+        result = cloudinary.uploader.destroy(public_id)
+        print(f"[Cloudinary] Destruyendo {public_id}: {result}")
+    except Exception as e:
+        print(f"[Cloudinary] No se pudo destruir {public_id}: {e}")
+
     return {"ok": True}
 
 
