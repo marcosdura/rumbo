@@ -55,6 +55,12 @@ como registro de qué se decidió atacar y qué no.
 - [x] **Dependencia `openai` sin uso + `package.json` suelto en `backend/`** — confirmado sin uso real, `openai` fuera de `requirements.txt`; `package.json`/`package-lock.json` (declaraban `cloudinary` de Node en la carpeta del backend Python) borrados.
       → `d09ecfb`
 
+- [ ] **No hay forma de llegar a cargar contenido desde la app** — el único link a `/agregar-lugar` estaba en el panel admin: ni el Navbar, ni la home, ni el perfil, ni la página del spot. La página del spot no ofrece sumar nada (y las secciones vacías no se muestran), el dueño no tiene acceso a "Administrar" desde su spot, y agregar-lugar no acepta llegar con un spot ya elegido.
+      **Decidido (en curso):**
+      - *Parte 1, accesos:* "Agregar lugar" en el Navbar; en /profile "Tus lugares" y "Tus aportes" siempre visibles con estado vacío; la pestaña de experiencias del dashboard solo en Camping/Glamping/Motorhome (como agregar-lugar y la página pública); links directos a agregar-lugar (`?sumar=sector&spot=12`) que saltan al formulario, vuelven al spot y sobreviven al login; en la página del spot "Administrar" para el dueño, "Sugerir un sector/vía" en escalada (aunque no haya sectores), "Agregar una ruta" para el dueño de trekking, "Sumar tu escuela/servicio" en surf y kayak; aviso al autor de sus aportes pendientes en ese spot.
+      - *Parte 2, borrar:* la pestaña de contenido del dashboard lista todo (rutas, sectores con vías, experiencias, glamping) con lo pendiente marcado y permite borrar; endpoints de borrado que faltan para rutas, sectores, vías, surf y kayak (con sus fotos).
+      - *Parte 3, escuelas con dueño propio:* las playas y lagunas (spots de Surf/Kayak) son lugares públicos que solo edita el admin (regla por categoría, sin migración de datos); cada escuela de surf o servicio de kayak tiene `owner_email` (migración 0004; vacío = admin) y la suma cualquier usuario, que pasa a ser su dueño, con revisión; si la playa no existe se sugiere junto con la escuela y queda a nombre del admin; dashboard de escuela con la misma revisión que los spots (nombre, descripción y fotos a revisión; contacto, clases, precio y temporada al instante), generalizando los pedidos de cambio; "Tus escuelas" en /profile. Las escuelas y kayaks actuales son de prueba: no se migran dueños.
+
 ## 02 — Modularización
 
 - [x] **Reviews implementadas 3 veces** (spots/kayak/surf) → router genérico parametrizado
