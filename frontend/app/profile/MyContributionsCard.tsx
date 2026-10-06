@@ -7,6 +7,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal"
 import { api } from "@/lib/api"
 import { KIND_LABELS, type Contribution } from "@/lib/contributions"
 import { s } from "./styles"
+import { ctaLink } from "./MySpotsCard"
 
 interface Props {
   token: string | undefined
@@ -22,7 +23,7 @@ const STATUS_PILL = {
 // vías de escalada en lugares ajenos) y cómo terminó la revisión. Los
 // aprobados y rechazados quedan hasta que cerrás el aviso.
 export default function MyContributionsCard({ token }: Props) {
-  const [items, setItems] = useState<Contribution[]>([])
+  const [items, setItems] = useState<Contribution[] | null>(null)
   const [toWithdraw, setToWithdraw] = useState<Contribution | null>(null)
   const [busy, setBusy] = useState(false)
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
@@ -31,15 +32,13 @@ export default function MyContributionsCard({ token }: Props) {
     if (!token) return
     api.get<Contribution[]>("/contributions/mine", { token })
       .then(({ data }) => setItems(Array.isArray(data) ? data : []))
-      .catch(() => {
-        // No es crítico para el perfil: sin datos, la tarjeta no se muestra.
-      })
+      .catch(() => setItems([]))
   }, [token])
 
   async function dismiss(id: number) {
     try {
       await api.post(`/contributions/${id}/dismiss`, undefined, { token })
-      setItems(prev => prev.filter(c => c.id !== id))
+      setItems(prev => (prev ?? []).filter(c => c.id !== id))
     } catch {
       // Si falla, el aviso sigue ahí y se puede volver a cerrar.
     }
@@ -51,7 +50,7 @@ export default function MyContributionsCard({ token }: Props) {
     setWithdrawError(null)
     try {
       await api.post(`/contributions/${toWithdraw.id}/withdraw`, undefined, { token })
-      setItems(prev => prev.filter(c => c.id !== toWithdraw.id))
+      setItems(prev => (prev ?? []).filter(c => c.id !== toWithdraw.id))
       setToWithdraw(null)
     } catch {
       setWithdrawError("No se pudo retirar. Intentá de nuevo.")
@@ -59,8 +58,6 @@ export default function MyContributionsCard({ token }: Props) {
       setBusy(false)
     }
   }
-
-  if (items.length === 0) return null
 
   return (
     <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
@@ -70,8 +67,19 @@ export default function MyContributionsCard({ token }: Props) {
           Tus aportes
         </p>
       </div>
+      {items === null ? (
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>Cargando...</p>
+      ) : items.length === 0 && (
+        // Siempre visible, como "Tus lugares": explica qué es un aporte.
+        <div>
+          <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: "0 0 12px", lineHeight: 1.5 }}>
+            Cuando sumes algo a un lugar ya publicado (un sector o una vía de escalada, una ruta, una experiencia), lo vas a ver acá mientras se revisa y cuando se apruebe.
+          </p>
+          <Link href="/agregar-lugar" style={ctaLink}>＋ Sumar algo</Link>
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {items.map(c => {
+        {(items ?? []).map(c => {
           const pill = STATUS_PILL[c.status as keyof typeof STATUS_PILL]
           return (
             <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: "1px solid #ede9e1" }}>

@@ -43,10 +43,11 @@ describe("MyContributionsCard", () => {
     expect(screen.getAllByRole("link", { name: "Cerro Arequita" })[0].getAttribute("href")).toBe("/spots/cerro-arequita")
   })
 
-  it("sin aportes no se muestra", async () => {
+  it("sin aportes se muestra igual, explicando qué son", async () => {
     mine = []
-    const { container } = render(<MyContributionsCard token="t" />)
-    await waitFor(() => expect(container.innerHTML).toBe(""))
+    render(<MyContributionsCard token="t" />)
+    expect(await screen.findByText(/Cuando sumes algo a un lugar ya publicado/)).toBeTruthy()
+    expect(screen.getByRole("link", { name: "＋ Sumar algo" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 
   it("retirar un aporte pendiente pide confirmación", async () => {

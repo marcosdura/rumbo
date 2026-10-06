@@ -8,9 +8,13 @@ interface Props {
   mySpots: any[]
 }
 
-export default function MySpotsCard({ mySpots }: Props) {
-  if (mySpots.length === 0) return null
+// Mismo estilo que el link "Administrar →" de cada lugar.
+export const ctaLink = {
+  display: "inline-block", padding: "6px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+  background: "#f7f5f0", border: "1px solid var(--border)", color: "#3d3d3a", textDecoration: "none",
+}
 
+export default function MySpotsCard({ mySpots }: Props) {
   return (
     <div className="fade-up fade-up-3" style={{ ...s.card, padding: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
@@ -19,6 +23,15 @@ export default function MySpotsCard({ mySpots }: Props) {
           Tus lugares
         </p>
       </div>
+      {mySpots.length === 0 && (
+        // Siempre visible: es la puerta de entrada a cargar un lugar.
+        <div>
+          <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: "0 0 12px", lineHeight: 1.5 }}>
+            Todavía no cargaste ningún lugar. Si conocés un camping, una ruta o un lugar para escalar que no está en Rumbo, sumalo.
+          </p>
+          <Link href="/agregar-lugar" style={ctaLink}>＋ Agregar un lugar</Link>
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {mySpots.map(spot => {
           const main = spot.images?.find((i: any) => i.is_main) || spot.images?.[0]
