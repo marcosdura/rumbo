@@ -12,6 +12,7 @@ import {
 import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute } from "./submit"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
+import { RESULT_COPY, mySpotsFor, type MySpot, type SubmitResult } from "./result"
 import AgregarLugarHeader from "./AgregarLugarHeader"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
@@ -74,7 +75,7 @@ export default function AgregarLugar() {
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
-  const [success, setSuccess]                     = useState(false)
+  const [success, setSuccess]                     = useState<SubmitResult | null>(null)
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
@@ -158,11 +159,12 @@ export default function AgregarLugar() {
     setStep(2)
     if (isServ) {
       setLoadingSpots(true)
-      // /spots/pins en vez de /spots: no pagina (el picker necesita "todos"
-      // los de esa actividad) y ya trae id+name, sin el payload pesado.
-      api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: cat.name } })
+      // Surf y kayak se suman solo a lugares propios (el backend lo exige):
+      // antes se ofrecían todos los lugares de la actividad y el envío
+      // terminaba en 403 para cualquiera que no fuera el dueño.
+      api.get<MySpot[]>("/spots/mine", { token })
         .then(({ data }) => {
-          setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
+          setAvailableSpots(mySpotsFor(data, cat.name))
         })
         .catch(() => {
           // proceed with empty list if fetch fails
@@ -178,8 +180,9 @@ export default function AgregarLugar() {
     if (mode === "new_route") {
       setLoadingTrekkingSpots(true)
       try {
-        const { data } = await api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: "Trekking" } })
-        setAvailableTrekkingSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
+        // Igual que surf y kayak: las rutas se suman solo a lugares propios.
+        const { data } = await api.get<MySpot[]>("/spots/mine", { token })
+        setAvailableTrekkingSpots(mySpotsFor(data, "Trekking"))
       } catch {} finally {
         setLoadingTrekkingSpots(false)
       }
@@ -191,6 +194,9 @@ export default function AgregarLugar() {
     if (mode === "new_sector" || mode === "new_route") {
       setLoadingSpots(true)
       try {
+        // Escalada es abierta: cualquiera sugiere sectores y vías en cualquier
+        // lugar aprobado (quedan en revisión). /spots/pins no pagina y trae
+        // solo id+name.
         const { data } = await api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: "Escalada" } })
         setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
       } catch {
@@ -333,7 +339,7 @@ export default function AgregarLugar() {
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
-    setFeatureErrors(new Set()); setError(null); setSuccess(false)
+    setFeatureErrors(new Set()); setError(null); setSuccess(null)
     setSelectedSpotId(null); setAvailableSpots([])
     setIsPublic(null); setPublicTransport(null)
     setCreatingNewSpot(false); setClimbingMode(null)
@@ -393,9 +399,9 @@ export default function AgregarLugar() {
         <div style={{ ...s.container, textAlign: "center", paddingTop: 32 }}>
           {pageHeader}
           <div style={{ marginTop: 48 }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>¡Gracias!</p>
-            <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36 }}>Tu lugar fue enviado y será revisado pronto.</p>
-            <button style={s.btnPrimary} onClick={reset}>Enviar otro lugar</button>
+            <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>{RESULT_COPY[success].title}</p>
+            <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36, maxWidth: 440, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5 }}>{RESULT_COPY[success].text}</p>
+            <button style={s.btnPrimary} onClick={reset}>{RESULT_COPY[success].again}</button>
           </div>
         </div>
       </div>

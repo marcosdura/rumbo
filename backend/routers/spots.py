@@ -650,6 +650,9 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             "is_approved": s.is_approved,
             "created_at": s.created_at.isoformat(),
             "category": s.category,
+            # Todas sus actividades (principal + secundarias): agregar-lugar
+            # las usa para ofrecer "tus spots de Surf / Kayak / Trekking".
+            "activities": sorted({sc.category.name for sc in s.spot_categories if sc.category} | ({s.category.name} if s.category else set())),
             "images": s.images,
             "average_rating": round(float(agg_by_id[s.id].average_rating), 1) if s.id in agg_by_id and agg_by_id[s.id].average_rating else None,
             "review_count": agg_by_id[s.id].review_count if s.id in agg_by_id else 0,

@@ -17,6 +17,9 @@ export default function StepClimbingSpotSelector({
   return (
     <div>
       <h2 style={s.title}>Seleccioná el spot de escalada</h2>
+      <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
+        Podés sugerir sectores y vías en cualquier lugar de escalada. Se publican cuando el equipo de Rumbo los revisa.
+      </p>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {loadingSpots ? (

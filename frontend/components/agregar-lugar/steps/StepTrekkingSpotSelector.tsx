@@ -17,11 +17,14 @@ export default function StepTrekkingSpotSelector({
   return (
     <div>
       <h2 style={s.title}>¿A qué spot querés agregar la ruta?</h2>
+      <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
+        Las rutas se suman a lugares que cargaste vos. Si el lugar ya está aprobado, la ruta pasa por revisión antes de publicarse.
+      </p>
       <div style={s.form}>
         {loadingSpots ? (
           <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando spots...</p>
         ) : availableSpots.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--muted)" }}>No hay spots de trekking disponibles.</p>
+          <p style={{ fontSize: 13, color: "var(--muted)" }}>Todavía no cargaste ningún lugar de trekking.</p>
         ) : (
           <select
             style={s.input}

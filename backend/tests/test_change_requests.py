@@ -222,3 +222,15 @@ def test_borrar_la_cuenta_cancela_el_pedido_y_borra_sus_fotos(client, db, make_u
     assert r.status_code == 200
     assert destroyed == photos
     assert db.query(SpotChangeRequest).one().status == "cancelled"
+
+
+def test_mine_trae_las_actividades_del_spot(client, db, make_spot):
+    from models import Category, SpotCategory
+    spot = make_spot()
+    surf = Category(name="Surf")
+    db.add(surf)
+    db.flush()
+    db.add(SpotCategory(spot_id=spot.id, category_id=surf.id, is_primary=False))
+    db.commit()
+    [mio] = client.get("/spots/mine", headers=as_user(OWNER)).json()
+    assert mio["activities"] == ["Camping", "Surf"]

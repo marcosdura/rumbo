@@ -27,6 +27,7 @@ export default function StepServicioSpot({
         {selectedCat.name === "Surf"
           ? "Seleccioná la playa donde funciona tu escuela de surf."
           : "Seleccioná el río o laguna donde ofrecés el servicio de kayak."}
+        {" "}Se muestran los lugares que cargaste vos; si la tuya no está, agregala abajo.
       </p>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -34,7 +35,7 @@ export default function StepServicioSpot({
             <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando lugares...</p>
           ) : availableSpots.length === 0 ? (
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              No hay lugares disponibles aún. Podés agregar el tuyo abajo.
+              Todavía no cargaste ningún lugar de {selectedCat.name.toLowerCase()}. Podés agregar el tuyo abajo.
             </p>
           ) : (
             <select

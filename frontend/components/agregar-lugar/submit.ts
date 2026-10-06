@@ -1,3 +1,4 @@
+import { contributionResult, type SubmitResult } from "./result"
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
@@ -22,7 +23,7 @@ interface SubmitNewTrekkingRouteParams {
   routes: RouteItem[]
   setSubmitting: (v: boolean) => void
   setError: (v: string | null) => void
-  setSuccess: (v: boolean) => void
+  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParams): Promise<void> {
@@ -30,9 +31,10 @@ export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParam
   setSubmitting(true)
   setError(null)
   try {
+    const created: { is_approved?: boolean }[] = []
     for (const r of routes) {
       if (!r.name) continue
-      await api.post("/routes/", {
+      const { data } = await api.post<{ is_approved?: boolean }>("/routes/", {
         spot_id: trekkingSpotId,
         name: r.name,
         distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
@@ -46,8 +48,9 @@ export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParam
         technical_level: r.technical_level || null,
         physical_demand: r.physical_demand || null,
       }, { token })
+      created.push(data)
     }
-    setSuccess(true)
+    setSuccess(contributionResult(created))
   } catch {
     setError("No se pudo guardar la ruta. Intentá de nuevo.")
   } finally {
@@ -62,7 +65,7 @@ interface SubmitNewClimbingSectorParams {
   sectorRoutes: ClimbingRouteItem[]
   setSubmitting: (v: boolean) => void
   setError: (v: string | null) => void
-  setSuccess: (v: boolean) => void
+  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitNewClimbingSector(params: SubmitNewClimbingSectorParams): Promise<void> {
@@ -71,7 +74,7 @@ export async function submitNewClimbingSector(params: SubmitNewClimbingSectorPar
   setError(null)
   try {
     const sec = sectors[0]
-    const { data: newSector } = await api.post<{ id: number }>("/sectors/", {
+    const { data: newSector } = await api.post<{ id: number; is_approved?: boolean }>("/sectors/", {
       name: sec.name,
       type: sec.type || null,
       max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
@@ -91,7 +94,8 @@ export async function submitNewClimbingSector(params: SubmitNewClimbingSectorPar
         sector_id: newSector.id,
       }, { token })
     }
-    setSuccess(true)
+    // Las vías van con el sector: si el sector quedó en revisión, ellas también.
+    setSuccess(contributionResult([newSector]))
   } catch {
     setError("No se pudo guardar el sector. Intentá de nuevo.")
   } finally {
@@ -105,7 +109,7 @@ interface SubmitNewClimbingRouteParams {
   climbingNewRoutes: ClimbingRouteItem[]
   setSubmitting: (v: boolean) => void
   setError: (v: string | null) => void
-  setSuccess: (v: boolean) => void
+  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParams): Promise<void> {
@@ -113,9 +117,10 @@ export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParam
   setSubmitting(true)
   setError(null)
   try {
+    const created: { is_approved?: boolean }[] = []
     for (const r of climbingNewRoutes) {
       if (!r.name) continue
-      await api.post("/climbingroutes/", {
+      const { data } = await api.post<{ is_approved?: boolean }>("/climbingroutes/", {
         name: r.name,
         grade: r.grade || null,
         type: r.type || null,
@@ -124,8 +129,9 @@ export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParam
         description: r.description || null,
         sector_id: climbingSectorId,
       }, { token })
+      created.push(data)
     }
-    setSuccess(true)
+    setSuccess(contributionResult(created))
   } catch {
     setError("No se pudo guardar la ruta. Intentá de nuevo.")
   } finally {
@@ -164,7 +170,7 @@ interface SubmitParams {
   setSubmitting: (v: boolean) => void
   setUploadProgress: (v: string | null) => void
   setError: (v: string | null) => void
-  setSuccess: (v: boolean) => void
+  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
@@ -183,6 +189,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setSubmitting(true)
     try {
       let spotId = selectedSpotId
+      const created: { is_approved?: boolean }[] = []
 
       if (creatingNewSpot) {
         setUploadProgress("Guardando lugar...")
@@ -237,7 +244,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           photoUrls[i] = url
         }
 
-        await api.post("/surfschool/", {
+        const { data: school } = await api.post<{ is_approved?: boolean }>("/surfschool/", {
           spot_id: spotId,
           name: surf.name,
           class_type: surf.class_type || null,
@@ -248,6 +255,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
           photo_1: photoUrls[0], photo_2: photoUrls[1] ?? null, photo_3: photoUrls[2] ?? null,
         }, { token })
+        created.push(school)
       }
       if (cat === "Kayak") {
         if (!creatingNewSpot && !kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
@@ -264,7 +272,9 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
 
         for (const k of kayaks) {
           if (!k.name) continue
-          await api.post("/kayak/", {
+          // Sin .catch silencioso: si el backend rechaza (por ejemplo, el
+          // lugar no es tuyo), el usuario tiene que enterarse.
+          const { data: kayak } = await api.post<{ is_approved?: boolean }>("/kayak/", {
             spot_id: spotId,
             name: k.name,
             water_type: k.water_type || null, difficulty: k.difficulty || null,
@@ -274,11 +284,12 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
             season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
             email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
             photo_1: kayakPhotoUrls[0], photo_2: kayakPhotoUrls[1] ?? null, photo_3: kayakPhotoUrls[2] ?? null,
-          }, { token }).catch(() => {})
+          }, { token })
+          created.push(kayak)
         }
       }
       trackEvent("add_spot_complete", { category: cat, creating_new_spot: creatingNewSpot })
-      setSuccess(true)
+      setSuccess(creatingNewSpot ? "spot" : contributionResult(created))
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Error inesperado")
     } finally {
@@ -564,7 +575,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     trackEvent("add_spot_complete", { category: cat, creating_new_spot: true })
-    setSuccess(true)
+    setSuccess("spot")
   } catch (e: unknown) {
     setError(e instanceof Error ? e.message : "Error inesperado")
   } finally {
