@@ -5,7 +5,7 @@ from auth import get_current_user_required, is_admin, get_current_admin_user
 from ownership import get_owned_spot_or_admin
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
-from schemas import SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
+from schemas import SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -14,6 +14,7 @@ from typing import Optional, List
 from database import engine
 from models import Base
 from slugs import generate_slug
+from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, apply_request_to_spot, close_request, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
 import cloudinary
 import cloudinary.uploader
@@ -503,13 +504,12 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
         raise HTTPException(status_code=404, detail="Spot not found")
 
     images = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).all()
-    for img in images:
-        try:
-            print(f"[Cloudinary] Destruyendo: {img.cloudinary_public_id}")
-            result = cloudinary.uploader.destroy(img.cloudinary_public_id)
-            print(f"[Cloudinary] Resultado: {result}")
-        except Exception as e:
-            print(f"[Cloudinary] Error: {e}")
+    # Las fotos de un pedido de cambio pendiente también están en Cloudinary
+    # (sin fila en spot_images): el cascade borra el pedido, pero no el archivo.
+    pending = get_pending_request(db, spot_id)
+    destroy_cloudinary_images(
+        [img.cloudinary_public_id for img in images] + (request_photos(pending) if pending else [])
+    )
 
     # Antes esto era un DELETE FROM spots crudo, que rompía con
     # IntegrityError apenas el spot tenía cualquier fila asociada (reviews,
@@ -646,6 +646,10 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             "images": s.images,
             "average_rating": round(float(agg_by_id[s.id].average_rating), 1) if s.id in agg_by_id and agg_by_id[s.id].average_rating else None,
             "review_count": agg_by_id[s.id].review_count if s.id in agg_by_id else 0,
+            # Pedido pendiente, o el último aprobado/rechazado que el dueño
+            # todavía no cerró. Lo usan el aviso del dashboard y la etiqueta
+            # "cambio en revisión" de /profile.
+            "change_request": serialize_request(r) if (r := owner_visible_request(db, s.id)) else None,
         }
         for s in spots
     ]
@@ -919,6 +923,17 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
+    # Si el spot vuelve a pendiente con un pedido de cambio abierto, el pedido
+    # se vuelca sobre el spot: desde ahora sus ediciones van directo (un spot
+    # pendiente se revisa entero antes de publicarse), y el pedido quedaría
+    # colgado con datos viejos.
+    if not approved and spot.is_approved:
+        pending = get_pending_request(db, spot.id)
+        if pending:
+            apply_request_to_spot(db, pending)
+            close_request(pending, "approved", by=admin.get("email"))
+            # No es una aprobación real que el dueño tenga que ver.
+            pending.owner_dismissed_at = pending.resolved_at
     spot.is_approved = approved
     if approved and not spot.slug:
         spot.slug = generate_slug(spot.name)
@@ -946,18 +961,44 @@ def can_upload_image(public_id: str, db: Session = Depends(get_db), spot: SpotDB
     ).first()
     if existing:
         raise HTTPException(status_code=409, detail="Ese public_id ya está en uso")
+    # Las fotos de un pedido pendiente todavía no tienen fila en spot_images.
+    pending = get_pending_request(db, spot.id)
+    if pending and {public_id, f"rumbo/spots/{public_id}"} & set(request_photos(pending)):
+        raise HTTPException(status_code=409, detail="Ese public_id ya está en uso")
     return {"ok": True}
 
 
 @router.patch("/admin/spots/{spot_id}")
-def edit_spot_admin(data: dict, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
-    allowed = ["name", "description", "department", "email", "whatsapp", "instagram", "price", "lat", "lng", "is_public", "public_transport", "season_start", "season_end"]
-    for field, value in data.items():
-        if field in allowed:
-            setattr(spot, field, value)
-    db.commit()
+@limiter.limit("20/minute")
+def edit_spot_admin(
+    request: Request,
+    body: SpotEditRequest,
+    dry_run: bool = False,
+    spot: SpotDB = Depends(get_owned_spot_or_admin),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user_required),
+):
+    # Lo usan el dueño (dashboard) y el admin (EditSpotModal). Sobre un spot
+    # aprobado, el dueño ya no escribe directo los campos sensibles: van a un
+    # pedido de cambio (ver spot_changes.py). dry_run=true devuelve la misma
+    # clasificación sin escribir nada — el dashboard la usa para avisar qué va
+    # a revisión antes de subir fotos y guardar.
+    admin = is_admin(user)
+    plan = plan_spot_edit(db, spot, body.model_dump(exclude_unset=True), admin=admin)
+    applied = list(plan["apply"].keys()) + (["photos_added"] if plan["photos_direct"] else [])
+    pending = list(plan["pending"].keys()) + (["photos_added"] if plan["photos_added"] else [])
+    if dry_run:
+        return {"id": spot.id, "applied": applied, "pending": pending}
+
+    change_request = execute_spot_edit(db, spot, plan, requested_by=user.get("email"))
     db.refresh(spot)
-    return {"id": spot.id, "name": spot.name}
+    return {
+        "id": spot.id,
+        "name": spot.name,
+        "applied": applied,
+        "pending": pending,
+        "change_request": serialize_request(change_request) if change_request else None,
+    }
 
 
 @router.patch("/admin/spots/{spot_id}/main-image")

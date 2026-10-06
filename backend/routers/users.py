@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from models import User, Favorite, Review, SurfReview, KayakReview, SpotDB
+from models import User, Favorite, Review, SurfReview, KayakReview, SpotDB, SpotChangeRequest
 from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
+from spot_changes import close_request, request_photos, destroy_cloudinary_images
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -46,6 +47,21 @@ async def delete_account(
         SpotDB.owner_deleted_at.is_(None),
     ).update({"owner_deleted_at": func.now()}, synchronize_session=False)
 
+    # Los pedidos de cambio pendientes se cancelan: el spot queda desactivado
+    # y no hay dueño que vaya a ver el resultado. Sus fotos nuevas nunca se
+    # publicaron, así que se destruyen en Cloudinary.
+    pending = (
+        db.query(SpotChangeRequest)
+        .join(SpotDB, SpotDB.id == SpotChangeRequest.spot_id)
+        .filter(SpotDB.owner_email == db_user.email, SpotChangeRequest.status == "pending")
+        .all()
+    )
+    orphan_photos = []
+    for change in pending:
+        orphan_photos += request_photos(change)
+        close_request(change, "cancelled", by=db_user.email)
+
     db.delete(db_user)
     db.commit()
+    destroy_cloudinary_images(orphan_photos)
     return {"message": "Cuenta eliminada"}

@@ -26,6 +26,13 @@ async def add_image_to_spot(
     if not is_admin(user) and spot.owner_email != user.get("email"):
         raise HTTPException(status_code=403, detail="No autorizado")
 
+    # Sobre un spot aprobado, el dueño no puede publicar fotos directo: van
+    # en un pedido de cambio (PATCH /admin/spots/{id} con photos_added) que
+    # revisa el admin. Este endpoint queda para el alta de un spot nuevo
+    # (todavía no aprobado) y para el admin.
+    if not is_admin(user) and spot.is_approved:
+        raise HTTPException(status_code=403, detail="Las fotos nuevas de un lugar aprobado pasan por revisión.")
+
     current_count = db.query(SpotImage).filter(SpotImage.spot_id == spot_id).count()
     if current_count >= 10:
         raise HTTPException(status_code=400, detail="El spot ya tiene el máximo de 10 fotos")

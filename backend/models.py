@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, text
 from database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -60,6 +60,53 @@ class SpotDB(Base):
     favorites = relationship("Favorite", back_populates="spot", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="spot", cascade="all, delete-orphan")
     experiences = relationship("Experience", back_populates="spot", cascade="all, delete-orphan")
+    change_requests = relationship("SpotChangeRequest", back_populates="spot", cascade="all, delete-orphan")
+
+
+class SpotChangeRequest(Base):
+    """Pedido de cambio sobre un spot YA aprobado. Los campos sensibles
+    (nombre, descripción, fotos nuevas) no se escriben en SpotDB: quedan acá
+    hasta que el admin aprueba, así el público sigue viendo la versión
+    aprobada sin tocar ningún endpoint de lectura. La lógica vive en
+    spot_changes.py.
+
+    changes es un JSON con solo lo que cambió:
+      {"name": {"from": "...", "to": "..."},
+       "description": {"from": "...", "to": "..."},
+       "photos_added": ["rumbo/spots/12/ab12...", ...]}
+    Las fotos de photos_added ya están subidas a Cloudinary pero sin fila en
+    spot_images, así que no se ven en ningún lado hasta aprobarse.
+    """
+    __tablename__ = "spot_change_requests"
+
+    # Un solo pedido pendiente por spot. Índice único PARCIAL: los aprobados,
+    # rechazados y cancelados quedan como historial sin chocar entre sí.
+    # spot_changes.py devuelve 409 antes de llegar acá; esto cubre la carrera
+    # de dos requests simultáneos (ej. doble click en Guardar).
+    __table_args__ = (
+        Index(
+            "uq_spot_change_pending", "spot_id", unique=True,
+            postgresql_where=text("status = 'pending'"),
+            sqlite_where=text("status = 'pending'"),
+        ),
+    )
+
+    id           = Column(Integer, primary_key=True, index=True)
+    spot_id      = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
+    requested_by = Column(String, nullable=False)  # email del dueño
+    # "pending" | "approved" | "rejected" | "cancelled"
+    status       = Column(String, nullable=False, default="pending", index=True)
+    changes      = Column(JSON, nullable=False)
+    # Comentario opcional del admin al rechazar; el dueño lo ve en su dashboard.
+    reject_reason = Column(String, nullable=True)
+    created_at   = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at  = Column(DateTime(timezone=True), nullable=True)
+    resolved_by  = Column(String, nullable=True)
+    # El dueño ve "aprobado"/"rechazado" en su dashboard hasta cerrarlo.
+    # NULL = todavía no lo cerró (o el pedido sigue pendiente).
+    owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
+
+    spot = relationship("SpotDB", back_populates="change_requests")
 
 
 class Category(Base):

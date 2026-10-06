@@ -38,6 +38,35 @@ class SpotCreate(BaseModel):
     public_transport: Optional[str] = Field(default=None, max_length=20)
 
 
+class SpotEditRequest(BaseModel):
+    """PATCH /admin/spots/{id}. Todos opcionales: solo se toca lo que viene
+    (model_dump(exclude_unset=True)). Qué campo se aplica ya y cuál va a
+    revisión lo decide spot_changes.py, no este schema."""
+    name: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=3000)
+    department: str | None = Field(default=None, max_length=100)
+    email: str | None = Field(default=None, max_length=254)
+    instagram: str | None = Field(default=None, max_length=100)
+    whatsapp: str | None = Field(default=None, max_length=30)
+    price: int | None = None
+    season_start: Optional[int] = None  # 1–12
+    season_end:   Optional[int] = None  # 1–12
+    lat: float | None = None
+    lng: float | None = None
+    is_public: Optional[bool] = None
+    public_transport: Optional[str] = Field(default=None, max_length=20)
+    # Fotos ya subidas a Cloudinary que el dueño quiere sumar.
+    photos_added: list[str] = Field(default_factory=list, max_length=10)
+
+
+class ChangeRequestReject(BaseModel):
+    reason: str | None = Field(default=None, max_length=500)
+
+
+class DiscardPhotosRequest(BaseModel):
+    public_ids: list[str] = Field(max_length=10)
+
+
 # -------- GLAMPING --------
 class GlampingAmenityCreate(BaseModel):
     private_bathroom:   Optional[bool] = None
