@@ -1,7 +1,8 @@
 "use client"
 import SectorCard from "./SectorCard"
+import { SectionHeader } from "./AddToSpot"
 
-function ClimbingSectorsCards({ sectors, spotSlug }) {
+function ClimbingSectorsCards({ sectors, spotSlug, action }) {
   return (
     <div className="sectors-outer" style={{
       background: "#fff",
@@ -129,12 +130,7 @@ function ClimbingSectorsCards({ sectors, spotSlug }) {
         }
       `}</style>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-          Sectores de Escalada
-        </p>
-      </div>
+      <SectionHeader title="Sectores de Escalada" action={action} />
 
       <div className="sectors-grid">
         {sectors.map(sector => (

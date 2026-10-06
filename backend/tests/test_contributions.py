@@ -339,3 +339,31 @@ def test_el_duenio_ve_sus_pendientes_en_el_dashboard(client, db, make_spot, surf
 def test_owner_content_solo_para_el_duenio(client, make_spot):
     spot = make_spot()
     assert client.get(f"/spots/{spot.id}/owner-content", headers=as_user(OTHER)).status_code == 403
+
+
+# -------- Quien mira el spot --------
+
+def test_viewer_sin_sesion(client, make_spot):
+    spot = make_spot()
+    assert client.get(f"/spots/{spot.id}/viewer").json() == {"is_owner": False, "is_admin": False, "pending": []}
+
+
+def test_viewer_duenio_y_sus_pendientes(client, make_spot):
+    spot = make_spot()
+    post_trekking(client, spot, OWNER)
+    body = client.get(f"/spots/{spot.id}/viewer", headers=as_user(OWNER)).json()
+    assert body["is_owner"] is True
+    assert [(p["kind"], p["title"]) for p in body["pending"]] == [("trekking_route", "Sendero al mirador")]
+
+
+def test_viewer_solo_ve_sus_propios_pendientes(client, make_spot):
+    spot = make_spot()
+    post_sector(client, spot, OTHER)
+    assert client.get(f"/spots/{spot.id}/viewer", headers=as_user(OWNER)).json()["pending"] == []
+    otro = client.get(f"/spots/{spot.id}/viewer", headers=as_user(OTHER)).json()
+    assert otro["is_owner"] is False
+    assert [p["title"] for p in otro["pending"]] == ["Sector Norte"]
+
+
+def test_viewer_spot_inexistente(client):
+    assert client.get("/spots/999/viewer").status_code == 404

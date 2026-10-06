@@ -1,7 +1,8 @@
 "use client"
 import RouteCard from "./RouteCard"
+import { SectionHeader } from "./AddToSpot"
 
-function TrekkingRoutes({ routes, spotSlug }) {
+function TrekkingRoutes({ routes, spotSlug, action }) {
   return (
     <div className="routes-outer" style={{
       background: "#fff",
@@ -143,12 +144,7 @@ function TrekkingRoutes({ routes, spotSlug }) {
         }
       `}</style>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-          Rutas de Trekking
-        </p>
-      </div>
+      <SectionHeader title="Rutas de Trekking" action={action} />
 
       <div className="routes-grid">
         {routes.map(route => (

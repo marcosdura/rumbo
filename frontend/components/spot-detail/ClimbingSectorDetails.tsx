@@ -6,6 +6,8 @@ import Navbar from "@/components/layout/Navbar"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import Pill, { type PillVariant } from "@/components/ui/Pill"
 import { api } from "@/lib/api"
+import { AddButton, SectionHeader } from "./AddToSpot"
+import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const params = useParams()
@@ -220,12 +222,11 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
             borderRadius: 20, padding: "24px 28px",
             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-                Rutas — {routes.length} en total
-              </p>
-            </div>
+            {/* Escalada es abierta: cualquiera sugiere vías (pasan por revisión). */}
+            <SectionHeader
+              title={`Rutas — ${routes.length} en total`}
+              action={sector.spot_id ? <AddButton href={addToSpotUrl("via", sector.spot_id, sector.id)}>＋ Sugerir una vía</AddButton> : undefined}
+            />
 
             {routes.length === 0 ? (
               <p style={{ fontSize: 14, color: "var(--muted)", textAlign: "center", padding: "32px 0" }}>

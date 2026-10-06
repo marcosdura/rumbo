@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 import contributions
-from auth import get_current_admin_user, get_current_user_required
+from auth import get_current_admin_user, get_current_user, get_current_user_required, is_admin
 from database import get_db
 from limiter import limiter
 from models import Contribution, SpotDB
@@ -21,6 +21,37 @@ def _spot_summary(spot: SpotDB) -> dict:
         "department": spot.department,
         "category": spot.category,
         "owner_email": spot.owner_email,
+    }
+
+
+# -------- Quien mira un spot --------
+
+@router.get("/spots/{spot_id}/viewer")
+def spot_viewer(spot_id: int, db: Session = Depends(get_db), user: dict | None = Depends(get_current_user)):
+    """Lo que la página pública de un spot necesita saber de quien la mira:
+    si es el dueño (para el acceso a "Administrar" y "Agregar una ruta") y
+    qué aportes suyos están en revisión ahí (para que no los cargue dos
+    veces creyendo que no se guardaron). La página se genera en el servidor
+    sin sesión: esto lo pide el navegador aparte. Sin sesión, todo vacío."""
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    if not user:
+        return {"is_owner": False, "is_admin": False, "pending": []}
+    pending = (
+        db.query(Contribution)
+        .filter(
+            Contribution.spot_id == spot_id,
+            Contribution.author_email == user.get("email"),
+            Contribution.status == "pending",
+        )
+        .order_by(Contribution.created_at.asc())
+        .all()
+    )
+    return {
+        "is_owner": spot.owner_email == user.get("email"),
+        "is_admin": is_admin(user),
+        "pending": [{"id": c.id, "kind": c.kind, "title": c.title} for c in pending],
     }
 
 

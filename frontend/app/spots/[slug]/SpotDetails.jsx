@@ -33,6 +33,9 @@ import CampingCard from "../../../components/spot-detail/CampingCard"
 import GlampingCard from "../../../components/spot-detail/GlampingCard"
 import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
 import Pill from "@/components/ui/Pill"
+import { useSession } from "next-auth/react"
+import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/spot-detail/AddToSpot"
+import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -46,6 +49,17 @@ function SpotDetail({ spot }) {
   const [showShare, setShowShare] = useState(false)
   const [reviewSummary, setReviewSummary] = useState(null)
   const router = useRouter()
+  const { data: session } = useSession()
+  // Quién mira: si es el dueño y qué aportes suyos están en revisión acá.
+  // La página se genera en el servidor sin sesión; esto lo pide el navegador.
+  const [viewer, setViewer] = useState({ is_owner: false, pending: [] })
+
+  useEffect(() => {
+    if (!spot?.id || !session?.id_token) return
+    api.get(`/spots/${spot.id}/viewer`, { token: session.id_token })
+      .then(({ data }) => setViewer(data))
+      .catch(() => {})  // sin esto la página funciona igual, solo sin los accesos
+  }, [spot?.id, session?.id_token])
 
 useEffect(() => {
   if (!spot?.id) return
@@ -289,6 +303,9 @@ useEffect(() => {
               </div>
             </div>
 
+            {viewer.is_owner && <OwnerBar spotId={spot.id} />}
+            <PendingNotice pending={viewer.pending} />
+
             {/* Imágenes */}
             <div className="fade-up fade-up-2" style={{ marginBottom: spot.is_public != null ? 12 : 36 }}>
               <SpotImages images={spot.images} name={spot.name} />
@@ -345,12 +362,39 @@ useEffect(() => {
                 <TrekkingAmenitiesCard trekkingDetail={spot.trekking_detail} />
               )}
 
+              {/* Rutas: las suma solo el dueño del lugar. */}
               {spot.category?.name === "Trekking" && routes.length > 0 && (
-                <TrekkingRoutes routes={routes} spotSlug={spot.slug} />
+                <TrekkingRoutes
+                  routes={routes}
+                  spotSlug={spot.slug}
+                  action={viewer.is_owner ? <AddButton href={addToSpotUrl("ruta", spot.id)}>＋ Agregar una ruta</AddButton> : undefined}
+                />
+              )}
+              {spot.category?.name === "Trekking" && routes.length === 0 && viewer.is_owner && (
+                <EmptySection
+                  title="Rutas de Trekking"
+                  text="Todavía no cargaste rutas en este lugar."
+                  href={addToSpotUrl("ruta", spot.id)}
+                  label="＋ Agregar una ruta"
+                />
               )}
 
+              {/* Escalada es abierta: cualquiera sugiere sectores (pasan por
+                  revisión), así que la sección se muestra aunque esté vacía. */}
               {spot.category?.name === "Escalada" && sectors.length > 0 && (
-                <ClimbingSectorsCards sectors={sectors} spotSlug={spot.slug} />
+                <ClimbingSectorsCards
+                  sectors={sectors}
+                  spotSlug={spot.slug}
+                  action={<AddButton href={addToSpotUrl("sector", spot.id)}>＋ Sugerir un sector</AddButton>}
+                />
+              )}
+              {spot.category?.name === "Escalada" && sectors.length === 0 && (
+                <EmptySection
+                  title="Sectores de Escalada"
+                  text="Todavía no hay sectores cargados en este lugar. ¿Conocés alguno? Sugerilo y lo revisamos."
+                  href={addToSpotUrl("sector", spot.id)}
+                  label="＋ Sugerir un sector"
+                />
               )}
 
               {orderedStayCards}
