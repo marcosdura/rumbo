@@ -10,6 +10,7 @@ import AccountActions from "./AccountActions"
 import StatsRow from "./StatsRow"
 import MySpotsCard from "./MySpotsCard"
 import MyContributionsCard from "./MyContributionsCard"
+import MyOperatorsCard from "./MyOperatorsCard"
 import FavoritesPreview from "./FavoritesPreview"
 import DeleteAccountModal from "./DeleteAccountModal"
 
@@ -193,6 +194,7 @@ export default function ProfilePage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <StatsRow reviewsCount={reviews.length} favoritesCount={favorites.length} />
             <MySpotsCard mySpots={mySpots} />
+            <MyOperatorsCard token={session.id_token} />
             <MyContributionsCard token={session.id_token} />
             <FavoritesPreview favorites={favorites} />
           </div>
