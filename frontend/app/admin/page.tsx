@@ -16,6 +16,7 @@ import DeactivatedTab from "./DeactivatedTab"
 import ChangesTab from "./ChangesTab"
 import ContributionsList from "./ContributionsList"
 import OperatorChangesList, { type AdminOperatorChange } from "./OperatorChangesList"
+import ReportsTab, { groupKey, type ReportGroup } from "./ReportsTab"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 
@@ -56,6 +57,11 @@ export default function AdminPage() {
   const [operatorChangesError, setOperatorChangesError] = useState<string | null>(null)
   const [operatorActionLoading, setOperatorActionLoading] = useState<number | null>(null)
   const [operatorActionErrors, setOperatorActionErrors] = useState<Record<number, string>>({})
+  // Reportes abiertos (pestaña "Reportes"); acá solo se cargan, para el
+  // contador. Las acciones las maneja ReportsTab.
+  const [reportGroups, setReportGroups] = useState<ReportGroup[]>([])
+  const [reportsLoading, setReportsLoading] = useState(true)
+  const [reportsError, setReportsError] = useState<string | null>(null)
   // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
   // pedido de cambio de escuela.
   type RejectType = "change" | "contribution" | "operator" | "spot"
@@ -91,6 +97,10 @@ export default function AdminPage() {
       .then(({ data }) => setOperatorChanges(Array.isArray(data) ? data : []))
       .catch(() => setOperatorChangesError("Error al cargar los cambios de escuelas."))
       .finally(() => setOperatorChangesLoading(false))
+    api.get<ReportGroup[]>("/admin/reports", { token })
+      .then(({ data }) => setReportGroups(Array.isArray(data) ? data : []))
+      .catch(() => setReportsError("Error al cargar los reportes."))
+      .finally(() => setReportsLoading(false))
   }, [token])
 
   // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
@@ -333,6 +343,7 @@ export default function AdminPage() {
           {([
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
             { id: "cambios", label: `📝 Cambios pendientes${pendingReviews > 0 ? ` (${pendingReviews})` : ""}` },
+            { id: "reportes", label: `⚑ Reportes${reportGroups.length > 0 ? ` (${reportGroups.length})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
             { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
@@ -396,6 +407,20 @@ export default function AdminPage() {
             actionErrors={operatorActionErrors}
             onApprove={handleApproveOperatorChange}
             onRejectRequest={id => openReject("operator", id)}
+          />
+        )}
+
+        {mode === "reportes" && (
+          <ReportsTab
+            groups={reportGroups}
+            loadError={reportsError}
+            loading={reportsLoading}
+            token={token}
+            onResolved={(group, action) => {
+              setReportGroups(prev => prev.filter(g => groupKey(g) !== groupKey(group)))
+              // Despublicar o borrar cambia la lista de spots (y sus reseñas).
+              if (action !== "dismiss") refreshSpots().catch(() => {})
+            }}
           />
         )}
 
