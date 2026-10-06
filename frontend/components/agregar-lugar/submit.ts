@@ -1,6 +1,7 @@
 import { contributionResult, type SubmitResult } from "./result"
+import { experiencePayload, glampingUnitPayload } from "./payloads"
 import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
-import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, EXPERIENCE_SCHEDULE_OPTIONS, normalizePhoneDigits } from "./constants"
+import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
@@ -374,12 +375,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (cat === "Glamping") {
       for (const unit of glampingUnits) {
         if (!unit.accommodation_type && !unit.capacity && !unit.price_per_night && !unit.min_nights) continue
-        await api.post(`/glamping/spots/${spotId}/glamping`, {
-          accommodation_type: unit.accommodation_type || null,
-          capacity: unit.capacity ? parseInt(unit.capacity) : null,
-          price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
-          min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
-        }, { token }).catch(() => {})
+        await api.post(`/glamping/spots/${spotId}/glamping`, glampingUnitPayload(unit), { token }).catch(() => {})
       }
 
       const amenityPayload: Record<string, boolean> = {}
@@ -557,21 +553,9 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     }
 
     for (const exp of experiences) {
-      if (!exp.title.trim() || !exp.category_id) continue
-      const scheduleValue = exp.schedule_type === "personalizado"
-        ? exp.schedule_custom.trim() || null
-        : exp.schedule_type
-          ? EXPERIENCE_SCHEDULE_OPTIONS.find(o => o.value === exp.schedule_type)?.label ?? null
-          : null
-      await api.post(`/spots/${spotId}/experiences`, {
-        category_id: parseInt(exp.category_id),
-        title: exp.title.trim(),
-        description: exp.description.trim() || null,
-        price: exp.price ? parseFloat(exp.price) : null,
-        currency: "UYU",
-        schedule: scheduleValue,
-        contact: exp.contact.trim() || null,
-      }, { token }).catch(() => {})
+      const payload = experiencePayload(exp)
+      if (!payload) continue
+      await api.post(`/spots/${spotId}/experiences`, payload, { token }).catch(() => {})
     }
 
     trackEvent("add_spot_complete", { category: cat, creating_new_spot: true })

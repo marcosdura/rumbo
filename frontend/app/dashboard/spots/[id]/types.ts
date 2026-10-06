@@ -34,6 +34,19 @@ export type Spot = {
   is_approved: boolean; category: { name: string } | null
   images: SpotImage[]; average_rating: number | null; review_count: number
   change_request: ChangeRequest | null
+  // Actividades del spot (categoría principal + secundarias).
+  activities?: string[]
 }
 
-export type Tab = "info" | "fotos" | "reviews"
+// GET /spots/{id}/owner-content: lo del dueño, incluido lo que está en revisión.
+export type OwnedExperience = {
+  id: number; title: string; price: number | null; is_approved: boolean
+  category: { name: string } | null
+}
+export type OwnedGlampingUnit = {
+  id: number; accommodation_type: string | null; capacity: number | null
+  price_per_night: number | null; min_nights: number | null; is_approved: boolean
+}
+export type OwnerContent = { experiences: OwnedExperience[]; glamping_units: OwnedGlampingUnit[] }
+
+export type Tab = "info" | "fotos" | "contenido" | "reviews"

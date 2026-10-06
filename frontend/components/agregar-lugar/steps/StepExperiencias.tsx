@@ -83,7 +83,9 @@ export default function StepExperiencias({
   )
 }
 
-function ExperienceCard({
+// Exportada: el dashboard del dueño la reusa para sumar experiencias a un
+// lugar existente.
+export function ExperienceCard({
   index,
   exp,
   setExperiences,

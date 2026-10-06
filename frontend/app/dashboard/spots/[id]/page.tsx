@@ -16,6 +16,7 @@ import { describeFields, checkNewPhotos, errorMessage } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
+import ContentTab from "./ContentTab"
 import ChangeRequestBanner from "./ChangeRequestBanner"
 
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
@@ -296,6 +297,7 @@ export default function SpotDashboardPage() {
   const changeRequest = spot.change_request
   const pendingRequest = changeRequest?.status === "pending" ? changeRequest : null
   const pendingPhotoCount = pendingRequest?.changes.photos_added?.length ?? 0
+  const showGlamping = spot.category?.name === "Glamping" || (spot.activities ?? []).includes("Glamping")
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
@@ -363,6 +365,7 @@ export default function SpotDashboardPage() {
           {([
             { id: "info", label: "✏️ Información" },
             { id: "fotos", label: `📷 Fotos (${photoCount}/${MAX_PHOTOS})` },
+            { id: "contenido", label: showGlamping ? "🧭 Experiencias y alojamiento" : "🧭 Experiencias" },
             { id: "reviews", label: `💬 Reseñas (${reviews.length})` },
           ] as { id: Tab; label: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={s.tab(tab === t.id)}>{t.label}</button>
@@ -408,8 +411,15 @@ export default function SpotDashboardPage() {
           />
         )}
 
+        {/* Se monta siempre y se oculta: así lo que estás escribiendo no se
+            pierde al cambiar de pestaña (mismo motivo por el que los campos
+            de Información viven en esta página). */}
+        <div style={{ display: tab === "contenido" ? "block" : "none" }}>
+          <ContentTab spotId={spot.id} token={token} reviewed={spot.is_approved} showGlamping={showGlamping} />
+        </div>
+
         {/* Guardar: uno solo para la información y las fotos nuevas. */}
-        {tab !== "reviews" && (
+        {(tab === "info" || tab === "fotos") && (
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
             <button
               onClick={handleSave}

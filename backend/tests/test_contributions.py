@@ -317,3 +317,25 @@ def test_borrar_la_cuenta_retira_sus_aportes_en_spots_ajenos(client, db, make_sp
 ])
 def test_public_id_desde_url(url, expected):
     assert public_id_from_url(url) == expected
+
+
+# -------- Dashboard del dueño --------
+
+def test_el_duenio_ve_sus_pendientes_en_el_dashboard(client, db, make_spot, surf_category):
+    spot = make_spot()
+    db.add(GlampingDetail(spot_id=spot.id, accommodation_type="domo"))
+    db.commit()
+    post_experience(client, spot, OWNER, surf_category.id)
+    post_glamping(client, spot, OWNER)
+    r = client.get(f"/spots/{spot.id}/owner-content", headers=as_user(OWNER))
+    assert r.status_code == 200
+    body = r.json()
+    assert [e["is_approved"] for e in body["experiences"]] == [False]
+    assert [g["is_approved"] for g in body["glamping_units"]] == [True, False]
+    # La lectura pública sigue sin mostrarlas.
+    assert client.get(f"/spots/{spot.id}/experiences").json() == []
+
+
+def test_owner_content_solo_para_el_duenio(client, make_spot):
+    spot = make_spot()
+    assert client.get(f"/spots/{spot.id}/owner-content", headers=as_user(OTHER)).status_code == 403

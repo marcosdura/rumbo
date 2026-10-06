@@ -1095,6 +1095,33 @@ def get_experiences(spot_id: int, db: Session = Depends(get_db)):
     )
 
 
+@router.get("/spots/{spot_id}/owner-content")
+def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """Para el dashboard del dueño: sus experiencias y unidades de glamping,
+    incluidas las que están en revisión (is_approved = False), que la lectura
+    pública oculta. Las rechazadas ya no existen: su resultado se ve en
+    /profile ("Tus aportes")."""
+    experiences = (
+        db.query(Experience)
+        .execution_options(include_pending=True)
+        .options(selectinload(Experience.category))
+        .filter(Experience.spot_id == spot.id)
+        .order_by(Experience.id)
+        .all()
+    )
+    glamping_units = (
+        db.query(GlampingDetail)
+        .execution_options(include_pending=True)
+        .filter(GlampingDetail.spot_id == spot.id)
+        .order_by(GlampingDetail.id)
+        .all()
+    )
+    return {
+        "experiences": [ExperienceResponse.model_validate(e).model_dump(mode="json") for e in experiences],
+        "glamping_units": [GlampingDetailResponse.model_validate(g).model_dump(mode="json") for g in glamping_units],
+    }
+
+
 @router.delete("/spots/{spot_id}/experiences/{experience_id}")
 def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     # include_pending: el dueño también puede borrar una experiencia en revisión.
