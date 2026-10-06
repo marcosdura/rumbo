@@ -12,7 +12,14 @@ router = APIRouter(prefix="/climbingroutes", tags=["climbingroutes"])
 @router.post("/", response_model=ClimbingRouteResponse)
 @limiter.limit("10/minute")
 async def create_climbing_route(request: Request, route: ClimbingRouteCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    sector = db.query(ClimbingSector).filter(ClimbingSector.id == route.sector_id).first()
+    # include_pending: el autor de un sector sugerido le carga vías mientras
+    # el sector sigue en revisión.
+    sector = (
+        db.query(ClimbingSector)
+        .execution_options(include_pending=True)
+        .filter(ClimbingSector.id == route.sector_id)
+        .first()
+    )
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
 

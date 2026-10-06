@@ -110,7 +110,14 @@ def pending_contribution_for(db: Session, kind: str, item_id: int):
 
 def get_item(db: Session, contribution: Contribution):
     model = KIND_MODELS[contribution.kind]
-    return db.query(model).filter(model.id == contribution.item_id).first()
+    # include_pending: el elemento de un aporte pendiente está oculto para
+    # cualquier otra consulta (models.hide_pending_contributions).
+    return (
+        db.query(model)
+        .execution_options(include_pending=True)
+        .filter(model.id == contribution.item_id)
+        .first()
+    )
 
 
 def _close(contribution: Contribution, status: str, by: str, reason: str = None):

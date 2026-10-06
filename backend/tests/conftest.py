@@ -97,6 +97,12 @@ def destroyed(monkeypatch):
     return calls
 
 
+def every(db, model):
+    """Consulta que también ve los aportes pendientes, que el filtro global
+    (models.hide_pending_contributions) oculta. Para inspeccionar la base."""
+    return db.query(model).execution_options(include_pending=True)
+
+
 def new_photo_id(spot_id: int, n: int) -> str:
     """Formato que arma lib/uploadImage.ts, tal como lo devuelve Cloudinary."""
     return f"rumbo/spots/{spot_id}/{n:016x}"

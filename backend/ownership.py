@@ -33,7 +33,8 @@ def assert_owns_spot(db: Session, spot_id: int, user: dict) -> SpotDB:
 def assert_owns_glamping(db: Session, glamping_id: int, user: dict) -> GlampingDetail:
     """Para endpoints que solo reciben glamping_id (sin spot_id) — resuelve
     la unidad de glamping y valida ownership del spot al que pertenece."""
-    detail = db.query(GlampingDetail).filter(GlampingDetail.id == glamping_id).first()
+    # include_pending: el dueño también borra una unidad en revisión.
+    detail = db.query(GlampingDetail).execution_options(include_pending=True).filter(GlampingDetail.id == glamping_id).first()
     if not detail:
         raise HTTPException(status_code=404, detail="Glamping detail no encontrado")
     assert_owns_spot(db, detail.spot_id, user)

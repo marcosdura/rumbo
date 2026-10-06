@@ -38,4 +38,8 @@ def get_route_by_slug(slug: str, db: Session = Depends(get_db)):
 
 @router.get("/{route_id}", response_model=RouteResponse)
 def get_route(route_id: int, db: Session = Depends(get_db)):
-    return db.query(Route).filter(Route.id == route_id).first()
+    route = db.query(Route).filter(Route.id == route_id).first()
+    # Antes devolvía None, que con response_model terminaba en un 500.
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+    return route

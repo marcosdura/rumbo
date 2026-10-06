@@ -2,7 +2,7 @@
 queda pendiente, y aprobar / rechazar / retirar."""
 import pytest
 
-from conftest import ADMIN, OTHER, OWNER, as_user
+from conftest import ADMIN, OTHER, OWNER, as_user, every
 from contributions import public_id_from_url
 from models import (
     Category, ClimbingRoute, ClimbingSector, Contribution, Experience, GlampingDetail,
@@ -80,7 +80,7 @@ def test_duenio_en_spot_aprobado_queda_pendiente(client, db, make_spot, kind, po
     r = post(client, spot, OWNER)
     assert r.status_code == 200, r.text
     assert r.json()["is_approved"] is False
-    assert db.query(model).one().is_approved is False
+    assert every(db, model).one().is_approved is False
     c = contribution_of(db, kind)
     assert (c.status, c.author_email, c.spot_id) == ("pending", OWNER, spot.id)
 
@@ -103,7 +103,7 @@ def test_admin_va_directo(client, db, make_spot, kind, post, model):
 def test_otro_usuario_no_puede(client, db, make_spot, kind, post, model):
     spot = make_spot()
     assert post(client, spot, OTHER).status_code == 403
-    assert db.query(model).count() == 0
+    assert every(db, model).count() == 0
 
 
 def test_experiencia_pendiente_no_suma_su_categoria_hasta_aprobarse(client, db, make_spot, surf_category):
@@ -115,7 +115,7 @@ def test_experiencia_pendiente_no_suma_su_categoria_hasta_aprobarse(client, db, 
     c = contribution_of(db, "experience")
     assert client.post(f"/admin/contributions/{c.id}/approve", headers=as_user(ADMIN)).status_code == 200
     db.expire_all()
-    assert db.query(Experience).one().is_approved is True
+    assert every(db, Experience).one().is_approved is True
     assert db.query(SpotCategory).filter_by(spot_id=spot.id, category_id=surf_category.id).count() == 1
 
 
@@ -159,8 +159,8 @@ def test_vias_dentro_del_sector_sugerido_van_con_el(client, db, make_spot):
     c = contribution_of(db, "climbing_sector")
     client.post(f"/admin/contributions/{c.id}/approve", headers=as_user(ADMIN))
     db.expire_all()
-    assert db.query(ClimbingSector).one().is_approved is True
-    assert db.query(ClimbingRoute).one().is_approved is True
+    assert every(db, ClimbingSector).one().is_approved is True
+    assert every(db, ClimbingRoute).one().is_approved is True
 
 
 def test_nadie_mas_carga_vias_en_un_sector_sugerido_pendiente(client, make_spot):
@@ -186,8 +186,8 @@ def test_rechazar_un_sector_borra_sus_vias(client, db, make_spot):
     post_climbing_route(client, sector_id, OTHER)
     c = contribution_of(db, "climbing_sector")
     client.post(f"/admin/contributions/{c.id}/reject", json={}, headers=as_user(ADMIN))
-    assert db.query(ClimbingSector).count() == 0
-    assert db.query(ClimbingRoute).count() == 0
+    assert every(db, ClimbingSector).count() == 0
+    assert every(db, ClimbingRoute).count() == 0
 
 
 # -------- Admin --------
@@ -215,7 +215,7 @@ def test_rechazar_borra_el_elemento_y_sus_fotos(client, db, make_spot, destroyed
     c = contribution_of(db, "surf_school")
     r = client.post(f"/admin/contributions/{c.id}/reject", json={"reason": " Faltan datos de contacto "}, headers=as_user(ADMIN))
     assert r.status_code == 200
-    assert db.query(SurfSchool).count() == 0
+    assert every(db, SurfSchool).count() == 0
     assert destroyed == [f"rumbo/spots/{spot.id}/{0:016x}", f"rumbo/spots/{spot.id}/{1:016x}"]
     [visto] = mine(client)
     assert (visto["status"], visto["reject_reason"], visto["title"]) == ("rejected", "Faltan datos de contacto", "Escuela Ola")
@@ -244,7 +244,7 @@ def test_retirar_un_aporte_pendiente(client, db, make_spot, destroyed):
     post_surf(client, spot, OWNER, photos=1)
     c = contribution_of(db, "surf_school")
     assert client.post(f"/contributions/{c.id}/withdraw", headers=as_user(OWNER)).status_code == 200
-    assert db.query(SurfSchool).count() == 0
+    assert every(db, SurfSchool).count() == 0
     assert destroyed == [f"rumbo/spots/{spot.id}/{0:016x}"]
     assert mine(client) == [], "los retirados no se muestran"
 
@@ -305,7 +305,7 @@ def test_borrar_la_cuenta_retira_sus_aportes_en_spots_ajenos(client, db, make_sp
     make_user(OTHER)
     assert client.delete("/users/me", headers=as_user(OTHER)).status_code == 200
     assert contribution_of(db, "climbing_sector").status == "withdrawn"
-    assert db.query(ClimbingSector).count() == 0
+    assert every(db, ClimbingSector).count() == 0
 
 
 @pytest.mark.parametrize("url,expected", [

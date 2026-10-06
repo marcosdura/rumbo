@@ -494,7 +494,10 @@ def get_spot_pins(
 
 @router.delete("/spots/{spot_id}")
 def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
-    db_spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    # include_pending: el cascade del ORM borra lo que carga de las
+    # relaciones; sin esto los aportes pendientes no se cargan y quedan
+    # huérfanos (en Postgres los borra el ON DELETE CASCADE, pero no sus fotos).
+    db_spot = db.query(SpotDB).execution_options(include_pending=True).filter(SpotDB.id == spot_id).first()
     if not db_spot:
         raise HTTPException(status_code=404, detail="Spot not found")
 
@@ -505,9 +508,9 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
     # Las escuelas de surf y los kayaks guardan sus fotos como URL (no en
     # spot_images): antes quedaban en Cloudinary para siempre.
     operator_photos = []
-    for school in db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id):
+    for school in db.query(SurfSchool).execution_options(include_pending=True).filter(SurfSchool.spot_id == spot_id):
         operator_photos += contributions.item_photos("surf_school", school)
-    for kayak in db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id):
+    for kayak in db.query(KayakDetail).execution_options(include_pending=True).filter(KayakDetail.spot_id == spot_id):
         operator_photos += contributions.item_photos("kayak", kayak)
     destroy_cloudinary_images(
         [img.cloudinary_public_id for img in images]
@@ -1091,7 +1094,8 @@ def get_experiences(spot_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/spots/{spot_id}/experiences/{experience_id}")
 def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
-    experience = db.query(Experience).filter(
+    # include_pending: el dueño también puede borrar una experiencia en revisión.
+    experience = db.query(Experience).execution_options(include_pending=True).filter(
         Experience.id == experience_id,
         Experience.spot_id == spot_id,
     ).first()
