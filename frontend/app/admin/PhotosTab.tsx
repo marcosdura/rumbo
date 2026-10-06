@@ -69,13 +69,8 @@ export default function PhotosTab({
                 setPhotoError(null)
                 setUploadingPhotos(true)
                 try {
-                  const results = await Promise.all(files.map((file, i) =>
-                    uploadImageToCloudinary(file, {
-                      category: selectedSpot.category?.name ?? "Spot",
-                      spotName: selectedSpot.name,
-                      index: (selectedSpot.images?.length ?? 0) + i,
-                      spotId: selectedSpot.id,
-                    })
+                  const results = await Promise.all(files.map(file =>
+                    uploadImageToCloudinary(file, { spotId: selectedSpot.id })
                   ))
 
                   await Promise.all(results.map(({ publicId }, i) =>

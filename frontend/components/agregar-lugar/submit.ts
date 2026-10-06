@@ -209,12 +209,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         setUploadProgress("Subiendo imágenes del lugar...")
         const uploadResults = await Promise.all(
           images.map(async (file, i) => {
-            const { publicId } = await uploadImageToCloudinary(file, {
-              category: selectedCat.name,
-              spotName: basic.name,
-              index: i,
-              spotId: spotId as number,
-            })
+            const { publicId } = await uploadImageToCloudinary(file, { spotId: spotId as number })
             return { publicId, index: i }
           })
         )
@@ -238,12 +233,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = surfPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file, {
-            category: "Surf",
-            spotName: surf.name,
-            index: i,
-            spotId: spotId as number,
-          })
+          const { url } = await uploadImageToCloudinary(file, { spotId: spotId as number })
           photoUrls[i] = url
         }
 
@@ -268,12 +258,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
           const file = kayakPhotoFiles[i]
           if (!file) continue
           setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file, {
-            category: "Kayak",
-            spotName: kayaks[0]?.name || "kayak",
-            index: i,
-            spotId: spotId as number,
-          })
+          const { url } = await uploadImageToCloudinary(file, { spotId: spotId as number })
           kayakPhotoUrls[i] = url
         }
 
@@ -340,12 +325,7 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     setUploadProgress("Subiendo imágenes...")
     const uploadResults = await Promise.all(
       images.map(async (file, i) => {
-        const { publicId } = await uploadImageToCloudinary(file, {
-          category: selectedCat.name,
-          spotName: basic.name,
-          index: i,
-          spotId,
-        })
+        const { publicId } = await uploadImageToCloudinary(file, { spotId })
         return { publicId, index: i }
       })
     )

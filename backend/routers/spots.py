@@ -18,6 +18,7 @@ from routers.sectors import _attach_sector_stats
 import cloudinary
 import cloudinary.uploader
 import os
+import re
 
 
 
@@ -928,12 +929,23 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
 @router.get("/spots/{spot_id}/can-upload")
 def can_upload_image(public_id: str, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     # get_owned_spot_or_admin ya garantiza que spot_id es del usuario (o admin).
-    # Además, ese public_id no puede estar ya usado por OTRO spot — evita que
-    # alguien pise la foto de un spot ajeno subiendo a un spot propio con el
-    # mismo nombre/categoría (mismo public_id calculado).
-    existing = db.query(SpotImage).filter(SpotImage.cloudinary_public_id == public_id).first()
-    if existing and existing.spot_id != spot.id:
-        raise HTTPException(status_code=409, detail="Ese public_id ya está en uso por otro spot")
+    #
+    # El formato es el que arma lib/uploadImage.ts: "{spot_id}/{16 hex}".
+    # Exigirlo acá ata cada foto nueva a su spot y deja afuera cualquier id
+    # elegido a mano (antes los ids eran "Categoria/Nombre/NombreN",
+    # adivinables y apuntables).
+    if not re.fullmatch(rf"{spot.id}/[0-9a-f]{{16}}", public_id):
+        raise HTTPException(status_code=400, detail="public_id con formato inválido")
+    # Ningún spot (tampoco este) puede reusar un id existente: antes solo se
+    # miraba OTROS spots, y el dueño podía pisar en Cloudinary una foto propia
+    # ya aprobada. La firma ahora lleva overwrite=false, que es la protección
+    # real; esto lo corta antes. Se compara también con el prefijo de la
+    # carpeta porque Cloudinary puede guardarlo como "rumbo/spots/{id}".
+    existing = db.query(SpotImage).filter(
+        SpotImage.cloudinary_public_id.in_([public_id, f"rumbo/spots/{public_id}"])
+    ).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Ese public_id ya está en uso")
     return {"ok": True}
 
 

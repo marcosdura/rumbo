@@ -34,12 +34,18 @@ export async function POST(req: Request) {
   // request tenga una firma "válida" — cambiar este parámetro invalida la
   // firma entera, así que no es bypasseable editando el JS del cliente.
   const allowedFormats = "jpg,jpeg,png,webp,gif,heic,heif";
+  // Cloudinary sobrescribe por defecto: con una firma válida para un
+  // public_id que ya existe, el archivo se reemplazaba en el lugar — una
+  // foto ya aprobada podía cambiarse sin pasar por ninguna revisión. Firmado
+  // por el mismo motivo que allowed_formats: si no viaja, la firma no matchea.
+  const overwrite = "false";
 
   const paramsToSign: Record<string, string | number> = {
     timestamp,
     folder,
     public_id: publicId,
     allowed_formats: allowedFormats,
+    overwrite,
   };
 
   const sortedParams = Object.keys(paramsToSign)
@@ -57,6 +63,7 @@ export async function POST(req: Request) {
     timestamp,
     folder,
     allowedFormats,
+    overwrite,
     apiKey: process.env.CLOUDINARY_API_KEY,
     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   });

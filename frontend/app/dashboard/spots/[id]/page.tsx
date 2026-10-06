@@ -153,13 +153,8 @@ export default function SpotDashboardPage() {
     }
     setUploadingPhotos(true)
     try {
-      const results = await Promise.all(filesToUpload.map((file, i) =>
-        uploadImageToCloudinary(file, {
-          category: spot.category?.name ?? "Spot",
-          spotName: spot.name,
-          index: currentCount + i,
-          spotId: spot.id,
-        })
+      const results = await Promise.all(filesToUpload.map(file =>
+        uploadImageToCloudinary(file, { spotId: spot.id })
       ))
       await Promise.all(results.map(({ publicId }, i) =>
         api.post(`/images/spots/${spot.id}`, undefined, {
