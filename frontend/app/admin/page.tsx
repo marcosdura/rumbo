@@ -15,6 +15,7 @@ import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
 import ChangesTab from "./ChangesTab"
 import ContributionsList from "./ContributionsList"
+import OperatorChangesList, { type AdminOperatorChange } from "./OperatorChangesList"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 
@@ -49,8 +50,16 @@ export default function AdminPage() {
   const [contributionsError, setContributionsError] = useState<string | null>(null)
   const [contributionActionLoading, setContributionActionLoading] = useState<number | null>(null)
   const [contributionActionErrors, setContributionActionErrors] = useState<Record<number, string>>({})
-  // Qué se está rechazando: un pedido de cambio o un aporte.
-  const [rejecting, setRejecting] = useState<{ type: "change" | "contribution"; id: number } | null>(null)
+  // Pedidos de cambio de escuelas de surf y servicios de kayak.
+  const [operatorChanges, setOperatorChanges] = useState<AdminOperatorChange[]>([])
+  const [operatorChangesLoading, setOperatorChangesLoading] = useState(true)
+  const [operatorChangesError, setOperatorChangesError] = useState<string | null>(null)
+  const [operatorActionLoading, setOperatorActionLoading] = useState<number | null>(null)
+  const [operatorActionErrors, setOperatorActionErrors] = useState<Record<number, string>>({})
+  // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
+  // pedido de cambio de escuela.
+  type RejectType = "change" | "contribution" | "operator"
+  const [rejecting, setRejecting] = useState<{ type: RejectType; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
 
@@ -78,6 +87,10 @@ export default function AdminPage() {
       .then(({ data }) => setContributions(Array.isArray(data) ? data : []))
       .catch(() => setContributionsError("Error al cargar los aportes pendientes."))
       .finally(() => setContributionsLoading(false))
+    api.get<AdminOperatorChange[]>("/admin/operator-change-requests", { token })
+      .then(({ data }) => setOperatorChanges(Array.isArray(data) ? data : []))
+      .catch(() => setOperatorChangesError("Error al cargar los cambios de escuelas."))
+      .finally(() => setOperatorChangesLoading(false))
   }, [token])
 
   // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
@@ -128,17 +141,40 @@ export default function AdminPage() {
     }
   }
 
+  async function handleApproveOperatorChange(id: number) {
+    setOperatorActionLoading(id)
+    setOperatorActionErrors(prev => withError(prev, id, null))
+    try {
+      await api.post(`/admin/operator-change-requests/${id}/approve`, undefined, { token })
+      setOperatorChanges(prev => prev.filter(c => c.id !== id))
+    } catch (e) {
+      setOperatorActionErrors(prev => withError(prev, id,
+        e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo."))
+    } finally {
+      setOperatorActionLoading(null)
+    }
+  }
+
+  const REJECT_URL: Record<RejectType, (id: number) => string> = {
+    change: id => `/admin/change-requests/${id}/reject`,
+    contribution: id => `/admin/contributions/${id}/reject`,
+    operator: id => `/admin/operator-change-requests/${id}/reject`,
+  }
+  const LOADING_SETTER: Record<RejectType, (v: number | null) => void> = {
+    change: setChangeActionLoading, contribution: setContributionActionLoading, operator: setOperatorActionLoading,
+  }
+
   async function handleReject() {
     if (rejecting === null) return
     const { type, id } = rejecting
-    const setLoadingFor = type === "change" ? setChangeActionLoading : setContributionActionLoading
+    const setLoadingFor = LOADING_SETTER[type]
     setLoadingFor(id)
     setRejectError(null)
     try {
-      const url = type === "change" ? `/admin/change-requests/${id}/reject` : `/admin/contributions/${id}/reject`
-      await api.post(url, { reason: rejectReason.trim() || null }, { token })
+      await api.post(REJECT_URL[type](id), { reason: rejectReason.trim() || null }, { token })
       if (type === "change") setChangeRequests(prev => prev.filter(r => r.id !== id))
-      else setContributions(prev => prev.filter(c => c.id !== id))
+      else if (type === "contribution") setContributions(prev => prev.filter(c => c.id !== id))
+      else setOperatorChanges(prev => prev.filter(c => c.id !== id))
       setRejecting(null)
     } catch (e) {
       setRejectError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo rechazar. Intentá de nuevo.")
@@ -147,7 +183,7 @@ export default function AdminPage() {
     }
   }
 
-  function openReject(type: "change" | "contribution", id: number) {
+  function openReject(type: RejectType, id: number) {
     setRejecting({ type, id })
     setRejectReason("")
     setRejectError(null)
@@ -220,7 +256,7 @@ export default function AdminPage() {
     .sort((a, b) => new Date(a.owner_deleted_at!).getTime() - new Date(b.owner_deleted_at!).getTime())
 
   const pending = activeSpots.filter(s => !s.is_approved).length
-  const pendingReviews = changeRequests.length + contributions.length
+  const pendingReviews = changeRequests.length + contributions.length + operatorChanges.length
   const filtered = activeSpots.filter(s =>
     filter === "all" ? true : filter === "pending" ? !s.is_approved : s.is_approved
   )
@@ -333,6 +369,18 @@ export default function AdminPage() {
           />
         )}
 
+        {mode === "cambios" && (
+          <OperatorChangesList
+            changes={operatorChanges}
+            loadError={operatorChangesError}
+            loading={operatorChangesLoading}
+            actionLoading={operatorActionLoading}
+            actionErrors={operatorActionErrors}
+            onApprove={handleApproveOperatorChange}
+            onRejectRequest={id => openReject("operator", id)}
+          />
+        )}
+
         {mode === "fotos" && (
           <PhotosTab
             spots={spots}
@@ -386,7 +434,9 @@ export default function AdminPage() {
           ? "Se borra, junto con sus fotos. Quien lo propuso ve el rechazo en su perfil, con el motivo si lo escribís."
           : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
         confirmLabel="Rechazar"
-        loading={rejecting !== null && (rejecting.type === "change" ? changeActionLoading : contributionActionLoading) === rejecting.id}
+        loading={rejecting !== null && {
+          change: changeActionLoading, contribution: contributionActionLoading, operator: operatorActionLoading,
+        }[rejecting.type] === rejecting.id}
         loadingLabel="Rechazando..."
         error={rejectError}
         onCancel={() => setRejecting(null)}

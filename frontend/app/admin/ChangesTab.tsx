@@ -30,7 +30,7 @@ const afterBox = {
   background: "#e8f5ee", border: "1px solid #b7dfc8", color: "var(--primary-dark)",
 }
 
-function TextDiff({ title, from, to, current }: { title: string; from: string; to: string; current: string }) {
+export function TextDiff({ title, from, to, current }: { title: string; from: string; to: string; current: string }) {
   // El "antes" se guardó al hacer el pedido; si el spot se editó después
   // (el admin, por ejemplo), aprobar pisaría ese valor nuevo.
   const stale = (current ?? "") !== (from ?? "")
