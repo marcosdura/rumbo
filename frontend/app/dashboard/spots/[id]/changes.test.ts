@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api"
-import { checkNewPhotos, describeFields, describeRequest, errorMessage, joinLabels } from "./changes"
+import { checkNewPhotos, describeFields, describeRequest, errorMessage, isStaySpot, joinLabels } from "./changes"
 import type { ChangeRequest } from "./types"
 
 const image = (name = "a.jpg", type = "image/jpeg", bytes = 1000) =>
@@ -72,5 +72,14 @@ describe("errorMessage", () => {
 
   it("un error que no es de la API usa el mensaje genérico", () => {
     expect(errorMessage(new TypeError("Failed to fetch"), "No se pudo guardar.")).toBe("No se pudo guardar.")
+  })
+})
+
+describe("isStaySpot", () => {
+  it("solo los alojamientos tienen experiencias", () => {
+    expect(["Camping", "Glamping", "Motorhome"].every(isStaySpot)).toBe(true)
+    expect(isStaySpot("Trekking")).toBe(false)
+    expect(isStaySpot("Escalada")).toBe(false)
+    expect(isStaySpot(null)).toBe(false)
   })
 })

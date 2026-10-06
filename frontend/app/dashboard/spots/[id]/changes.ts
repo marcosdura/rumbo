@@ -78,3 +78,11 @@ export function errorMessage(e: unknown, fallback: string) {
   if (e instanceof ApiError && e.status !== 422 && typeof e.message === "string" && e.message) return e.message
   return fallback
 }
+
+// Camping, Glamping y Motorhome: los lugares que tienen experiencias (lo
+// que ofrece agregar-lugar y lo que muestra la página pública).
+export const STAY_CATEGORIES = ["Camping", "Glamping", "Motorhome"]
+
+export function isStaySpot(categoryName: string | null | undefined) {
+  return !!categoryName && STAY_CATEGORIES.includes(categoryName)
+}
