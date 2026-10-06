@@ -29,14 +29,25 @@ beforeEach(() => {
     glamping_units: [
       { id: 7, accommodation_type: "domo", capacity: 2, price_per_night: 3500, min_nights: 1, is_approved: false },
     ],
+    routes: [{ id: 21, name: "Sendero al mirador", distance_km: 6, difficulty: "moderado", is_approved: true }],
+    sectors: [
+      { id: 31, name: "Sector Norte", type: "deportiva", is_approved: true, routes: [
+        { id: 41, name: "La Diagonal", grade: "6a", is_approved: true },
+        { id: 42, name: "Vía sugerida", grade: "7a", is_approved: false },
+      ] },
+      { id: 32, name: "Sector sugerido", type: null, is_approved: false, routes: [] },
+    ],
+    surf_schools: [{ id: 51, name: "Escuela Ola", is_approved: false }],
+    kayaks: [],
   }
   postResponse = { is_approved: false }
   posts = []
   deletes = []
 })
 
-function renderTab(showGlamping = true) {
-  render(<ContentTab spotId={5} token="t" reviewed showGlamping={showGlamping} />)
+function renderTab(showGlamping = true, category = "Glamping") {
+  const stay = ["Camping", "Glamping", "Motorhome"].includes(category)
+  render(<ContentTab spotId={5} token="t" reviewed category={category} showExperiences={stay} showGlamping={showGlamping} />)
 }
 
 describe("ContentTab", () => {
@@ -49,7 +60,7 @@ describe("ContentTab", () => {
   })
 
   it("sin glamping no muestra la sección de alojamiento", async () => {
-    renderTab(false)
+    renderTab(false, "Camping")
     await screen.findByText("Cabalgata")
     expect(screen.queryByText("Tipos de alojamiento")).toBeNull()
   })
@@ -105,5 +116,49 @@ describe("savedMessage", () => {
   it("distingue revisión de publicado", () => {
     expect(savedMessage([{ is_approved: false }])).toMatch(/revisión/)
     expect(savedMessage([{ is_approved: true }])).toBe("✓ Guardado correctamente")
+  })
+})
+
+describe("ContentTab según el tipo de lugar", () => {
+  it("trekking: rutas, sin experiencias, con acceso a sumar", async () => {
+    renderTab(false, "Trekking")
+    expect(await screen.findByText("Sendero al mirador")).toBeTruthy()
+    expect(screen.queryByText("Experiencias")).toBeNull()
+    expect(screen.getByRole("link", { name: "＋ Agregar una ruta" }).getAttribute("href")).toBe("/agregar-lugar?sumar=ruta&spot=5")
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar Sendero al mirador" }))
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
+    await waitFor(() => expect(deletes).toEqual(["/routes/21"]))
+  })
+
+  it("escalada: sectores con sus vías, lo pendiente marcado", async () => {
+    renderTab(false, "Escalada")
+    expect(await screen.findByText("Sector Norte")).toBeTruthy()
+    expect(screen.getByText("La Diagonal")).toBeTruthy()
+    expect(screen.getAllByText("En revisión")).toHaveLength(2)  // la vía sugerida y el sector sugerido
+    expect(screen.getByRole("link", { name: "＋ Agregar una vía a Sector Norte" }).getAttribute("href"))
+      .toBe("/agregar-lugar?sumar=via&spot=5&sector=31")
+    // A un sector en revisión no se le ofrece sumar vías.
+    expect(screen.queryByRole("link", { name: "＋ Agregar una vía a Sector sugerido" })).toBeNull()
+  })
+
+  it("borrar un sector avisa que se van sus vías", async () => {
+    renderTab(false, "Escalada")
+    fireEvent.click(await screen.findByRole("button", { name: "Eliminar Sector Norte" }))
+    expect(screen.getByText("Se borran también sus 2 vías. No se puede deshacer.")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
+    await waitFor(() => expect(deletes).toEqual(["/sectors/31"]))
+  })
+
+  it("borrar una vía usa su endpoint", async () => {
+    renderTab(false, "Escalada")
+    fireEvent.click(await screen.findByRole("button", { name: "Eliminar La Diagonal" }))
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
+    await waitFor(() => expect(deletes).toEqual(["/climbingroutes/41"]))
+  })
+
+  it("surf: escuelas", async () => {
+    renderTab(false, "Surf")
+    expect(await screen.findByText("Escuela Ola")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "＋ Agregar una escuela" }).getAttribute("href")).toBe("/agregar-lugar?sumar=surf&spot=5")
   })
 })

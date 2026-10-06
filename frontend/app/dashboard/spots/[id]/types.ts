@@ -47,6 +47,19 @@ export type OwnedGlampingUnit = {
   id: number; accommodation_type: string | null; capacity: number | null
   price_per_night: number | null; min_nights: number | null; is_approved: boolean
 }
-export type OwnerContent = { experiences: OwnedExperience[]; glamping_units: OwnedGlampingUnit[] }
+export type OwnedRoute = {
+  id: number; name: string; is_approved: boolean
+  distance_km?: number | null; difficulty?: string | null; grade?: string | null
+}
+export type OwnedSector = { id: number; name: string; type: string | null; is_approved: boolean; routes: OwnedRoute[] }
+export type OwnedOperator = { id: number; name: string; is_approved: boolean }
+export type OwnerContent = {
+  experiences: OwnedExperience[]
+  glamping_units: OwnedGlampingUnit[]
+  routes: OwnedRoute[]
+  sectors: OwnedSector[]
+  surf_schools: OwnedOperator[]
+  kayaks: OwnedOperator[]
+}
 
 export type Tab = "info" | "fotos" | "contenido" | "reviews"

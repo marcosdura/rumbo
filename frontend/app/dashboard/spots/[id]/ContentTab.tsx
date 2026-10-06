@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import { api } from "@/lib/api"
@@ -8,16 +9,19 @@ import { ExperienceCard } from "@/components/agregar-lugar/steps/StepExperiencia
 import { GlampingUnitCard } from "@/components/agregar-lugar/steps/StepGlampingUnidades"
 import { defaultExperience, defaultGlampingDetail } from "@/components/agregar-lugar/constants"
 import { experiencePayload, glampingUnitPayload, missingGlampingFields } from "@/components/agregar-lugar/payloads"
+import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import type { ExperienceItem, GlampingDetailItem } from "@/components/agregar-lugar/types"
 import { s } from "./styles"
 import { errorMessage } from "./changes"
-import type { OwnerContent, OwnedExperience, OwnedGlampingUnit } from "./types"
+import type { OwnerContent } from "./types"
 
 interface Props {
   spotId: number
   token: string | undefined
   // El spot ya está aprobado: lo nuevo pasa por revisión.
   reviewed: boolean
+  category: string | null
+  showExperiences: boolean
   showGlamping: boolean
 }
 
@@ -27,11 +31,14 @@ const ACCOMMODATION_LABELS: Record<string, string> = {
 
 // Mismo encabezado de sección que InfoTab.
 const sectionTitle = { fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--primary)", margin: "0 0 12px" }
+const emptyText = { fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }
 // Mismo botón primario que "Guardar cambios".
 const primaryBtn = (busy: boolean) => ({ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none", opacity: busy ? 0.7 : 1 })
 // Mismo ✕ que borrar una foto.
 const deleteBtn = { padding: "4px 8px", borderRadius: 7, fontSize: 11, cursor: "pointer", fontFamily: "inherit", background: "#fff", color: "var(--danger)", border: "1px solid #fecaca", flexShrink: 0 }
 const addBtn = { padding: "7px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "#f7f5f0", color: "#3d3d3a", border: "1px solid var(--border)" }
+// Mismo botón, como link a agregar-lugar ya posicionado en el formulario.
+const addLink = { ...addBtn, display: "inline-block", textDecoration: "none" }
 
 export function savedMessage(created: { is_approved?: boolean }[]) {
   return created.some(c => c.is_approved === false)
@@ -39,9 +46,10 @@ export function savedMessage(created: { is_approved?: boolean }[]) {
     : "✓ Guardado correctamente"
 }
 
-type ToDelete = { kind: "experience"; item: OwnedExperience } | { kind: "glamping"; item: OwnedGlampingUnit }
+// Qué se está por borrar: cada elemento sabe su endpoint.
+type ToDelete = { url: string; title: string; pending: boolean; note?: string }
 
-export default function ContentTab({ spotId, token, reviewed, showGlamping }: Props) {
+export default function ContentTab({ spotId, token, reviewed, category, showExperiences, showGlamping }: Props) {
   const [content, setContent] = useState<OwnerContent | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -133,16 +141,17 @@ export default function ContentTab({ spotId, token, reviewed, showGlamping }: Pr
     await load()
   }
 
+  function askDelete(target: ToDelete) {
+    setDeleteError(null)
+    setToDelete(target)
+  }
+
   async function confirmDelete() {
     if (!toDelete) return
     setDeleting(true)
     setDeleteError(null)
     try {
-      if (toDelete.kind === "experience") {
-        await api.del(`/spots/${spotId}/experiences/${toDelete.item.id}`, { token })
-      } else {
-        await api.del(`/glamping/glamping/${toDelete.item.id}`, { token })
-      }
+      await api.del(toDelete.url, { token })
       setToDelete(null)
       await load()
     } catch {
@@ -155,70 +164,77 @@ export default function ContentTab({ spotId, token, reviewed, showGlamping }: Pr
   if (loadError) return <div style={{ ...s.card, padding: 24 }}><p style={{ fontSize: 13, color: "var(--danger)", margin: 0 }}>{loadError}</p></div>
   if (!content) return <div style={{ ...s.card, padding: 24 }}><p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>Cargando...</p></div>
 
+  const operators = category === "Surf" ? content.surf_schools : content.kayaks
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {reviewed && (
         <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
-          Lo que sumes acá pasa por revisión antes de publicarse. Borrar algo se aplica al instante.
+          Lo que sumes pasa por revisión antes de publicarse. Borrar algo se aplica al instante.
         </p>
       )}
 
-      {/* Experiencias */}
-      <div style={{ ...s.card, padding: 24 }}>
-        <p style={sectionTitle}>Experiencias</p>
-        {content.experiences.length === 0 && expDrafts.length === 0 && (
-          <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>
-            Todavía no hay experiencias. Si tu lugar ofrece actividades como trekking, cabalgatas o pesca, sumalas acá.
-          </p>
-        )}
-        {content.experiences.map(exp => (
-          <ItemRow
-            key={exp.id}
-            title={exp.title}
-            detail={[exp.category?.name, exp.price != null ? `$ ${exp.price}` : null].filter(Boolean).join(" · ")}
-            pending={!exp.is_approved}
-            onDelete={() => { setDeleteError(null); setToDelete({ kind: "experience", item: exp }) }}
-          />
-        ))}
-
-        {expDrafts.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-            {expDrafts.map((exp, index) => (
-              <ExperienceCard key={index} index={index} exp={exp} setExperiences={setExpDrafts} />
-            ))}
-          </div>
-        )}
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
-          <button type="button" onClick={() => { setExpMsg(null); setExpDrafts(prev => [...prev, defaultExperience()]) }} style={addBtn}>
-            ＋ Agregar experiencia
-          </button>
-          {expDrafts.length > 0 && (
-            <button onClick={saveExperiences} disabled={expSaving} style={primaryBtn(expSaving)}>
-              {expSaving ? "Guardando..." : "Guardar experiencias"}
-            </button>
+      {/* Experiencias (solo alojamientos) */}
+      {showExperiences && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Experiencias</p>
+          {content.experiences.length === 0 && expDrafts.length === 0 && (
+            <p style={emptyText}>
+              Todavía no hay experiencias. Si tu lugar ofrece actividades como trekking, cabalgatas o pesca, sumalas acá.
+            </p>
           )}
-          {expMsg && <span style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>{expMsg}</span>}
-          {expError && <span style={{ fontSize: 13, color: "var(--danger)" }}>{expError}</span>}
+          {content.experiences.map(exp => (
+            <ItemRow
+              key={exp.id}
+              title={exp.title}
+              detail={[exp.category?.name, exp.price != null ? `$ ${exp.price}` : null].filter(Boolean).join(" · ")}
+              pending={!exp.is_approved}
+              onDelete={() => askDelete({ url: `/spots/${spotId}/experiences/${exp.id}`, title: exp.title, pending: !exp.is_approved })}
+            />
+          ))}
+
+          {expDrafts.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+              {expDrafts.map((exp, index) => (
+                <ExperienceCard key={index} index={index} exp={exp} setExperiences={setExpDrafts} />
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+            <button type="button" onClick={() => { setExpMsg(null); setExpDrafts(prev => [...prev, defaultExperience()]) }} style={addBtn}>
+              ＋ Agregar experiencia
+            </button>
+            {expDrafts.length > 0 && (
+              <button onClick={saveExperiences} disabled={expSaving} style={primaryBtn(expSaving)}>
+                {expSaving ? "Guardando..." : "Guardar experiencias"}
+              </button>
+            )}
+            {expMsg && <span style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>{expMsg}</span>}
+            {expError && <span style={{ fontSize: 13, color: "var(--danger)" }}>{expError}</span>}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Unidades de glamping */}
       {showGlamping && (
         <div style={{ ...s.card, padding: 24 }}>
           <p style={sectionTitle}>Tipos de alojamiento</p>
-          {content.glamping_units.map(unit => (
-            <ItemRow
-              key={unit.id}
-              title={ACCOMMODATION_LABELS[unit.accommodation_type ?? ""] ?? unit.accommodation_type ?? "Alojamiento"}
-              detail={[
-                unit.capacity != null ? `${unit.capacity} personas` : null,
-                unit.price_per_night != null ? `$ ${unit.price_per_night} por noche` : null,
-              ].filter(Boolean).join(" · ")}
-              pending={!unit.is_approved}
-              onDelete={() => { setDeleteError(null); setToDelete({ kind: "glamping", item: unit }) }}
-            />
-          ))}
+          {content.glamping_units.map(unit => {
+            const label = ACCOMMODATION_LABELS[unit.accommodation_type ?? ""] ?? unit.accommodation_type ?? "Alojamiento"
+            return (
+              <ItemRow
+                key={unit.id}
+                title={label}
+                detail={[
+                  unit.capacity != null ? `${unit.capacity} personas` : null,
+                  unit.price_per_night != null ? `$ ${unit.price_per_night} por noche` : null,
+                ].filter(Boolean).join(" · ")}
+                pending={!unit.is_approved}
+                onDelete={() => askDelete({ url: `/glamping/glamping/${unit.id}`, title: label, pending: !unit.is_approved })}
+              />
+            )
+          })}
 
           {unitDrafts.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
@@ -260,12 +276,103 @@ export default function ContentTab({ spotId, token, reviewed, showGlamping }: Pr
         </div>
       )}
 
+      {/* Rutas de trekking: las suma solo el dueño. */}
+      {category === "Trekking" && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Rutas</p>
+          {content.routes.length === 0 && <p style={emptyText}>Todavía no hay rutas.</p>}
+          {content.routes.map(r => (
+            <ItemRow
+              key={r.id}
+              title={r.name}
+              detail={[r.distance_km != null ? `${r.distance_km} km` : null, r.difficulty].filter(Boolean).join(" · ")}
+              pending={!r.is_approved}
+              onDelete={() => askDelete({ url: `/routes/${r.id}`, title: r.name, pending: !r.is_approved })}
+            />
+          ))}
+          <div style={{ marginTop: 16 }}>
+            <Link href={addToSpotUrl("ruta", spotId)} style={addLink}>＋ Agregar una ruta</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Escalada: también los sectores y vías que sugirió otra gente. */}
+      {category === "Escalada" && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Sectores y vías</p>
+          {content.sectors.length === 0 && <p style={emptyText}>Todavía no hay sectores.</p>}
+          {content.sectors.map(sector => (
+            <div key={sector.id}>
+              <ItemRow
+                title={sector.name}
+                detail={`${sector.routes.length} vía${sector.routes.length !== 1 ? "s" : ""}${sector.type ? ` · ${sector.type}` : ""}`}
+                pending={!sector.is_approved}
+                onDelete={() => askDelete({
+                  url: `/sectors/${sector.id}`, title: sector.name, pending: !sector.is_approved,
+                  note: sector.routes.length ? `Se borran también sus ${sector.routes.length} vías. No se puede deshacer.` : undefined,
+                })}
+              />
+              <div style={{ paddingLeft: 18 }}>
+                {sector.routes.map(r => (
+                  <ItemRow
+                    key={r.id}
+                    title={r.name}
+                    detail={r.grade ?? ""}
+                    pending={!r.is_approved}
+                    onDelete={() => askDelete({ url: `/climbingroutes/${r.id}`, title: r.name, pending: !r.is_approved })}
+                  />
+                ))}
+                {/* Un sector en revisión solo lo amplía quien lo sugirió. */}
+                {sector.is_approved && (
+                  <div style={{ padding: "8px 0 4px" }}>
+                    <Link href={addToSpotUrl("via", spotId, sector.id)} style={{ fontSize: 12, fontWeight: 600, color: "var(--primary)", textDecoration: "none" }}>
+                      ＋ Agregar una vía a {sector.name}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          <div style={{ marginTop: 16 }}>
+            <Link href={addToSpotUrl("sector", spotId)} style={addLink}>＋ Agregar un sector</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Surf y kayak */}
+      {(category === "Surf" || category === "Kayak") && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>{category === "Surf" ? "Escuelas de surf" : "Servicios de kayak"}</p>
+          {operators.length === 0 && (
+            <p style={emptyText}>Todavía no hay {category === "Surf" ? "escuelas" : "servicios"}.</p>
+          )}
+          {operators.map(op => (
+            <ItemRow
+              key={op.id}
+              title={op.name}
+              detail=""
+              pending={!op.is_approved}
+              onDelete={() => askDelete({
+                url: category === "Surf" ? `/surfschool/${op.id}` : `/kayak/${op.id}`,
+                title: op.name, pending: !op.is_approved,
+                note: "Se borra con sus fotos. No se puede deshacer.",
+              })}
+            />
+          ))}
+          <div style={{ marginTop: 16 }}>
+            <Link href={addToSpotUrl(category === "Surf" ? "surf" : "kayak", spotId)} style={addLink}>
+              {category === "Surf" ? "＋ Agregar una escuela" : "＋ Agregar un servicio de kayak"}
+            </Link>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         open={toDelete !== null}
-        title={toDelete?.kind === "glamping" ? "¿Eliminar este alojamiento?" : "¿Eliminar esta experiencia?"}
-        message={toDelete && ("is_approved" in toDelete.item) && !toDelete.item.is_approved
+        title={`¿Eliminar "${toDelete?.title ?? ""}"?`}
+        message={toDelete?.pending
           ? "Todavía está en revisión: se retira y no se publica."
-          : "Deja de verse en tu lugar. No se puede deshacer."}
+          : toDelete?.note ?? "Deja de verse en tu lugar. No se puede deshacer."}
         loading={deleting}
         error={deleteError}
         onCancel={() => setToDelete(null)}

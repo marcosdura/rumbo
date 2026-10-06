@@ -12,7 +12,7 @@ import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import { api } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
 import type { Spot, Review, Tab, StagedPhoto } from "./types"
-import { describeFields, checkNewPhotos, errorMessage, isStaySpot } from "./changes"
+import { describeFields, checkNewPhotos, errorMessage, isStaySpot, contentTabLabel } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
@@ -301,6 +301,7 @@ export default function SpotDashboardPage() {
   // Experiencias solo en alojamientos: es lo que ofrece agregar-lugar y lo
   // único que muestra la página pública (ExperienciasSection).
   const showExperiences = isStaySpot(spot.category?.name)
+  const contentLabel = contentTabLabel(spot.category?.name, showGlamping)
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
@@ -368,7 +369,7 @@ export default function SpotDashboardPage() {
           {([
             { id: "info", label: "✏️ Información" },
             { id: "fotos", label: `📷 Fotos (${photoCount}/${MAX_PHOTOS})` },
-            ...(showExperiences ? [{ id: "contenido", label: showGlamping ? "🧭 Experiencias y alojamiento" : "🧭 Experiencias" }] : []),
+            ...(contentLabel ? [{ id: "contenido", label: contentLabel }] : []),
             { id: "reviews", label: `💬 Reseñas (${reviews.length})` },
           ] as { id: Tab; label: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={s.tab(tab === t.id)}>{t.label}</button>
@@ -417,9 +418,16 @@ export default function SpotDashboardPage() {
         {/* Se monta siempre y se oculta: así lo que estás escribiendo no se
             pierde al cambiar de pestaña (mismo motivo por el que los campos
             de Información viven en esta página). */}
-        {showExperiences && (
+        {contentLabel && (
           <div style={{ display: tab === "contenido" ? "block" : "none" }}>
-            <ContentTab spotId={spot.id} token={token} reviewed={spot.is_approved} showGlamping={showGlamping} />
+            <ContentTab
+              spotId={spot.id}
+              token={token}
+              reviewed={spot.is_approved}
+              category={spot.category?.name ?? null}
+              showExperiences={showExperiences}
+              showGlamping={showGlamping}
+            />
           </div>
         )}
 

@@ -86,3 +86,16 @@ export const STAY_CATEGORIES = ["Camping", "Glamping", "Motorhome"]
 export function isStaySpot(categoryName: string | null | undefined) {
   return !!categoryName && STAY_CATEGORIES.includes(categoryName)
 }
+
+// Nombre de la pestaña de contenido del dashboard según el tipo de lugar
+// (qué se le puede sumar). null = el lugar no tiene esa pestaña.
+export function contentTabLabel(categoryName: string | null | undefined, hasGlamping: boolean): string | null {
+  if (isStaySpot(categoryName)) return hasGlamping ? "🧭 Experiencias y alojamiento" : "🧭 Experiencias"
+  switch (categoryName) {
+    case "Trekking": return "🥾 Rutas"
+    case "Escalada": return "🧗 Sectores y vías"
+    case "Surf": return "🏄 Escuelas de surf"
+    case "Kayak": return "🛶 Kayak"
+    default: return null
+  }
+}

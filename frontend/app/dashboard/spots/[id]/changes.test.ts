@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api"
-import { checkNewPhotos, describeFields, describeRequest, errorMessage, isStaySpot, joinLabels } from "./changes"
+import { checkNewPhotos, describeFields, describeRequest, errorMessage, isStaySpot, joinLabels, contentTabLabel } from "./changes"
 import type { ChangeRequest } from "./types"
 
 const image = (name = "a.jpg", type = "image/jpeg", bytes = 1000) =>
@@ -81,5 +81,15 @@ describe("isStaySpot", () => {
     expect(isStaySpot("Trekking")).toBe(false)
     expect(isStaySpot("Escalada")).toBe(false)
     expect(isStaySpot(null)).toBe(false)
+  })
+})
+
+describe("contentTabLabel", () => {
+  it("nombra la pestaña según qué se le puede sumar al lugar", () => {
+    expect(contentTabLabel("Camping", false)).toBe("🧭 Experiencias")
+    expect(contentTabLabel("Glamping", true)).toBe("🧭 Experiencias y alojamiento")
+    expect(contentTabLabel("Trekking", false)).toBe("🥾 Rutas")
+    expect(contentTabLabel("Escalada", false)).toBe("🧗 Sectores y vías")
+    expect(contentTabLabel(null, false)).toBeNull()
   })
 })
