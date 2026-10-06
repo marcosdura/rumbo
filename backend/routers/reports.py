@@ -81,6 +81,7 @@ def admin_delete_review(kind: str, review_id: int, db: Session = Depends(get_db)
     review = db.query(model).filter(model.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
+    reports.notify_review_deleted(db, review)
     db.delete(review)
     reports.close_reports(db, kind, review_id, "actioned", "deleted", by=admin.get("email"))
     db.commit()

@@ -166,6 +166,27 @@ class OperatorChangeRequest(Base):
     spot = relationship("SpotDB", back_populates="operator_change_requests")
 
 
+class Notification(Base):
+    """Aviso dentro de la app (notifications.py): la campanita del Navbar."""
+    __tablename__ = "notifications"
+    __table_args__ = (
+        # La consulta de siempre: las no leídas de un usuario.
+        Index("ix_notifications_user_unread", "user_email", "read_at"),
+    )
+
+    id         = Column(Integer, primary_key=True, index=True)
+    user_email = Column(String, nullable=False, index=True)
+    # spot_approved | spot_rejected | change_approved | ... (texto libre:
+    # el frontend solo lo usa para el ícono).
+    kind       = Column(String, nullable=False)
+    title      = Column(String, nullable=False)
+    body       = Column(String, nullable=True)
+    # A dónde lleva al tocarla (ruta del frontend).
+    link       = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    read_at    = Column(DateTime(timezone=True), nullable=True)
+
+
 class Report(Base):
     """Un reporte de un usuario sobre algo publicado: un spot, una reseña o
     una escuela/kayak (reports.py). Solo avisa: nada se oculta por cantidad

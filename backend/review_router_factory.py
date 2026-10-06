@@ -9,9 +9,10 @@ from models import User
 from schemas import ReviewCreate, ReviewResponse
 from auth import get_current_user_required, get_current_user
 from limiter import limiter
+from notifications import notify
 
 
-def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, parent_not_found_detail):
+def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, parent_not_found_detail, owner_of=None):
     """reviews.py, kayak_reviews.py y surf_reviews.py eran 3 copias casi
     idénticas de este mismo CRUD (summary, listado paginado, alta, baja) —
     cambiaba solo el modelo de review, el FK al padre y el mensaje de
@@ -94,7 +95,8 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
         if not 1 <= data.rating <= 5:
             raise HTTPException(status_code=400, detail="El rating debe ser entre 1 y 5")
 
-        if not db.query(parent_model).filter(parent_model.id == parent_id).first():
+        parent = db.query(parent_model).filter(parent_model.id == parent_id).first()
+        if not parent:
             raise HTTPException(status_code=404, detail=parent_not_found_detail)
 
         if not db.query(User).filter(User.id == user_id).first():
@@ -120,6 +122,15 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
                 detail="Ya dejaste una reseña acá. Podés editarla.",
             )
         db.refresh(review)
+        # owner_of(parent) -> (email del dueño, nombre, link): quién se entera
+        # de la reseña nueva. Se notifica después del commit de la reseña:
+        # si falla el aviso, la reseña igual quedó.
+        if owner_of:
+            owner_email, name, link = owner_of(parent)
+            if owner_email and owner_email != user.get("email"):
+                notify(db, owner_email, "new_review", f"Nueva reseña en «{name}»",
+                       body=f"{'★' * data.rating}{' · ' + data.comment[:120] if data.comment else ''}", link=link)
+                db.commit()
         return review
 
     @router.patch("/{review_id}", response_model=ReviewResponse)

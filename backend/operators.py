@@ -24,6 +24,7 @@ from contributions import is_own_new_photo_id_url, public_id_from_url
 from models import KayakDetail, OperatorChangeRequest, SurfSchool
 from ownership import is_public_venue
 from spot_changes import destroy_cloudinary_images
+from notifications import notify_admin
 
 PHOTO_FIELDS = ["photo_1", "photo_2", "photo_3"]
 
@@ -148,6 +149,7 @@ def execute_operator_edit(db: Session, kind: str, operator, plan: dict, requeste
             requested_by=requested_by, status="pending", changes=plan["pending"],
         )
         db.add(request)
+        notify_admin(db, "admin_operator_change", f"Pedido de cambio en «{operator.name}»", body=requested_by)
     try:
         db.commit()
     except IntegrityError:

@@ -14,6 +14,7 @@ from sqlalchemy import func, or_, and_
 from typing import Optional, List
 from slugs import generate_slug
 import contributions
+from notifications import notify, notify_admin, spot_link
 import operators as operators_domain
 from spot_changes import unpublish_spot, reject_spot as reject_spot_with_reason, plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
@@ -78,6 +79,8 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
         is_primary=True,
     )
     db.add(db_spot_category)
+    if not is_admin(user):
+        notify_admin(db, "admin_new_spot", f"Lugar nuevo para revisar: {db_spot.name}", body=user.get("email"))
     db.commit()
 
     db_spot = (
@@ -953,6 +956,7 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
         raise HTTPException(status_code=404, detail="Spot not found")
     if not approved:
         unpublish_spot(db, spot, by=admin.get("email"))
+    was_approved = spot.is_approved
     spot.is_approved = approved
     if approved:
         # Aprobado: ya no hay rechazo que mostrarle al dueño.
@@ -960,10 +964,14 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
         spot.rejected_at = None
     # Una playa o laguna aprobada es un lugar público: pasa al admin. Quien
     # la sugirió sigue siendo dueño de su escuela, no de la playa.
+    # Antes del traspaso de una playa al admin: el aviso es para quien la sugirió.
+    owner_before = spot.owner_email
     if approved and is_public_venue(spot) and ADMIN_EMAIL:
         spot.owner_email = ADMIN_EMAIL
     if approved and not spot.slug:
         spot.slug = generate_slug(spot.name)
+    if approved and not was_approved and owner_before != admin.get("email"):
+        notify(db, owner_before, "spot_approved", f"Tu lugar «{spot.name}» fue aprobado", body="Ya está publicado en Rumbo.", link=f"/spots/{spot.slug}")
     db.commit()
     return {"id": spot.id, "is_approved": spot.is_approved}
 
@@ -989,6 +997,7 @@ def resubmit_spot(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session =
         raise HTTPException(status_code=409, detail="Este lugar no está rechazado.")
     spot.rejection_reason = None
     spot.rejected_at = None
+    notify_admin(db, "admin_spot_resubmitted", f"Lugar reenviado a revisión: {spot.name}", body=spot.owner_email)
     db.commit()
     return {"id": spot.id}
 

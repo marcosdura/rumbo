@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 import operators
+from notifications import notify
 from auth import get_current_admin_user, get_current_user_required, is_admin
 from contributions import pending_contribution_for
 from database import get_db
@@ -179,6 +180,9 @@ def _pending_change_or_404(db: Session, request_id: int) -> OperatorChangeReques
 def approve_operator_change(request_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     change = _pending_change_or_404(db, request_id)
     removed = operators.approve_change(db, change, by=admin.get("email"))
+    operator = operators.get_operator(db, change.kind, change.operator_id)
+    notify(db, change.requested_by, "change_approved", f"Se aprobó tu cambio en «{operator.name}»",
+           body="Ya está publicado.", link=f"/dashboard/operadores/{change.kind}/{change.operator_id}")
     db.commit()
     operators.destroy_cloudinary_images(removed)
     return operators.serialize_change(change)
@@ -189,6 +193,10 @@ def reject_operator_change(request_id: int, body: ChangeRequestReject, db: Sessi
     change = _pending_change_or_404(db, request_id)
     reason = (body.reason or "").strip() or None
     photos = operators.discard_change(change, "rejected", by=admin.get("email"), reason=reason)
+    operator = operators.get_operator(db, change.kind, change.operator_id)
+    notify(db, change.requested_by, "change_rejected", f"No se aprobó tu cambio en «{operator.name}»",
+           body=f"Motivo: {reason}" if reason else None,
+           link=f"/dashboard/operadores/{change.kind}/{change.operator_id}")
     db.commit()
     operators.destroy_cloudinary_images(photos)
     return operators.serialize_change(change)

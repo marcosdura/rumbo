@@ -26,6 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from models import SpotDB, SpotImage, SpotChangeRequest
+from notifications import notify, notify_admin
 
 SENSITIVE_FIELDS = ["name", "description"]
 INSTANT_FIELDS = ["email", "whatsapp", "instagram", "price", "season_start", "season_end", "is_public", "public_transport"]
@@ -179,6 +180,7 @@ def execute_spot_edit(db: Session, spot: SpotDB, plan: dict, requested_by: str):
             changes["photos_added"] = plan["photos_added"]
         request = SpotChangeRequest(spot_id=spot.id, requested_by=requested_by, status="pending", changes=changes)
         db.add(request)
+        notify_admin(db, "admin_change_request", f"Pedido de cambio en «{spot.name}»", body=requested_by)
 
     try:
         db.commit()
@@ -221,9 +223,16 @@ def unpublish_spot(db: Session, spot: SpotDB, by: str):
 def reject_spot(db: Session, spot: SpotDB, reason: str, by: str):
     """Rechazar un spot nuevo o despublicar uno aprobado, con el motivo que
     ve el dueño (que corrige y lo reenvía). No hace commit."""
+    was_published = spot.is_approved
     unpublish_spot(db, spot, by)
     spot.rejection_reason = reason.strip()
     spot.rejected_at = datetime.now(timezone.utc)
+    notify(
+        db, spot.owner_email, "spot_rejected",
+        f"Tu lugar «{spot.name}» fue despublicado" if was_published else f"Tu lugar «{spot.name}» no fue aprobado",
+        body=f"Motivo: {spot.rejection_reason}. Corregilo y volvé a enviarlo.",
+        link=f"/dashboard/spots/{spot.id}",
+    )
 
 
 def close_request(request: SpotChangeRequest, status: str, by: str, reason: str = None):

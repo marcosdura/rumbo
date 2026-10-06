@@ -12,6 +12,7 @@ router = build_review_router(
     fk_field="spot_id",
     parent_model=SpotDB,
     parent_not_found_detail="Spot no encontrado",
+    owner_of=lambda spot: (spot.owner_email, spot.name, f"/spots/{spot.slug}#reviews"),
 )
 
 

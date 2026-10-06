@@ -9,6 +9,7 @@ from limiter import limiter
 from models import SpotChangeRequest, SpotDB, SpotImage
 from ownership import get_owned_spot_or_admin
 from schemas import ChangeRequestReject, DiscardPhotosRequest
+from notifications import notify
 from spot_changes import (
     apply_request_to_spot, assert_name_available, assert_photo_limit, close_request,
     destroy_cloudinary_images, get_pending_request, is_own_new_photo_id,
@@ -130,6 +131,8 @@ def approve_change_request(request_id: int, db: Session = Depends(get_db), admin
         assert_photo_limit(db, change.spot_id, len(photos))
     apply_request_to_spot(db, change)
     close_request(change, "approved", by=admin.get("email"))
+    notify(db, change.requested_by, "change_approved", f"Se aprobó tu cambio en «{change.spot.name}»",
+           body="Ya está publicado.", link=f"/dashboard/spots/{change.spot_id}")
     db.commit()
     return serialize_request(change)
 
@@ -140,6 +143,8 @@ def reject_change_request(request_id: int, body: ChangeRequestReject, db: Sessio
     photos = request_photos(change)
     reason = (body.reason or "").strip() or None
     close_request(change, "rejected", by=admin.get("email"), reason=reason)
+    notify(db, change.requested_by, "change_rejected", f"No se aprobó tu cambio en «{change.spot.name}»",
+           body=f"Motivo: {reason}" if reason else None, link=f"/dashboard/spots/{change.spot_id}")
     db.commit()
     destroy_cloudinary_images(photos)
     return serialize_request(change)

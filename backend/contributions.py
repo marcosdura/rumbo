@@ -29,6 +29,7 @@ from models import (
 )
 from spot_changes import destroy_cloudinary_images
 from ownership import is_public_venue
+from notifications import notify, notify_admin, spot_link
 
 KIND_MODELS = {
     "experience": Experience,
@@ -116,6 +117,7 @@ def register(db: Session, kind: str, item, spot: SpotDB, user: dict, pending: bo
         status="pending", title=_title(kind, item),
     )
     db.add(contribution)
+    notify_admin(db, "admin_contribution", f"Aporte nuevo en «{spot.name}»: {contribution.title}", body=user.get("email"))
     return contribution
 
 
@@ -161,6 +163,14 @@ def approve(db: Session, contribution: Contribution, by: str):
         if not exists:
             db.add(SpotCategory(spot_id=item.spot_id, category_id=item.category_id, is_primary=False))
     _close(contribution, "approved", by)
+    spot = contribution.spot
+    notify(db, contribution.author_email, "contribution_approved", f"Se publicó tu aporte «{contribution.title}»",
+           body=f"en {spot.name}", link=spot_link(spot))
+    # Si lo sumó otra persona (un sector de escalada, por ejemplo), también
+    # se entera el dueño del lugar.
+    if spot.owner_email and spot.owner_email != contribution.author_email:
+        notify(db, spot.owner_email, "spot_new_content", f"Se sumó «{contribution.title}» a tu lugar «{spot.name}»",
+               link=spot_link(spot))
 
 
 def discard(db: Session, contribution: Contribution, status: str, by: str, reason: str = None):
@@ -173,6 +183,9 @@ def discard(db: Session, contribution: Contribution, status: str, by: str, reaso
         photos = item_photos(contribution.kind, item)
         db.delete(item)
     _close(contribution, status, by, reason)
+    if status == "rejected":
+        notify(db, contribution.author_email, "contribution_rejected", f"No se publicó tu aporte «{contribution.title}»",
+               body=f"Motivo: {reason}" if reason else None, link="/profile")
     return photos
 
 

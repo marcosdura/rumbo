@@ -20,6 +20,7 @@ import contributions
 import operators
 from models import KayakDetail, KayakReview, Report, Review, SpotDB, SurfReview, SurfSchool, User
 from spot_changes import reject_spot
+from notifications import notify, notify_admin
 
 REASONS = {
     "false_info": "Información falsa o engañosa",
@@ -107,8 +108,18 @@ def create_report(db: Session, user: dict, kind: str, target_id: int, reason: st
         reporter_email=email, reason=reason, comment=comment, status="open",
     )
     db.add(report)
+    notify_admin(db, "admin_report", f"Reporte nuevo: {REASONS[reason]}", body=f"en {spot.name}", link="/admin")
     db.commit()
     return report
+
+
+def notify_review_deleted(db: Session, review):
+    """El admin borró una reseña: su autor se entera (sin el detalle de quién
+    la reportó)."""
+    user = db.query(User).filter(User.id == review.user_id).first()
+    if user:
+        notify(db, user.email, "review_deleted", "Se eliminó una reseña tuya",
+               body="No cumplía con las normas de la comunidad.", link="/reviews")
 
 
 def describe_target(db: Session, kind: str, target) -> dict:
@@ -178,6 +189,7 @@ def resolve(db: Session, admin: dict, kind: str, target_id: int, action: str, re
             photos += operators.cancel_pending_change(db, kind, target.id, by=by)
             photos += contributions.delete_item(db, kind, target, by=by)
         else:
+            notify_review_deleted(db, target)
             db.delete(target)
         close_reports(db, kind, target_id, "actioned", "deleted", by)
     return photos
