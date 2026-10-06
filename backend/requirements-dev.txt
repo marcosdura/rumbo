@@ -1,0 +1,4 @@
+# Lo que hace falta para desarrollar y correr los tests; Railway instala
+# solo requirements.txt.
+-r requirements.txt
+pytest==9.1.1

@@ -35,6 +35,22 @@ server. Si una migración falla, el server de ese deploy no arranca: el
 error queda en los logs del deploy en Railway. Cada migración corre en una
 transacción, así que la base no queda a medio migrar.
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+No necesitan Postgres ni internet: corren sobre un SQLite temporal creado
+con las migraciones, con el login de Google y Cloudinary simulados (ver
+`tests/conftest.py`). `tests/test_migrations.py` falla si `models.py` y las
+migraciones no coinciden, o sea si se cambió un modelo sin generar la
+migración.
+
+Todo cambio de comportamiento viene con sus tests. El frontend tiene los
+suyos: `npm test` desde `frontend/` (Vitest + Testing Library).
+
 ## Migraciones (Alembic)
 
 La app **no** crea tablas sola: no hay `create_all`. `create_all` solo crea
