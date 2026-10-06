@@ -4,6 +4,25 @@ from database import get_db
 from auth import get_current_user_required, is_admin
 from models import SpotDB, GlampingDetail
 
+# Playas y lagunas: lugares públicos. Una vez aprobados son del admin (ni
+# quien los sugirió los edita); lo que tiene dueño propio son las escuelas
+# de surf y los servicios de kayak que trabajan ahí (operators.py).
+PUBLIC_VENUE_CATEGORIES = {"Surf", "Kayak"}
+
+
+def is_public_venue(spot: SpotDB) -> bool:
+    return bool(spot.category and spot.category.name in PUBLIC_VENUE_CATEGORIES)
+
+
+def can_manage_spot(spot: SpotDB, user: dict) -> bool:
+    if is_admin(user):
+        return True
+    if spot.owner_email != user.get("email"):
+        return False
+    # Mientras la playa está en revisión la maneja quien la sugirió (por
+    # ejemplo, para subirle las fotos al crearla); aprobada, solo el admin.
+    return not (is_public_venue(spot) and spot.is_approved)
+
 
 def get_owned_spot_or_admin(
     spot_id: int,
@@ -14,7 +33,7 @@ def get_owned_spot_or_admin(
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    if not is_admin(user) and spot.owner_email != user.get("email"):
+    if not can_manage_spot(spot, user):
         raise HTTPException(status_code=403, detail="No autorizado")
     return spot
 
@@ -25,7 +44,7 @@ def assert_owns_spot(db: Session, spot_id: int, user: dict) -> SpotDB:
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    if not is_admin(user) and spot.owner_email != user.get("email"):
+    if not can_manage_spot(spot, user):
         raise HTTPException(status_code=403, detail="No autorizado")
     return spot
 

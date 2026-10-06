@@ -337,6 +337,9 @@ class KayakDetail(ReviewedContent, Base):
     id = Column(Integer, primary_key=True, index=True)
 
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
+    # Dueño propio de la escuela/servicio (quien lo sumó a la playa), distinto
+    # del dueño del lugar. NULL = lo maneja el admin (los de antes de esto).
+    owner_email = Column(String, nullable=True, index=True)
     spot = relationship("SpotDB", back_populates="kayak_detail")
     # Sin esto, borrar un spot con servicios de kayak fallaba: KayakReview
     # tiene FK a kayak_details.id, y esa cascada no se disparaba sola
@@ -376,6 +379,9 @@ class SurfSchool(ReviewedContent, Base):
     id = Column(Integer, primary_key=True, index=True)
 
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
+    # Dueño propio de la escuela/servicio (quien lo sumó a la playa), distinto
+    # del dueño del lugar. NULL = lo maneja el admin (los de antes de esto).
+    owner_email = Column(String, nullable=True, index=True)
     spot = relationship("SpotDB", back_populates="surf_schools")
     # Idem KayakDetail.reviews — sin esto, borrar un spot con escuelas de
     # surf fallaba por la FK de SurfReview a surf_beach.id sin cascada.

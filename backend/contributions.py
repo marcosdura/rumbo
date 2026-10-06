@@ -28,6 +28,7 @@ from models import (
     KayakDetail, Route, SpotCategory, SpotDB, SurfSchool,
 )
 from spot_changes import destroy_cloudinary_images
+from ownership import is_public_venue
 
 KIND_MODELS = {
     "experience": Experience,
@@ -41,6 +42,9 @@ KIND_MODELS = {
 
 # Los que cualquier usuario logueado puede sugerir en un spot ajeno.
 COMMUNITY_KINDS = {"climbing_sector", "climbing_route"}
+# Escuelas de surf y servicios de kayak: en una playa o laguna los suma
+# cualquiera, que pasa a ser su dueño (operators.py).
+OPERATOR_KINDS = {"surf_school", "kayak"}
 
 
 def _title(kind, item) -> str:
@@ -74,6 +78,10 @@ def decide(spot: SpotDB, kind: str, user: dict) -> bool:
     si el usuario no puede sumarlo."""
     if is_admin(user):
         return False
+    if kind in OPERATOR_KINDS and is_public_venue(spot):
+        # Siempre a revisión, también en una playa recién sugerida: el admin
+        # revisa la playa y la escuela.
+        return True
     owner = spot.owner_email == user.get("email")
     if kind in COMMUNITY_KINDS and spot.is_approved:
         # Cualquiera sugiere en un spot aprobado; el dueño también pasa por

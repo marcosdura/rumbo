@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user_required, is_admin, get_current_admin_user
-from ownership import get_owned_spot_or_admin
+from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue
+from auth import ADMIN_EMAIL
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
 from schemas import ClimbingRouteResponse, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
@@ -620,6 +621,9 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
         .order_by(SpotDB.created_at.desc())
         .all()
     )
+    # Una playa o laguna aprobada ya no es de quien la sugirió (es del
+    # admin): no aparece en "Tus lugares".
+    spots = [s for s in spots if is_admin(user) or not (is_public_venue(s) and s.is_approved)]
     spot_ids = [s.id for s in spots]
     review_aggs = (
         db.query(
@@ -951,6 +955,10 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
             # No es una aprobación real que el dueño tenga que ver.
             pending.owner_dismissed_at = pending.resolved_at
     spot.is_approved = approved
+    # Una playa o laguna aprobada es un lugar público: pasa al admin. Quien
+    # la sugirió sigue siendo dueño de su escuela, no de la playa.
+    if approved and is_public_venue(spot) and ADMIN_EMAIL:
+        spot.owner_email = ADMIN_EMAIL
     if approved and not spot.slug:
         spot.slug = generate_slug(spot.name)
     db.commit()
@@ -958,8 +966,17 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
 
 
 @router.get("/spots/{spot_id}/can-upload")
-def can_upload_image(public_id: str, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
-    # get_owned_spot_or_admin ya garantiza que spot_id es del usuario (o admin).
+@limiter.limit("30/minute")
+def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    # El dueño (o el admin) sube fotos del lugar. En una playa o laguna,
+    # cualquier logueado sube las de su escuela de surf o servicio de kayak
+    # (quedan en la carpeta de la playa; operators.assert_valid_photos exige
+    # ese formato al guardarlas).
+    if not can_manage_spot(spot, user) and not is_public_venue(spot):
+        raise HTTPException(status_code=403, detail="No autorizado")
     #
     # El formato es el que arma lib/uploadImage.ts: "{spot_id}/{16 hex}".
     # Exigirlo acá ata cada foto nueva a su spot y deja afuera cualquier id

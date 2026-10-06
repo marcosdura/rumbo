@@ -111,10 +111,11 @@ def new_photo_id(spot_id: int, n: int) -> str:
 @pytest.fixture
 def make_spot(db):
     """Crea un spot con `photos` fotos ya publicadas (la primera, principal)."""
-    def _make(name="Cascada Escondida", owner=OWNER, approved=True, photos=0, **fields):
-        category = db.query(Category).filter_by(name="Camping").first()
+    def _make(name="Cascada Escondida", owner=OWNER, approved=True, photos=0, category="Camping", **fields):
+        category_name = category
+        category = db.query(Category).filter_by(name=category_name).first()
         if not category:
-            category = Category(name="Camping")
+            category = Category(name=category_name)
             db.add(category)
             db.flush()
         spot = SpotDB(
