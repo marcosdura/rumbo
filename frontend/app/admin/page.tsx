@@ -14,6 +14,8 @@ import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
 import ChangesTab from "./ChangesTab"
+import ContributionsList from "./ContributionsList"
+import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 
 export default function AdminPage() {
@@ -40,7 +42,15 @@ export default function AdminPage() {
   const [changesError, setChangesError] = useState<string | null>(null)
   const [changeActionLoading, setChangeActionLoading] = useState<number | null>(null)
   const [changeActionErrors, setChangeActionErrors] = useState<Record<number, string>>({})
-  const [rejectingId, setRejectingId] = useState<number | null>(null)
+  // Aportes nuevos sobre spots aprobados (misma pestaña). Sus ids son de
+  // otra tabla: loading y errores van aparte de los de pedidos de cambio.
+  const [contributions, setContributions] = useState<AdminContribution[]>([])
+  const [contributionsLoading, setContributionsLoading] = useState(true)
+  const [contributionsError, setContributionsError] = useState<string | null>(null)
+  const [contributionActionLoading, setContributionActionLoading] = useState<number | null>(null)
+  const [contributionActionErrors, setContributionActionErrors] = useState<Record<number, string>>({})
+  // Qué se está rechazando: un pedido de cambio o un aporte.
+  const [rejecting, setRejecting] = useState<{ type: "change" | "contribution"; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
 
@@ -64,6 +74,10 @@ export default function AdminPage() {
       .then(({ data }) => setChangeRequests(Array.isArray(data) ? data : []))
       .catch(() => setChangesError("Error al cargar los cambios pendientes."))
       .finally(() => setChangesLoading(false))
+    api.get<AdminContribution[]>("/admin/contributions", { token })
+      .then(({ data }) => setContributions(Array.isArray(data) ? data : []))
+      .catch(() => setContributionsError("Error al cargar los aportes pendientes."))
+      .finally(() => setContributionsLoading(false))
   }, [token])
 
   // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
@@ -73,13 +87,29 @@ export default function AdminPage() {
     setSpots(Array.isArray(data) ? data : [])
   }
 
+  function withError(prev: Record<number, string>, id: number, message: string | null) {
+    const next = { ...prev }
+    if (message) next[id] = message
+    else delete next[id]
+    return next
+  }
+
   function setChangeError(id: number, message: string | null) {
-    setChangeActionErrors(prev => {
-      const next = { ...prev }
-      if (message) next[id] = message
-      else delete next[id]
-      return next
-    })
+    setChangeActionErrors(prev => withError(prev, id, message))
+  }
+
+  async function handleApproveContribution(id: number) {
+    setContributionActionLoading(id)
+    setContributionActionErrors(prev => withError(prev, id, null))
+    try {
+      await api.post(`/admin/contributions/${id}/approve`, undefined, { token })
+      setContributions(prev => prev.filter(c => c.id !== id))
+    } catch (e) {
+      setContributionActionErrors(prev => withError(prev, id,
+        e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo."))
+    } finally {
+      setContributionActionLoading(null)
+    }
   }
 
   async function handleApproveChange(id: number) {
@@ -98,20 +128,29 @@ export default function AdminPage() {
     }
   }
 
-  async function handleRejectChange() {
-    if (rejectingId === null) return
-    const id = rejectingId
-    setChangeActionLoading(id)
+  async function handleReject() {
+    if (rejecting === null) return
+    const { type, id } = rejecting
+    const setLoadingFor = type === "change" ? setChangeActionLoading : setContributionActionLoading
+    setLoadingFor(id)
     setRejectError(null)
     try {
-      await api.post(`/admin/change-requests/${id}/reject`, { reason: rejectReason.trim() || null }, { token })
-      setChangeRequests(prev => prev.filter(r => r.id !== id))
-      setRejectingId(null)
+      const url = type === "change" ? `/admin/change-requests/${id}/reject` : `/admin/contributions/${id}/reject`
+      await api.post(url, { reason: rejectReason.trim() || null }, { token })
+      if (type === "change") setChangeRequests(prev => prev.filter(r => r.id !== id))
+      else setContributions(prev => prev.filter(c => c.id !== id))
+      setRejecting(null)
     } catch (e) {
       setRejectError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo rechazar. Intentá de nuevo.")
     } finally {
-      setChangeActionLoading(null)
+      setLoadingFor(null)
     }
+  }
+
+  function openReject(type: "change" | "contribution", id: number) {
+    setRejecting({ type, id })
+    setRejectReason("")
+    setRejectError(null)
   }
 
   async function handleApprove(id: number, approved: boolean) {
@@ -181,6 +220,7 @@ export default function AdminPage() {
     .sort((a, b) => new Date(a.owner_deleted_at!).getTime() - new Date(b.owner_deleted_at!).getTime())
 
   const pending = activeSpots.filter(s => !s.is_approved).length
+  const pendingReviews = changeRequests.length + contributions.length
   const filtered = activeSpots.filter(s =>
     filter === "all" ? true : filter === "pending" ? !s.is_approved : s.is_approved
   )
@@ -240,7 +280,7 @@ export default function AdminPage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           {([
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
-            { id: "cambios", label: `📝 Cambios pendientes${changeRequests.length > 0 ? ` (${changeRequests.length})` : ""}` },
+            { id: "cambios", label: `📝 Cambios pendientes${pendingReviews > 0 ? ` (${pendingReviews})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
             { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
@@ -277,7 +317,19 @@ export default function AdminPage() {
             actionLoading={changeActionLoading}
             actionErrors={changeActionErrors}
             onApprove={handleApproveChange}
-            onRejectRequest={id => { setRejectingId(id); setRejectReason(""); setRejectError(null) }}
+            onRejectRequest={id => openReject("change", id)}
+          />
+        )}
+
+        {mode === "cambios" && (
+          <ContributionsList
+            contributions={contributions}
+            loadError={contributionsError}
+            loading={contributionsLoading}
+            actionLoading={contributionActionLoading}
+            actionErrors={contributionActionErrors}
+            onApprove={handleApproveContribution}
+            onRejectRequest={id => openReject("contribution", id)}
           />
         )}
 
@@ -328,15 +380,17 @@ export default function AdminPage() {
       />
 
       <ConfirmModal
-        open={rejectingId !== null}
-        title="¿Rechazar este cambio?"
-        message="El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."
+        open={rejecting !== null}
+        title={rejecting?.type === "contribution" ? "¿Rechazar este aporte?" : "¿Rechazar este cambio?"}
+        message={rejecting?.type === "contribution"
+          ? "Se borra, junto con sus fotos. Quien lo propuso ve el rechazo en su perfil, con el motivo si lo escribís."
+          : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
         confirmLabel="Rechazar"
-        loading={changeActionLoading === rejectingId}
+        loading={rejecting !== null && (rejecting.type === "change" ? changeActionLoading : contributionActionLoading) === rejecting.id}
         loadingLabel="Rechazando..."
         error={rejectError}
-        onCancel={() => setRejectingId(null)}
-        onConfirm={handleRejectChange}
+        onCancel={() => setRejecting(null)}
+        onConfirm={handleReject}
       >
         <label htmlFor="reject-reason" style={{ ...labelStyle, margin: "16px 0 6px" }}>Motivo (opcional)</label>
         <textarea
