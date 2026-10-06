@@ -138,5 +138,11 @@ como registro de qué se decidió atacar y qué no.
 - [ ] **Sin ningún camino de monetización** — el modelo de datos ya tiene los ganchos (email/whatsapp/instagram en spots, surf, kayak), falta la capa de pago y destacados
 - [ ] **Cero retención activa** — sin email, sin notificaciones, sin newsletter
 - [ ] **Contenido sin moderación real ni forma de reportar** — solo existe `is_approved` booleano, sin motivo de rechazo ni endpoint de report/flag
+      **Estado al planificar:** los pedidos de cambio, aportes y cambios de escuelas ya tienen rechazo con motivo. Falta: rechazar un spot nuevo es borrarlo sin aviso; "Desaprobar" uno publicado es silencioso; el admin no puede borrar reseñas (solo su autor); no hay ninguna forma de reportar.
+      **Decidido (en curso):**
+      - *1) Rechazo de spots con motivo:* migración 0006 (motivo y fecha de rechazo en spots). "Rechazar" y "Desaprobar" piden motivo; "Eliminar" queda para spam. El dueño ve el motivo en su dashboard y en /profile, corrige y "Vuelve a enviar a revisión" (no pierde lo cargado).
+      - *2) Reportes, backend:* tabla `reports` (qué, quién, motivo, comentario, estado). Se reportan spots, reseñas (spot, surf, kayak) y escuelas/kayaks. Motivos fijos + "otro" con comentario. Solo con sesión; un reporte abierto por persona y cosa; rate limit. El admin puede borrar cualquier reseña.
+      - *3) Botón "Reportar"* en la página del spot, en cada reseña y en cada escuela/kayak; quien reporta solo ve "Gracias, lo vamos a revisar".
+      - *4) Pestaña "Reportes" en el admin* con contador, agrupada por cosa reportada: Descartar, Despublicar el spot (con motivo), Eliminar la reseña, Eliminar la escuela. Nada se oculta solo por cantidad de reportes: siempre decide el admin.
 - [ ] **Surf y Kayak rompen el patrón genérico de categoría** (estructural) — contacto y fotos duplicados en vez de reusar `SpotDB`/`SpotImage`, reviews propias en vez del sistema genérico
       **Avance:** se resolvió el problema de producto que esto causaba (la playa y sus escuelas tenían un solo dueño): las playas/lagunas son lugares públicos del admin y cada escuela o servicio tiene dueño propio, dashboard propio y la misma revisión de cambios que un spot. Sigue pendiente la parte estructural (fotos en 3 columnas de URL en vez de una tabla, reseñas propias).
