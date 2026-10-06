@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, text
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text
 from database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -26,7 +26,7 @@ class SpotDB(Base):
     # spot se desactiva (deja de mostrarse públicamente) en vez de borrarse,
     # y pasa a la pestaña "Cuentas eliminadas" del panel admin.
     owner_deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
-    slug = Column(String, unique=True, nullable=True, index=True)
+    slug = Column(String, unique=True, nullable=True)
     # Índice: es la columna de ORDER BY de get_spots — ordenar + LIMIT/OFFSET
     # sin índice acá es el peor caso posible para paginar.
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
@@ -92,7 +92,7 @@ class SpotChangeRequest(Base):
     )
 
     id           = Column(Integer, primary_key=True, index=True)
-    spot_id      = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
+    spot_id      = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
     requested_by = Column(String, nullable=False)  # email del dueño
     # "pending" | "approved" | "rejected" | "cancelled"
     status       = Column(String, nullable=False, default="pending", index=True)
@@ -122,9 +122,9 @@ class Category(Base):
 class SpotCategory(Base):
     __tablename__ = "spot_categories"
 
-    spot_id     = Column(Integer, ForeignKey("spots.id"), primary_key=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), primary_key=True)
-    is_primary  = Column(Boolean, default=False)
+    spot_id     = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True)
+    category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True)
+    is_primary  = Column(Boolean, default=False, nullable=False)
 
     spot     = relationship("SpotDB", back_populates="spot_categories")
     category = relationship("Category", back_populates="spot_categories")
@@ -133,7 +133,7 @@ class GlampingDetail(Base):
     __tablename__ = "glamping_details"
 
     id = Column(Integer, primary_key=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
 
     accommodation_type = Column(String, nullable=True)   # domo | carpa | cabaña | treehouse | otro
     capacity = Column(Integer, nullable=True)
@@ -147,8 +147,8 @@ class GlampingAmenity(Base):
     __tablename__ = "glamping_amenities"
 
     id = Column(Integer, primary_key=True)
-    glamping_id = Column(Integer, ForeignKey("glamping_details.id"), unique=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    glamping_id = Column(Integer, ForeignKey("glamping_details.id", ondelete="CASCADE"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True)
 
     private_bathroom   = Column(Boolean, nullable=True)
     electricity        = Column(Boolean, nullable=True)
@@ -168,7 +168,7 @@ class CampingDetail(Base):
     __tablename__ = "camping_details"
 
     id = Column(Integer, primary_key=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True)
     price = Column(Float)
 
     spot = relationship("SpotDB", back_populates="camping_detail")
@@ -178,7 +178,7 @@ class MotorhomeDetail(Base):
     __tablename__ = "motorhome_details"
 
     id = Column(Integer, primary_key=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True, nullable=False)
 
     capacity         = Column(Integer, nullable=True)
     surface_type     = Column(String, nullable=True)
@@ -193,7 +193,7 @@ class TrekkingDetail(Base):
     __tablename__ = "trekking_details"
 
     id        = Column(Integer, primary_key=True)
-    spot_id   = Column(Integer, ForeignKey("spots.id"), unique=True)
+    spot_id   = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True)
 
     bathrooms     = Column(Boolean, nullable=True)
     potable_water = Column(Boolean, nullable=True)
@@ -220,7 +220,7 @@ class Amenity(Base):
 class SpotAmenity(Base):
     __tablename__ = "spot_amenities"
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), primary_key=True)
     amenity_id = Column(Integer, ForeignKey("amenities.id"), primary_key=True)
 
     spot = relationship("SpotDB", back_populates="amenities")
@@ -232,7 +232,7 @@ class Route(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="routes")
 
     name = Column(String)
@@ -258,7 +258,7 @@ class ClimbingSector(Base):
     __tablename__ = "climbingsectors"
     
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
 
     name = Column(String)
     type = Column(String)
@@ -273,7 +273,7 @@ class ClimbingRoute(Base):
     __tablename__ = "climbingroutes"
 
     id = Column(Integer, primary_key=True, index=True)
-    sector_id = Column(Integer, ForeignKey("climbingsectors.id"))
+    sector_id = Column(Integer, ForeignKey("climbingsectors.id", ondelete="CASCADE"))
 
     name = Column(String)
     grade = Column(String)
@@ -289,7 +289,7 @@ class KayakDetail(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="kayak_detail")
     # Sin esto, borrar un spot con servicios de kayak fallaba: KayakReview
     # tiene FK a kayak_details.id, y esa cascada no se disparaba sola
@@ -328,7 +328,7 @@ class SurfSchool(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="surf_schools")
     # Idem KayakDetail.reviews — sin esto, borrar un spot con escuelas de
     # surf fallaba por la FK de SurfReview a surf_beach.id sin cascada.
@@ -377,7 +377,7 @@ class SpotImage(Base):
     __tablename__ = "spot_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     cloudinary_public_id = Column(String)
     is_main = Column(Boolean, default=False)
     order = Column(Integer, default=0)
@@ -391,7 +391,7 @@ class Favorite(Base):
  
     id         = Column(Integer, primary_key=True, index=True)
     user_id    = Column(String, ForeignKey("users.id"), nullable=False)
-    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False)
+    spot_id    = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
  
     user = relationship("User", back_populates="favorites")
@@ -414,8 +414,8 @@ class Review(Base):
     __table_args__ = (UniqueConstraint("user_id", "spot_id", name="uq_review_user_spot"),)
 
     id         = Column(Integer, primary_key=True, index=True)
-    spot_id    = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
-    user_id    = Column(String, ForeignKey("users.id"), nullable=False)
+    spot_id    = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id    = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     rating     = Column(Integer, nullable=False)   # 1 a 5
     comment    = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -431,12 +431,12 @@ class SurfReview(Base):
 
     __table_args__ = (UniqueConstraint("user_id", "surf_beach_id", name="uq_surfreview_user_beach"),)
 
-    id            = Column(Integer, primary_key=True, index=True)
-    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id"), nullable=False, index=True)
-    user_id       = Column(String, ForeignKey("users.id"), nullable=False)
+    id            = Column(Integer, primary_key=True)
+    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id       = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     rating        = Column(Integer, nullable=False)
-    comment       = Column(String, nullable=True)
-    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+    comment       = Column(Text, nullable=True)
+    created_at    = Column(DateTime, server_default=func.now())
     updated_at    = Column(DateTime(timezone=True), nullable=True)
 
     surf_school = relationship("SurfSchool", back_populates="reviews")
@@ -448,12 +448,12 @@ class KayakReview(Base):
 
     __table_args__ = (UniqueConstraint("user_id", "kayak_details_id", name="uq_kayakreview_user_detail"),)
 
-    id               = Column(Integer, primary_key=True, index=True)
-    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id"), nullable=False, index=True)
-    user_id          = Column(String, ForeignKey("users.id"), nullable=False)
+    id               = Column(Integer, primary_key=True)
+    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id          = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     rating           = Column(Integer, nullable=False)
-    comment          = Column(String, nullable=True)
-    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+    comment          = Column(Text, nullable=True)
+    created_at       = Column(DateTime, server_default=func.now())
     updated_at       = Column(DateTime(timezone=True), nullable=True)
 
     kayak_detail = relationship("KayakDetail", back_populates="reviews")
@@ -462,18 +462,22 @@ class KayakReview(Base):
 
 class Experience(Base):
     __tablename__ = "experiences"
+    __table_args__ = (
+        Index("idx_experiences_spot_id", "spot_id"),
+        Index("idx_experiences_category_id", "category_id"),
+    )
 
-    id          = Column(Integer, primary_key=True, index=True)
+    id          = Column(Integer, primary_key=True)
     spot_id     = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     title       = Column(String(150), nullable=False)
-    description = Column(String, nullable=True)
-    price       = Column(Float, nullable=True)
+    description = Column(Text, nullable=True)
+    price       = Column(Numeric(10, 2), nullable=True)
     currency    = Column(String(3), default="UYU")
     schedule    = Column(String(255), nullable=True)
     contact     = Column(String(255), nullable=True)
     is_active   = Column(Boolean, default=True)
-    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+    created_at  = Column(DateTime, server_default=func.now())
 
     spot     = relationship("SpotDB", back_populates="experiences")
     category = relationship("Category")

@@ -11,8 +11,6 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
 from sqlalchemy import func, or_, and_
 from typing import Optional, List
-from database import engine
-from models import Base
 from slugs import generate_slug
 from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, apply_request_to_spot, close_request, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
@@ -21,10 +19,6 @@ import cloudinary.uploader
 import os
 import re
 
-
-
-
-Base.metadata.create_all(bind=engine)
 
 
 router = APIRouter()

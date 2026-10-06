@@ -1,16 +1,16 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from database import engine
-from models import Base
 from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews, surf_reviews, kayak_reviews, users, glamping, climbingroutes, change_requests
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 
-# crea la tabla en la db
-Base.metadata.create_all(bind=engine)
+# El esquema lo manejan las migraciones de Alembic (backend/alembic/), no
+# create_all: create_all solo crea tablas que no existen, nunca agrega
+# columnas ni índices a una tabla existente. Correr `alembic upgrade head`
+# antes de levantar el server (el deploy lo hace en el start command).
 
 app = FastAPI()
 app.state.limiter = limiter
