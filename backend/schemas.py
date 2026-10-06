@@ -184,6 +184,9 @@ class ClimbingSectorResponse(ClimbingSectorBase):
     # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
     is_approved: bool = True
     id: int
+    # Para que un link "sugerir una vía" pueda verificar que el sector es de
+    # ese lugar.
+    spot_id: int
     routes_count: int = 0
     min_grade: Optional[str] = None
     max_grade: Optional[str] = None

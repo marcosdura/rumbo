@@ -7,12 +7,14 @@ import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
-  defaultClimbingRouteItem, defaultExperience,
+  defaultClimbingRouteItem, defaultExperience, CATEGORIES,
 } from "./constants"
 import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute } from "./submit"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 import { RESULT_COPY, mySpotsFor, type MySpot, type SubmitResult } from "./result"
+import { parsePrefill, PREFILL_CATEGORY, PREFILL_STEP, type Prefill } from "./prefill"
+import Link from "next/link"
 import AgregarLugarHeader from "./AgregarLugarHeader"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
@@ -97,6 +99,48 @@ export default function AgregarLugar() {
   const [loadingTrekkingSpots, setLoadingTrekkingSpots] = useState(false)
 
   const [experiences, setExperiences]                   = useState<ExperienceItem[]>([])
+
+  // Llegada por link directo (?sumar=sector&spot=12): el lugar ya elegido,
+  // para el "Volver a ..." y para no pasar por categoría/modo/lugar.
+  const [prefillSpot, setPrefillSpot] = useState<{ id: number; name: string; slug: string | null } | null>(null)
+
+  useEffect(() => {
+    // window.location y no useSearchParams: este último obliga a envolver la
+    // página en un <Suspense> para el prerender.
+    const prefill = parsePrefill(new URLSearchParams(window.location.search))
+    if (prefill) applyPrefill(prefill)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function applyPrefill({ kind, spotId, sectorId }: Prefill) {
+    const cat = CATEGORIES.find(c => c.name === PREFILL_CATEGORY[kind])
+    if (!cat) return
+    try {
+      // /spots/{id} solo devuelve lugares publicados: un link a uno que no
+      // existe (o no está aprobado) cae en el catch.
+      const { data: spot } = await api.get<{ id: number; name: string; slug: string | null }>(`/spots/${spotId}`)
+      let sector: { id: number; name: string } | null = null
+      if (kind === "via") {
+        const { data } = await api.get<{ id: number; name: string; spot_id: number }>(`/sectors/${sectorId}`)
+        if (data.spot_id !== spot.id) throw new Error("El sector es de otro lugar")
+        sector = data
+      }
+      const option = [{ id: spot.id, name: spot.name }]
+      setSelectedCat(cat)
+      if (kind === "ruta") {
+        setTrekkingMode("new_route"); setTrekkingSpotId(spot.id); setAvailableTrekkingSpots(option)
+      } else if (kind === "sector" || kind === "via") {
+        setClimbingMode(kind === "sector" ? "new_sector" : "new_route"); setClimbingSpotId(spot.id); setAvailableSpots(option)
+        if (sector) { setClimbingSectorId(sector.id); setAvailableSectors([{ id: sector.id, name: sector.name }]) }
+      } else {
+        setCreatingNewSpot(false); setSelectedSpotId(spot.id); setAvailableSpots(option)
+      }
+      setPrefillSpot(spot)
+      setStep(PREFILL_STEP[kind])
+    } catch {
+      setError("No encontramos ese lugar. Podés elegirlo desde el formulario.")
+    }
+  }
 
   useEffect(() => {
     trackEvent("add_spot_start")
@@ -350,9 +394,16 @@ export default function AgregarLugar() {
     setTrekkingMode(null); setTrekkingSpotId(null)
     setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
     setExperiences([])
+    setPrefillSpot(null)
   }
 
   const pageHeader = <AgregarLugarHeader step={step} summaryStep={summaryStep} onReset={reset} />
+  // Mismo link que "← Volver al perfil" del dashboard.
+  const backToSpot = prefillSpot?.slug ? (
+    <Link href={`/spots/${prefillSpot.slug}`} style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+      ← Volver a {prefillSpot.name}
+    </Link>
+  ) : null
 
   if (!session) {
     return (
@@ -371,7 +422,9 @@ export default function AgregarLugar() {
               Guardamos tu email para poder contactarte si necesitamos verificar o completar la información del lugar que enviás.
             </p>
             <button
-              onClick={() => signInWithGoogle({ callbackUrl: "/agregar-lugar" })}
+              // Volver a la misma URL: si llegó por un link directo
+              // (?sumar=...&spot=...), después del login sigue ahí.
+              onClick={() => signInWithGoogle({ callbackUrl: window.location.pathname + window.location.search })}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
                 background: "#fff", border: "1px solid var(--border)", borderRadius: 12,
@@ -398,6 +451,7 @@ export default function AgregarLugar() {
         <style>{mediaQuery}</style>
         <div style={{ ...s.container, textAlign: "center", paddingTop: 32 }}>
           {pageHeader}
+          {backToSpot}
           <div style={{ marginTop: 48 }}>
             <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>{RESULT_COPY[success].title}</p>
             <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36, maxWidth: 440, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5 }}>{RESULT_COPY[success].text}</p>
@@ -416,6 +470,10 @@ export default function AgregarLugar() {
       <style>{mediaQuery}</style>
       <div style={s.container}>
         {pageHeader}
+        {backToSpot}
+        {step === 1 && error && (
+          <p style={{ fontSize: 13, color: "var(--danger)", margin: "0 0 12px" }}>{error}</p>
+        )}
 
         {step === 1 && (
           <StepCategoria onSelect={handleCategorySelect} />

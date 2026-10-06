@@ -158,3 +158,7 @@ def test_no_se_resenia_un_pendiente(client, world, make_user, prefix, key):
     make_user(OTHER)
     r = client.post(f"{prefix}/{world[key]}", json={"rating": 5, "comment": "Muy bueno"}, headers=as_user(OTHER))
     assert r.status_code == 404
+
+
+def test_el_sector_dice_de_que_lugar_es(client, world):
+    assert client.get(f"/sectors/{world['sector_ok']}").json()["spot_id"] == world["spot"].id
