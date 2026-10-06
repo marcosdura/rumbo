@@ -6,7 +6,7 @@ from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue
 from auth import ADMIN_EMAIL
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
-from schemas import ClimbingRouteResponse, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
+from schemas import ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -21,6 +21,7 @@ import cloudinary
 import cloudinary.uploader
 import os
 import re
+from datetime import datetime, timezone
 
 
 
@@ -656,6 +657,8 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             "is_public": s.is_public,
             "public_transport": s.public_transport,
             "is_approved": s.is_approved,
+            "rejection_reason": s.rejection_reason,
+            "rejected_at": s.rejected_at.isoformat() if s.rejected_at else None,
             "created_at": s.created_at.isoformat(),
             "category": s.category,
             # Todas sus actividades (principal + secundarias): agregar-lugar
@@ -917,6 +920,8 @@ def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get
             "description": s.description,
             "department": s.department,
             "is_approved": s.is_approved,
+            "rejection_reason": s.rejection_reason,
+            "rejected_at": s.rejected_at.isoformat() if s.rejected_at else None,
             "category": s.category,
             "images": s.images,
             "owner_email": s.owner_email,
@@ -942,23 +947,33 @@ def reactivate_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = D
     return {"id": spot.id}
 
 
-@router.patch("/admin/spots/{spot_id}/approve")
-def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
-    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
-    # Si el spot vuelve a pendiente con un pedido de cambio abierto, el pedido
-    # se vuelca sobre el spot: desde ahora sus ediciones van directo (un spot
-    # pendiente se revisa entero antes de publicarse), y el pedido quedaría
-    # colgado con datos viejos.
-    if not approved and spot.is_approved:
+def _unpublish(db: Session, spot: SpotDB, admin: dict):
+    """Un spot aprobado vuelve a no publicado. Si tenía un pedido de cambio
+    abierto, el pedido se vuelca sobre el spot: desde ahora sus ediciones van
+    directo (un spot no publicado se revisa entero antes de volver), y el
+    pedido quedaría colgado con datos viejos."""
+    if spot.is_approved:
         pending = get_pending_request(db, spot.id)
         if pending:
             apply_request_to_spot(db, pending)
             close_request(pending, "approved", by=admin.get("email"))
             # No es una aprobación real que el dueño tenga que ver.
             pending.owner_dismissed_at = pending.resolved_at
+    spot.is_approved = False
+
+
+@router.patch("/admin/spots/{spot_id}/approve")
+def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    if not approved:
+        _unpublish(db, spot, admin)
     spot.is_approved = approved
+    if approved:
+        # Aprobado: ya no hay rechazo que mostrarle al dueño.
+        spot.rejection_reason = None
+        spot.rejected_at = None
     # Una playa o laguna aprobada es un lugar público: pasa al admin. Quien
     # la sugirió sigue siendo dueño de su escuela, no de la playa.
     if approved and is_public_venue(spot) and ADMIN_EMAIL:
@@ -967,6 +982,33 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
         spot.slug = generate_slug(spot.name)
     db.commit()
     return {"id": spot.id, "is_approved": spot.is_approved}
+
+
+@router.post("/admin/spots/{spot_id}/reject")
+def reject_spot(spot_id: int, body: SpotReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+    """Rechazar un spot nuevo, o despublicar uno aprobado, con un motivo que
+    el dueño ve en su dashboard. Antes la única salida para un spot que no
+    servía era borrarlo, sin explicación; "Eliminar" queda para el spam. El
+    dueño corrige y lo vuelve a enviar (POST /spots/{id}/resubmit)."""
+    spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    _unpublish(db, spot, admin)
+    spot.rejection_reason = body.reason.strip()
+    spot.rejected_at = datetime.now(timezone.utc)
+    db.commit()
+    return {"id": spot.id, "is_approved": False, "rejection_reason": spot.rejection_reason}
+
+
+@router.post("/spots/{spot_id}/resubmit")
+def resubmit_spot(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """El dueño corrigió su spot rechazado y lo vuelve a mandar a revisión."""
+    if spot.is_approved or spot.rejected_at is None:
+        raise HTTPException(status_code=409, detail="Este lugar no está rechazado.")
+    spot.rejection_reason = None
+    spot.rejected_at = None
+    db.commit()
+    return {"id": spot.id}
 
 
 @router.get("/spots/{spot_id}/can-upload")

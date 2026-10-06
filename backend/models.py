@@ -38,6 +38,12 @@ class SpotDB(Base):
     # spot se desactiva (deja de mostrarse públicamente) en vez de borrarse,
     # y pasa a la pestaña "Cuentas eliminadas" del panel admin.
     owner_deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    # Rechazado (spot nuevo) o despublicado (spot que estaba aprobado) por el
+    # admin, con el motivo que ve el dueño. Con fecha = esperando que el
+    # dueño corrija y lo vuelva a enviar (POST /spots/{id}/resubmit); NULL =
+    # pendiente normal o aprobado.
+    rejection_reason = Column(String, nullable=True)
+    rejected_at      = Column(DateTime(timezone=True), nullable=True)
     slug = Column(String, unique=True, nullable=True)
     # Índice: es la columna de ORDER BY de get_spots — ordenar + LIMIT/OFFSET
     # sin índice acá es el peor caso posible para paginar.

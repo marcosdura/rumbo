@@ -83,6 +83,11 @@ class OperatorEditRequest(BaseModel):
     photos: Optional[list[str]] = Field(default=None, max_length=3)
 
 
+class SpotReject(BaseModel):
+    # Obligatorio: es lo que el dueño necesita para saber qué corregir.
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class ContributionReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 
