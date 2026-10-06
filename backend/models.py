@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true
 from database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -61,6 +61,7 @@ class SpotDB(Base):
     reviews = relationship("Review", back_populates="spot", cascade="all, delete-orphan")
     experiences = relationship("Experience", back_populates="spot", cascade="all, delete-orphan")
     change_requests = relationship("SpotChangeRequest", back_populates="spot", cascade="all, delete-orphan")
+    contributions = relationship("Contribution", back_populates="spot", cascade="all, delete-orphan")
 
 
 class SpotChangeRequest(Base):
@@ -109,6 +110,40 @@ class SpotChangeRequest(Base):
     spot = relationship("SpotDB", back_populates="change_requests")
 
 
+class Contribution(Base):
+    """Registro de un aporte (algo nuevo sumado a un spot ya aprobado) y su
+    revisión. El aporte en sí vive en su tabla de siempre con is_approved =
+    False; esta tabla guarda quién lo propuso, el estado y el motivo de
+    rechazo. Al rechazar, el elemento se borra pero este registro queda, para
+    que el autor vea el resultado en /profile. La lógica vive en
+    contributions.py.
+    """
+    __tablename__ = "contributions"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    # experience | glamping_unit | trekking_route | climbing_sector |
+    # climbing_route | surf_school | kayak
+    kind         = Column(String, nullable=False)
+    # Id en la tabla del aporte. Sin FK: apunta a tablas distintas según
+    # kind, y después de un rechazo el elemento ya no existe.
+    item_id      = Column(Integer, nullable=False)
+    spot_id      = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_email = Column(String, nullable=False, index=True)
+    # "pending" | "approved" | "rejected" | "withdrawn"
+    status       = Column(String, nullable=False, default="pending", index=True)
+    # Nombre del elemento al proponerlo: sigue sirviendo para mostrar el
+    # aporte aunque se haya rechazado y borrado.
+    title        = Column(String, nullable=False)
+    reject_reason = Column(String, nullable=True)
+    created_at   = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at  = Column(DateTime(timezone=True), nullable=True)
+    resolved_by  = Column(String, nullable=True)
+    # El autor ve el resultado en /profile hasta cerrarlo.
+    author_dismissed_at = Column(DateTime(timezone=True), nullable=True)
+
+    spot = relationship("SpotDB", back_populates="contributions")
+
+
 class Category(Base):
     __tablename__ = "categories"
 
@@ -133,6 +168,11 @@ class GlampingDetail(Base):
     __tablename__ = "glamping_details"
 
     id = Column(Integer, primary_key=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
 
     accommodation_type = Column(String, nullable=True)   # domo | carpa | cabaña | treehouse | otro
@@ -231,6 +271,11 @@ class Route(Base):
     __tablename__ = "routes"
 
     id = Column(Integer, primary_key=True, index=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
 
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="routes")
@@ -258,6 +303,11 @@ class ClimbingSector(Base):
     __tablename__ = "climbingsectors"
     
     id = Column(Integer, primary_key=True, index=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+    
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
 
     name = Column(String)
@@ -273,6 +323,11 @@ class ClimbingRoute(Base):
     __tablename__ = "climbingroutes"
 
     id = Column(Integer, primary_key=True, index=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
     sector_id = Column(Integer, ForeignKey("climbingsectors.id", ondelete="CASCADE"))
 
     name = Column(String)
@@ -288,6 +343,11 @@ class KayakDetail(Base):
     __tablename__ = "kayak_details"
 
     id = Column(Integer, primary_key=True, index=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
 
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="kayak_detail")
@@ -327,6 +387,11 @@ class SurfSchool(Base):
     __tablename__ = "surf_beach"
 
     id = Column(Integer, primary_key=True, index=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
 
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
     spot = relationship("SpotDB", back_populates="surf_schools")
@@ -468,6 +533,11 @@ class Experience(Base):
     )
 
     id          = Column(Integer, primary_key=True)
+    # False = aporte pendiente de revisión (contributions.py): existe pero el
+    # público no lo ve. server_default true: todo lo cargado antes de la
+    # revisión de aportes quedó aprobado.
+
+    is_approved = Column(Boolean, nullable=False, default=True, server_default=true(), index=True)
     spot_id     = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     title       = Column(String(150), nullable=False)

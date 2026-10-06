@@ -747,7 +747,13 @@ def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), sp
 
 
 @router.post("/spots/{spot_id}/categories")
-def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
+    # Una categoría secundaria hace aparecer el spot en otras búsquedas: sobre
+    # un spot aprobado es el mismo "publicar algo y después cambiarlo" que
+    # cierran los pedidos de cambio. Agregar lugar la usa solo al crear el
+    # spot (todavía no aprobado); después, solo el admin.
+    if spot.is_approved and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Las categorías de un lugar aprobado solo las cambia el equipo de Rumbo.")
     category = db.query(models.Category).filter(models.Category.name == data.category).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
