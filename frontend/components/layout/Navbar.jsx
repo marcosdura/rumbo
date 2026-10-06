@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react"
 import SearchBar from "@/components/spots/SearchBar"
 import Image from "next/image"
 import AuthModal from "@/components/layout/AuthModal"
+import NotificationBell from "@/components/layout/NotificationBell"
 
 function Avatar({ user, size = 28 }) {
   const initials = user?.name
@@ -380,6 +381,8 @@ function Navbar() {
           <Link href="/agregar-lugar" className="signin-nav-btn addplace-nav-btn">
             ＋ Agregar lugar
           </Link>
+
+          {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
 
           {isLoggedIn ? (
             <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">

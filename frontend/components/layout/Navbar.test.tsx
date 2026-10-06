@@ -9,6 +9,7 @@ vi.mock("next-auth/react", () => ({
 vi.mock("next/navigation", () => ({ usePathname: () => "/spots" }))
 vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 vi.mock("@/components/layout/AuthModal", () => ({ default: () => null }))
+vi.mock("@/components/layout/NotificationBell", () => ({ default: () => <span>campanita</span> }))
 // next/image necesita el loader de Next; para el test alcanza un <img>.
 vi.mock("next/image", () => ({ default: (props: { alt: string }) => <img alt={props.alt} /> }))
 
@@ -27,5 +28,15 @@ describe("Navbar", () => {
     session = { user: { name: "Ana", email: "ana@test.com", image: null } }
     render(<Navbar />)
     expect(screen.getAllByRole("link", { name: /Agregar lugar/ })).toHaveLength(2)
+  })
+
+  it("la campanita solo aparece con sesión", () => {
+    session = null
+    const { unmount } = render(<Navbar />)
+    expect(screen.queryByText("campanita")).toBeNull()
+    unmount()
+    session = { user: { name: "Ana", email: "ana@test.com", image: null }, id_token: "t" } as never
+    render(<Navbar />)
+    expect(screen.getByText("campanita")).toBeTruthy()
   })
 })
