@@ -9,7 +9,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal"
 import { tab } from "@/lib/theme"
 import { api, ApiError } from "@/lib/api"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
-import type { AdminSpot, AdminMode, SortBy, AdminChangeRequest } from "./types"
+import { spotStatus, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
@@ -26,7 +26,7 @@ export default function AdminPage() {
   const [spots, setSpots] = useState<AdminSpot[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<"pending" | "approved" | "all">("pending")
+  const [filter, setFilter] = useState<SpotFilter>("pending")
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
   const [photoLoading, setPhotoLoading] = useState(false)
@@ -58,7 +58,7 @@ export default function AdminPage() {
   const [operatorActionErrors, setOperatorActionErrors] = useState<Record<number, string>>({})
   // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
   // pedido de cambio de escuela.
-  type RejectType = "change" | "contribution" | "operator"
+  type RejectType = "change" | "contribution" | "operator" | "spot"
   const [rejecting, setRejecting] = useState<{ type: RejectType; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
@@ -159,14 +159,22 @@ export default function AdminPage() {
     change: id => `/admin/change-requests/${id}/reject`,
     contribution: id => `/admin/contributions/${id}/reject`,
     operator: id => `/admin/operator-change-requests/${id}/reject`,
+    spot: id => `/admin/spots/${id}/reject`,
   }
   const LOADING_SETTER: Record<RejectType, (v: number | null) => void> = {
     change: setChangeActionLoading, contribution: setContributionActionLoading, operator: setOperatorActionLoading,
+    spot: setActionLoading,
   }
 
   async function handleReject() {
     if (rejecting === null) return
     const { type, id } = rejecting
+    // Para un spot el motivo es obligatorio: es lo que el dueño necesita
+    // para saber qué corregir.
+    if (type === "spot" && !rejectReason.trim()) {
+      setRejectError("Escribí el motivo: es lo que va a ver el dueño.")
+      return
+    }
     const setLoadingFor = LOADING_SETTER[type]
     setLoadingFor(id)
     setRejectError(null)
@@ -174,6 +182,12 @@ export default function AdminPage() {
       await api.post(REJECT_URL[type](id), { reason: rejectReason.trim() || null }, { token })
       if (type === "change") setChangeRequests(prev => prev.filter(r => r.id !== id))
       else if (type === "contribution") setContributions(prev => prev.filter(c => c.id !== id))
+      else if (type === "spot") {
+        const now = new Date().toISOString()
+        setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: false, rejection_reason: rejectReason.trim(), rejected_at: now } : s))
+        // Despublicar vuelca su pedido de cambio pendiente sobre el spot.
+        setChangeRequests(prev => prev.filter(r => r.spot_id !== id))
+      }
       else setOperatorChanges(prev => prev.filter(c => c.id !== id))
       setRejecting(null)
     } catch (e) {
@@ -255,10 +269,12 @@ export default function AdminPage() {
     .filter(s => s.owner_deleted_at)
     .sort((a, b) => new Date(a.owner_deleted_at!).getTime() - new Date(b.owner_deleted_at!).getTime())
 
-  const pending = activeSpots.filter(s => !s.is_approved).length
+  const pending = activeSpots.filter(s => spotStatus(s) === "pending").length
+  const rejected = activeSpots.filter(s => spotStatus(s) === "rejected").length
   const pendingReviews = changeRequests.length + contributions.length + operatorChanges.length
+  const rejectingSpot = rejecting?.type === "spot" ? spots.find(s => s.id === rejecting.id) ?? null : null
   const filtered = activeSpots.filter(s =>
-    filter === "all" ? true : filter === "pending" ? !s.is_approved : s.is_approved
+    filter === "all" ? true : spotStatus(s) === filter
   )
   const displayed = filtered
     .filter(s =>
@@ -330,6 +346,7 @@ export default function AdminPage() {
           <SpotsTab
             displayed={displayed}
             pending={pending}
+            rejected={rejected}
             filter={filter}
             setFilter={setFilter}
             searchSpots={searchSpots}
@@ -340,6 +357,7 @@ export default function AdminPage() {
             loading={loading}
             actionLoading={actionLoading}
             onApprove={handleApprove}
+            onRejectRequest={spot => openReject("spot", spot.id)}
             onEdit={setEditingSpot}
             onDeleteRequest={setDeleteConfirmId}
           />
@@ -429,20 +447,25 @@ export default function AdminPage() {
 
       <ConfirmModal
         open={rejecting !== null}
-        title={rejecting?.type === "contribution" ? "¿Rechazar este aporte?" : "¿Rechazar este cambio?"}
-        message={rejecting?.type === "contribution"
-          ? "Se borra, junto con sus fotos. Quien lo propuso ve el rechazo en su perfil, con el motivo si lo escribís."
-          : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
-        confirmLabel="Rechazar"
+        title={rejectingSpot
+          ? (rejectingSpot.is_approved ? "¿Despublicar este spot?" : "¿Rechazar este spot?")
+          : rejecting?.type === "contribution" ? "¿Rechazar este aporte?" : "¿Rechazar este cambio?"}
+        message={rejectingSpot
+          ? "No se borra: deja de verse (o no se publica) y el dueño ve el motivo en su panel, corrige y lo vuelve a enviar."
+          : rejecting?.type === "contribution"
+            ? "Se borra, junto con sus fotos. Quien lo propuso ve el rechazo en su perfil, con el motivo si lo escribís."
+            : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
+        confirmLabel={rejectingSpot?.is_approved ? "Despublicar" : "Rechazar"}
         loading={rejecting !== null && {
           change: changeActionLoading, contribution: contributionActionLoading, operator: operatorActionLoading,
+          spot: actionLoading,
         }[rejecting.type] === rejecting.id}
         loadingLabel="Rechazando..."
         error={rejectError}
         onCancel={() => setRejecting(null)}
         onConfirm={handleReject}
       >
-        <label htmlFor="reject-reason" style={{ ...labelStyle, margin: "16px 0 6px" }}>Motivo (opcional)</label>
+        <label htmlFor="reject-reason" style={{ ...labelStyle, margin: "16px 0 6px" }}>{rejectingSpot ? "Motivo (obligatorio)" : "Motivo (opcional)"}</label>
         <textarea
           id="reject-reason"
           value={rejectReason}

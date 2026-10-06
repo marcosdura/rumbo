@@ -18,6 +18,7 @@ import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
 import ContentTab from "./ContentTab"
 import ChangeRequestBanner from "./ChangeRequestBanner"
+import RejectionBanner from "./RejectionBanner"
 
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
 // revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
@@ -53,6 +54,8 @@ export default function SpotDashboardPage() {
   const [cancelLoading, setCancelLoading] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [dismissing, setDismissing] = useState(false)
+  const [resubmitting, setResubmitting] = useState(false)
+  const [resubmitError, setResubmitError] = useState<string | null>(null)
 
   // Campos editables
   const [editName, setEditName] = useState("")
@@ -215,6 +218,20 @@ export default function SpotDashboardPage() {
     }
   }
 
+  async function handleResubmit() {
+    if (!spot) return
+    setResubmitting(true)
+    setResubmitError(null)
+    try {
+      await api.post(`/spots/${spot.id}/resubmit`, undefined, { token })
+      await refreshSpot()
+    } catch (e) {
+      setResubmitError(errorMessage(e, "No se pudo enviar. Intentá de nuevo."))
+    } finally {
+      setResubmitting(false)
+    }
+  }
+
   async function handleDismissRequest() {
     if (!spot) return
     setDismissing(true)
@@ -320,8 +337,8 @@ export default function SpotDashboardPage() {
                 {spot.name}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
-                  {spot.is_approved ? "✓ Aprobado" : "⏳ Pendiente de aprobación"}
+                <Pill variant={spot.is_approved ? "green" : spot.rejected_at ? "red" : "yellow"} size="sm">
+                  {spot.is_approved ? "✓ Aprobado" : spot.rejected_at ? "✕ Rechazado" : "⏳ Pendiente de aprobación"}
                 </Pill>
                 {spot.category && (
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>{spot.category.name} · {spot.department}</span>
@@ -336,6 +353,15 @@ export default function SpotDashboardPage() {
             )}
           </div>
         </div>
+
+        {!spot.is_approved && spot.rejected_at && spot.rejection_reason && (
+          <RejectionBanner
+            reason={spot.rejection_reason}
+            onResubmit={handleResubmit}
+            resubmitting={resubmitting}
+            error={resubmitError}
+          />
+        )}
 
         {changeRequest && (
           <ChangeRequestBanner

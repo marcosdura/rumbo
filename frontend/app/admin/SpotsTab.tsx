@@ -2,13 +2,14 @@
 
 import Pill from "@/components/ui/Pill"
 import { pill, input } from "@/lib/theme"
-import type { AdminSpot, SortBy } from "./types"
+import { spotStatus, type AdminSpot, type SortBy, type SpotFilter } from "./types"
 
 interface Props {
   displayed: AdminSpot[]
   pending: number
-  filter: "pending" | "approved" | "all"
-  setFilter: (f: "pending" | "approved" | "all") => void
+  rejected: number
+  filter: SpotFilter
+  setFilter: (f: SpotFilter) => void
   searchSpots: string
   setSearchSpots: (v: string) => void
   sortBy: SortBy
@@ -17,20 +18,31 @@ interface Props {
   loading: boolean
   actionLoading: number | null
   onApprove: (id: number, approved: boolean) => Promise<void>
+  // Rechazar (nuevo) o despublicar (aprobado): pide motivo.
+  onRejectRequest: (spot: AdminSpot) => void
   onEdit: (spot: { id: number; name: string; description: string }) => void
   onDeleteRequest: (id: number) => void
 }
 
+// Mismas paletas que en el resto del panel.
+const STATUS_PILL = {
+  approved: { variant: "green", label: "Aprobado" },
+  pending: { variant: "yellow", label: "Pendiente" },
+  rejected: { variant: "red", label: "Rechazado" },
+} as const
+
 export default function SpotsTab({
-  displayed, pending, filter, setFilter, searchSpots, setSearchSpots,
-  sortBy, setSortBy, loadError, loading, actionLoading, onApprove, onEdit, onDeleteRequest,
+  displayed, pending, rejected, filter, setFilter, searchSpots, setSearchSpots,
+  sortBy, setSortBy, loadError, loading, actionLoading, onApprove, onRejectRequest, onEdit, onDeleteRequest,
 }: Props) {
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {(["pending", "approved", "all"] as const).map(f => (
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {(["pending", "rejected", "approved", "all"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
-            {f === "pending" ? `Pendientes (${pending})` : f === "approved" ? "Aprobados" : "Todos"}
+            {f === "pending" ? `Pendientes (${pending})`
+              : f === "rejected" ? `Rechazados (${rejected})`
+              : f === "approved" ? "Aprobados" : "Todos"}
           </button>
         ))}
       </div>
@@ -98,8 +110,8 @@ export default function SpotsTab({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{spot.name}</span>
-                    <Pill variant={spot.is_approved ? "green" : "yellow"} size="sm">
-                      {spot.is_approved ? "Aprobado" : "Pendiente"}
+                    <Pill variant={STATUS_PILL[spotStatus(spot)].variant} size="sm">
+                      {STATUS_PILL[spotStatus(spot)].label}
                     </Pill>
                   </div>
                   <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
@@ -118,6 +130,9 @@ export default function SpotsTab({
                       </a>
                     )}
                   </div>
+                  {spot.rejection_reason && !spot.is_approved && (
+                    <p style={{ fontSize: 12, color: "#7c1d1d", margin: "4px 0 0" }}>Motivo: {spot.rejection_reason}</p>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -127,9 +142,15 @@ export default function SpotsTab({
                       Aprobar
                     </button>
                   ) : (
-                    <button onClick={() => onApprove(spot.id, false)} disabled={actionLoading === spot.id}
+                    <button onClick={() => onRejectRequest(spot)} disabled={actionLoading === spot.id}
                       className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
                       Desaprobar
+                    </button>
+                  )}
+                  {spotStatus(spot) === "pending" && (
+                    <button onClick={() => onRejectRequest(spot)} disabled={actionLoading === spot.id}
+                      className="action-btn-sm" style={{ background: "#fff", color: "var(--danger)", border: "1px solid #fecaca", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
+                      Rechazar
                     </button>
                   )}
                   <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank" rel="noopener noreferrer"

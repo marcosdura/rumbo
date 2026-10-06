@@ -36,6 +36,10 @@ export type Spot = {
   change_request: ChangeRequest | null
   // Actividades del spot (categoría principal + secundarias).
   activities?: string[]
+  // El admin lo rechazó o lo despublicó, con este motivo; el dueño corrige y
+  // lo reenvía (POST /spots/{id}/resubmit).
+  rejection_reason?: string | null
+  rejected_at?: string | null
 }
 
 // GET /spots/{id}/owner-content: lo del dueño, incluido lo que está en revisión.

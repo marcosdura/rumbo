@@ -15,4 +15,10 @@ describe("MySpotsCard", () => {
     expect(screen.getByRole("link", { name: "Administrar →" }).getAttribute("href")).toBe("/dashboard/spots/4")
     expect(screen.queryByText("＋ Agregar un lugar")).toBeNull()
   })
+
+  it("un lugar rechazado se marca como tal", () => {
+    render(<MySpotsCard mySpots={[{ id: 5, name: "Mi lugar", is_approved: false, rejected_at: "2026-10-02", review_count: 0, images: [] }]} />)
+    expect(screen.getByText("Rechazado")).toBeTruthy()
+    expect(screen.queryByText("Pendiente")).toBeNull()
+  })
 })
