@@ -203,12 +203,12 @@ export default function AgregarLugar() {
     setStep(2)
     if (isServ) {
       setLoadingSpots(true)
-      // Surf y kayak se suman solo a lugares propios (el backend lo exige):
-      // antes se ofrecían todos los lugares de la actividad y el envío
-      // terminaba en 403 para cualquiera que no fuera el dueño.
-      api.get<MySpot[]>("/spots/mine", { token })
+      // Las playas y lagunas son lugares públicos: cualquiera suma su
+      // escuela o servicio a cualquiera de ellas (queda en revisión y pasa a
+      // ser su dueño). /spots/pins no pagina y trae solo id+name.
+      api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: cat.name } })
         .then(({ data }) => {
-          setAvailableSpots(mySpotsFor(data, cat.name))
+          setAvailableSpots(data.map(sp => ({ id: sp.id, name: sp.name })))
         })
         .catch(() => {
           // proceed with empty list if fetch fails

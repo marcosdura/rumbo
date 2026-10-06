@@ -5,6 +5,7 @@ import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import CircleArrow from "@/components/ui/CircleArrow"
 import { slugWithId } from "@/lib/slugify"
+import { SectionHeader } from "./AddToSpot"
 
 const waterTypeLabel = {
   rio:  { label: "Río",  icon: "🏞️" },
@@ -153,7 +154,7 @@ function KayakCard({ kayak, copiedId, onCopy }) {
   )
 }
 
-export default function KayakDetail({ kayaks }) {
+export default function KayakDetail({ kayaks, action }) {
   const [copiedId, setCopiedId] = useState(null)
 
   if (!kayaks?.length) return null
@@ -195,12 +196,7 @@ export default function KayakDetail({ kayaks }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-          Alquiler de Kayaks
-        </p>
-      </div>
+      <SectionHeader title="Alquiler de Kayaks" action={action} />
 
       <div style={{
         display: "grid",

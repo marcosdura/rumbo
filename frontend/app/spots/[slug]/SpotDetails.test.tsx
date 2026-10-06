@@ -69,4 +69,15 @@ describe("Página del lugar: accesos para sumar contenido", () => {
     expect(await screen.findByText(/Tenés en revisión en este lugar: Sector Norte \(sector de escalada\)/)).toBeTruthy()
     expect(screen.queryByRole("link", { name: "Administrar →" })).toBeNull()
   })
+
+  it("surf: cualquiera puede sumar su escuela, aunque la playa no tenga ninguna", async () => {
+    render(<SpotDetail spot={spot("Surf")} />)
+    const link = await screen.findByRole("link", { name: "＋ Sumar tu escuela de surf" })
+    expect(link.getAttribute("href")).toBe("/agregar-lugar?sumar=surf&spot=12")
+  })
+
+  it("kayak con servicios también ofrece sumar", async () => {
+    render(<SpotDetail spot={spot("Kayak", { kayak_detail: [{ id: 1, name: "Kayak Laguna" }] })} />)
+    expect(await screen.findByRole("link", { name: "＋ Sumar tu servicio de kayak" })).toBeTruthy()
+  })
 })

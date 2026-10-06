@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 
 // Agregar lugar abierto por un link directo: tiene que saltar al formulario
 // con el lugar ya elegido y ofrecer volver a él.
@@ -62,5 +62,15 @@ describe("AgregarLugar por link directo", () => {
     openWith("sumar=ruta&spot=999")
     expect(await screen.findByText("No encontramos ese lugar. Podés elegirlo desde el formulario.")).toBeTruthy()
     expect(screen.queryByRole("link", { name: /Volver a/ })).toBeNull()
+  })
+})
+
+describe("AgregarLugar: escuelas de surf", () => {
+  it("ofrece todas las playas publicadas, no solo las propias", async () => {
+    responses = { "/spots/pins": [{ id: 3, name: "Playa Brava" }, { id: 4, name: "La Paloma" }] }
+    openWith("")
+    fireEvent.click(await screen.findByText("Surf"))
+    expect(await screen.findByRole("option", { name: "Playa Brava" })).toBeTruthy()
+    expect(screen.getByRole("option", { name: "La Paloma" })).toBeTruthy()
   })
 })

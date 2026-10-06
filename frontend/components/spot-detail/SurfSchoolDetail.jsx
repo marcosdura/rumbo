@@ -5,6 +5,7 @@ import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import CircleArrow from "@/components/ui/CircleArrow"
 import { slugWithId } from "@/lib/slugify"
+import { SectionHeader } from "./AddToSpot"
 
 const classTypeConfig = {
   grupal:    { label: "Grupal",    icon: "👥" },
@@ -130,7 +131,7 @@ function SchoolCard({ school, copiedId, onCopy }) {
   )
 }
 
-export default function SurfSchoolDetail({ surfSchools }) {
+export default function SurfSchoolDetail({ surfSchools, action }) {
   const [copiedId, setCopiedId] = useState(null)
 
   if (!surfSchools?.length) return null
@@ -172,12 +173,7 @@ export default function SurfSchoolDetail({ surfSchools }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-          Escuelas de Surf
-        </p>
-      </div>
+      <SectionHeader title="Escuelas de Surf" action={action} />
 
       <div style={{
         display: "grid",

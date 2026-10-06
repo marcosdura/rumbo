@@ -403,11 +403,36 @@ useEffect(() => {
                 <ExperienciasSection spotId={spot.id} />
               )}
 
+              {/* Playas y lagunas son lugares públicos: cualquiera suma su escuela
+                  o servicio (queda en revisión y pasa a ser su dueño), así que la
+                  sección se muestra aunque esté vacía. */}
               {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (
-                <KayakDetail kayaks={kayakDetails} />
+                <KayakDetail
+                  kayaks={kayakDetails}
+                  action={<AddButton href={addToSpotUrl("kayak", spot.id)}>＋ Sumar tu servicio de kayak</AddButton>}
+                />
+              )}
+              {spot.category?.name === "Kayak" && kayakDetails.length === 0 && (
+                <EmptySection
+                  title="Alquiler de Kayaks"
+                  text="Todavía no hay servicios de kayak en este lugar. ¿Ofrecés uno? Sumalo y lo revisamos."
+                  href={addToSpotUrl("kayak", spot.id)}
+                  label="＋ Sumar tu servicio de kayak"
+                />
               )}
               {spot.category?.name === "Surf" && surfSchools.length > 0 && (
-                <SurfSchoolDetail surfSchools={surfSchools} />
+                <SurfSchoolDetail
+                  surfSchools={surfSchools}
+                  action={<AddButton href={addToSpotUrl("surf", spot.id)}>＋ Sumar tu escuela de surf</AddButton>}
+                />
+              )}
+              {spot.category?.name === "Surf" && surfSchools.length === 0 && (
+                <EmptySection
+                  title="Escuelas de Surf"
+                  text="Todavía no hay escuelas de surf en esta playa. ¿Tenés una? Sumala y la revisamos."
+                  href={addToSpotUrl("surf", spot.id)}
+                  label="＋ Sumar tu escuela de surf"
+                />
               )}
 
               {/* Reviews */}
