@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import ReportButton from "@/components/ui/ReportButton"
 import Navbar from "@/components/layout/Navbar"
 import BackButton from "./BackButton"
 import SurfPhotos from "./SurfPhotos"
@@ -322,6 +323,10 @@ export default async function SurfSchoolPage({ params }: Props) {
           {/* Reviews */}
           <div style={{ marginTop: 32 }}>
             <ReviewsSection spotId={school.id} entityType="surf" />
+          </div>
+          <div style={{ textAlign: "right", marginTop: 16 }}>
+            <ReportButton targetKind="surf_school" targetId={school.id} what="esta escuela" label="⚑ Reportar esta escuela"
+              style={{ fontSize: 12, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }} />
           </div>
 
           {/* Spacer para que el footer quede lejos cuando hay poca info */}

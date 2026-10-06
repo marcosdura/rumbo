@@ -5,6 +5,10 @@ import { useSession } from "next-auth/react"
 import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
+import ReportButton from "@/components/ui/ReportButton"
+
+// Tipo de reporte de una reseña según de qué es (backend/reports.py).
+const REVIEW_REPORT_KIND = { spot: "review", surf: "surf_review", kayak: "kayak_review" }
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 
@@ -430,6 +434,14 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                   </div>
                   <div className="review-card-actions">
                     <StarDisplay rating={review.rating} size={14} />
+                    {!review.is_mine && (
+                      <ReportButton
+                        targetKind={REVIEW_REPORT_KIND[entityType]}
+                        targetId={review.id}
+                        what="esta reseña"
+                        className="reviews-edit-btn"
+                      />
+                    )}
                     {review.is_mine && (
                       <>
                         <button

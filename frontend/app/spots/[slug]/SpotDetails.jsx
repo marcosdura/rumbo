@@ -36,6 +36,7 @@ import Pill from "@/components/ui/Pill"
 import { useSession } from "next-auth/react"
 import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
+import ReportButton from "@/components/ui/ReportButton"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -439,6 +440,14 @@ useEffect(() => {
               <div id="reviews">
                 <ReviewsSection spotId={spot.id} />
               </div>
+
+              {/* El dueño no reporta su propio lugar (el backend tampoco lo deja). */}
+              {!viewer.is_owner && (
+                <div style={{ textAlign: "right" }}>
+                  <ReportButton targetKind="spot" targetId={spot.id} what="este lugar" label="⚑ Reportar este lugar"
+                    style={{ fontSize: 12, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }} />
+                </div>
+              )}
             </div>
 
           </div>

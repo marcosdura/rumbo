@@ -80,4 +80,17 @@ describe("Página del lugar: accesos para sumar contenido", () => {
     render(<SpotDetail spot={spot("Kayak", { kayak_detail: [{ id: 1, name: "Kayak Laguna" }] })} />)
     expect(await screen.findByRole("link", { name: "＋ Sumar tu servicio de kayak" })).toBeTruthy()
   })
+
+  it("cualquiera puede reportar el lugar, menos su dueño", async () => {
+    render(<SpotDetail spot={spot("Camping")} />)
+    expect(await screen.findByRole("button", { name: "⚑ Reportar este lugar" })).toBeTruthy()
+  })
+
+  it("el dueño no ve Reportar en su propio lugar", async () => {
+    session = { id_token: "t" }
+    viewer = { is_owner: true, is_admin: false, pending: [] }
+    render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByRole("link", { name: "Administrar →" })
+    expect(screen.queryByRole("button", { name: "⚑ Reportar este lugar" })).toBeNull()
+  })
 })

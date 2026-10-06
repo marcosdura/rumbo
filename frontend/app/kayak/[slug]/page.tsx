@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
+import ReportButton from "@/components/ui/ReportButton"
 import BackButton from "./BackButton"
 import KayakPhotos from "./KayakPhotos"
 import Footer from "@/components/layout/Footer"
@@ -327,6 +328,10 @@ export default async function KayakDetailPage({ params }: Props) {
           {/* Reviews */}
           <div style={{ marginTop: 32 }}>
             <ReviewsSection spotId={kayak.id} entityType="kayak" />
+          </div>
+          <div style={{ textAlign: "right", marginTop: 16 }}>
+            <ReportButton targetKind="kayak" targetId={kayak.id} what="este servicio" label="⚑ Reportar este servicio"
+              style={{ fontSize: 12, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }} />
           </div>
 
           {/* Spacer para que el footer quede lejos cuando hay poca info */}
