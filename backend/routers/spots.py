@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import func, or_, and_
 from typing import Optional, List
 from slugs import generate_slug
+import contributions
 from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, apply_request_to_spot, close_request, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
 import cloudinary
@@ -501,8 +502,17 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
     # Las fotos de un pedido de cambio pendiente también están en Cloudinary
     # (sin fila en spot_images): el cascade borra el pedido, pero no el archivo.
     pending = get_pending_request(db, spot_id)
+    # Las escuelas de surf y los kayaks guardan sus fotos como URL (no en
+    # spot_images): antes quedaban en Cloudinary para siempre.
+    operator_photos = []
+    for school in db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id):
+        operator_photos += contributions.item_photos("surf_school", school)
+    for kayak in db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id):
+        operator_photos += contributions.item_photos("kayak", kayak)
     destroy_cloudinary_images(
-        [img.cloudinary_public_id for img in images] + (request_photos(pending) if pending else [])
+        [img.cloudinary_public_id for img in images]
+        + (request_photos(pending) if pending else [])
+        + operator_photos
     )
 
     # Antes esto era un DELETE FROM spots crudo, que rompía con
@@ -1043,20 +1053,24 @@ def delete_image(public_id: str, db: Session = Depends(get_db), user: dict = Dep
 
 
 @router.post("/spots/{spot_id}/experiences", response_model=ExperienceResponse)
-def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     category = db.query(models.Category).filter(models.Category.id == data.category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
+    pending = contributions.decide(spot, "experience", user)
     experience = Experience(spot_id=spot_id, **data.dict())
     db.add(experience)
     db.flush()
+    contributions.register(db, "experience", experience, spot, user, pending)
 
+    # La categoría de la experiencia se suma al spot (aparece en esas
+    # búsquedas). Si la experiencia queda en revisión, eso se hace al aprobarla.
     existing_sc = db.query(SpotCategory).filter(
         SpotCategory.spot_id == spot_id,
         SpotCategory.category_id == data.category_id,
     ).first()
-    if not existing_sc:
+    if not existing_sc and not pending:
         db.add(SpotCategory(spot_id=spot_id, category_id=data.category_id, is_primary=False))
 
     db.commit()
@@ -1076,7 +1090,7 @@ def get_experiences(spot_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/spots/{spot_id}/experiences/{experience_id}")
-def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     experience = db.query(Experience).filter(
         Experience.id == experience_id,
         Experience.spot_id == spot_id,
@@ -1085,12 +1099,15 @@ def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Experience not found")
 
     category_id = experience.category_id
+    contributions.withdraw_for_deleted_item(db, "experience", experience.id, by=user.get("email"))
     db.delete(experience)
     db.flush()
 
+    # Solo cuentan las aprobadas: una pendiente todavía no sumó la categoría.
     remaining = db.query(Experience).filter(
         Experience.spot_id == spot_id,
         Experience.category_id == category_id,
+        Experience.is_approved == True,
     ).count()
 
     if remaining == 0:

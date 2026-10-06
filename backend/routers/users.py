@@ -6,6 +6,7 @@ from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
 from spot_changes import close_request, request_photos, destroy_cloudinary_images
+import contributions
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -60,6 +61,9 @@ async def delete_account(
     for change in pending:
         orphan_photos += request_photos(change)
         close_request(change, "cancelled", by=db_user.email)
+    # Sus aportes pendientes (también sectores sugeridos en spots ajenos) se
+    # retiran: nadie va a ver el resultado.
+    orphan_photos += contributions.withdraw_all_by_author(db, db_user.email)
 
     db.delete(db_user)
     db.commit()

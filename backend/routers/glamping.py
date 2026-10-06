@@ -7,6 +7,7 @@ from typing import Optional
 from auth import get_current_user_required
 from ownership import get_owned_spot_or_admin, assert_owns_glamping
 from limiter import limiter
+import contributions
 
 router = APIRouter(prefix="/glamping", tags=["glamping"])
 
@@ -14,9 +15,12 @@ router = APIRouter(prefix="/glamping", tags=["glamping"])
 
 @router.post("/spots/{spot_id}/glamping", response_model=GlampingDetailResponse)
 @limiter.limit("10/minute")
-async def add_glamping_detail(request: Request, spot_id: int, data: GlampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+async def add_glamping_detail(request: Request, spot_id: int, data: GlampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
+    pending = contributions.decide(spot, "glamping_unit", user)
     detail = GlampingDetail(spot_id=spot_id, **data.dict())
     db.add(detail)
+    db.flush()
+    contributions.register(db, "glamping_unit", detail, spot, user, pending)
     db.commit()
     db.refresh(detail)
     return detail
@@ -32,6 +36,7 @@ def get_glamping_detail(spot_id: int, db: Session = Depends(get_db)):
 @limiter.limit("10/minute")
 async def delete_glamping_detail(request: Request, glamping_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     detail = assert_owns_glamping(db, glamping_id, user)
+    contributions.withdraw_for_deleted_item(db, "glamping_unit", detail.id, by=user.get("email"))
     db.delete(detail)
     db.commit()
     return {"message": "Unidad de glamping eliminada"}

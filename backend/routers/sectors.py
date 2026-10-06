@@ -7,7 +7,8 @@ from schemas import ClimbingSectorCreate, ClimbingSectorResponse
 from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
 from auth import get_current_user_required
-from ownership import assert_owns_spot
+from models import SpotDB
+import contributions
 from limiter import limiter
 from slugs import generate_slug
 
@@ -40,12 +41,20 @@ def _attach_sector_stats(sector):
 @router.post("/", response_model=ClimbingSectorResponse)
 @limiter.limit("10/minute")
 async def create_sector(request: Request, sector: ClimbingSectorCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    assert_owns_spot(db, sector.spot_id, user)
+    # Escalada es la excepción: cualquier usuario logueado puede sugerir un
+    # sector en un spot ajeno (queda en revisión). contributions.decide
+    # decide si va directo, pendiente, o si no puede (spot ajeno sin aprobar).
+    spot = db.query(SpotDB).filter(SpotDB.id == sector.spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    pending = contributions.decide(spot, "climbing_sector", user)
     valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
     sector_data = {k: v for k, v in sector.dict().items() if k in valid_fields}
     db_sector = ClimbingSector(**sector_data)
     db_sector.slug = generate_slug(sector.name)
     db.add(db_sector)
+    db.flush()
+    contributions.register(db, "climbing_sector", db_sector, spot, user, pending)
     db.commit()
     db.refresh(db_sector)
     return db_sector

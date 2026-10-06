@@ -6,6 +6,7 @@ router = build_operator_router(
     prefix="/kayak",
     tags=["kayak"],
     model=KayakDetail,
+    kind="kayak",
     create_schema=KayakDetailCreate,
     response_schema=KayakDetailResponse,
     not_found_detail="Kayak no encontrado",

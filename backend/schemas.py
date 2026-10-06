@@ -63,6 +63,10 @@ class ChangeRequestReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 
 
+class ContributionReject(BaseModel):
+    reason: str | None = Field(default=None, max_length=500)
+
+
 class DiscardPhotosRequest(BaseModel):
     public_ids: list[str] = Field(max_length=10)
 
@@ -94,6 +98,8 @@ class GlampingDetailCreate(BaseModel):
     min_nights:         Optional[int]   = None
 
 class GlampingDetailResponse(GlampingDetailCreate):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
     spot_id: int
 
@@ -153,6 +159,8 @@ class RouteCreate(RouteBase):
 
 
 class RouteResponse(RouteBase):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
 
     class Config:
@@ -173,6 +181,8 @@ class ClimbingSectorCreate(ClimbingSectorBase):
 
 
 class ClimbingSectorResponse(ClimbingSectorBase):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
     routes_count: int = 0
     min_grade: Optional[str] = None
@@ -197,6 +207,8 @@ class ClimbingRouteCreate(ClimbingRouteBase):
 
 
 class ClimbingRouteResponse(ClimbingRouteBase):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
 
     class Config:
@@ -224,6 +236,8 @@ class KayakDetailCreate(KayakDetail):
     spot_id: int
 
 class KayakDetailResponse(KayakDetail):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
     spot_id: Optional[int] = None
     spot_name: Optional[str] = None
@@ -254,6 +268,8 @@ class SurfSchoolCreate(SurfSchool):
 
 
 class SurfSchoolResponse(SurfSchool):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
     spot_id: Optional[int] = None
     spot_name: Optional[str] = None
@@ -324,6 +340,8 @@ class ExperienceCreate(BaseModel):
     is_active: bool = True
 
 class ExperienceResponse(BaseModel):
+    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
+    is_approved: bool = True
     id: int
     spot_id: int
     category_id: int

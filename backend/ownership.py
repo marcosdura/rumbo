@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user_required, is_admin
-from models import SpotDB, GlampingDetail, ClimbingSector
+from models import SpotDB, GlampingDetail
 
 
 def get_owned_spot_or_admin(
@@ -39,12 +39,3 @@ def assert_owns_glamping(db: Session, glamping_id: int, user: dict) -> GlampingD
     assert_owns_spot(db, detail.spot_id, user)
     return detail
 
-
-def assert_owns_sector(db: Session, sector_id: int, user: dict) -> ClimbingSector:
-    """Para endpoints que reciben sector_id (no spot_id) — resuelve el sector
-    y valida ownership del spot al que pertenece."""
-    sector = db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()
-    if not sector:
-        raise HTTPException(status_code=404, detail="Sector not found")
-    assert_owns_spot(db, sector.spot_id, user)
-    return sector

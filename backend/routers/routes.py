@@ -7,16 +7,20 @@ from auth import get_current_user_required
 from ownership import assert_owns_spot
 from limiter import limiter
 from slugs import generate_slug
+import contributions
 
 router = APIRouter(prefix="/routes", tags=["routes"])
 
 @router.post("/", response_model=RouteResponse)
 @limiter.limit("10/minute")
 async def create_route(request: Request, route: RouteCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    assert_owns_spot(db, route.spot_id, user)
+    spot = assert_owns_spot(db, route.spot_id, user)
+    pending = contributions.decide(spot, "trekking_route", user)
     db_route = Route(**route.dict())
     db_route.slug = generate_slug(route.name)
     db.add(db_route)
+    db.flush()
+    contributions.register(db, "trekking_route", db_route, spot, user, pending)
     db.commit()
     db.refresh(db_route)
     return db_route

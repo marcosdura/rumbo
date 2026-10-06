@@ -6,6 +6,7 @@ router = build_operator_router(
     prefix="/surfschool",
     tags=["surfschool"],
     model=SurfSchool,
+    kind="surf_school",
     create_schema=SurfSchoolCreate,
     response_schema=SurfSchoolResponse,
     not_found_detail="SurfSchool no encontrada",

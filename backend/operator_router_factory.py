@@ -4,9 +4,10 @@ from database import get_db
 from auth import get_current_user_required
 from ownership import assert_owns_spot
 from limiter import limiter
+import contributions
 
 
-def build_operator_router(*, prefix, tags, model, create_schema, response_schema, not_found_detail):
+def build_operator_router(*, prefix, tags, model, kind, create_schema, response_schema, not_found_detail):
     """kayak.py y surfschools.py eran el mismo router con los nombres
     cambiados — alta con chequeo de ownership, /ids para el sitemap,
     listado y detalle. Arma ese router una sola vez, parametrizado por
@@ -24,9 +25,12 @@ def build_operator_router(*, prefix, tags, model, create_schema, response_schema
         db: Session = Depends(get_db),
         user: dict = Depends(get_current_user_required),
     ):
-        assert_owns_spot(db, data.spot_id, user)
+        spot = assert_owns_spot(db, data.spot_id, user)
+        pending = contributions.decide(spot, kind, user)
         db_obj = model(**data.dict())
         db.add(db_obj)
+        db.flush()
+        contributions.register(db, kind, db_obj, spot, user, pending)
         db.commit()
         db.refresh(db_obj)
         return db_obj
