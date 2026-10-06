@@ -25,6 +25,19 @@ async def create_route(request: Request, route: RouteCreate, db: Session = Depen
     db.refresh(db_route)
     return db_route
 
+@router.delete("/{route_id}")
+@limiter.limit("20/minute")
+def delete_route(request: Request, route_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    # include_pending: el dueño también borra una ruta en revisión.
+    route = db.query(Route).execution_options(include_pending=True).filter(Route.id == route_id).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+    assert_owns_spot(db, route.spot_id, user)
+    contributions.delete_item(db, "trekking_route", route, by=user.get("email"))
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/", response_model=list[RouteResponse])
 def get_routes(db: Session = Depends(get_db)):
     return db.query(Route).all()

@@ -12,8 +12,8 @@ def build_operator_router(*, prefix, tags, model, kind, create_schema, response_
     cambiados — alta con chequeo de ownership, /ids para el sitemap,
     listado y detalle. Arma ese router una sola vez, parametrizado por
     modelo/schema. A diferencia de review_router_factory, acá el alta SÍ
-    valida ownership (assert_owns_spot) y no hay endpoint de borrado en
-    ninguno de los dos originales, así que no se inventa uno acá.
+    valida ownership (assert_owns_spot). El borrado lo hace el dueño del
+    lugar (o el admin) y destruye también las fotos en Cloudinary.
     """
     router = APIRouter(prefix=prefix, tags=tags)
 
@@ -53,5 +53,18 @@ def build_operator_router(*, prefix, tags, model, kind, create_schema, response_
         if not obj:
             raise HTTPException(status_code=404, detail=not_found_detail)
         return obj
+
+    @router.delete("/{item_id}")
+    @limiter.limit("20/minute")
+    def delete(request: Request, item_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+        obj = db.query(model).execution_options(include_pending=True).filter(model.id == item_id).first()
+        if not obj:
+            raise HTTPException(status_code=404, detail=not_found_detail)
+        assert_owns_spot(db, obj.spot_id, user)
+        photos = contributions.delete_item(db, kind, obj, by=user.get("email"))
+        db.commit()
+        # Fotos después del commit, como en el resto de los borrados.
+        contributions.destroy_cloudinary_images(photos)
+        return {"ok": True}
 
     return router

@@ -5,6 +5,7 @@ from models import ClimbingRoute, ClimbingSector
 from schemas import ClimbingRouteCreate, ClimbingRouteResponse
 from auth import get_current_user_required, is_admin
 import contributions
+from ownership import assert_owns_spot
 from limiter import limiter
 
 router = APIRouter(prefix="/climbingroutes", tags=["climbingroutes"])
@@ -45,3 +46,18 @@ async def create_climbing_route(request: Request, route: ClimbingRouteCreate, db
     db.commit()
     db.refresh(db_route)
     return db_route
+
+
+@router.delete("/{route_id}")
+@limiter.limit("20/minute")
+def delete_climbing_route(request: Request, route_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    route = db.query(ClimbingRoute).execution_options(include_pending=True).filter(ClimbingRoute.id == route_id).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+    sector = db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.id == route.sector_id).first()
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    assert_owns_spot(db, sector.spot_id, user)
+    contributions.delete_item(db, "climbing_route", route, by=user.get("email"))
+    db.commit()
+    return {"ok": True}

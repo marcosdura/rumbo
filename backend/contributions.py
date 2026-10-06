@@ -164,6 +164,21 @@ def withdraw_for_deleted_item(db: Session, kind: str, item_id: int, by: str):
         _close(contribution, "withdrawn", by)
 
 
+def delete_item(db: Session, kind: str, item, by: str):
+    """El dueño del spot (o el admin) borra un elemento, aprobado o no. Si
+    estaba en revisión, su aporte queda retirado; un sector se lleva sus
+    vías (y los aportes pendientes de esas vías). Devuelve las fotos a
+    destruir después del commit. `item` tiene que venir cargado con
+    include_pending, para que el sector traiga también sus vías pendientes."""
+    photos = item_photos(kind, item)
+    withdraw_for_deleted_item(db, kind, item.id, by)
+    if kind == "climbing_sector":
+        for route in item.routes:
+            withdraw_for_deleted_item(db, "climbing_route", route.id, by)
+    db.delete(item)
+    return photos
+
+
 def withdraw_all_by_author(db: Session, email: str):
     """Al borrar una cuenta: sus aportes pendientes se retiran (el autor ya
     no va a ver el resultado). Devuelve las fotos a destruir."""

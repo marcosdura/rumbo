@@ -5,7 +5,7 @@ from auth import get_current_user_required, is_admin, get_current_admin_user
 from ownership import get_owned_spot_or_admin
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
-from schemas import SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
+from schemas import ClimbingRouteResponse, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -1097,10 +1097,13 @@ def get_experiences(spot_id: int, db: Session = Depends(get_db)):
 
 @router.get("/spots/{spot_id}/owner-content")
 def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
-    """Para el dashboard del dueño: sus experiencias y unidades de glamping,
-    incluidas las que están en revisión (is_approved = False), que la lectura
-    pública oculta. Las rechazadas ya no existen: su resultado se ve en
-    /profile ("Tus aportes")."""
+    """Para el dashboard del dueño: todo lo que tiene su lugar (experiencias,
+    glamping, rutas, sectores con sus vías, surf, kayak), incluido lo que está
+    en revisión (is_approved = False), que la lectura pública oculta. Lo
+    rechazado ya no existe: su resultado se ve en /profile ("Tus aportes")."""
+    def every(model):
+        return db.query(model).execution_options(include_pending=True)
+
     experiences = (
         db.query(Experience)
         .execution_options(include_pending=True)
@@ -1116,9 +1119,26 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
         .order_by(GlampingDetail.id)
         .all()
     )
+    routes = every(Route).filter(Route.spot_id == spot.id).order_by(Route.id).all()
+    sectors = every(ClimbingSector).filter(ClimbingSector.spot_id == spot.id).order_by(ClimbingSector.id).all()
+    surf_schools = every(SurfSchool).filter(SurfSchool.spot_id == spot.id).order_by(SurfSchool.id).all()
+    kayaks = every(KayakDetail).filter(KayakDetail.spot_id == spot.id).order_by(KayakDetail.id).all()
+
+    def dump(schema, obj):
+        return schema.model_validate(obj).model_dump(mode="json")
+
     return {
-        "experiences": [ExperienceResponse.model_validate(e).model_dump(mode="json") for e in experiences],
-        "glamping_units": [GlampingDetailResponse.model_validate(g).model_dump(mode="json") for g in glamping_units],
+        "experiences": [dump(ExperienceResponse, e) for e in experiences],
+        "glamping_units": [dump(GlampingDetailResponse, g) for g in glamping_units],
+        "routes": [dump(RouteResponse, r) for r in routes],
+        # sector.routes: carga de relación desde una consulta con
+        # include_pending, así que trae también las vías en revisión.
+        "sectors": [
+            {**dump(ClimbingSectorResponse, s), "routes": [dump(ClimbingRouteResponse, r) for r in sorted(s.routes, key=lambda r: r.id)]}
+            for s in sectors
+        ],
+        "surf_schools": [dump(SurfSchoolResponse, s) for s in surf_schools],
+        "kayaks": [dump(KayakDetailResponse, k) for k in kayaks],
     }
 
 

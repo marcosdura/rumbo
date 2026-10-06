@@ -8,6 +8,7 @@ from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
 from auth import get_current_user_required
 from models import SpotDB
+from ownership import assert_owns_spot
 import contributions
 from limiter import limiter
 from slugs import generate_slug
@@ -58,6 +59,21 @@ async def create_sector(request: Request, sector: ClimbingSectorCreate, db: Sess
     db.commit()
     db.refresh(db_sector)
     return db_sector
+
+@router.delete("/{sector_id}")
+@limiter.limit("20/minute")
+def delete_sector(request: Request, sector_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """El dueño del lugar (o el admin) borra un sector con todas sus vías,
+    también uno que sugirió otra persona. Quien lo sugirió y todavía está
+    en revisión lo retira desde /profile (POST /contributions/{id}/withdraw)."""
+    sector = db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.id == sector_id).first()
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    assert_owns_spot(db, sector.spot_id, user)
+    contributions.delete_item(db, "climbing_sector", sector, by=user.get("email"))
+    db.commit()
+    return {"ok": True}
+
 
 @router.get("/", response_model=list[ClimbingSectorResponse])
 def get_sectors(spot_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
