@@ -8,10 +8,12 @@ import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import { tab } from "@/lib/theme"
 import { api, ApiError } from "@/lib/api"
-import type { AdminSpot, AdminMode, SortBy } from "./types"
+import { label as labelStyle, input as inputStyle } from "@/lib/theme"
+import type { AdminSpot, AdminMode, SortBy, AdminChangeRequest } from "./types"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
+import ChangesTab from "./ChangesTab"
 import EditSpotModal from "./EditSpotModal"
 
 export default function AdminPage() {
@@ -32,6 +34,16 @@ export default function AdminPage() {
   const [photoToDelete, setPhotoToDelete] = useState<{ spotId: number; publicId: string } | null>(null)
   const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
 
+  // Pedidos de cambio sobre spots aprobados (pestaña "Cambios pendientes").
+  const [changeRequests, setChangeRequests] = useState<AdminChangeRequest[]>([])
+  const [changesLoading, setChangesLoading] = useState(true)
+  const [changesError, setChangesError] = useState<string | null>(null)
+  const [changeActionLoading, setChangeActionLoading] = useState<number | null>(null)
+  const [changeActionErrors, setChangeActionErrors] = useState<Record<number, string>>({})
+  const [rejectingId, setRejectingId] = useState<number | null>(null)
+  const [rejectReason, setRejectReason] = useState("")
+  const [rejectError, setRejectError] = useState<string | null>(null)
+
   useEffect(() => {
     if (!token) return
     setLoadError(null)
@@ -45,10 +57,73 @@ export default function AdminPage() {
       })
   }, [token])
 
+  useEffect(() => {
+    if (!token) return
+    setChangesError(null)
+    api.get<AdminChangeRequest[]>("/admin/change-requests", { token })
+      .then(({ data }) => setChangeRequests(Array.isArray(data) ? data : []))
+      .catch(() => setChangesError("Error al cargar los cambios pendientes."))
+      .finally(() => setChangesLoading(false))
+  }, [token])
+
+  // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
+  // spots para que Gestión de spots y Gestión de fotos lo muestren ya.
+  async function refreshSpots() {
+    const { data } = await api.get<AdminSpot[]>("/admin/spots", { token })
+    setSpots(Array.isArray(data) ? data : [])
+  }
+
+  function setChangeError(id: number, message: string | null) {
+    setChangeActionErrors(prev => {
+      const next = { ...prev }
+      if (message) next[id] = message
+      else delete next[id]
+      return next
+    })
+  }
+
+  async function handleApproveChange(id: number) {
+    setChangeActionLoading(id)
+    setChangeError(id, null)
+    try {
+      await api.post(`/admin/change-requests/${id}/approve`, undefined, { token })
+      setChangeRequests(prev => prev.filter(r => r.id !== id))
+      await refreshSpots().catch(() => {})
+    } catch (e) {
+      // 409: el nombre ya lo tomó otro spot, o el pedido ya se resolvió.
+      // 400: ya no entran las fotos (alguien sumó mientras esperaba).
+      setChangeError(id, e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo.")
+    } finally {
+      setChangeActionLoading(null)
+    }
+  }
+
+  async function handleRejectChange() {
+    if (rejectingId === null) return
+    const id = rejectingId
+    setChangeActionLoading(id)
+    setRejectError(null)
+    try {
+      await api.post(`/admin/change-requests/${id}/reject`, { reason: rejectReason.trim() || null }, { token })
+      setChangeRequests(prev => prev.filter(r => r.id !== id))
+      setRejectingId(null)
+    } catch (e) {
+      setRejectError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo rechazar. Intentá de nuevo.")
+    } finally {
+      setChangeActionLoading(null)
+    }
+  }
+
   async function handleApprove(id: number, approved: boolean) {
     setActionLoading(id)
     await api.patch(`/admin/spots/${id}/approve`, undefined, { token, params: { approved } }).catch(() => {})
     setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: approved } : s))
+    // Desaprobar un spot vuelca su pedido pendiente sobre el spot (backend,
+    // approve_spot): ya no queda nada que revisar en "Cambios pendientes".
+    if (!approved) {
+      setChangeRequests(prev => prev.filter(r => r.spot_id !== id))
+      await refreshSpots().catch(() => {})
+    }
     setActionLoading(null)
   }
 
@@ -165,6 +240,7 @@ export default function AdminPage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           {([
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
+            { id: "cambios", label: `📝 Cambios pendientes${changeRequests.length > 0 ? ` (${changeRequests.length})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
             { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
@@ -190,6 +266,18 @@ export default function AdminPage() {
             onApprove={handleApprove}
             onEdit={setEditingSpot}
             onDeleteRequest={setDeleteConfirmId}
+          />
+        )}
+
+        {mode === "cambios" && (
+          <ChangesTab
+            requests={changeRequests}
+            loadError={changesError}
+            loading={changesLoading}
+            actionLoading={changeActionLoading}
+            actionErrors={changeActionErrors}
+            onApprove={handleApproveChange}
+            onRejectRequest={id => { setRejectingId(id); setRejectReason(""); setRejectError(null) }}
           />
         )}
 
@@ -238,6 +326,29 @@ export default function AdminPage() {
         onCancel={() => setPhotoToDelete(null)}
         onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete.spotId, photoToDelete.publicId)}
       />
+
+      <ConfirmModal
+        open={rejectingId !== null}
+        title="¿Rechazar este cambio?"
+        message="El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."
+        confirmLabel="Rechazar"
+        loading={changeActionLoading === rejectingId}
+        loadingLabel="Rechazando..."
+        error={rejectError}
+        onCancel={() => setRejectingId(null)}
+        onConfirm={handleRejectChange}
+      >
+        <label htmlFor="reject-reason" style={{ ...labelStyle, margin: "16px 0 6px" }}>Motivo (opcional)</label>
+        <textarea
+          id="reject-reason"
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          maxLength={500}
+          rows={3}
+          placeholder="Ej: la foto nueva no es del lugar."
+          style={{ ...inputStyle, resize: "vertical" }}
+        />
+      </ConfirmModal>
 
       <EditSpotModal
         editingSpot={editingSpot}
