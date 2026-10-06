@@ -203,6 +203,29 @@ def apply_request_to_spot(db: Session, request: SpotChangeRequest):
     _attach_photos(db, spot, request.changes.get("photos_added", []))
 
 
+def unpublish_spot(db: Session, spot: SpotDB, by: str):
+    """Un spot aprobado vuelve a no publicado. Si tenía un pedido de cambio
+    abierto, el pedido se vuelca sobre el spot: desde ahora sus ediciones van
+    directo (un spot no publicado se revisa entero antes de volver), y el
+    pedido quedaría colgado con datos viejos."""
+    if spot.is_approved:
+        pending = get_pending_request(db, spot.id)
+        if pending:
+            apply_request_to_spot(db, pending)
+            close_request(pending, "approved", by=by)
+            # No es una aprobación real que el dueño tenga que ver.
+            pending.owner_dismissed_at = pending.resolved_at
+    spot.is_approved = False
+
+
+def reject_spot(db: Session, spot: SpotDB, reason: str, by: str):
+    """Rechazar un spot nuevo o despublicar uno aprobado, con el motivo que
+    ve el dueño (que corrige y lo reenvía). No hace commit."""
+    unpublish_spot(db, spot, by)
+    spot.rejection_reason = reason.strip()
+    spot.rejected_at = datetime.now(timezone.utc)
+
+
 def close_request(request: SpotChangeRequest, status: str, by: str, reason: str = None):
     request.status = status
     request.resolved_at = datetime.now(timezone.utc)

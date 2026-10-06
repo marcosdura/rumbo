@@ -88,6 +88,22 @@ class SpotReject(BaseModel):
     reason: str = Field(min_length=1, max_length=500)
 
 
+class ReportCreate(BaseModel):
+    target_kind: str = Field(max_length=20)
+    target_id: int
+    reason: str = Field(max_length=20)
+    comment: str | None = Field(default=None, max_length=500)
+
+
+class ReportResolve(BaseModel):
+    target_kind: str = Field(max_length=20)
+    target_id: int
+    # dismiss | delete | unpublish
+    action: str = Field(max_length=20)
+    # Obligatorio para despublicar un spot: lo ve su dueño.
+    reason: str | None = Field(default=None, max_length=500)
+
+
 class ContributionReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 

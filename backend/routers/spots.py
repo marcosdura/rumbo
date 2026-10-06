@@ -15,13 +15,12 @@ from typing import Optional, List
 from slugs import generate_slug
 import contributions
 import operators as operators_domain
-from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, apply_request_to_spot, close_request, destroy_cloudinary_images, owner_visible_request
+from spot_changes import unpublish_spot, reject_spot as reject_spot_with_reason, plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
 import cloudinary
 import cloudinary.uploader
 import os
 import re
-from datetime import datetime, timezone
 
 
 
@@ -947,28 +946,13 @@ def reactivate_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = D
     return {"id": spot.id}
 
 
-def _unpublish(db: Session, spot: SpotDB, admin: dict):
-    """Un spot aprobado vuelve a no publicado. Si tenía un pedido de cambio
-    abierto, el pedido se vuelca sobre el spot: desde ahora sus ediciones van
-    directo (un spot no publicado se revisa entero antes de volver), y el
-    pedido quedaría colgado con datos viejos."""
-    if spot.is_approved:
-        pending = get_pending_request(db, spot.id)
-        if pending:
-            apply_request_to_spot(db, pending)
-            close_request(pending, "approved", by=admin.get("email"))
-            # No es una aprobación real que el dueño tenga que ver.
-            pending.owner_dismissed_at = pending.resolved_at
-    spot.is_approved = False
-
-
 @router.patch("/admin/spots/{spot_id}/approve")
 def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
     if not approved:
-        _unpublish(db, spot, admin)
+        unpublish_spot(db, spot, by=admin.get("email"))
     spot.is_approved = approved
     if approved:
         # Aprobado: ya no hay rechazo que mostrarle al dueño.
@@ -993,9 +977,7 @@ def reject_spot(spot_id: int, body: SpotReject, db: Session = Depends(get_db), a
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    _unpublish(db, spot, admin)
-    spot.rejection_reason = body.reason.strip()
-    spot.rejected_at = datetime.now(timezone.utc)
+    reject_spot_with_reason(db, spot, body.reason, by=admin.get("email"))
     db.commit()
     return {"id": spot.id, "is_approved": False, "rejection_reason": spot.rejection_reason}
 

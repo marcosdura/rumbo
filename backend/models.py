@@ -80,6 +80,7 @@ class SpotDB(Base):
     experiences = relationship("Experience", back_populates="spot", cascade="all, delete-orphan")
     change_requests = relationship("SpotChangeRequest", back_populates="spot", cascade="all, delete-orphan")
     contributions = relationship("Contribution", back_populates="spot", cascade="all, delete-orphan")
+    reports = relationship("Report", back_populates="spot", cascade="all, delete-orphan")
     operator_change_requests = relationship("OperatorChangeRequest", back_populates="spot", cascade="all, delete-orphan")
 
 
@@ -163,6 +164,43 @@ class OperatorChangeRequest(Base):
     owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
 
     spot = relationship("SpotDB", back_populates="operator_change_requests")
+
+
+class Report(Base):
+    """Un reporte de un usuario sobre algo publicado: un spot, una reseña o
+    una escuela/kayak (reports.py). Solo avisa: nada se oculta por cantidad
+    de reportes, siempre decide el admin."""
+    __tablename__ = "reports"
+    # Un reporte abierto por persona y por cosa reportada.
+    __table_args__ = (
+        Index(
+            "uq_report_open", "reporter_email", "target_kind", "target_id", unique=True,
+            postgresql_where=text("status = 'open'"),
+            sqlite_where=text("status = 'open'"),
+        ),
+    )
+
+    id             = Column(Integer, primary_key=True, index=True)
+    # spot | review | surf_review | kayak_review | surf_school | kayak
+    target_kind    = Column(String, nullable=False)
+    # Sin FK: apunta a tablas distintas según target_kind.
+    target_id      = Column(Integer, nullable=False)
+    # Lugar al que pertenece (para agruparlo y enlazarlo). Borrar el lugar
+    # borra sus reportes.
+    spot_id        = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    reporter_email = Column(String, nullable=False, index=True)
+    # false_info | offensive | spam | wrong_photos | closed | other
+    reason         = Column(String, nullable=False)
+    comment        = Column(String, nullable=True)
+    # open | dismissed | actioned
+    status         = Column(String, nullable=False, default="open", index=True)
+    # Qué hizo el admin: dismissed | unpublished | deleted
+    resolution     = Column(String, nullable=True)
+    created_at     = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at    = Column(DateTime(timezone=True), nullable=True)
+    resolved_by    = Column(String, nullable=True)
+
+    spot = relationship("SpotDB", back_populates="reports")
 
 
 class Contribution(Base):
