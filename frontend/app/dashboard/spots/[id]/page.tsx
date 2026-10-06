@@ -5,14 +5,14 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
-import { uploadImageToCloudinary, buildPublicId, ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/uploadImage"
+import { uploadImageToCloudinary, buildPublicId } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
-import { api, ApiError } from "@/lib/api"
+import { api } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
 import type { Spot, Review, Tab, StagedPhoto } from "./types"
-import { describeFields } from "./changes"
+import { describeFields, checkNewPhotos, errorMessage } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
@@ -21,13 +21,6 @@ import ChangeRequestBanner from "./ChangeRequestBanner"
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
 // revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
 type EditResult = { applied: string[]; pending: string[] }
-
-function errorMessage(e: unknown, fallback: string) {
-  // El detail de un 422 de FastAPI es una lista de errores de validación,
-  // no un texto para mostrar.
-  if (e instanceof ApiError && e.status !== 422 && typeof e.message === "string" && e.message) return e.message
-  return fallback
-}
 
 export default function SpotDashboardPage() {
   const { data: session, status } = useSession()
@@ -237,20 +230,11 @@ export default function SpotDashboardPage() {
 
   function handleAddFiles(files: File[]) {
     if (!spot) return
-    const valid = files.filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_BYTES)
-    const rejected = files.length - valid.length
-    const current = (spot.images?.length ?? 0) + stagedPhotos.length
-    // Sin recortar en silencio: si no entran todas, no se agrega ninguna y
-    // se dice cuántas hay que borrar.
-    if (current + valid.length > MAX_PHOTOS) {
-      const extra = current + valid.length - MAX_PHOTOS
-      setPhotoError(`El límite es ${MAX_PHOTOS} fotos por lugar. Tenés ${current} y querés agregar ${valid.length}: borrá al menos ${extra} para poder subirlas.`)
-      return
+    const { accepted, error } = checkNewPhotos(files, (spot.images?.length ?? 0) + stagedPhotos.length)
+    if (accepted.length) {
+      setStagedPhotos(prev => [...prev, ...accepted.map(file => ({ file, url: URL.createObjectURL(file) }))])
     }
-    setStagedPhotos(prev => [...prev, ...valid.map(file => ({ file, url: URL.createObjectURL(file) }))])
-    setPhotoError(rejected > 0
-      ? `${rejected} archivo${rejected !== 1 ? "s" : ""} no se pudo agregar: solo se aceptan imágenes (JPG, PNG, WEBP, GIF, HEIC) de hasta 15MB.`
-      : null)
+    setPhotoError(error)
   }
 
   function handleRemoveStaged(index: number) {

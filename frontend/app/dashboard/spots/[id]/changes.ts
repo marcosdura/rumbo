@@ -1,4 +1,7 @@
 import type { ChangeRequest } from "./types"
+import { ApiError } from "@/lib/api"
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/uploadImage"
+import { MAX_PHOTOS } from "./styles"
 
 // Nombres legibles de los campos que devuelve el backend en applied/pending
 // (PATCH /admin/spots/{id}). season_start/season_end se muestran juntos.
@@ -45,4 +48,33 @@ export function describeRequest(req: ChangeRequest) {
 
 export function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+// Qué hacer con los archivos que el dueño eligió para sumar. `current` son
+// las fotos que ya cuentan para el límite (publicadas + las que ya eligió).
+// Sin recortar en silencio: si no entran todas, no se agrega ninguna y se
+// dice cuántas hay que borrar.
+export function checkNewPhotos(files: File[], current: number): { accepted: File[]; error: string | null } {
+  const valid = files.filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_BYTES)
+  const rejected = files.length - valid.length
+  if (current + valid.length > MAX_PHOTOS) {
+    const extra = current + valid.length - MAX_PHOTOS
+    return {
+      accepted: [],
+      error: `El límite es ${MAX_PHOTOS} fotos por lugar. Tenés ${current} y querés agregar ${valid.length}: borrá al menos ${extra} para poder subirlas.`,
+    }
+  }
+  return {
+    accepted: valid,
+    error: rejected > 0
+      ? `${rejected} archivo${rejected !== 1 ? "s" : ""} no se pudo agregar: solo se aceptan imágenes (JPG, PNG, WEBP, GIF, HEIC) de hasta 15MB.`
+      : null,
+  }
+}
+
+export function errorMessage(e: unknown, fallback: string) {
+  // El detail de un 422 de FastAPI es una lista de errores de validación,
+  // no un texto para mostrar.
+  if (e instanceof ApiError && e.status !== 422 && typeof e.message === "string" && e.message) return e.message
+  return fallback
 }
