@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
 import AuthModal from "@/components/layout/AuthModal"
+import NotificationBell from "@/components/layout/NotificationBell"
 
 function Avatar({ user, size = 32 }) {
   const initials = user?.name
@@ -78,6 +79,14 @@ export default function HeroHeader() {
       {/* Right side */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 
+        {/* Lo mismo que el Navbar (que en la home se oculta hasta pasar el
+            hero): si se suma algo allá, va también acá. */}
+        <Link href="/agregar-lugar" className="signin-nav-btn addplace-nav-btn">
+          ＋ Agregar lugar
+        </Link>
+
+        {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
+
         {isLoggedIn ? (
           <Link href="/profile" style={{ display: "flex", borderRadius: "50%", transition: "opacity 0.2s" }}>
             <Avatar user={session.user} />
@@ -121,6 +130,9 @@ export default function HeroHeader() {
 
             <Link href="/" onClick={() => setMenuOpen(false)} className="menu-link active">
               <span className="menu-link-icon">🏠</span> Home
+            </Link>
+            <Link href="/agregar-lugar" onClick={() => setMenuOpen(false)} className="menu-link">
+              <span className="menu-link-icon">➕</span> Agregar lugar
             </Link>
             <div className="menu-divider" />
 
