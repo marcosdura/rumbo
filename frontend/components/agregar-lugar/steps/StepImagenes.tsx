@@ -4,6 +4,7 @@ import { useRef } from "react"
 import type React from "react"
 import { s } from "../styles"
 import NavRow from "../ui/NavRow"
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/uploadImage"
 
 export default function StepImagenes({
   images, setImages, previews, setPreviews, setError, error, onBack, onNext,
@@ -19,16 +20,10 @@ export default function StepImagenes({
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Espejo de allowed_formats en app/api/upload/signature/route.ts — esto es
-  // solo UX (falla rápido antes de comprimir/subir), la validación real que
-  // no se puede saltear está firmada del lado de Cloudinary.
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]
-  const MAX_FILE_BYTES = 15 * 1024 * 1024 // 15MB antes de comprimir
-
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const incoming = Array.from(e.target.files ?? [])
 
-    const valid = incoming.filter(f => ALLOWED_TYPES.includes(f.type) && f.size <= MAX_FILE_BYTES)
+    const valid = incoming.filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_BYTES)
     const rejected = incoming.length - valid.length
 
     setImages(prev => {

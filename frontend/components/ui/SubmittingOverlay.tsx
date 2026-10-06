@@ -2,9 +2,12 @@
 
 interface Props {
   uploadProgress: string | null
+  title?: string
 }
 
-export default function SubmittingOverlay({ uploadProgress }: Props) {
+// Pantalla de "no cierres esto" para envíos largos (subir fotos + guardar).
+// Nació en agregar-lugar; el dashboard del dueño la reusa al guardar cambios.
+export default function SubmittingOverlay({ uploadProgress, title = "Enviando tu lugar..." }: Props) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
@@ -26,7 +29,7 @@ export default function SubmittingOverlay({ uploadProgress }: Props) {
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <p style={{ fontSize: 17, fontWeight: 700, color: "#1b1b19", margin: "0 0 8px" }}>
-          Enviando tu lugar...
+          {title}
         </p>
         <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: "0 0 16px", lineHeight: 1.5 }}>
           {uploadProgress ?? "Procesando..."}

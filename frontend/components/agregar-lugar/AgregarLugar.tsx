@@ -13,7 +13,7 @@ import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, su
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 import AgregarLugarHeader from "./AgregarLugarHeader"
-import SubmittingOverlay from "./SubmittingOverlay"
+import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
 import StepServicioSpot from "./steps/StepServicioSpot"

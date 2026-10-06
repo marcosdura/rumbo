@@ -1,19 +1,33 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import Link from "next/link"
-import { uploadImageToCloudinary } from "@/lib/uploadImage"
+import { uploadImageToCloudinary, buildPublicId, ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
-import { api } from "@/lib/api"
+import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
+import { api, ApiError } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
-import type { Spot, Review, Tab } from "./types"
+import type { Spot, Review, Tab, StagedPhoto } from "./types"
+import { describeFields } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
+import ChangeRequestBanner from "./ChangeRequestBanner"
+
+// Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
+// revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
+type EditResult = { applied: string[]; pending: string[] }
+
+function errorMessage(e: unknown, fallback: string) {
+  // El detail de un 422 de FastAPI es una lista de errores de validación,
+  // no un texto para mostrar.
+  if (e instanceof ApiError && e.status !== 422 && typeof e.message === "string" && e.message) return e.message
+  return fallback
+}
 
 export default function SpotDashboardPage() {
   const { data: session, status } = useSession()
@@ -27,12 +41,24 @@ export default function SpotDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>("info")
   const [saving, setSaving] = useState(false)
-  const [saveOk, setSaveOk] = useState(false)
+  const [saveOk, setSaveOk] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [photoLoading, setPhotoLoading] = useState(false)
-  const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [photoToDelete, setPhotoToDelete] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  // Fotos elegidas que todavía no se subieron: se suben a Cloudinary recién
+  // al guardar, así si el dueño se arrepiente no quedan archivos sueltos.
+  const [stagedPhotos, setStagedPhotos] = useState<StagedPhoto[]>([])
+  const [submitting, setSubmitting] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  // Aviso previo cuando algo del guardado va a revisión.
+  const [reviewPreview, setReviewPreview] = useState<EditResult | null>(null)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [dismissing, setDismissing] = useState(false)
 
   // Campos editables
   const [editName, setEditName] = useState("")
@@ -67,6 +93,11 @@ export default function SpotDashboardPage() {
     })
   }, [token, spotId])
 
+  // Liberar las previews (URL.createObjectURL) al salir de la página.
+  const stagedRef = useRef(stagedPhotos)
+  stagedRef.current = stagedPhotos
+  useEffect(() => () => stagedRef.current.forEach(p => URL.revokeObjectURL(p.url)), [])
+
   function populateFields(s: Spot) {
     setEditName(s.name ?? "")
     setEditDescription(s.description ?? "")
@@ -81,94 +112,184 @@ export default function SpotDashboardPage() {
     setEditPublicTransport(s.public_transport ?? null)
   }
 
+  async function refreshSpot() {
+    const { data } = await api.get<Spot[]>("/spots/mine", { token })
+    const found = Array.isArray(data) ? data.find((s: Spot) => String(s.id) === spotId) : null
+    if (found) {
+      setSpot(found)
+      populateFields(found)
+    }
+  }
+
+  function buildPayload() {
+    return {
+      name: editName,
+      description: editDescription,
+      email: editEmail || null,
+      whatsapp: editWhatsapp || null,
+      instagram: editInstagram || null,
+      price: editPrice !== "" ? parseFloat(editPrice) : null,
+      season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
+      season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
+      is_public: editIsPublic,
+      public_transport: editPublicTransport,
+    }
+  }
+
+  function showSaveOk(message: string) {
+    setSaveOk(message)
+    setTimeout(() => setSaveOk(null), 4000)
+  }
+
+  // Paso 1: preguntarle al backend qué pasaría (dry_run), sin subir nada.
+  // Si algo va a revisión, se muestra el aviso antes de seguir.
   async function handleSave() {
     if (!spot) return
     setSaving(true)
-    setSaveOk(false)
+    setSaveOk(null)
     setSaveError(null)
     try {
-      await api.patch(`/admin/spots/${spot.id}`, {
-        name: editName,
-        description: editDescription,
-        email: editEmail || null,
-        whatsapp: editWhatsapp || null,
-        instagram: editInstagram || null,
-        price: editPrice !== "" ? parseFloat(editPrice) : null,
-        season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
-        season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
-        is_public: editIsPublic,
-        public_transport: editPublicTransport,
-      }, { token })
-      setSpot(prev => prev ? {
-        ...prev,
-        name: editName, description: editDescription,
-        email: editEmail || null, whatsapp: editWhatsapp || null, instagram: editInstagram || null,
-        price: editPrice !== "" ? parseFloat(editPrice) : null,
-        season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
-        season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
-        is_public: editIsPublic, public_transport: editPublicTransport,
-      } : null)
-      setSaveOk(true)
-      setTimeout(() => setSaveOk(false), 2500)
-    } catch {
-      setSaveError("No se pudo guardar. Intentá de nuevo.")
+      // Ids de mentira con el formato real: al dry_run solo le importa
+      // cuántas fotos son, todavía no se subió ninguna.
+      const { data } = await api.patch<EditResult>(`/admin/spots/${spot.id}`, {
+        ...buildPayload(),
+        photos_added: stagedPhotos.map(() => buildPublicId(spot.id)),
+      }, { token, params: { dry_run: true } })
+      if (data.pending.length === 0 && data.applied.length === 0) {
+        showSaveOk("No había cambios para guardar.")
+      } else if (data.pending.length > 0) {
+        setReviewPreview(data)
+      } else {
+        await commitSave()
+      }
+    } catch (e) {
+      setSaveError(errorMessage(e, "No se pudo guardar. Intentá de nuevo."))
     } finally {
       setSaving(false)
     }
   }
 
+  // Paso 2: subir las fotos nuevas y guardar de verdad.
+  async function commitSave() {
+    if (!spot) return
+    setReviewPreview(null)
+    setSaveError(null)
+    setSubmitting(true)
+    const uploaded: string[] = []
+    try {
+      for (let i = 0; i < stagedPhotos.length; i++) {
+        setUploadProgress(`Subiendo foto ${i + 1} de ${stagedPhotos.length}...`)
+        const { publicId } = await uploadImageToCloudinary(stagedPhotos[i].file, { spotId: spot.id })
+        uploaded.push(publicId)
+      }
+      setUploadProgress("Guardando cambios...")
+      const { data } = await api.patch<EditResult>(`/admin/spots/${spot.id}`, {
+        ...buildPayload(),
+        photos_added: uploaded,
+      }, { token })
+      stagedPhotos.forEach(p => URL.revokeObjectURL(p.url))
+      setStagedPhotos([])
+      await refreshSpot()
+      showSaveOk(data.pending.length > 0
+        ? `✓ Guardado. En revisión: ${describeFields(data.pending, uploaded.length)}.`
+        : "✓ Guardado correctamente")
+    } catch (e) {
+      // Si el guardado falló después de subir fotos, se borran de Cloudinary:
+      // no quedaron asociadas a nada.
+      if (uploaded.length) {
+        api.post(`/spots/${spot.id}/change-request/discard-photos`, { public_ids: uploaded }, { token }).catch(() => {})
+      }
+      setSaveError(errorMessage(e, "No se pudo guardar. Intentá de nuevo."))
+    } finally {
+      setSubmitting(false)
+      setUploadProgress(null)
+    }
+  }
+
+  async function handleCancelRequest() {
+    if (!spot) return
+    setCancelLoading(true)
+    setCancelError(null)
+    try {
+      await api.post(`/spots/${spot.id}/change-request/cancel`, undefined, { token })
+      await refreshSpot()
+      setCancelOpen(false)
+    } catch (e) {
+      setCancelError(errorMessage(e, "No se pudo cancelar el cambio. Intentá de nuevo."))
+    } finally {
+      setCancelLoading(false)
+    }
+  }
+
+  async function handleDismissRequest() {
+    if (!spot) return
+    setDismissing(true)
+    try {
+      await api.post(`/spots/${spot.id}/change-request/dismiss`, undefined, { token })
+      setSpot(prev => prev ? { ...prev, change_request: null } : null)
+    } catch {
+      // Cerrar el aviso no es crítico: si falla, el aviso sigue ahí y se
+      // puede volver a intentar.
+    } finally {
+      setDismissing(false)
+    }
+  }
+
+  function handleAddFiles(files: File[]) {
+    if (!spot) return
+    const valid = files.filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_BYTES)
+    const rejected = files.length - valid.length
+    const current = (spot.images?.length ?? 0) + stagedPhotos.length
+    // Sin recortar en silencio: si no entran todas, no se agrega ninguna y
+    // se dice cuántas hay que borrar.
+    if (current + valid.length > MAX_PHOTOS) {
+      const extra = current + valid.length - MAX_PHOTOS
+      setPhotoError(`El límite es ${MAX_PHOTOS} fotos por lugar. Tenés ${current} y querés agregar ${valid.length}: borrá al menos ${extra} para poder subirlas.`)
+      return
+    }
+    setStagedPhotos(prev => [...prev, ...valid.map(file => ({ file, url: URL.createObjectURL(file) }))])
+    setPhotoError(rejected > 0
+      ? `${rejected} archivo${rejected !== 1 ? "s" : ""} no se pudo agregar: solo se aceptan imágenes (JPG, PNG, WEBP, GIF, HEIC) de hasta 15MB.`
+      : null)
+  }
+
+  function handleRemoveStaged(index: number) {
+    setStagedPhotos(prev => {
+      URL.revokeObjectURL(prev[index].url)
+      return prev.filter((_, i) => i !== index)
+    })
+    setPhotoError(null)
+  }
+
   async function handleSetMain(publicId: string) {
     if (!spot) return
     setPhotoLoading(true)
-    await api.patch(`/admin/spots/${spot.id}/main-image`, { cloudinary_public_id: publicId }, { token }).catch(() => {})
-    setSpot(prev => prev ? {
-      ...prev,
-      images: prev.images.map(img => ({ ...img, is_main: img.cloudinary_public_id === publicId })),
-    } : null)
-    setPhotoLoading(false)
+    setPhotoError(null)
+    try {
+      await api.patch(`/admin/spots/${spot.id}/main-image`, { cloudinary_public_id: publicId }, { token })
+      setSpot(prev => prev ? {
+        ...prev,
+        images: prev.images.map(img => ({ ...img, is_main: img.cloudinary_public_id === publicId })),
+      } : null)
+    } catch {
+      setPhotoError("No se pudo cambiar la foto principal. Intentá de nuevo.")
+    } finally {
+      setPhotoLoading(false)
+    }
   }
 
   async function handleDeletePhoto(publicId: string) {
     if (!spot) return
     setPhotoLoading(true)
-    await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
-    setSpot(prev => prev ? { ...prev, images: prev.images.filter(img => img.cloudinary_public_id !== publicId) } : null)
-    setPhotoLoading(false)
-    setPhotoToDelete(null)
-  }
-
-  async function handleUploadPhotos(files: File[]) {
-    if (!spot) return
-    const currentCount = spot.images?.length ?? 0
-    const available = MAX_PHOTOS - currentCount
-    if (available <= 0) {
-      setPhotoError("Ya alcanzaste el límite de 10 fotos para este spot.")
-      return
-    }
-    const filesToUpload = files.slice(0, available)
-    if (filesToUpload.length < files.length) {
-      setPhotoError(`Solo se subieron ${filesToUpload.length} foto${filesToUpload.length !== 1 ? "s" : ""} para no superar el límite de 10.`)
-    } else {
-      setPhotoError(null)
-    }
-    setUploadingPhotos(true)
+    setDeleteError(null)
     try {
-      const results = await Promise.all(filesToUpload.map(file =>
-        uploadImageToCloudinary(file, { spotId: spot.id })
-      ))
-      await Promise.all(results.map(({ publicId }, i) =>
-        api.post(`/images/spots/${spot.id}`, undefined, {
-          token,
-          params: { cloudinary_public_id: publicId, is_main: false, order: currentCount + i },
-        })
-      ))
-      const { data: updated } = await api.get<Spot[]>("/spots/mine", { token })
-      const found = Array.isArray(updated) ? updated.find((s: Spot) => String(s.id) === spotId) : null
-      if (found) setSpot(found)
+      await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token })
+      setSpot(prev => prev ? { ...prev, images: prev.images.filter(img => img.cloudinary_public_id !== publicId) } : null)
+      setPhotoToDelete(null)
     } catch {
-      setPhotoError("Error al subir fotos. Intentá de nuevo.")
+      setDeleteError("No se pudo eliminar la foto. Intentá de nuevo.")
     } finally {
-      setUploadingPhotos(false)
+      setPhotoLoading(false)
     }
   }
 
@@ -186,8 +307,11 @@ export default function SpotDashboardPage() {
   if (!spot) return null
 
   const sortedImages = [...(spot.images ?? [])].sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0))
-  const photoCount = spot.images?.length ?? 0
+  const photoCount = (spot.images?.length ?? 0) + stagedPhotos.length
   const atPhotoLimit = photoCount >= MAX_PHOTOS
+  const changeRequest = spot.change_request
+  const pendingRequest = changeRequest?.status === "pending" ? changeRequest : null
+  const pendingPhotoCount = pendingRequest?.changes.photos_added?.length ?? 0
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
@@ -222,6 +346,15 @@ export default function SpotDashboardPage() {
             )}
           </div>
         </div>
+
+        {changeRequest && (
+          <ChangeRequestBanner
+            request={changeRequest}
+            onCancel={() => { setCancelError(null); setCancelOpen(true) }}
+            onDismiss={handleDismissRequest}
+            dismissing={dismissing}
+          />
+        )}
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
@@ -265,24 +398,50 @@ export default function SpotDashboardPage() {
             editSeasonEnd={editSeasonEnd} setEditSeasonEnd={setEditSeasonEnd}
             editIsPublic={editIsPublic} setEditIsPublic={setEditIsPublic}
             editPublicTransport={editPublicTransport} setEditPublicTransport={setEditPublicTransport}
-            saving={saving} saveOk={saveOk} saveError={saveError}
-            onSave={handleSave}
+            lockSensitive={pendingRequest !== null}
+            pendingName={pendingRequest?.changes.name?.to}
+            pendingDescription={pendingRequest?.changes.description?.to}
+            sensitiveReviewed={spot.is_approved}
           />
         )}
 
         {tab === "fotos" && (
           <PhotosTab
             sortedImages={sortedImages}
+            stagedPhotos={stagedPhotos}
+            pendingPhotoIds={pendingRequest?.changes.photos_added ?? []}
             photoCount={photoCount}
             atPhotoLimit={atPhotoLimit}
+            lockAdd={pendingRequest !== null}
+            sensitiveReviewed={spot.is_approved}
             photoError={photoError}
-            uploadingPhotos={uploadingPhotos}
             photoLoading={photoLoading}
             setPhotoError={setPhotoError}
-            onUploadFiles={handleUploadPhotos}
+            onAddFiles={handleAddFiles}
+            onRemoveStaged={handleRemoveStaged}
             onSetMain={handleSetMain}
-            onDeletePhoto={setPhotoToDelete}
+            onDeletePhoto={id => { setDeleteError(null); setPhotoToDelete(id) }}
           />
+        )}
+
+        {/* Guardar: uno solo para la información y las fotos nuevas. */}
+        {tab !== "reviews" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+            <button
+              onClick={handleSave}
+              disabled={saving || submitting}
+              style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none", opacity: saving || submitting ? 0.7 : 1 }}
+            >
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+            {stagedPhotos.length > 0 && !saveError && (
+              <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>
+                {stagedPhotos.length} foto{stagedPhotos.length !== 1 ? "s" : ""} sin guardar
+              </span>
+            )}
+            {saveOk && <span style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>{saveOk}</span>}
+            {saveError && <span style={{ fontSize: 13, color: "var(--danger)" }}>{saveError}</span>}
+          </div>
         )}
 
         {tab === "reviews" && <ReviewsTab reviews={reviews} />}
@@ -290,13 +449,57 @@ export default function SpotDashboardPage() {
       </div>
 
       <ConfirmModal
+        open={reviewPreview !== null}
+        title="Algunos cambios pasan a revisión"
+        confirmLabel="Guardar cambios"
+        cancelLabel="Volver"
+        confirmVariant="primary"
+        onCancel={() => setReviewPreview(null)}
+        onConfirm={commitSave}
+      >
+        {reviewPreview && (
+          <div style={{ fontSize: 14, color: "#4a4a46", lineHeight: 1.6 }}>
+            <p style={{ margin: 0 }}>
+              ⏳ <strong>Pasan a revisión:</strong> {describeFields(reviewPreview.pending, stagedPhotos.length)}.
+              El público sigue viendo la versión actual hasta que se aprueben.
+            </p>
+            {reviewPreview.applied.length > 0 && (
+              <p style={{ margin: "10px 0 0" }}>
+                ✓ <strong>Se actualizan al instante:</strong> {describeFields(reviewPreview.applied, 0)}.
+              </p>
+            )}
+          </div>
+        )}
+      </ConfirmModal>
+
+      <ConfirmModal
+        open={cancelOpen}
+        title="¿Cancelar el cambio en revisión?"
+        message={pendingPhotoCount === 0
+          ? "Se descarta el pedido. No se puede deshacer."
+          : pendingPhotoCount === 1
+            ? "Se descarta el pedido y se borra la foto nueva que subiste. No se puede deshacer."
+            : `Se descarta el pedido y se borran las ${pendingPhotoCount} fotos nuevas que subiste. No se puede deshacer.`}
+        confirmLabel="Cancelar cambio"
+        cancelLabel="Volver"
+        loading={cancelLoading}
+        loadingLabel="Cancelando..."
+        error={cancelError}
+        onCancel={() => setCancelOpen(false)}
+        onConfirm={handleCancelRequest}
+      />
+
+      <ConfirmModal
         open={photoToDelete !== null}
         title="¿Eliminar esta foto?"
         message="La foto se borra de Cloudinary y no se puede recuperar."
         loading={photoLoading}
+        error={deleteError}
         onCancel={() => setPhotoToDelete(null)}
         onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete)}
       />
+
+      {submitting && <SubmittingOverlay title="Guardando tus cambios..." uploadProgress={uploadProgress} />}
     </div>
   )
 }

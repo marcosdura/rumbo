@@ -1,5 +1,11 @@
 import { compressImage } from "./compressImage"
 
+// Espejo de allowed_formats en app/api/upload/signature/route.ts — esto es
+// solo UX (falla rápido antes de comprimir/subir), la validación real que
+// no se puede saltear está firmada del lado de Cloudinary.
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]
+export const MAX_IMAGE_BYTES = 15 * 1024 * 1024 // 15MB antes de comprimir
+
 export interface PublicIdParams {
   spotId: number
 }

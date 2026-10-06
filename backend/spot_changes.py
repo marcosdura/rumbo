@@ -146,6 +146,10 @@ def plan_spot_edit(db: Session, spot: SpotDB, data: dict, admin: bool) -> dict:
             if goes_to_review:
                 pending[field] = {"from": getattr(spot, field), "to": value}
                 continue
+        elif value == getattr(spot, field):
+            # El dashboard manda el formulario entero: sin esto, el aviso
+            # diría "se aplica ya: email, WhatsApp, ..." aunque no se tocaron.
+            continue
         apply[field] = value
 
     if photos:

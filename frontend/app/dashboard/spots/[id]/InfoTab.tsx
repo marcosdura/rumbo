@@ -14,10 +14,21 @@ interface Props {
   editSeasonEnd: string; setEditSeasonEnd: (v: string) => void
   editIsPublic: boolean | null; setEditIsPublic: (v: boolean) => void
   editPublicTransport: string | null; setEditPublicTransport: (updater: (prev: string | null) => string | null) => void
-  saving: boolean
-  saveOk: boolean
-  saveError: string | null
-  onSave: () => void
+  // Con un pedido de cambio pendiente, nombre y descripción quedan bloqueados
+  // y muestran el valor que está en revisión.
+  lockSensitive: boolean
+  pendingName?: string
+  pendingDescription?: string
+  // El spot está aprobado: cambiar nombre o descripción pasa por revisión.
+  sensitiveReviewed: boolean
+}
+
+function PendingHint({ value }: { value: string }) {
+  return (
+    <p style={{ fontSize: 12, color: "#78590a", margin: "6px 0 0", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+      ⏳ En revisión: «{value}»
+    </p>
+  )
 }
 
 export default function InfoTab({
@@ -25,20 +36,29 @@ export default function InfoTab({
   editEmail, setEditEmail, editWhatsapp, setEditWhatsapp, editInstagram, setEditInstagram,
   editPrice, setEditPrice, editSeasonType, setEditSeasonType, editSeasonStart, setEditSeasonStart,
   editSeasonEnd, setEditSeasonEnd, editIsPublic, setEditIsPublic, editPublicTransport, setEditPublicTransport,
-  saving, saveOk, saveError, onSave,
+  lockSensitive, pendingName, pendingDescription, sensitiveReviewed,
 }: Props) {
+  const lockedInput = lockSensitive ? { opacity: 0.6, cursor: "not-allowed" } : {}
   return (
     <div style={{ ...s.card, padding: 24 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+        {sensitiveReviewed && !lockSensitive && (
+          <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
+            Los cambios de nombre, descripción y fotos nuevas pasan por revisión antes de publicarse. El resto se actualiza al instante.
+          </p>
+        )}
+
         <div>
           <label style={s.label}>Nombre</label>
-          <input value={editName} onChange={e => setEditName(e.target.value)} style={s.input} />
+          <input value={editName} onChange={e => setEditName(e.target.value)} disabled={lockSensitive} style={{ ...s.input, ...lockedInput }} />
+          {pendingName !== undefined && <PendingHint value={pendingName} />}
         </div>
 
         <div>
           <label style={s.label}>Descripción</label>
-          <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={5} style={{ ...s.input, resize: "vertical" }} />
+          <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} disabled={lockSensitive} rows={5} style={{ ...s.input, resize: "vertical", ...lockedInput }} />
+          {pendingDescription !== undefined && <PendingHint value={pendingDescription} />}
         </div>
 
         {/* Separador */}
@@ -134,19 +154,6 @@ export default function InfoTab({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Guardar */}
-        <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            onClick={onSave}
-            disabled={saving}
-            style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none", opacity: saving ? 0.7 : 1 }}
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
-          {saveOk && <span style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600 }}>✓ Guardado correctamente</span>}
-          {saveError && <span style={{ fontSize: 13, color: "var(--danger)" }}>{saveError}</span>}
         </div>
 
       </div>

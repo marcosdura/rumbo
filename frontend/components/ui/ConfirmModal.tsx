@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { useModalA11y } from "@/lib/useModalA11y"
 
 // Modal de confirmación genérico, mismo estilo visual que el modal de
@@ -21,6 +21,12 @@ type Props = {
   confirmPhrase?: string
   error?: string | null
   loading?: boolean
+  loadingLabel?: string
+  // "danger" (rojo) para borrar; "primary" (verde) para confirmar algo que
+  // no destruye nada, como guardar con aviso de revisión.
+  confirmVariant?: "danger" | "primary"
+  // Contenido extra debajo de message, para cuando un texto plano no alcanza.
+  children?: ReactNode
   onConfirm: () => void
   onCancel: () => void
 }
@@ -34,6 +40,9 @@ export default function ConfirmModal({
   confirmPhrase,
   error,
   loading = false,
+  loadingLabel = "Eliminando...",
+  confirmVariant = "danger",
+  children,
   onConfirm,
   onCancel,
 }: Props) {
@@ -90,6 +99,7 @@ export default function ConfirmModal({
           cursor: pointer; background: var(--danger); color: #fff;
           transition: opacity 0.15s, background 0.15s;
         }
+        .confirm-modal-confirm-btn.primary { background: var(--primary); }
         .confirm-modal-confirm-btn:disabled { cursor: not-allowed; opacity: 0.7; }
       `}</style>
 
@@ -111,6 +121,8 @@ export default function ConfirmModal({
             {message}
           </p>
         )}
+
+        {children}
 
         {confirmPhrase && (
           <>
@@ -144,12 +156,12 @@ export default function ConfirmModal({
             {cancelLabel}
           </button>
           <button
-            className="confirm-modal-confirm-btn"
+            className={`confirm-modal-confirm-btn${confirmVariant === "primary" ? " primary" : ""}`}
             onClick={onConfirm}
             disabled={confirmDisabled}
             style={phraseOk ? undefined : { background: "#d1cdc7", color: "var(--muted)" }}
           >
-            {loading ? "Eliminando..." : confirmLabel}
+            {loading ? loadingLabel : confirmLabel}
           </button>
         </div>
       </div>
