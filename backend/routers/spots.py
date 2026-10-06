@@ -14,6 +14,7 @@ from sqlalchemy import func, or_, and_
 from typing import Optional, List
 from slugs import generate_slug
 import contributions
+import operators as operators_domain
 from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, apply_request_to_spot, close_request, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
 import cloudinary
@@ -513,10 +514,13 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
         operator_photos += contributions.item_photos("surf_school", school)
     for kayak in db.query(KayakDetail).execution_options(include_pending=True).filter(KayakDetail.spot_id == spot_id):
         operator_photos += contributions.item_photos("kayak", kayak)
+    # Y las fotos nuevas de pedidos de cambio pendientes de esas escuelas.
+    for change in db.query(models.OperatorChangeRequest).filter_by(spot_id=spot_id, status="pending"):
+        operator_photos += operators_domain.discard_change(change, "cancelled", by=admin.get("email"))
     destroy_cloudinary_images(
         [img.cloudinary_public_id for img in images]
         + (request_photos(pending) if pending else [])
-        + operator_photos
+        + [p for p in operator_photos if p]
     )
 
     # Antes esto era un DELETE FROM spots crudo, que rompía con

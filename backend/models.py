@@ -74,6 +74,7 @@ class SpotDB(Base):
     experiences = relationship("Experience", back_populates="spot", cascade="all, delete-orphan")
     change_requests = relationship("SpotChangeRequest", back_populates="spot", cascade="all, delete-orphan")
     contributions = relationship("Contribution", back_populates="spot", cascade="all, delete-orphan")
+    operator_change_requests = relationship("OperatorChangeRequest", back_populates="spot", cascade="all, delete-orphan")
 
 
 class SpotChangeRequest(Base):
@@ -120,6 +121,42 @@ class SpotChangeRequest(Base):
     owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
 
     spot = relationship("SpotDB", back_populates="change_requests")
+
+
+class OperatorChangeRequest(Base):
+    """Pedido de cambio sobre una escuela de surf o un servicio de kayak ya
+    aprobado: lo mismo que SpotChangeRequest para los spots (nombre y fotos
+    a revisión; el resto se aplica al instante). Ver operators.py.
+
+    changes: {"name": {"from", "to"}, "photos": {"from": [...], "to": [...]}}
+    Las fotos son las 3 del operador (URLs); "to" es como quedarían.
+    """
+    __tablename__ = "operator_change_requests"
+    __table_args__ = (
+        Index(
+            "uq_operator_change_pending", "kind", "operator_id", unique=True,
+            postgresql_where=text("status = 'pending'"),
+            sqlite_where=text("status = 'pending'"),
+        ),
+    )
+
+    id            = Column(Integer, primary_key=True, index=True)
+    kind          = Column(String, nullable=False)   # "surf_school" | "kayak"
+    # Sin FK: apunta a surf_beach o kayak_details según kind. Al borrar el
+    # operador se cancelan sus pedidos (operators.cancel_pending_change).
+    operator_id   = Column(Integer, nullable=False)
+    spot_id       = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    requested_by  = Column(String, nullable=False)
+    # "pending" | "approved" | "rejected" | "cancelled"
+    status        = Column(String, nullable=False, default="pending", index=True)
+    changes       = Column(JSON, nullable=False)
+    reject_reason = Column(String, nullable=True)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at   = Column(DateTime(timezone=True), nullable=True)
+    resolved_by   = Column(String, nullable=True)
+    owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
+
+    spot = relationship("SpotDB", back_populates="operator_change_requests")
 
 
 class Contribution(Base):

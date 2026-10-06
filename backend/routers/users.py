@@ -7,6 +7,8 @@ from auth import get_current_user_required
 from limiter import limiter
 from spot_changes import close_request, request_photos, destroy_cloudinary_images
 import contributions
+import operators
+from models import OperatorChangeRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -64,6 +66,9 @@ async def delete_account(
     # Sus aportes pendientes (también sectores sugeridos en spots ajenos) se
     # retiran: nadie va a ver el resultado.
     orphan_photos += contributions.withdraw_all_by_author(db, db_user.email)
+    # Y los pedidos de cambio pendientes de sus escuelas de surf / kayak.
+    for change in db.query(OperatorChangeRequest).filter_by(requested_by=db_user.email, status="pending"):
+        orphan_photos += operators.discard_change(change, "cancelled", by=db_user.email)
 
     db.delete(db_user)
     db.commit()

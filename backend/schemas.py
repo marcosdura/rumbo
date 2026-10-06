@@ -63,6 +63,26 @@ class ChangeRequestReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 
 
+class OperatorEditRequest(BaseModel):
+    """PATCH /operators/{kind}/{id}. Solo se toca lo que viene. Los campos
+    que no correspondan al tipo (por ejemplo water_type en una escuela de
+    surf) se ignoran. photos: cómo quedan las 3 fotos (URLs, en orden)."""
+    name: str | None = Field(default=None, max_length=200)
+    class_type: Optional[str] = Field(default=None, max_length=50)
+    equipment_include: Optional[bool] = None
+    water_type: Optional[str] = Field(default=None, max_length=50)
+    difficulty: Optional[str] = Field(default=None, max_length=50)
+    kayak_type: Optional[str] = Field(default=None, max_length=50)
+    rental_available: Optional[bool] = None
+    duration: Optional[float] = None
+    email: Optional[str] = Field(default=None, max_length=254)
+    whatsapp: Optional[str] = Field(default=None, max_length=30)
+    instagram: Optional[str] = Field(default=None, max_length=100)
+    season_start: Optional[int] = None
+    season_end: Optional[int] = None
+    photos: Optional[list[str]] = Field(default=None, max_length=3)
+
+
 class ContributionReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 

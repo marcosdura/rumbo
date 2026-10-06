@@ -6,7 +6,7 @@ from models import SpotDB
 from ownership import assert_owns_spot, is_public_venue
 from limiter import limiter
 import contributions
-from operators import PHOTO_FIELDS, assert_can_manage_operator, assert_valid_photos
+from operators import PHOTO_FIELDS, assert_can_manage_operator, assert_valid_photos, cancel_pending_change
 
 
 def build_operator_router(*, prefix, tags, model, kind, create_schema, response_schema, not_found_detail):
@@ -76,7 +76,9 @@ def build_operator_router(*, prefix, tags, model, kind, create_schema, response_
         if not obj:
             raise HTTPException(status_code=404, detail=not_found_detail)
         assert_can_manage_operator(obj, obj.spot, user)
-        photos = contributions.delete_item(db, kind, obj, by=user.get("email"))
+        # Su pedido de cambio pendiente se cancela (y sus fotos nuevas se van).
+        photos = cancel_pending_change(db, kind, obj.id, by=user.get("email"))
+        photos += contributions.delete_item(db, kind, obj, by=user.get("email"))
         db.commit()
         # Fotos después del commit, como en el resto de los borrados.
         contributions.destroy_cloudinary_images(photos)
