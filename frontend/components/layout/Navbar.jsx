@@ -283,12 +283,15 @@ function Navbar() {
           position: relative; z-index: 1;
         }
         .signin-nav-btn:hover { background: rgba(255,255,255,0.25); }
+        /* Mismo estilo que "Iniciar sesión": es la otra acción principal. */
+        .addplace-nav-btn { text-decoration: none; display: inline-flex; align-items: center; }
 
         /* Avatar genérico — solo mobile */
         .signin-avatar-mobile { display: none; }
 
         @media (max-width: 768px) {
           .signin-nav-btn        { display: none; }
+          .addplace-nav-btn      { display: none; }
           .signin-avatar-mobile  { display: flex; }
         }
 
@@ -372,6 +375,12 @@ function Navbar() {
             </svg>
           </button>
 
+          {/* Agregar lugar — desktop (en mobile va en el menú). Antes el único
+              link a /agregar-lugar estaba en el panel admin. */}
+          <Link href="/agregar-lugar" className="signin-nav-btn addplace-nav-btn">
+            ＋ Agregar lugar
+          </Link>
+
           {isLoggedIn ? (
             <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">
               <Avatar user={session.user} size={32} />
@@ -433,6 +442,9 @@ function Navbar() {
 
           <Link href="/" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/") ? "active" : ""}`}>
             <span className="menu-link-icon">🏠</span> Home
+          </Link>
+          <Link href="/agregar-lugar" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/agregar-lugar") ? "active" : ""}`}>
+            <span className="menu-link-icon">➕</span> Agregar lugar
           </Link>
 
           <div className="menu-divider" />
