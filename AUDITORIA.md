@@ -137,6 +137,8 @@ como registro de qué se decidió atacar y qué no.
       → `eac584e`, `a2d24a1`
 - [ ] **Sin ningún camino de monetización** — el modelo de datos ya tiene los ganchos (email/whatsapp/instagram en spots, surf, kayak), falta la capa de pago y destacados
 - [ ] **Cero retención activa** — sin email, sin notificaciones, sin newsletter
+      **Decidido (en curso):** por ahora solo notificaciones dentro de la app. Sin email ni push: no depender de servicios con tope gratuito que después obliguen a pagar. Tabla `notifications` + `notify()` en cada evento; campanita en el Navbar con no leídas y página con la lista. Avisa al dueño/autor (spot aprobado/rechazado/despublicado con motivo, pedidos de cambio de spots y escuelas, aportes, reseñas nuevas en lo suyo, contenido que otro sumó a su lugar, reseña suya borrada por el admin) y al admin (spots nuevos o reenviados, pedidos de cambio, aportes, reportes).
+      *Para más adelante (evaluado):* push de la PWA es viable sin Serwist (service worker a mano en `public/sw.js`, según la guía de Next 16.2.3; Serwist solo hace falta para offline), y no depende de un servicio pago (VAPID es estándar). Email y resumen semanal quedan descartados por ahora.
 - [x] **Contenido sin moderación real ni forma de reportar** — solo existe `is_approved` booleano, sin motivo de rechazo ni endpoint de report/flag
       **Estado al planificar:** los pedidos de cambio, aportes y cambios de escuelas ya tienen rechazo con motivo. Falta: rechazar un spot nuevo es borrarlo sin aviso; "Desaprobar" uno publicado es silencioso; el admin no puede borrar reseñas (solo su autor); no hay ninguna forma de reportar.
       **Resuelto así:**
