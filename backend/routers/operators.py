@@ -9,7 +9,8 @@ from contributions import pending_contribution_for
 from database import get_db
 from limiter import limiter
 from models import KayakDetail, OperatorChangeRequest, SpotDB, SurfSchool
-from schemas import ChangeRequestReject, KayakDetailResponse, OperatorEditRequest, SurfSchoolResponse
+from schemas import ChangeRequestReject, DiscardPhotosRequest, KayakDetailResponse, OperatorEditRequest, SurfSchoolResponse
+from contributions import is_own_new_photo_id_url
 
 router = APIRouter(tags=["operators"])
 
@@ -120,6 +121,25 @@ def dismiss_operator_change(kind: str, operator_id: int, db: Session = Depends(g
     )
     db.commit()
     return {"ok": True}
+
+
+@router.post("/operators/{kind}/{operator_id}/discard-photos")
+@limiter.limit("20/minute")
+def discard_operator_photos(request: Request, kind: str, operator_id: int, body: DiscardPhotosRequest, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """Si el guardado falló después de subir fotos nuevas, el dashboard las
+    manda a borrar acá. Solo las de la carpeta de su playa que no use el
+    operador ni su pedido pendiente."""
+    operator = _managed_operator(db, kind, operator_id, user)
+    in_use = set(operators.current_photos(operator))
+    change = operators.get_pending_change(db, kind, operator.id)
+    if change and "photos" in change.changes:
+        in_use |= set(change.changes["photos"]["to"])
+    to_destroy = [
+        pid for url in body.public_ids
+        if url not in in_use and (pid := is_own_new_photo_id_url(operator.spot_id, url))
+    ]
+    operators.destroy_cloudinary_images(to_destroy)
+    return {"discarded": to_destroy}
 
 
 # -------- Admin --------

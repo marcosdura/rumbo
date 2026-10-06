@@ -65,6 +65,17 @@ def public_id_from_url(url: str):
     return m.group(1) if m else None
 
 
+def is_own_new_photo_id_url(spot_id: int, url: str):
+    """Si `url` es una foto de nuestro Cloudinary con el formato de la
+    carpeta de ese spot, devuelve su public_id; si no, None."""
+    if not url or not url.startswith("https://res.cloudinary.com/"):
+        return None
+    public_id = public_id_from_url(url)
+    if public_id and re.fullmatch(rf"(rumbo/spots/)?{spot_id}/[0-9a-f]{{16}}", public_id):
+        return public_id
+    return None
+
+
 def item_photos(kind, item):
     if kind not in ("surf_school", "kayak"):
         return []

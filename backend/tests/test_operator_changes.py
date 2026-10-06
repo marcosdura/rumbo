@@ -177,3 +177,16 @@ def test_mis_escuelas_incluye_las_que_estan_en_revision(client, db, school, make
     ]
     assert mine[1]["contribution_id"] is not None
     assert mine[0]["spot"]["name"] == "Playa Brava"
+
+
+def test_descartar_fotos_subidas_si_el_guardado_fallo(client, db, school, destroyed):
+    sid = school.spot_id
+    r = client.post(
+        f"/operators/surf_school/{school.id}/discard-photos",
+        json={"public_ids": [photo(sid, 9), photo(sid, 1), "https://otro.com/x.jpg", photo(999, 1)]},
+        headers=as_user(OPERATOR),
+    )
+    assert r.status_code == 200
+    # No toca la que usa la escuela, ni URLs ajenas o de otra playa.
+    assert destroyed == [pid(sid, 9)]
+    assert client.post(f"/operators/surf_school/{school.id}/discard-photos", json={"public_ids": []}, headers=as_user(OTHER)).status_code == 403

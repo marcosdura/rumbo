@@ -13,7 +13,6 @@ escuela tiene su propio dueño: quien la sumó.
   nuestro Cloudinary y con el formato de esa playa ("{spot_id}/{16 hex}",
   el que firma can-upload). Antes se aceptaba cualquier URL.
 """
-import re
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -21,7 +20,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from auth import is_admin
-from contributions import public_id_from_url
+from contributions import is_own_new_photo_id_url, public_id_from_url
 from models import KayakDetail, OperatorChangeRequest, SurfSchool
 from ownership import is_public_venue
 from spot_changes import destroy_cloudinary_images
@@ -34,12 +33,7 @@ def assert_valid_photos(spot_id: int, urls, keep=()):
     for url in urls:
         if not url or url in keep:
             continue
-        public_id = public_id_from_url(url)
-        if (
-            not url.startswith("https://res.cloudinary.com/")
-            or not public_id
-            or not re.fullmatch(rf"(rumbo/spots/)?{spot_id}/[0-9a-f]{{16}}", public_id)
-        ):
+        if not is_own_new_photo_id_url(spot_id, url):
             raise HTTPException(status_code=400, detail="Foto con formato inválido")
 
 
