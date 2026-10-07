@@ -2,34 +2,21 @@
 
 // Campanita del Navbar: cantidad de avisos sin leer y los últimos, con
 // acceso a /notificaciones. Solo para usuarios con sesión.
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { api } from "@/lib/api"
 import { badgeText, notificationIcon, timeAgo, type AppNotification, type NotificationList } from "@/lib/notifications"
-
-// Cada cuánto se vuelve a mirar si hay avisos nuevos (solo con la pestaña
-// visible). Es un número: una consulta liviana.
-const POLL_MS = 60_000
+import { getUnread, setUnread, subscribe } from "./unreadStore"
 
 export default function NotificationBell({ token }: { token: string }) {
   const router = useRouter()
-  const [unread, setUnread] = useState(0)
+  // Compartido con las demás campanitas montadas (unreadStore.ts).
+  const subscribeToken = useCallback((cb: () => void) => subscribe(token, cb), [token])
+  const unread = useSyncExternalStore(subscribeToken, getUnread, () => 0)
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<AppNotification[] | null>(null)
   const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const refreshCount = () =>
-      api.get<{ unread: number }>("/notifications/unread-count", { token })
-        .then(({ data }) => setUnread(data.unread))
-        .catch(() => {})  // sin el número la app funciona igual
-    refreshCount()
-    const id = setInterval(() => {
-      if (document.visibilityState === "visible") refreshCount()
-    }, POLL_MS)
-    return () => clearInterval(id)
-  }, [token])
 
   // Cerrar al tocar afuera, como el menú del Navbar.
   useEffect(() => {

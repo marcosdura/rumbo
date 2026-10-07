@@ -75,6 +75,9 @@ export default function SpotSection({ label, title, count, spots, loading, href 
     else         { setCanLeft(false);  setCanRight(el.scrollWidth > el.clientWidth + 4) }
   }
 
+  // Una colección sin lugares no se muestra (solo el título quedaría vacío).
+  if (!loading && spots.length === 0) return null
+
   const titleRow = (
     <div
       style={{
@@ -228,7 +231,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {href
-            ? <Link href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{titleRow}</Link>
+            ? <Link href={href} style={{ textDecoration: "none" }}>{titleRow}</Link>
             : titleRow
           }
 

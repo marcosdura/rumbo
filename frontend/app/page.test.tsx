@@ -1,40 +1,56 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
+import type { HomeData } from "@/lib/home"
 
-// API simulada con funciones comunes, no vi.fn (ver
-// components/agregar-lugar/submit.test.ts).
-let fail = false
+// La home se arma en el servidor con GET /home: el backend ya eligió las
+// secciones; acá se prueba cómo se muestran.
+let home: HomeData | null = null
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/HeroHeader", () => ({ default: () => null }))
 vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 vi.mock("@/components/spots/SpotSection", () => ({
-  default: ({ title, loading }: { title: string; loading: boolean }) => <p>{loading ? `cargando ${title}` : title}</p>,
+  default: ({ title, spots }: { title: string; spots: unknown[] }) => <h2 data-spots={spots.length}>{title}</h2>,
 }))
 vi.mock("@/lib/api", () => ({
-  api: {
-    get: () => fail ? Promise.reject(new Error("Sin conexión")) : Promise.resolve({ data: [], totalCount: 0 }),
-  },
+  api: { get: () => (home ? Promise.resolve({ data: home }) : Promise.reject(new Error("caído"))) },
 }))
 
 const { default: Home } = await import("./page")
 
-afterEach(() => { fail = false })
+const spot = (id: number) => ({ id, name: `Lugar ${id}` })
+const section = (key: string, title: string) => ({ key, label: "", title, href: "/search", total: 0, spots: [spot(1), spot(2), spot(3)] })
 
-const flush = () => act(() => Promise.resolve())
+afterEach(() => { home = null })
 
 describe("Home", () => {
-  it("si fallan los lugares, avisa; al reintentar muestra la carga y después las secciones", async () => {
-    fail = true
-    render(<Home />)
-    await flush()
-    expect(screen.getByText("Sin conexión")).toBeTruthy()
+  it("populares arriba, después recién agregados, la invitación y las colecciones del día", async () => {
+    home = {
+      stats: { spots: 42, departments: 7 },
+      sections: [section("popular", "Populares"), section("recent", "Recién agregados"), section("department:Rocha", "Lugares en Rocha")],
+    }
+    const { container } = render(await Home())
+    const order = Array.from(container.querySelectorAll("h2, p")).map(e => e.textContent)
+      .filter(t => ["Populares", "Recién agregados", "¿Conocés un lugar que no está?", "Lugares en Rocha"].includes(t ?? ""))
+    expect(order).toEqual(["Populares", "Recién agregados", "¿Conocés un lugar que no está?", "Lugares en Rocha"])
+    expect(screen.getByRole("link", { name: "＋ Agregar lugar" }).getAttribute("href")).toBe("/agregar-lugar")
+  })
 
-    fail = false
-    fireEvent.click(screen.getByRole("button", { name: "Reintentar" }))
-    expect(screen.queryByText("Sin conexión")).toBeNull()
-    expect(screen.getAllByText(/^cargando /).length).toBeGreaterThan(0)
-    await flush()
-    expect(screen.queryAllByText(/^cargando /)).toHaveLength(0)
+  it("el hero muestra cuántos lugares y departamentos hay", async () => {
+    home = { stats: { spots: 42, departments: 7 }, sections: [] }
+    render(await Home())
+    expect(screen.getByText("42 lugares para descubrir en 7 departamentos")).toBeTruthy()
+  })
+
+  it("sin lugares todavía, igual invita a sumar uno", async () => {
+    home = { stats: { spots: 0, departments: 0 }, sections: [] }
+    render(await Home())
+    expect(screen.getByText("¿Conocés un lugar que no está?")).toBeTruthy()
+  })
+
+  it("si el backend no responde, ofrece reintentar", async () => {
+    render(await Home())
+    expect(screen.getByText("No pudimos cargar los lugares.")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Reintentar" })).toBeTruthy()
   })
 })

@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import SearchBar from "@/components/spots/SearchBar"
 import Image from "next/image"
 import AuthModal from "@/components/layout/AuthModal"
 import NotificationBell from "@/components/layout/NotificationBell"
+import MenuLinks from "@/components/layout/MenuLinks"
 
 function Avatar({ user, size = 28 }) {
   const initials = user?.name
@@ -53,7 +54,6 @@ function Navbar() {
   const menuRef  = useRef()
   const { data: session, status } = useSession()
   const isLoggedIn = status === "authenticated"
-  const isActive = (path) => pathname === path
   const isHome = pathname === "/"
 
   // Al cambiar de página: se cierran el menú y la búsqueda, y en la home el
@@ -439,56 +439,10 @@ function Navbar() {
 
         {/* Menu dropdown */}
         <div ref={menuRef} className={`dropdown-menu ${menuOpen ? "is-open" : "is-closed"}`}>
-          {isLoggedIn && (
-            <>
-              <div className="menu-user-info">
-                <Avatar user={session.user} size={32} />
-                <div style={{ minWidth: 0 }}>
-                  <div className="menu-user-name">{session.user?.name}</div>
-                  <div className="menu-user-email">{session.user?.email}</div>
-                </div>
-              </div>
-              <div className="menu-divider" />
-            </>
-          )}
-
-          <Link href="/" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/") ? "active" : ""}`}>
-            <span className="menu-link-icon">🏠</span> Home
-          </Link>
-          <Link href="/agregar-lugar" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/agregar-lugar") ? "active" : ""}`}>
-            <span className="menu-link-icon">➕</span> Agregar lugar
-          </Link>
-
-          <div className="menu-divider" />
-
-          {isLoggedIn ? (
-            <>
-              <Link href="/profile" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/profile") ? "active" : ""}`}>
-                <span className="menu-link-icon">👤</span> Mi perfil
-              </Link>
-              <Link href="/favorites" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/favorites") ? "active" : ""}`}>
-                <span className="menu-link-icon">❤️</span> Favoritos
-              </Link>
-              <Link href="/reviews" onClick={() => setMenuOpen(false)} className={`menu-link ${isActive("/reviews") ? "active" : ""}`}>
-                <span className="menu-link-icon">💬</span> Mis reviews
-              </Link>
-              <button onClick={() => { setMenuOpen(false); signOut() }} className="menu-link danger">
-                <span className="menu-link-icon">↩</span> Cerrar sesión
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => { setMenuOpen(false); setAuthModalOpen(true) }}
-              className="signin-btn"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                <polyline points="10 17 15 12 10 7"/>
-                <line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-              Iniciar sesión con Google
-            </button>
-          )}
+          <MenuLinks
+            session={session} isLoggedIn={isLoggedIn} Avatar={Avatar} pathname={pathname}
+            onClose={() => setMenuOpen(false)} onSignIn={() => setAuthModalOpen(true)}
+          />
         </div>
 
       </nav>

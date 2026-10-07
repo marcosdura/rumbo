@@ -6,9 +6,11 @@ let session: { id_token: string } | null = null
 let viewer = { is_owner: false, is_admin: false, pending: [] as { id: number; kind: string; title: string }[] }
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: session }) }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, back: () => {} }), usePathname: () => "/spots/x" }))
+let views: { url: string; token: string | undefined }[] = []
 vi.mock("@/lib/api", () => ({
   api: {
     get: (url: string) => Promise.resolve({ data: url.endsWith("/viewer") ? viewer : { average: null, total: 0 } }),
+    post: (url: string, _body: unknown, opts: { token?: string }) => { views.push({ url, token: opts?.token }); return Promise.resolve({ data: null }) },
   },
 }))
 // Lo pesado de la página (mapa, galería, navbar, reseñas) no importa acá.
@@ -106,5 +108,12 @@ describe("Página del lugar sugerido por un visitante", () => {
     render(<SpotDetail spot={spot("Camping")} />)
     await screen.findByText("Cerro Arequita")
     expect(screen.queryByText(/la información está a confirmar/)).toBeNull()
+  })
+
+  it("registra la visita al lugar, una vez", async () => {
+    views = []
+    render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    expect(views).toEqual([{ url: "/spots/12/view", token: undefined }])
   })
 })

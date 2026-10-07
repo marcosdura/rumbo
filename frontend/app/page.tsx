@@ -1,78 +1,37 @@
-﻿"use client"
-
+import { Fragment } from "react"
 import Footer from "@/components/layout/Footer"
-import { useEffect, useState } from "react"
 import Navbar from "@/components/layout/Navbar"
 import HeroHeader from "@/components/layout/HeroHeader"
 import SpotSection from "@/components/spots/SpotSection"
 import SearchBar from "@/components/spots/SearchBar"
+import AddPlaceInvite from "@/components/spots/AddPlaceInvite"
+import ReloadButton from "@/components/ui/ReloadButton"
 import { api } from "@/lib/api"
+import { heroTagline, type HomeData } from "@/lib/home"
 
-type Spot = { id: number; name: string; department: string; [key: string]: unknown }
-type Section = { data: Spot[]; total: number }
+// Se arma en el servidor (antes se pedía todo desde el navegador: Google
+// veía la página sin lugares y el usuario un esqueleto de carga). Las
+// colecciones rotan por día, así que alcanza con regenerarla cada 10 min.
+const REVALIDATE_SECONDS = 600
 
-export default function Home() {
-  const [recent, setRecent]       = useState<Section>({ data: [], total: 0 })
-  const [lavalleja, setLavalleja] = useState<Section>({ data: [], total: 0 })
-  const [rocha, setRocha]         = useState<Section>({ data: [], total: 0 })
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [retryTick, setRetryTick] = useState(0)
+// La invitación a sumar lugares va después de esta cantidad de secciones.
+const INVITE_AFTER = 2
 
-  useEffect(() => {
-    // 3 pedidos chicos y ya filtrados en vez de traer el catálogo entero y
-    // recortarlo a mano acá — antes esto pedía TODOS los spots aprobados
-    // solo para mostrar 6 en cada sección.
-    const fetchSection = (params: string): Promise<Section> =>
-      api.get<Spot[]>(`/spots?${params}`).then(({ data, totalCount }) => ({
-        data: Array.isArray(data) ? data : [],
-        total: totalCount ?? 0,
-      }))
+async function loadHome(): Promise<HomeData | null> {
+  try {
+    const { data } = await api.get<HomeData>("/home", { next: { revalidate: REVALIDATE_SECONDS } })
+    return data
+  } catch {
+    return null
+  }
+}
 
-    Promise.all([
-      fetchSection("limit=6"),
-      fetchSection("department=Lavalleja&limit=6"),
-      fetchSection("department=Rocha&limit=6"),
-    ]).then(([r, l, ro]) => {
-      setRecent(r)
-      setLavalleja(l)
-      setRocha(ro)
-      setLoading(false)
-    }).catch((e) => {
-      setError(e instanceof Error ? e.message : "Error al cargar los spots.")
-      setLoading(false)
-    })
-  }, [retryTick])
-
-  const sections = [
-    {
-      label: "Descubrí Uruguay",
-      title: "Spots populares del mes",
-      spots: recent.data,
-      count: recent.total,
-      href: "/search",
-    },
-    {
-      label: "Destacados",
-      title: "Spots en Lavalleja",
-      spots: lavalleja.data,
-      count: lavalleja.total,
-      href: "/search?department=Lavalleja",
-    },
-    {
-      label: "Destacados",
-      title: "Spots en Rocha",
-      spots: rocha.data,
-      count: rocha.total,
-      href: "/search?department=Rocha",
-    },
-  ]
+export default async function Home() {
+  const data = await loadHome()
+  const sections = data?.sections ?? []
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
-      <style>{`
-      `}</style>
-
       {/* Navbar: fixed en home, oculto hasta que el hero salga del viewport */}
       <Navbar />
 
@@ -106,7 +65,7 @@ export default function Home() {
           fontSize: "clamp(15px, 2vw, 18px)",
           fontWeight: 300,
           marginBottom: 40,
-        }}>Camping, Trekking y mucho más...</p>
+        }}>{heroTagline(data?.stats ?? null)}</p>
 
         <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center" }}>
           <SearchBar hero />
@@ -116,38 +75,33 @@ export default function Home() {
       <div style={{ flex: 1, fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 64px" }}>
 
-          {error ? (
+          {data === null ? (
             <div style={{ textAlign: "center", padding: "64px 24px" }}>
-              <p style={{ color: "var(--danger)", fontSize: 14, marginBottom: 16 }}>{error}</p>
-              <button
-                onClick={() => { setLoading(true); setError(null); setRetryTick((t) => t + 1) }}
-                style={{
-                  fontFamily: "var(--font-dm-sans), sans-serif",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "var(--primary)",
-                  background: "#fff",
-                  border: "1px solid var(--primary)",
-                  borderRadius: 10,
-                  padding: "10px 20px",
-                  cursor: "pointer",
-                }}
-              >
+              <p style={{ color: "var(--danger)", fontSize: 14, marginBottom: 16 }}>No pudimos cargar los lugares.</p>
+              <ReloadButton style={{
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "var(--primary)", background: "#fff",
+                border: "1px solid var(--primary)", borderRadius: 10, padding: "10px 20px", cursor: "pointer",
+              }}>
                 Reintentar
-              </button>
+              </ReloadButton>
             </div>
           ) : (
-            sections.map((section) => (
-              <SpotSection
-                key={section.title}
-                label={section.label}
-                title={section.title}
-                count={section.count}
-                spots={section.spots}
-                href={section.href}
-                loading={loading}
-              />
-            ))
+            <>
+              {sections.map((section, i) => (
+                <Fragment key={section.key}>
+                  <SpotSection
+                    label={section.label}
+                    title={section.title}
+                    count={section.total}
+                    spots={section.spots}
+                    href={section.href}
+                    loading={false}
+                  />
+                  {i === INVITE_AFTER - 1 && <AddPlaceInvite />}
+                </Fragment>
+              ))}
+              {sections.length < INVITE_AFTER && <AddPlaceInvite />}
+            </>
           )}
 
         </div>

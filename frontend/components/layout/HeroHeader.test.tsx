@@ -11,8 +11,11 @@ vi.mock("next-auth/react", () => ({
 vi.mock("@/components/layout/AuthModal", () => ({ default: () => null }))
 vi.mock("@/components/layout/NotificationBell", () => ({ default: () => <span>campanita</span> }))
 vi.mock("next/image", () => ({ default: (props: { alt: string }) => <img alt={props.alt} /> }))
+vi.mock("next/navigation", () => ({ usePathname: () => "/" }))
+vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 
 const { default: HeroHeader } = await import("./HeroHeader")
+const { default: Navbar } = await import("./Navbar")
 
 describe("HeroHeader", () => {
   it("ofrece Agregar lugar (botón y menú), también sin sesión", () => {
@@ -28,5 +31,18 @@ describe("HeroHeader", () => {
     session = { user: { name: "Ana", email: "ana@test.com", image: null }, id_token: "t" }
     render(<HeroHeader />)
     expect(screen.getByText("campanita")).toBeTruthy()
+  })
+
+  it("el menú tiene lo mismo que el del Navbar (con y sin sesión)", () => {
+    for (const s of [null, { user: { name: "Ana", email: "ana@test.com", image: null }, id_token: "t" }]) {
+      session = s
+      const menuOf = (ui: React.ReactElement) => {
+        const { container, unmount } = render(ui)
+        const items = Array.from(container.querySelectorAll(".dropdown-menu .menu-link, .dropdown-menu .signin-btn")).map(e => e.textContent?.trim())
+        unmount()
+        return items
+      }
+      expect(menuOf(<HeroHeader />)).toEqual(menuOf(<Navbar />))
+    }
   })
 })

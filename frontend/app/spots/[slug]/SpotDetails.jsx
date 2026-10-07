@@ -52,7 +52,7 @@ function SpotDetail({ spot }) {
   const [showShare, setShowShare] = useState(false)
   const [reviewSummary, setReviewSummary] = useState(null)
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   // Quién mira: si es el dueño y qué aportes suyos están en revisión acá.
   // La página se genera en el servidor sin sesión; esto lo pide el navegador.
   const [viewer, setViewer] = useState({ is_owner: false, pending: [] })
@@ -63,6 +63,15 @@ function SpotDetail({ spot }) {
       .then(({ data }) => setViewer(data))
       .catch(() => {})  // sin esto la página funciona igual, solo sin los accesos
   }, [spot?.id, session?.id_token])
+
+  // Visita para la métrica de populares (backend/views.py): una vez que se
+  // sabe si hay sesión, para no contar a la misma persona como dos. El
+  // backend la cuenta una vez por persona y por día.
+  useEffect(() => {
+    if (!spot?.id || status === "loading") return
+    api.post(`/spots/${spot.id}/view`, undefined, { token: session?.id_token }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- una por lugar y por carga de sesión
+  }, [spot?.id, status])
 
 useEffect(() => {
   if (!spot?.id) return

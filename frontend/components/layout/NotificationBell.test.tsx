@@ -8,9 +8,13 @@ let unread = 2
 let items: AppNotification[] = []
 let posts: string[] = []
 let pushed: string[] = []
+let countRequests = 0
 vi.mock("@/lib/api", () => ({
   api: {
-    get: (url: string) => Promise.resolve({ data: url.endsWith("unread-count") ? { unread } : { unread, items } }),
+    get: (url: string) => {
+      if (url.endsWith("unread-count")) countRequests++
+      return Promise.resolve({ data: url.endsWith("unread-count") ? { unread } : { unread, items } })
+    },
     post: (url: string) => { posts.push(url); return Promise.resolve({ data: { ok: true } }) },
   },
 }))
@@ -22,6 +26,7 @@ afterEach(() => {
   unread = 2
   posts = []
   pushed = []
+  countRequests = 0
 })
 
 const approved: AppNotification = { id: 1, kind: "spot_approved", title: "Tu lugar «Cascada» fue aprobado", body: "Ya está publicado.", link: "/spots/cascada", created_at: null, read: false }
@@ -73,5 +78,15 @@ describe("NotificationBell", () => {
     render(<NotificationBell token="t" />)
     fireEvent.click(await screen.findByRole("button", { name: "Notificaciones" }))
     expect(await screen.findByText("No tenés notificaciones.")).toBeTruthy()
+  })
+
+  it("dos campanitas (hero y Navbar en la home) hacen una sola consulta y comparten el número", async () => {
+    items = [approved]
+    render(<><NotificationBell token="t" /><NotificationBell token="t" /></>)
+    expect(await screen.findAllByRole("button", { name: "Notificaciones (2 sin leer)" })).toHaveLength(2)
+    expect(countRequests).toBe(1)
+    fireEvent.click(screen.getAllByRole("button", { name: "Notificaciones (2 sin leer)" })[0])
+    fireEvent.click(await screen.findByRole("button", { name: "Marcar todas como leídas" }))
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Notificaciones" })).toHaveLength(2))
   })
 })
