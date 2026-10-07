@@ -20,8 +20,6 @@ export default function Home() {
   const [retryTick, setRetryTick] = useState(0)
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
     // 3 pedidos chicos y ya filtrados en vez de traer el catálogo entero y
     // recortarlo a mano acá — antes esto pedía TODOS los spots aprobados
     // solo para mostrar 6 en cada sección.
@@ -122,7 +120,7 @@ export default function Home() {
             <div style={{ textAlign: "center", padding: "64px 24px" }}>
               <p style={{ color: "var(--danger)", fontSize: 14, marginBottom: 16 }}>{error}</p>
               <button
-                onClick={() => setRetryTick((t) => t + 1)}
+                onClick={() => { setLoading(true); setError(null); setRetryTick((t) => t + 1) }}
                 style={{
                   fontFamily: "var(--font-dm-sans), sans-serif",
                   fontSize: 13,

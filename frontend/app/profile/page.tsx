@@ -29,7 +29,8 @@ export default function ProfilePage() {
  useEffect(() => {
   if (!session?.id_token) return
 
-  setDataLoading(true)
+  // dataLoading arranca en true. Si el token se renueva, los datos se
+  // recargan sin volver a mostrar la carga.
   let cancelled = false
 
   const fetchAll = (idToken: string) => {

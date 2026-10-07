@@ -15,10 +15,12 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const router = useRouter()
   const [sector, setSector] = useState<any>(null)
   const [routes, setRoutes] = useState<any[]>([])
-  const [error, setError] = useState(false)
+  const [fetchError, setError] = useState(false)
+  // Sin slug ni id no hay nada que pedir.
+  const error = fetchError || (!slugProp && !id)
 
   useEffect(() => {
-    if (!slugProp && !id) { setError(true); return }
+    if (!slugProp && !id) return
     const path = slugProp ? `/sectors/by-slug/${slugProp}` : `/sectors/${id}`
     api.get<any>(path)
       .then(({ data }) => {

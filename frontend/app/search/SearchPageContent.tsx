@@ -66,13 +66,18 @@ export default function SearchPage() {
   const [campingFilters, setCampingFilters]       = useState<CampingFilterState>(EMPTY_CAMPING_FILTERS)
   const [filterOpen, setFilterOpen]               = useState(false)
 
-  useEffect(() => {
+  // Otra actividad: los filtros de la anterior no aplican. Se limpian durante
+  // el render (no en un efecto) para que la búsqueda salga una sola vez, ya
+  // sin ellos.
+  const [filtersFor, setFiltersFor] = useState(activity)
+  if (activity !== filtersFor) {
+    setFiltersFor(activity)
     setTrekkingFilters(EMPTY_TREKKING_FILTERS)
     setKayakFilters(EMPTY_KAYAK_FILTERS)
     setSurfFilters(EMPTY_SURF_FILTERS)
     setClimbingFilters(EMPTY_CLIMBING_FILTERS)
     setCampingFilters(EMPTY_CAMPING_FILTERS)
-  }, [activity])
+  }
 
   // Compartido entre el efecto principal y "Cargar más": si cambian los
   // filtros mientras cualquiera de los dos está en vuelo, se cancela el
@@ -90,11 +95,13 @@ export default function SearchPage() {
     setAtBottom(el.scrollTop >= el.scrollHeight - el.clientHeight - 8)
   }
 
+  // Con resultados nuevos (o más), las sombras de arriba y abajo se recalculan
+  // midiendo la lista, como al scrollear.
   useEffect(() => {
     const el = scrollRef.current
     if (!el || loading) return
-    setAtTop(true)
-    setAtBottom(el.scrollHeight <= el.clientHeight + 8)
+    setAtTop(el.scrollTop < 8)
+    setAtBottom(el.scrollTop >= el.scrollHeight - el.clientHeight - 8)
   }, [spots, loading])
 
   // Los mismos filtros alimentan dos requests separados: la lista pagina,
@@ -135,10 +142,18 @@ export default function SearchPage() {
     return params
   }
 
-  useEffect(() => {
+  // Lo que define la búsqueda: si cambia (o se reintenta), se vuelve a pedir.
+  // "Cargando" se prende durante el render, no en el efecto, para no pintar
+  // un cuadro con los resultados viejos y sin aviso.
+  const searchKey = `${buildFilterParams().toString()}#${retryTick}`
+  const [searchedKey, setSearchedKey] = useState(searchKey)
+  if (searchKey !== searchedKey) {
+    setSearchedKey(searchKey)
     setLoading(true)
     setError(null)
+  }
 
+  useEffect(() => {
     fetchControllerRef.current?.abort()
     const controller = new AbortController()
     fetchControllerRef.current = controller
@@ -177,7 +192,9 @@ export default function SearchPage() {
       })
 
     return () => controller.abort()
-  }, [activity, department, trekkingFilters, kayakFilters, surfFilters, climbingFilters, campingFilters, retryTick])
+    // searchKey resume activity, department, los filtros y retryTick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchKey])
 
   const loadMore = () => {
     if (loadingMore) return

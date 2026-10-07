@@ -88,26 +88,30 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
     entityType === "kayak" ? `/kayak-reviews` :
     `/reviews`
 
-  const loadReviews = async () => {
-    setLoadError(false)
-    try {
-      const [revResult, sumResult] = await Promise.all([
-        api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
-        // Con token el summary devuelve además my_review: es la única forma de
-        // saber si el usuario ya reseñó, porque su reseña puede estar en una
-        // página que todavía no se cargó.
-        api.get(`${basePath}/summary`, { token }),
-      ])
-      setReviews(Array.isArray(revResult.data) ? revResult.data : [])
-      setReviewsTotal(revResult.totalCount ?? 0)
-      setSummary(sumResult.data)
-    } catch {
-      // Sin esto la lista queda vacía y la UI dice "todavía no hay reviews",
-      // que es mentira: no se pudieron cargar.
-      setLoadError(true)
-    }
-    setLoading(false)
-  }
+  // El error se limpia recién al cargar bien: mientras reintenta, "Cargando..."
+  // tiene prioridad sobre el aviso de error.
+  // Con .then y no async/await: el lint de React solo reconoce como
+  // asíncrono el setState que va dentro de un callback.
+  const loadReviews = () =>
+    Promise.all([
+      api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
+      // Con token el summary devuelve además my_review: es la única forma de
+      // saber si el usuario ya reseñó, porque su reseña puede estar en una
+      // página que todavía no se cargó.
+      api.get(`${basePath}/summary`, { token }),
+    ])
+      .then(([revResult, sumResult]) => {
+        setReviews(Array.isArray(revResult.data) ? revResult.data : [])
+        setReviewsTotal(revResult.totalCount ?? 0)
+        setSummary(sumResult.data)
+        setLoadError(false)
+      })
+      .catch(() => {
+        // Sin esto la lista queda vacía y la UI dice "todavía no hay reviews",
+        // que es mentira: no se pudieron cargar.
+        setLoadError(true)
+      })
+      .finally(() => setLoading(false))
 
   const loadMoreReviews = async () => {
     if (loadingMore) return

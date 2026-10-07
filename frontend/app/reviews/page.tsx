@@ -39,18 +39,12 @@ export default function ReviewsPage() {
 
   const token = session?.id_token
 
-  const loadReviews = async () => {
-    try {
-      const { data } = await api.get<any[]>("/reviews/user/me", { token })
-      setReviews(data)
-    } catch {}
-    setLoading(false)
-  }
-
   useEffect(() => {
-    if (status === "loading") return
-    if (token) loadReviews()
-    else setLoading(false)
+    if (status === "loading" || !token) return
+    api.get<any[]>("/reviews/user/me", { token })
+      .then(({ data }) => setReviews(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [token, status])
 
   const handleDelete = async () => {
@@ -104,7 +98,8 @@ export default function ReviewsPage() {
     setSaving(false)
   }
 
-  if (status === "loading" || loading) return <LoadingScreen />
+  // Sin sesión no hay nada que cargar: se muestra el aviso de abajo.
+  if (status === "loading" || (!!token && loading)) return <LoadingScreen />
 
   // si no esta logueado
   if (!session) {

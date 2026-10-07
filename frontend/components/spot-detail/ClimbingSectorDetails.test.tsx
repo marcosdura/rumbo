@@ -19,4 +19,9 @@ describe("ClimbingSectorDetails", () => {
     const link = await screen.findByRole("link", { name: "＋ Sugerir una vía" })
     expect(link.getAttribute("href")).toBe("/agregar-lugar?sumar=via&spot=12&sector=5")
   })
+
+  it("sin slug ni id muestra que no existe", () => {
+    render(<ClimbingSectorDetails />)
+    expect(screen.getByText("Sector no encontrado")).toBeTruthy()
+  })
 })

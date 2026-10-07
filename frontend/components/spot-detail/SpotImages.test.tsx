@@ -6,7 +6,9 @@ vi.mock("./ImageGallery", () => ({
   default: ({ startIndex }: { startIndex: number }) => <div role="dialog">galería desde {startIndex}</div>,
 }))
 
-const { default: SpotImages } = await import("./SpotImages")
+// SpotImages es .jsx: TypeScript infiere `images` como never[] por el default.
+const SpotImages = (await import("./SpotImages")).default as unknown as
+  (props: { images: { cloudinary_public_id: string }[]; name: string }) => React.ReactElement | null
 
 const images = [1, 2, 3].map(i => ({ cloudinary_public_id: `rumbo/spots/1/foto${i}` }))
 

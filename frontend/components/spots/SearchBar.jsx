@@ -15,18 +15,44 @@ function normalize(str) {
 }
 
 export default function SearchBar({ onSearch, hero = false } = {}) {
-  const [activity, setActivity] = useState("")
-  const [activityInput, setActivityInput] = useState("")
-  const [department, setDepartment] = useState("")
-  const [departmentInput, setDepartmentInput] = useState("")
+  const searchParams = useSearchParams()
+  // Arranca con lo que diga la URL (por ejemplo, en /search?activity=Surf).
+  const [activity, setActivity] = useState(() => searchParams.get("activity") ?? "")
+  const [activityInput, setActivityInput] = useState(activity)
+  const [department, setDepartment] = useState(() => searchParams.get("department") ?? "")
+  const [departmentInput, setDepartmentInput] = useState(department)
   const [openField, setOpenField] = useState(null)
   // highlighted index in dropdown (0 = best match / first item)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
+
+  // Si la URL cambia (otra búsqueda, atrás/adelante), los campos la siguen.
+  // Se ajusta durante el render, no en un efecto, para no pintar un cuadro
+  // con los valores viejos.
+  const paramsKey = searchParams.toString()
+  const [shownParams, setShownParams] = useState(paramsKey)
+  if (paramsKey !== shownParams) {
+    const a = searchParams.get("activity") ?? ""
+    const d = searchParams.get("department") ?? ""
+    setShownParams(paramsKey)
+    setActivity(a)
+    setActivityInput(a)
+    setDepartment(d)
+    setDepartmentInput(d)
+    setOpenField(null)
+  }
+
+  // Cada vez que cambia lo que se escribe o el campo abierto, se resalta la
+  // primera opción de la lista filtrada.
+  const listKey = `${openField}|${activityInput}|${departmentInput}`
+  const [shownList, setShownList] = useState(listKey)
+  if (listKey !== shownList) {
+    setShownList(listKey)
+    setHighlightedIndex(0)
+  }
   const router = useRouter()
   const barRef = useRef(null)
   const activityInputRef = useRef(null)
   const departmentInputRef = useRef(null)
-  const searchParams = useSearchParams()
 
   const filteredActivities = activities.filter((a) =>
     normalize(a).includes(normalize(activityInput))
@@ -34,11 +60,6 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
   const filteredDepartments = departments.filter((d) =>
     normalize(d).includes(normalize(departmentInput))
   )
-
-  // Reset highlighted index whenever the filtered list changes
-  useEffect(() => {
-    setHighlightedIndex(0)
-  }, [activityInput, departmentInput, openField])
 
   const handleSearch = () => {
     setOpenField(null)
@@ -123,16 +144,6 @@ export default function SearchBar({ onSearch, hero = false } = {}) {
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [openField])
-
-  useEffect(() => {
-    const a = searchParams.get("activity") ?? ""
-    const d = searchParams.get("department") ?? ""
-    setActivity(a)
-    setActivityInput(a)
-    setDepartment(d)
-    setDepartmentInput(d)
-    setOpenField(null)
-  }, [searchParams])
 
   return (
     <>
