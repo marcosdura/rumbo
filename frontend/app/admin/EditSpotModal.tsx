@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 import { useModalA11y } from "@/lib/useModalA11y"
+import { ApiError } from "@/lib/api"
 
 interface EditingSpot { id: number; name: string; description: string }
 
@@ -9,7 +11,13 @@ interface Props {
   editingSpot: EditingSpot | null
   setEditingSpot: (updater: (prev: EditingSpot | null) => EditingSpot | null) => void
   onCancel: () => void
+  // Si falla, tira el error: el modal queda abierto y lo muestra.
   onSave: () => Promise<void>
+}
+
+export function saveErrorMessage(e: unknown): string {
+  // El 422 trae el detalle de validación como lista, no como texto.
+  return e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo guardar. Intentá de nuevo."
 }
 
 // Modal de formulario — no puede usar ConfirmModal (ese es para confirmar,
@@ -17,9 +25,33 @@ interface Props {
 // #f5f4f0 con borde, título en Playfair, botones a la derecha, cierra al
 // clickear afuera.
 export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, onSave }: Props) {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const panelRef = useModalA11y(editingSpot !== null, onCancel)
 
+  // Otro spot (o el mismo reabierto): sin el error del intento anterior.
+  const editingId = editingSpot?.id ?? null
+  const [shownId, setShownId] = useState(editingId)
+  if (editingId !== shownId) {
+    setShownId(editingId)
+    setError(null)
+  }
+
   if (editingSpot === null) return null
+
+  const nameEmpty = editingSpot.name.trim() === ""
+
+  async function save() {
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave()
+    } catch (e) {
+      setError(saveErrorMessage(e))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="edit-modal-overlay" onClick={onCancel}>
@@ -50,6 +82,7 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
           cursor: pointer; background: var(--primary); color: #fff;
           transition: opacity 0.15s;
         }
+        .edit-modal-save-btn:disabled { cursor: not-allowed; opacity: 0.7; }
       `}</style>
 
       <div
@@ -85,9 +118,18 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
           </div>
         </div>
 
+        {nameEmpty && (
+          <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>El nombre no puede quedar vacío.</p>
+        )}
+        {error && (
+          <p role="alert" style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>{error}</p>
+        )}
+
         <div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}>
-          <button className="edit-modal-cancel-btn" onClick={onCancel}>Cancelar</button>
-          <button className="edit-modal-save-btn" onClick={onSave}>Guardar</button>
+          <button className="edit-modal-cancel-btn" onClick={onCancel} disabled={saving}>Cancelar</button>
+          <button className="edit-modal-save-btn" onClick={save} disabled={saving || nameEmpty}>
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
         </div>
       </div>
     </div>

@@ -36,6 +36,7 @@ export default function AdminPage() {
   const [sortBy, setSortBy] = useState<SortBy>("date_desc")
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
   const [photoToDelete, setPhotoToDelete] = useState<{ spotId: number; publicId: string } | null>(null)
+  const [photoDeleteError, setPhotoDeleteError] = useState<string | null>(null)
   const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
 
   // Pedidos de cambio sobre spots aprobados (pestaña "Cambios pendientes").
@@ -256,7 +257,15 @@ export default function AdminPage() {
 
   async function handleDeletePhoto(spotId: number, publicId: string) {
     setPhotoLoading(true)
-    await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token }).catch(() => {})
+    setPhotoDeleteError(null)
+    try {
+      await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token })
+    } catch (e) {
+      // La foto sigue en la lista y el modal abierto con el motivo.
+      setPhotoDeleteError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo eliminar la foto. Intentá de nuevo.")
+      setPhotoLoading(false)
+      return
+    }
     setSpots(prev => prev.map(s => {
       if (s.id !== spotId) return s
       return { ...s, images: s.images.filter(img => img.cloudinary_public_id !== publicId) }
@@ -265,9 +274,10 @@ export default function AdminPage() {
     setPhotoToDelete(null)
   }
 
+  // Si falla, el error lo muestra EditSpotModal y el modal queda abierto.
   async function handleSaveEdit() {
     if (!editingSpot) return
-    await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token }).catch(() => {})
+    await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token })
     setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
     setEditingSpot(null)
   }
@@ -434,7 +444,7 @@ export default function AdminPage() {
             setPhotoSpotId={setPhotoSpotId}
             photoLoading={photoLoading}
             onSetMainPhoto={handleSetMainPhoto}
-            onDeletePhotoRequest={(spotId, publicId) => setPhotoToDelete({ spotId, publicId })}
+            onDeletePhotoRequest={(spotId, publicId) => { setPhotoDeleteError(null); setPhotoToDelete({ spotId, publicId }) }}
             onSpotsRefreshed={setSpots}
           />
         )}
@@ -466,7 +476,8 @@ export default function AdminPage() {
         title="¿Eliminar esta foto?"
         message="La foto se borra de Cloudinary y no se puede recuperar."
         loading={photoLoading}
-        onCancel={() => setPhotoToDelete(null)}
+        error={photoDeleteError}
+        onCancel={() => { setPhotoToDelete(null); setPhotoDeleteError(null) }}
         onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete.spotId, photoToDelete.publicId)}
       />
 
