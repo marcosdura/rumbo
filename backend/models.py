@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true, false
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, Date, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true, false
 from database import Base
 from sqlalchemy import event
 from sqlalchemy.orm import Session, relationship, with_loader_criteria
@@ -195,6 +195,20 @@ class Notification(Base):
     link       = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     read_at    = Column(DateTime(timezone=True), nullable=True)
+
+
+class SpotView(Base):
+    """Una visita a la página de un lugar: una por persona, por lugar y por
+    día (views.py). Sin IPs ni emails: viewer_hash es un hash con sal del
+    día. Se junta para sumarla a la métrica de populares (home.py) cuando
+    haya datos suficientes."""
+    __tablename__ = "spot_views"
+    __table_args__ = (UniqueConstraint("spot_id", "day", "viewer_hash", name="uq_spot_view_daily"),)
+
+    id          = Column(Integer, primary_key=True)
+    spot_id     = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    day         = Column(Date, nullable=False, index=True)
+    viewer_hash = Column(String(64), nullable=False)
 
 
 class SpotClaim(Base):

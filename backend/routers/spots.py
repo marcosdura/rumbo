@@ -439,15 +439,23 @@ def get_spots(
     total = query.order_by(None).with_entities(SpotDB.id).distinct().count()
     response.headers["X-Total-Count"] = str(total)
 
-    query = query.options(
-        joinedload(SpotDB.category),
-        joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
-        joinedload(SpotDB.images),
-        selectinload(SpotDB.glamping_detail),
-        selectinload(SpotDB.glamping_amenities),
-    )
+    query = query.options(*SPOT_LIST_OPTIONS)
     spots = query.limit(limit).offset(offset).all()
+    return serialize_spot_list(db, spots)
 
+
+# Lo que carga cada lugar de un listado (GET /spots, la home).
+SPOT_LIST_OPTIONS = (
+    joinedload(SpotDB.category),
+    joinedload(SpotDB.amenities).joinedload(SpotAmenity.amenity),
+    joinedload(SpotDB.images),
+    selectinload(SpotDB.glamping_detail),
+    selectinload(SpotDB.glamping_amenities),
+)
+
+
+def serialize_spot_list(db: Session, spots: list) -> list[dict]:
+    """Los lugares como los muestra SpotCard, con su puntaje de reseñas."""
     spot_ids = [s.id for s in spots]
     review_aggs = (
         db.query(
