@@ -59,8 +59,8 @@ OPERATOR_MODELS = {"surf_school": SurfSchool, "kayak": KayakDetail}
 # Se aplican al instante (como contacto y precio en un spot). Nombre y fotos
 # pasan por revisión.
 INSTANT_FIELDS = {
-    "surf_school": ["class_type", "duration", "equipment_include", "email", "whatsapp", "instagram", "season_start", "season_end"],
-    "kayak": ["water_type", "difficulty", "duration", "kayak_type", "rental_available", "email", "whatsapp", "instagram", "season_start", "season_end"],
+    "surf_school": ["class_type", "duration", "equipment_include", "levels", "languages", "email", "whatsapp", "instagram", "season_start", "season_end"],
+    "kayak": ["water_type", "difficulty", "duration", "kayak_type", "rental_available", "includes_guide", "includes_life_jacket", "email", "whatsapp", "instagram", "season_start", "season_end"],
 }
 
 

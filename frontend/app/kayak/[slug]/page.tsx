@@ -10,6 +10,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
 import type { PublicKayak, ReviewSummary } from "@/lib/types"
+import { yesNo } from "@/lib/operatorInfo"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -277,6 +278,19 @@ export default async function KayakDetailPage({ params }: Props) {
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         🏪 {kayak.rental_available ? "Disponible" : "No disponible"}
                       </span>
+                    </div>
+                  )}
+                  {/* Guía y chaleco: solo si se saben. */}
+                  {kayak.includes_guide != null && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>🧭 Guía</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", textAlign: "right" }}>{`${yesNo(kayak.includes_guide)}`}</span>
+                    </div>
+                  )}
+                  {kayak.includes_life_jacket != null && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>🦺 Chaleco salvavidas</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", textAlign: "right" }}>{`${yesNo(kayak.includes_life_jacket)}`}</span>
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

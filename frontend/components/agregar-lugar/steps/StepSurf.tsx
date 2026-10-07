@@ -8,6 +8,17 @@ import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
 import type { SurfItem } from "../types"
+import MultiChoiceUnknown from "@/components/ui/MultiChoiceUnknown"
+import { LANGUAGES, SURF_LEVELS } from "@/lib/operatorInfo"
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>{label}</span>
+      {children}
+    </div>
+  )
+}
 
 export default function StepSurf({
   surf, setSurf, surfPhotoFiles, setSurfPhotoFiles, surfPhotoPreviews, setSurfPhotoPreviews,
@@ -90,6 +101,12 @@ export default function StepSurf({
             <div />
           </div>
           <Toggle label="Equipo incluido" checked={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
+          <InfoRow label="¿Para qué niveles?">
+            <MultiChoiceUnknown label="Niveles" options={SURF_LEVELS} value={surf.levels} onChange={v => setSurf(p => ({ ...p, levels: v }))} />
+          </InfoRow>
+          <InfoRow label="¿En qué idiomas dan las clases?">
+            <MultiChoiceUnknown label="Idiomas" options={LANGUAGES} value={surf.languages} onChange={v => setSurf(p => ({ ...p, languages: v }))} />
+          </InfoRow>
 
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: fieldErrors.has("photo") ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>

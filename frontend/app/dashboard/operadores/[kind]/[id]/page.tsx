@@ -17,6 +17,9 @@ import { uploadImageToCloudinary, buildPublicId, ALLOWED_IMAGE_TYPES, MAX_IMAGE_
 import ChangeRequestBanner from "@/app/dashboard/spots/[id]/ChangeRequestBanner"
 import { s, MONTHS } from "@/app/dashboard/spots/[id]/styles"
 import { errorMessage } from "@/app/dashboard/spots/[id]/changes"
+import MultiChoiceUnknown from "@/components/ui/MultiChoiceUnknown"
+import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
+import { LANGUAGES, SURF_LEVELS } from "@/lib/operatorInfo"
 import {
   OPERATOR_KINDS, OPERATOR_LABELS, asSpotChangeRequest, describeOperatorFields, formFromOperator,
   operatorPayload, photosOf, type Operator, type OperatorForm, type OperatorKind,
@@ -269,6 +272,8 @@ export default function OperatorDashboardPage() {
               <>
                 <div><label style={s.label}>Tipo de clase</label>{select(form.class_type, v => upd("class_type", v), [["grupal", "Grupal"], ["privada", "Privada"], ["intensivo", "Intensivo"]])}</div>
                 <div><label style={s.label}>¿Incluye el equipo?</label>{yesNo(form.equipment_include, v => upd("equipment_include", v))}</div>
+                <div><label style={s.label}>¿Para qué niveles?</label><MultiChoiceUnknown label="Niveles" options={SURF_LEVELS} value={form.levels} onChange={v => upd("levels", v)} /></div>
+                <div><label style={s.label}>¿En qué idiomas dan las clases?</label><MultiChoiceUnknown label="Idiomas" options={LANGUAGES} value={form.languages} onChange={v => upd("languages", v)} /></div>
               </>
             ) : (
               <>
@@ -276,6 +281,8 @@ export default function OperatorDashboardPage() {
                 <div><label style={s.label}>Dificultad</label>{select(form.difficulty, v => upd("difficulty", v), [["facil", "Fácil"], ["intermedio", "Intermedio"], ["dificil", "Difícil"]])}</div>
                 <div><label style={s.label}>Tipo de kayak</label>{select(form.kayak_type, v => upd("kayak_type", v), [["travesia", "Travesía"], ["recreativo", "Recreativo"], ["rapido", "Rápido"]])}</div>
                 <div><label style={s.label}>¿Alquilás kayaks?</label>{yesNo(form.rental_available, v => upd("rental_available", v))}</div>
+                <div><label style={s.label}>¿Incluye guía?</label><TriStateToggle value={form.includes_guide} onChange={v => upd("includes_guide", v)} /></div>
+                <div><label style={s.label}>¿Incluye chaleco salvavidas?</label><TriStateToggle value={form.includes_life_jacket} onChange={v => upd("includes_life_jacket", v)} /></div>
               </>
             )}
             <div>

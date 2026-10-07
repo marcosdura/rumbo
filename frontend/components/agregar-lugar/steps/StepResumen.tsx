@@ -6,6 +6,7 @@ import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
 import Pill from "@/components/ui/Pill"
 import { ROCK_TYPES, SUN_EXPOSURE, approachLabel } from "@/lib/sectorInfo"
+import { LANGUAGES, SURF_LEVELS, listLabel, yesNo } from "@/lib/operatorInfo"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
@@ -379,6 +380,8 @@ export default function StepResumen({
             value={surf.season_type === "seasonal" ? `Estacional (${surf.season_start || "?"} a ${surf.season_end || "?"})` : "Todo el año"}
           />
           <SummaryRow label="Equipo incluido" value={surf.equipment_include ? "Sí" : "No"} />
+          <SummaryRow label="Niveles" value={listLabel(surf.levels, SURF_LEVELS) ?? "No sé"} />
+          <SummaryRow label="Idiomas" value={listLabel(surf.languages, LANGUAGES) ?? "No sé"} />
           {surf.email && <SummaryRow label="Email" value={surf.email} />}
           {surf.whatsapp && <SummaryRow label="WhatsApp" value={surf.whatsapp} />}
           {surf.instagram && <SummaryRow label="Instagram" value={surf.instagram} />}
@@ -406,6 +409,8 @@ export default function StepResumen({
                 value={k.season_type === "seasonal" ? `Estacional (${k.season_start || "?"} a ${k.season_end || "?"})` : "Todo el año"}
               />
               <SummaryRow label="Alquiler disponible" value={k.rental_available ? "Sí" : "No"} />
+              <SummaryRow label="Incluye guía" value={yesNo(k.includes_guide) ?? "No sé"} />
+              <SummaryRow label="Incluye chaleco" value={yesNo(k.includes_life_jacket) ?? "No sé"} />
               {k.email && <SummaryRow label="Email" value={k.email} />}
               {k.whatsapp && <SummaryRow label="WhatsApp" value={k.whatsapp} />}
               {k.instagram && <SummaryRow label="Instagram" value={k.instagram} />}

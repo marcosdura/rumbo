@@ -11,6 +11,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
 import type { PublicSurfSchool, ReviewSummary } from "@/lib/types"
+import { LANGUAGES, SURF_LEVELS, listLabel } from "@/lib/operatorInfo"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -266,6 +267,19 @@ export default async function SurfSchoolPage({ params }: Props) {
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                         🩳 {school.equipment_include ? "Incluido" : "No incluido"}
                       </span>
+                    </div>
+                  )}
+                  {/* Niveles e idiomas: solo si se saben. */}
+                  {listLabel(school.levels, SURF_LEVELS) && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Niveles</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", textAlign: "right" }}>{listLabel(school.levels, SURF_LEVELS)}</span>
+                    </div>
+                  )}
+                  {listLabel(school.languages, LANGUAGES) && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Idiomas</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19", textAlign: "right" }}>{listLabel(school.languages, LANGUAGES)}</span>
                     </div>
                   )}
                   {!isSeasonal && (

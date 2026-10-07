@@ -22,6 +22,8 @@ export type SurfItem = {
   name: string; class_type: string; duration: string; equipment_include: boolean
   season_type: "all_year" | "seasonal"; season_start: string; season_end: string
   email: string; whatsapp: string; instagram: string
+  // null = no sé.
+  levels: string[] | null; languages: string[] | null
 }
 
 export type KayakItem = {
@@ -29,6 +31,8 @@ export type KayakItem = {
   rental_available: boolean
   season_type: "all_year" | "seasonal"; season_start: string; season_end: string
   email: string; whatsapp: string; instagram: string
+  // null = no sé.
+  includes_guide: boolean | null; includes_life_jacket: boolean | null
 }
 
 export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null

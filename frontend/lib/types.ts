@@ -18,6 +18,9 @@ type PublicOperatorBase = {
 export type PublicSurfSchool = PublicOperatorBase & {
   class_type: string | null
   equipment_include: boolean | null
+  // null = no sé.
+  levels: string[] | null
+  languages: string[] | null
 }
 
 export type PublicKayak = PublicOperatorBase & {
@@ -25,6 +28,9 @@ export type PublicKayak = PublicOperatorBase & {
   difficulty: string | null
   kayak_type: string | null
   rental_available: boolean | null
+  // null = no sé.
+  includes_guide: boolean | null
+  includes_life_jacket: boolean | null
 }
 
 // GET /spots/by-slug/{slug}. SpotDetails (.jsx) usa muchos más campos.

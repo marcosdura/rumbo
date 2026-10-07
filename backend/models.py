@@ -490,6 +490,9 @@ class KayakDetail(ReviewedContent, Base):
     kayak_type = Column(String)       # travesia | recreativo | rapido
 
     rental_available = Column(Boolean, default=False)
+    # null = "no sé".
+    includes_guide       = Column(Boolean, nullable=True)
+    includes_life_jacket = Column(Boolean, nullable=True)
 
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
@@ -527,6 +530,9 @@ class SurfSchool(ReviewedContent, Base):
     class_type = Column(String)        # grupal | privada | intensivo
     duration = Column(Float)
     equipment_include = Column(Boolean)
+    # Listas; null = "no sé" (quien lo cargó no lo sabía).
+    levels    = Column(JSON, nullable=True)     # principiante | intermedio | avanzado
+    languages = Column(JSON, nullable=True)     # espanol | ingles | portugues | otro
 
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)

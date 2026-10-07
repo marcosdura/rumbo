@@ -8,6 +8,16 @@ import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
 import type { KayakItem } from "../types"
+import TriStateToggle from "../ui/TriStateToggle"
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>{label}</span>
+      {children}
+    </div>
+  )
+}
 
 export default function StepKayak({
   kayaks, setKayaks, kayakPhotoFiles, setKayakPhotoFiles, kayakPhotoPreviews, setKayakPhotoPreviews,
@@ -32,7 +42,7 @@ export default function StepKayak({
   const [nameErrors, setNameErrors] = useState<Set<number>>(new Set())
   const [photoError, setPhotoError] = useState(false)
 
-  function updKayak(i: number, field: string, val: string | boolean) {
+  function updKayak(i: number, field: string, val: string | boolean | null) {
     setKayaks(prev => prev.map((k, idx) => idx === i ? { ...k, [field]: val } : k))
     if (field === "name" && val) setNameErrors(prev => { const n = new Set(prev); n.delete(i); return n })
   }
@@ -119,6 +129,12 @@ export default function StepKayak({
               <div />
             </div>
             <Toggle label="Alquiler disponible" checked={k.rental_available} onChange={v => updKayak(i, "rental_available", v)} />
+            <InfoRow label="¿Incluye guía?">
+              <TriStateToggle value={k.includes_guide} onChange={v => updKayak(i, "includes_guide", v)} />
+            </InfoRow>
+            <InfoRow label="¿Incluye chaleco salvavidas?">
+              <TriStateToggle value={k.includes_life_jacket} onChange={v => updKayak(i, "includes_life_jacket", v)} />
+            </InfoRow>
 
             {i === 0 && (
               <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>

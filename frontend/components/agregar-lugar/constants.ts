@@ -165,12 +165,14 @@ export const defaultSurf = (): SurfItem => ({
   name: "", class_type: "", duration: "", equipment_include: false,
   season_type: "all_year", season_start: "", season_end: "",
   email: "", whatsapp: "", instagram: "",
+  levels: null, languages: null,
 })
 
 export const defaultKayak = (): KayakItem => ({
   name: "", water_type: "", difficulty: "", duration: "", kayak_type: "",
   rental_available: false, season_type: "all_year", season_start: "", season_end: "",
   email: "", whatsapp: "", instagram: "",
+  includes_guide: null, includes_life_jacket: null,
 })
 
 export const emptyBasic = (): BasicInfo => ({

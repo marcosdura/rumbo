@@ -302,6 +302,8 @@ function surfPayload(surf: SurfItem) {
     season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
     season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
     email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+    // null = no sé.
+    levels: surf.levels, languages: surf.languages,
   }
 }
 
@@ -314,6 +316,7 @@ function kayakPayload(k: KayakItem) {
     season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
     season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
     email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+    includes_guide: k.includes_guide, includes_life_jacket: k.includes_life_jacket,
   }
 }
 

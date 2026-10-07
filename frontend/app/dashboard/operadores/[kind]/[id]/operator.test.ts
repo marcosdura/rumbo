@@ -20,8 +20,17 @@ describe("operator", () => {
     expect(payload).toEqual({
       name: "Escuela Ola", duration: 1.5, email: null, whatsapp: "099", instagram: null,
       season_start: 11, season_end: 3, photos: ["https://a"],
-      class_type: "grupal", equipment_include: true,
+      class_type: "grupal", equipment_include: true, levels: null, languages: null,
     })
+  })
+
+  it("niveles, idiomas, guía y chaleco: ida y vuelta, null = no sé", () => {
+    const withData = { ...surf, levels: ["principiante"], languages: ["ingles", "portugues"] }
+    expect(operatorPayload("surf_school", formFromOperator(withData), [])).toMatchObject({
+      levels: ["principiante"], languages: ["ingles", "portugues"],
+    })
+    const kayak = { ...surf, kind: "kayak" as const, includes_guide: true, includes_life_jacket: null }
+    expect(operatorPayload("kayak", formFromOperator(kayak), [])).toMatchObject({ includes_guide: true, includes_life_jacket: null })
   })
 
   it("kayak manda sus propios campos y no los de surf", () => {

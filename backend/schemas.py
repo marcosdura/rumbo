@@ -3,6 +3,12 @@ from typing import Literal, Optional
 from datetime import datetime
 from pydantic import field_validator
 
+# Valores permitidos de los datos opcionales (None = "no sé").
+SunExposure = Literal["sol", "sombra", "mixto"]
+RockType = Literal["granito", "basalto", "arenisca", "cuarcita", "caliza", "otra"]
+SurfLevel = Literal["principiante", "intermedio", "avanzado"]
+Language = Literal["espanol", "ingles", "portugues", "otro"]
+
 
 # -------- CATEGORY --------
 class CategoryBase(BaseModel):
@@ -77,6 +83,10 @@ class OperatorEditRequest(BaseModel):
     difficulty: Optional[str] = Field(default=None, max_length=50)
     kayak_type: Optional[str] = Field(default=None, max_length=50)
     rental_available: Optional[bool] = None
+    includes_guide: Optional[bool] = None
+    includes_life_jacket: Optional[bool] = None
+    levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
+    languages: Optional[list[Language]] = Field(default=None, max_length=4)
     duration: Optional[float] = None
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
@@ -220,10 +230,6 @@ class RouteResponse(RouteBase):
 
 
 # -------- CLIMBING SECTOR --------
-SunExposure = Literal["sol", "sombra", "mixto"]
-RockType = Literal["granito", "basalto", "arenisca", "cuarcita", "caliza", "otra"]
-
-
 class ClimbingSectorBase(BaseModel):
     name: str = Field(max_length=200)
     type: Optional[str] = Field(default=None, max_length=50)
@@ -286,6 +292,9 @@ class KayakDetail(BaseModel):
     duration: Optional[float] = None
     kayak_type: Optional[str] = Field(default=None, max_length=50)
     rental_available: Optional[bool] = None
+    # None = "no sé".
+    includes_guide: Optional[bool] = None
+    includes_life_jacket: Optional[bool] = None
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     instagram: Optional[str] = Field(default=None, max_length=100)
@@ -316,6 +325,9 @@ class SurfSchool(BaseModel):
     duration: Optional[float] = None
     class_type: Optional[str] = Field(default=None, max_length=50)
     equipment_include: Optional[bool] = None
+    # None = "no sé".
+    levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
+    languages: Optional[list[Language]] = Field(default=None, max_length=4)
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     instagram: Optional[str] = Field(default=None, max_length=100)

@@ -34,8 +34,10 @@ export type Operator = {
   season_start: number | null; season_end: number | null
   // Escuela de surf
   class_type?: string | null; equipment_include?: boolean | null
+  levels?: string[] | null; languages?: string[] | null
   // Kayak
   water_type?: string | null; difficulty?: string | null; kayak_type?: string | null; rental_available?: boolean | null
+  includes_guide?: boolean | null; includes_life_jacket?: boolean | null
 }
 
 export type OperatorForm = {
@@ -44,7 +46,10 @@ export type OperatorForm = {
   email: string; whatsapp: string; instagram: string
   seasonal: boolean; season_start: string; season_end: string
   class_type: string; equipment_include: boolean | null
+  // null = no sé.
+  levels: string[] | null; languages: string[] | null
   water_type: string; difficulty: string; kayak_type: string; rental_available: boolean | null
+  includes_guide: boolean | null; includes_life_jacket: boolean | null
 }
 
 export function formFromOperator(op: Operator): OperatorForm {
@@ -56,8 +61,10 @@ export function formFromOperator(op: Operator): OperatorForm {
     season_start: op.season_start ? String(op.season_start) : "",
     season_end: op.season_end ? String(op.season_end) : "",
     class_type: op.class_type ?? "", equipment_include: op.equipment_include ?? null,
+    levels: op.levels ?? null, languages: op.languages ?? null,
     water_type: op.water_type ?? "", difficulty: op.difficulty ?? "", kayak_type: op.kayak_type ?? "",
     rental_available: op.rental_available ?? null,
+    includes_guide: op.includes_guide ?? null, includes_life_jacket: op.includes_life_jacket ?? null,
   }
 }
 
@@ -78,11 +85,15 @@ export function operatorPayload(kind: OperatorKind, form: OperatorForm, photos: 
     photos,
   }
   return kind === "surf_school"
-    ? { ...common, class_type: form.class_type || null, equipment_include: form.equipment_include }
+    ? {
+      ...common, class_type: form.class_type || null, equipment_include: form.equipment_include,
+      levels: form.levels, languages: form.languages,
+    }
     : {
       ...common,
       water_type: form.water_type || null, difficulty: form.difficulty || null,
       kayak_type: form.kayak_type || null, rental_available: form.rental_available,
+      includes_guide: form.includes_guide, includes_life_jacket: form.includes_life_jacket,
     }
 }
 
@@ -90,6 +101,7 @@ const FIELD_LABELS: Record<string, string> = {
   name: "nombre", photos: "fotos", class_type: "tipo de clase", duration: "duración",
   equipment_include: "equipo incluido", water_type: "tipo de agua", difficulty: "dificultad",
   kayak_type: "tipo de kayak", rental_available: "alquiler", email: "email", whatsapp: "WhatsApp",
+  levels: "niveles", languages: "idiomas", includes_guide: "guía", includes_life_jacket: "chaleco",
   instagram: "Instagram", season_start: "temporada", season_end: "temporada",
 }
 

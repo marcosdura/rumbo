@@ -1,5 +1,6 @@
 """Datos nuevos para el visitante: todos opcionales, None = "no sé"."""
 from conftest import ADMIN, as_user
+from models import KayakDetail, SurfSchool
 
 
 # -------- Sectores de escalada --------
@@ -26,3 +27,55 @@ def test_un_sector_rechaza_valores_que_no_existen(client, make_spot):
     for bad in ({"sun_exposure": "nublado"}, {"rock_type": "plastico"}, {"approach_minutes": -5}):
         r = client.post("/sectors/", json={"spot_id": spot.id, "name": "X", **bad}, headers=as_user(ADMIN))
         assert r.status_code == 422, bad
+
+
+# -------- Escuelas de surf y servicios de kayak --------
+
+OPERATOR = "operador@test.com"
+
+
+def test_una_escuela_guarda_niveles_e_idiomas(client, make_spot):
+    beach = make_spot(name="Playa Brava", category="Surf")
+    r = client.post("/surfschool/", json={
+        "spot_id": beach.id, "name": "Escuela Ola", "levels": ["principiante", "intermedio"], "languages": ["espanol", "ingles"],
+    }, headers=as_user(ADMIN))
+    assert r.status_code == 200, r.text
+    school = client.get(f"/surfschool/{r.json()['id']}").json()
+    assert (school["levels"], school["languages"]) == (["principiante", "intermedio"], ["espanol", "ingles"])
+
+
+def test_una_escuela_sin_esos_datos_queda_en_no_se(client, make_spot):
+    beach = make_spot(name="Playa Brava", category="Surf")
+    r = client.post("/surfschool/", json={"spot_id": beach.id, "name": "Escuela Ola"}, headers=as_user(ADMIN))
+    assert (r.json()["levels"], r.json()["languages"]) == (None, None)
+
+
+def test_una_escuela_rechaza_niveles_o_idiomas_que_no_existen(client, make_spot):
+    beach = make_spot(name="Playa Brava", category="Surf")
+    for bad in ({"levels": ["experto"]}, {"languages": ["klingon"]}):
+        r = client.post("/surfschool/", json={"spot_id": beach.id, "name": "X", **bad}, headers=as_user(ADMIN))
+        assert r.status_code == 422, bad
+
+
+def test_un_kayak_guarda_guia_y_chaleco(client, make_spot):
+    lake = make_spot(name="Laguna", category="Kayak")
+    r = client.post("/kayak/", json={"spot_id": lake.id, "name": "Kayak Sur", "includes_guide": True, "includes_life_jacket": False}, headers=as_user(ADMIN))
+    assert r.status_code == 200, r.text
+    assert (r.json()["includes_guide"], r.json()["includes_life_jacket"]) == (True, False)
+
+
+def test_el_duenio_los_edita_al_instante_y_puede_volver_a_no_se(client, db, make_spot):
+    beach = make_spot(name="Playa Brava", category="Surf")
+    school = SurfSchool(spot_id=beach.id, name="Escuela Ola", owner_email=OPERATOR, levels=["avanzado"])
+    lake = make_spot(name="Laguna", category="Kayak")
+    kayak = KayakDetail(spot_id=lake.id, name="Kayak Sur", owner_email=OPERATOR)
+    db.add_all([school, kayak])
+    db.commit()
+
+    r = client.patch(f"/operators/surf_school/{school.id}", json={"levels": None, "languages": ["portugues"]}, headers=as_user(OPERATOR))
+    assert sorted(r.json()["applied"]) == ["languages", "levels"]
+    r = client.patch(f"/operators/kayak/{kayak.id}", json={"includes_guide": True}, headers=as_user(OPERATOR))
+    assert r.json()["applied"] == ["includes_guide"]
+    db.expire_all()
+    assert (db.get(SurfSchool, school.id).levels, db.get(SurfSchool, school.id).languages) == (None, ["portugues"])
+    assert db.get(KayakDetail, kayak.id).includes_guide is True
