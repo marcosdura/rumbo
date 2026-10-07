@@ -17,7 +17,7 @@ import { api } from "@/lib/api"
 import { RESULT_COPY, mySpotsFor, type MySpot, type SubmitResult } from "./result"
 import { parsePrefill, prefillIntro, PREFILL_AGAIN, PREFILL_CATEGORY, type PrefillKind } from "./prefill"
 import {
-  ENTRY_STEP, canEdit, createsSpot, flowSteps, nextStep, previousStep, stepLabel, type StepKey,
+  ENTRY_STEP, canEdit, createsSpot, flowSteps, isComplete, nextStep, previousStep, stepLabel, stepProgress, type StepKey,
 } from "./flow"
 import Link from "next/link"
 import type { PickableSpot } from "@/components/forms/spotSearch"
@@ -423,6 +423,8 @@ export default function AgregarLugar() {
   const pageHeader = (
     <AgregarLugarHeader
       stepLabel={label}
+      progress={stepProgress(steps, step, entry, selectedCat?.name ?? null)}
+      incomplete={!isComplete(steps)}
       canReset={step !== (entry ?? "categoria")}
       intro={locked ? prefillIntro(locked.kind, locked.spot.name, locked.sector?.name) : undefined}
       onReset={reset}

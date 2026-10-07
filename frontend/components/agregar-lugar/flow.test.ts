@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
-  ENTRY_STEP, canEdit, createsSpot, flowSteps, isComplete, nextStep, previousStep, stepLabel,
+  ENTRY_STEP, canEdit, createsSpot, flowSteps, isComplete, nextStep, previousStep, stepLabel, stepProgress,
   type FlowInput,
 } from "./flow"
 
@@ -86,5 +86,22 @@ describe("link directo", () => {
     expect(flow({ category: "Escalada", climbingMode: "new_route" })).toContain(ENTRY_STEP.via)
     expect(flow({ category: "Surf" })).toContain(ENTRY_STEP.surf)
     expect(flow({ category: "Kayak" })).toContain(ENTRY_STEP.kayak)
+  })
+})
+
+describe("stepProgress", () => {
+  it("nombra los pasos y marca hechos, actual y pendientes", () => {
+    const steps = flow({ category: "Kayak" })
+    expect(stepProgress(steps, "servicio", null, "Kayak")).toEqual([
+      { key: "categoria", label: "Categoría", state: "done" },
+      { key: "lugar", label: "Lugar", state: "done" },
+      { key: "servicio", label: "Servicio", state: "current" },
+      { key: "resumen", label: "Revisar", state: "todo" },
+    ])
+  })
+
+  it("con link directo empieza en el paso de entrada", () => {
+    const steps = flow({ category: "Surf" })
+    expect(stepProgress(steps, "servicio", ENTRY_STEP.surf, "Surf").map(i => i.label)).toEqual(["Escuela", "Revisar"])
   })
 })

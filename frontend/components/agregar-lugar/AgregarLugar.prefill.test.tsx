@@ -180,3 +180,18 @@ describe("AgregarLugar: escuelas de surf", () => {
     expect(screen.getByRole("option", { name: /La Paloma/ })).toBeTruthy()
   })
 })
+
+describe("AgregarLugar: indicador de pasos", () => {
+  it("muestra los pasos con nombre y marca el actual", async () => {
+    responses = { "/spots/12": AREQUITA }
+    openWith("sumar=sector&spot=12")
+    await screen.findByText("Datos del sector")
+    const steps = screen.getByRole("list", { name: "Pasos" })
+    expect(steps.textContent).toBe("SectorVíasRevisar")
+    expect(steps.querySelector('[aria-current="step"]')!.textContent).toBe("Sector")
+    fireEvent.change(screen.getByLabelText("Nombre del sector"), { target: { value: "Placa Sur" } })
+    click("Siguiente")
+    expect(steps.querySelector('[aria-current="step"]')!.textContent).toBe("Vías")
+    expect(steps.textContent).toContain("✓ Sector")
+  })
+})

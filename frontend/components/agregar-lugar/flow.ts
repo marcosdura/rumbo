@@ -112,3 +112,28 @@ export function canEdit(steps: StepKey[], target: StepKey, entry: StepKey | null
 export function createsSpot(steps: StepKey[]): boolean {
   return steps.includes("info")
 }
+
+// Nombre corto de cada paso para el indicador del encabezado.
+const STEP_NAMES: Record<StepKey, string> = {
+  categoria: "Categoría", modo: "Qué agregás", lugar: "Lugar", sector: "Sector", info: "Datos",
+  glamping_unidades: "Alojamientos", motorhome: "Motorhome", amenities: "Servicios",
+  experiencias: "Experiencias", trekking_caracteristicas: "Características", rutas: "Rutas",
+  sectores: "Sectores", sector_nuevo: "Sector", vias: "Vías", vias_nuevas: "Vías",
+  servicio: "Escuela", imagenes: "Fotos", adicionales: "Más categorías", resumen: "Revisar",
+}
+
+export function stepName(key: StepKey, category: string | null): string {
+  if (key === "servicio" && category === "Kayak") return "Servicio"
+  return STEP_NAMES[key]
+}
+
+export type StepProgressItem = { key: StepKey; label: string; state: "done" | "current" | "todo" }
+
+// Los pasos para el indicador, desde el de entrada si vino por link directo.
+export function stepProgress(steps: StepKey[], current: StepKey, entry: StepKey | null, category: string | null): StepProgressItem[] {
+  const visible = visibleSteps(steps, entry)
+  const i = visible.indexOf(current)
+  return visible.map((key, j) => ({
+    key, label: stepName(key, category), state: j < i ? "done" : j === i ? "current" : "todo",
+  }))
+}
