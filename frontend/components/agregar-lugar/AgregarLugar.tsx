@@ -10,7 +10,8 @@ import {
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
   defaultClimbingRouteItem, CATEGORIES,
 } from "./constants"
-import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute } from "./submit"
+import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute, type Failure } from "./submit"
+import FailuresNotice from "./FailuresNotice"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 import { RESULT_COPY, mySpotsFor, type MySpot, type SubmitResult } from "./result"
@@ -90,6 +91,8 @@ export default function AgregarLugar() {
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
   const [success, setSuccess]                     = useState<SubmitResult | null>(null)
+  // Partes que no se pudieron guardar después de crear el lugar o el sector.
+  const [failures, setFailures]                   = useState<Failure[]>([])
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<Option[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
@@ -339,15 +342,15 @@ export default function AgregarLugar() {
 
   async function handleSubmit() {
     if (isTrekking && trekkingMode === "new_route") {
-      return submitNewTrekkingRoute({ trekkingSpotId, token, routes, setSubmitting, setError, setSuccess })
+      return submitNewTrekkingRoute({ trekkingSpotId, token, routes, setSubmitting, setError, setSuccess, setFailures })
     }
 
     if (isEscalada && climbingMode === "new_sector") {
-      return submitNewClimbingSector({ climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess })
+      return submitNewClimbingSector({ climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess, setFailures })
     }
 
     if (isEscalada && climbingMode === "new_route") {
-      return submitNewClimbingRoute({ climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess })
+      return submitNewClimbingRoute({ climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess, setFailures })
     }
 
     await submitAgregarLugar({
@@ -382,6 +385,7 @@ export default function AgregarLugar() {
       setUploadProgress,
       setError,
       setSuccess,
+      setFailures,
     })
   }
 
@@ -397,7 +401,7 @@ export default function AgregarLugar() {
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
-    setFeatureErrors(new Set()); setError(null); setSuccess(null)
+    setFeatureErrors(new Set()); setError(null); setSuccess(null); setFailures([])
     setSelectedSpotId(null); setAvailableSpots([])
     setIsPublic(null); setPublicTransport(null)
     setCreatingNewSpot(false); setClimbingMode(null)
@@ -477,6 +481,7 @@ export default function AgregarLugar() {
           <div style={{ marginTop: 48 }}>
             <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>{RESULT_COPY[success].title}</p>
             <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36, maxWidth: 440, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5 }}>{RESULT_COPY[success].text}</p>
+            <FailuresNotice failures={failures} onChange={setFailures} />
             {locked && spotUrl ? (
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 <button style={s.btnSecondary} onClick={reset}>{PREFILL_AGAIN[locked.kind]}</button>

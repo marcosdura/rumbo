@@ -12,136 +12,205 @@ function formatWhatsapp(basic: BasicInfo): string | null {
   return `+${country.dial} ${normalizePhoneDigits(basic.whatsapp.trim(), country)}`
 }
 
+// ─── Lo que falla después de crear algo ────────────────────────────────────
+// Una vez creado el lugar (o el sector), lo que sigue (fotos, rutas,
+// sectores, vías, comodidades...) puede fallar por separado. Antes esos
+// errores se descartaban en silencio, o cortaban todo con un error y al
+// reintentar se duplicaba el lugar. Ahora cada parte es una tarea que se
+// puede retomar: si falla, se avisa con su nombre y "Reintentar" sigue desde
+// donde quedó, sin volver a crear lo que ya se creó.
+
+export type Failure = { label: string; retry: () => Promise<void> }
+
+async function attempt(failures: Failure[], label: string, task: () => Promise<unknown>) {
+  const run = async () => { await task() }
+  try {
+    await run()
+  } catch {
+    failures.push({ label, retry: run })
+  }
+}
+
+// Reintenta lo que había fallado; devuelve lo que sigue fallando.
+export async function retryFailures(failures: Failure[]): Promise<Failure[]> {
+  const still: Failure[] = []
+  for (const f of failures) {
+    try {
+      await f.retry()
+    } catch {
+      still.push(f)
+    }
+  }
+  return still
+}
+
+type Created = { id: number; is_approved?: boolean }
+
+function routePayload(r: RouteItem) {
+  return {
+    name: r.name,
+    distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
+    duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
+    elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain)   : null,
+    elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss)   : null,
+    max_altitude:   r.max_altitude   ? parseInt(r.max_altitude)     : null,
+    min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
+    difficulty: r.difficulty || null, route_type: r.route_type || null,
+    technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
+  }
+}
+
+function climbingRoutePayload(r: ClimbingRouteItem, sectorId: number) {
+  return {
+    name: r.name,
+    grade: r.grade || null,
+    type: r.type || null,
+    length: r.length_m ? parseInt(r.length_m) : null,
+    bolts: r.bolts ? parseInt(r.bolts) : null,
+    description: r.description || null,
+    sector_id: sectorId,
+  }
+}
+
+function sectorPayload(sec: SectorItem, spotId: number) {
+  return {
+    spot_id: spotId, name: sec.name,
+    type: sec.type || null,
+    max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
+    restrictions: sec.restrictions || null,
+  }
+}
+
+// Un sector con sus vías. Si falla una vía, reintentar no vuelve a crear el
+// sector ni las vías que ya se guardaron.
+function sectorTask(sec: SectorItem, routes: ClimbingRouteItem[], spotId: number, token: string | undefined) {
+  let sector: Created | null = null
+  const done = new Set<number>()
+  const task = async () => {
+    if (!sector) sector = (await api.post<Created>("/sectors/", sectorPayload(sec, spotId), { token })).data
+    for (const [i, r] of routes.entries()) {
+      if (done.has(i)) continue
+      await api.post("/climbingroutes/", climbingRoutePayload(r, sector.id), { token })
+      done.add(i)
+    }
+  }
+  return { task, created: () => sector }
+}
+
+// Una foto del lugar: subirla a Cloudinary y registrarla. Si ya se subió y
+// falló el registro, reintentar no la vuelve a subir.
+function imageTask(file: File, index: number, spotId: number, token: string | undefined) {
+  let publicId: string | null = null
+  return async () => {
+    if (!publicId) publicId = (await uploadImageToCloudinary(file, { spotId })).publicId
+    await api.post(`/images/spots/${spotId}`, undefined, {
+      token,
+      params: { cloudinary_public_id: publicId, is_main: index === 0, order: index },
+    })
+  }
+}
+
+async function addImages(failures: Failure[], images: File[], spotId: number, token: string | undefined) {
+  await Promise.all(images.map((file, i) =>
+    attempt(failures, images.length > 1 ? `Foto ${i + 1}` : "La foto", imageTask(file, i, spotId, token))))
+}
+
 // ─── Submits "especiales" ──────────────────────────────────────────────────
 // Los 3 flujos de "agregar contenido a un spot existente" (ruta de trekking
 // nueva / sector de escalada nuevo / ruta de escalada nueva) no crean un
 // spot — solo el/los sub-recursos. Viven acá junto al resto de la lógica de
 // envío, no en el componente, mismo criterio que submitAgregarLugar.
 
-interface SubmitNewTrekkingRouteParams {
-  trekkingSpotId: number | null
-  token: string | undefined
-  routes: RouteItem[]
+interface ContributionHandlers {
   setSubmitting: (v: boolean) => void
   setError: (v: string | null) => void
   setSuccess: (v: SubmitResult) => void
+  setFailures: (f: Failure[]) => void
 }
 
-export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParams): Promise<void> {
-  const { trekkingSpotId, token, routes, setSubmitting, setError, setSuccess } = params
-  setSubmitting(true)
-  setError(null)
+// Varias cosas independientes (rutas, vías): las que se guardaron cuentan;
+// si no se guardó ninguna, es un error común y se puede volver a enviar.
+async function submitEach<T>(
+  items: T[], label: (item: T) => string, post: (item: T) => Promise<Created>,
+  noneMessage: string, failMessage: string, h: ContributionHandlers,
+) {
+  h.setSubmitting(true)
+  h.setError(null)
   try {
-    const created: { is_approved?: boolean }[] = []
-    for (const r of routes) {
-      if (!r.name) continue
-      const { data } = await api.post<{ is_approved?: boolean }>("/routes/", {
-        spot_id: trekkingSpotId,
-        name: r.name,
-        distance_km: r.distance_km ? parseFloat(r.distance_km) : null,
-        duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
-        elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain) : null,
-        elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss) : null,
-        max_altitude: r.max_altitude ? parseInt(r.max_altitude) : null,
-        min_altitude: r.min_altitude ? parseInt(r.min_altitude) : null,
-        difficulty: r.difficulty || null,
-        route_type: r.route_type || null,
-        technical_level: r.technical_level || null,
-        physical_demand: r.physical_demand || null,
-      }, { token })
-      created.push(data)
+    const created: Created[] = []
+    const failures: Failure[] = []
+    for (const item of items) {
+      await attempt(failures, label(item), async () => { created.push(await post(item)) })
     }
-    // El paso ya lo exige; si igual no había nada, no se dice "¡Listo!".
-    if (created.length === 0) { setError("Agregá al menos una ruta."); return }
-    setSuccess(contributionResult(created))
-  } catch {
-    setError("No se pudo guardar la ruta. Intentá de nuevo.")
+    if (items.length === 0) { h.setError(noneMessage); return }
+    if (created.length === 0) { h.setError(failMessage); return }
+    h.setFailures(failures)
+    h.setSuccess(contributionResult(created))
   } finally {
-    setSubmitting(false)
+    h.setSubmitting(false)
   }
 }
 
-interface SubmitNewClimbingSectorParams {
+interface SubmitNewTrekkingRouteParams extends ContributionHandlers {
+  trekkingSpotId: number | null
+  token: string | undefined
+  routes: RouteItem[]
+}
+
+export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParams): Promise<void> {
+  const { trekkingSpotId, token, routes } = params
+  await submitEach(
+    routes.filter(r => r.name.trim()),
+    r => `Ruta «${r.name}»`,
+    async r => (await api.post<Created>("/routes/", { spot_id: trekkingSpotId, ...routePayload(r) }, { token })).data,
+    "Agregá al menos una ruta.",
+    "No se pudo guardar la ruta. Intentá de nuevo.",
+    params,
+  )
+}
+
+interface SubmitNewClimbingSectorParams extends ContributionHandlers {
   climbingSpotId: number | null
   token: string | undefined
   sectors: SectorItem[]
   sectorRoutes: ClimbingRouteItem[]
-  setSubmitting: (v: boolean) => void
-  setError: (v: string | null) => void
-  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitNewClimbingSector(params: SubmitNewClimbingSectorParams): Promise<void> {
-  const { climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess } = params
+  const { climbingSpotId, token, sectors, sectorRoutes, setSubmitting, setError, setSuccess, setFailures } = params
   setSubmitting(true)
   setError(null)
   try {
-    const sec = sectors[0]
-    const { data: newSector } = await api.post<{ id: number; is_approved?: boolean }>("/sectors/", {
-      name: sec.name,
-      type: sec.type || null,
-      max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
-      restrictions: sec.restrictions || null,
-      spot_id: climbingSpotId,
-    }, { token })
-
-    for (const r of sectorRoutes) {
-      if (!r.name) continue
-      await api.post("/climbingroutes/", {
-        name: r.name,
-        grade: r.grade || null,
-        type: r.type || null,
-        length: r.length_m ? parseInt(r.length_m) : null,
-        bolts: r.bolts ? parseInt(r.bolts) : null,
-        description: r.description || null,
-        sector_id: newSector.id,
-      }, { token })
-    }
+    const { task, created } = sectorTask(sectors[0], sectorRoutes.filter(r => r.name), climbingSpotId as number, token)
+    const failures: Failure[] = []
+    await attempt(failures, `Vías del sector «${sectors[0].name}»`, task)
+    const sector = created()
+    // Sin sector no se guardó nada: se puede volver a enviar tal cual.
+    if (!sector) { setError("No se pudo guardar el sector. Intentá de nuevo."); return }
+    setFailures(failures)
     // Las vías van con el sector: si el sector quedó en revisión, ellas también.
-    setSuccess(contributionResult([newSector]))
-  } catch {
-    setError("No se pudo guardar el sector. Intentá de nuevo.")
+    setSuccess(contributionResult([sector]))
   } finally {
     setSubmitting(false)
   }
 }
 
-interface SubmitNewClimbingRouteParams {
+interface SubmitNewClimbingRouteParams extends ContributionHandlers {
   climbingSectorId: number | null
   token: string | undefined
   climbingNewRoutes: ClimbingRouteItem[]
-  setSubmitting: (v: boolean) => void
-  setError: (v: string | null) => void
-  setSuccess: (v: SubmitResult) => void
 }
 
 export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParams): Promise<void> {
-  const { climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess } = params
-  setSubmitting(true)
-  setError(null)
-  try {
-    const created: { is_approved?: boolean }[] = []
-    for (const r of climbingNewRoutes) {
-      if (!r.name) continue
-      const { data } = await api.post<{ is_approved?: boolean }>("/climbingroutes/", {
-        name: r.name,
-        grade: r.grade || null,
-        type: r.type || null,
-        length: r.length_m ? parseInt(r.length_m) : null,
-        bolts: r.bolts ? parseInt(r.bolts) : null,
-        description: r.description || null,
-        sector_id: climbingSectorId,
-      }, { token })
-      created.push(data)
-    }
-    // El paso ya lo exige; si igual no había nada, no se dice "¡Listo!".
-    if (created.length === 0) { setError("Agregá al menos una vía."); return }
-    setSuccess(contributionResult(created))
-  } catch {
-    setError("No se pudieron guardar las vías. Intentá de nuevo.")
-  } finally {
-    setSubmitting(false)
-  }
+  const { climbingSectorId, token, climbingNewRoutes } = params
+  await submitEach(
+    climbingNewRoutes.filter(r => r.name.trim()),
+    r => `Vía «${r.name}»`,
+    async r => (await api.post<Created>("/climbingroutes/", climbingRoutePayload(r, climbingSectorId as number), { token })).data,
+    "Agregá al menos una vía.",
+    "No se pudieron guardar las vías. Intentá de nuevo.",
+    params,
+  )
 }
 
 interface SubmitParams {
@@ -176,133 +245,157 @@ interface SubmitParams {
   setUploadProgress: (v: string | null) => void
   setError: (v: string | null) => void
   setSuccess: (v: SubmitResult) => void
+  setFailures: (f: Failure[]) => void
+}
+
+function spotPayload(p: SubmitParams) {
+  const { basic, selectedCat, ownerEmail, isPublic, publicTransport } = p
+  return {
+    name:         basic.name,
+    description:  basic.description,
+    department:   basic.department,
+    category_id:  selectedCat.id,
+    owner_email:  ownerEmail,
+    is_approved:  false,
+    price:        basic.price ? parseInt(basic.price) : null,
+    season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
+    season_end:   basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null,
+    email:        basic.email     || null,
+    whatsapp:     formatWhatsapp(basic),
+    instagram:    basic.instagram || null,
+    lat:          basic.lat ? parseFloat(basic.lat) : null,
+    lng:          basic.lng ? parseFloat(basic.lng) : null,
+    is_public:        isPublic,
+    public_transport: publicTransport,
+  }
+}
+
+// Las fotos de una escuela o un servicio: se suben antes de crearlo (van como
+// URL en photo_1..3). Las que ya se subieron no se vuelven a subir.
+function operatorPhotos(files: (File | null)[], spotId: number, setUploadProgress: (v: string | null) => void) {
+  const urls: (string | null)[] = [null, null, null]
+  const labels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
+  return async () => {
+    for (let i = 0; i < 3; i++) {
+      const file = files[i]
+      if (!file || urls[i]) continue
+      setUploadProgress(`Subiendo ${labels[i]}...`)
+      urls[i] = (await uploadImageToCloudinary(file, { spotId })).url
+    }
+    return { photo_1: urls[0], photo_2: urls[1] ?? null, photo_3: urls[2] ?? null }
+  }
+}
+
+function surfPayload(surf: SurfItem) {
+  return {
+    name: surf.name,
+    class_type: surf.class_type || null,
+    duration: surf.duration ? parseFloat(surf.duration) : null,
+    equipment_include: surf.equipment_include,
+    season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
+    season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
+    email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
+  }
+}
+
+function kayakPayload(k: KayakItem) {
+  return {
+    name: k.name,
+    water_type: k.water_type || null, difficulty: k.difficulty || null,
+    duration: k.duration ? parseFloat(k.duration) : null,
+    kayak_type: k.kayak_type || null, rental_available: k.rental_available,
+    season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
+    season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
+    email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
+  }
+}
+
+// Escuela de surf o servicio de kayak (con sus fotos) para la playa spotId.
+function operatorTasks(p: SubmitParams, spotId: number, created: Created[]): { label: string; task: () => Promise<void> }[] {
+  const { selectedCat, surf, kayaks, surfPhotoFiles, kayakPhotoFiles, token, setUploadProgress } = p
+  if (selectedCat.name === "Surf") {
+    if (!surf.name) return []
+    const photos = operatorPhotos(surfPhotoFiles, spotId, setUploadProgress)
+    return [{
+      label: `Escuela «${surf.name}»`,
+      task: async () => {
+        const { data } = await api.post<Created>("/surfschool/", { spot_id: spotId, ...surfPayload(surf), ...(await photos()) }, { token })
+        created.push(data)
+      },
+    }]
+  }
+  // Las fotos son una sola tanda para el servicio.
+  const photos = operatorPhotos(kayakPhotoFiles, spotId, setUploadProgress)
+  return kayaks.filter(k => k.name).map(k => ({
+    label: `Servicio «${k.name}»`,
+    task: async () => {
+      const { data } = await api.post<Created>("/kayak/", { spot_id: spotId, ...kayakPayload(k), ...(await photos()) }, { token })
+      created.push(data)
+    },
+  }))
+}
+
+async function submitService(p: SubmitParams): Promise<void> {
+  const { creatingNewSpot, selectedCat, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, images, token,
+    setSubmitting, setUploadProgress, setError, setSuccess, setFailures } = p
+  const coverMissing = selectedCat.name === "Surf" ? !surfPhotoFiles[0] : !kayakPhotoFiles[0]
+  if (!creatingNewSpot && coverMissing) { setError("La foto de portada es obligatoria."); return }
+
+  setError(null)
+  setSubmitting(true)
+  try {
+    const created: Created[] = []
+    if (!creatingNewSpot) {
+      // A una playa existente: si falla, no se creó nada y se puede reenviar.
+      for (const { task } of operatorTasks(p, selectedSpotId as number, created)) await task()
+      trackEvent("add_spot_complete", { category: selectedCat.name, creating_new_spot: false })
+      setSuccess(contributionResult(created))
+      return
+    }
+
+    setUploadProgress("Guardando lugar...")
+    const { data: spot } = await api.post<{ id: number }>("/spots", spotPayload(p), { token })
+    // Desde acá la playa ya existe: lo que falle se avisa y se reintenta.
+    const failures: Failure[] = []
+    setUploadProgress("Subiendo imágenes del lugar...")
+    await addImages(failures, images, spot.id, token)
+    for (const { label, task } of operatorTasks(p, spot.id, created)) await attempt(failures, label, task)
+    trackEvent("add_spot_complete", { category: selectedCat.name, creating_new_spot: true })
+    setFailures(failures)
+    setSuccess("spot")
+  } catch (e: unknown) {
+    setError(e instanceof Error ? e.message : "Error inesperado")
+  } finally {
+    setSubmitting(false)
+    setUploadProgress(null)
+  }
+}
+
+// Ids de amenities por nombre (el catálogo es chico y se pide una vez).
+async function amenityIds(names: string[]): Promise<number[]> {
+  const { data: all } = await api.get<{ id: number; name: string }[]>("/amenities/")
+  const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
+  return names.map(n => nameToId[n]).filter((id): id is number => !!id)
+}
+
+function glampingAmenityPayload(names: string[]): Record<string, boolean> {
+  const payload: Record<string, boolean> = {}
+  for (const name of names) {
+    const field = GLAMPING_AMENITY_MAP[name]
+    if (field) payload[field] = true
+  }
+  return payload
 }
 
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
+  if (params.isService) return submitService(params)
+
   const {
-    selectedCat, isService, creatingNewSpot, token, basic, isPublic, publicTransport,
-    selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingDetail, glampingUnits,
-    selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, sectorRoutes, surf, kayaks,
-    images, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, ownerEmail, experiences,
-    setSubmitting, setUploadProgress, setError, setSuccess,
+    selectedCat, token, basic, selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
+    selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, sectorRoutes,
+    images, experiences, setSubmitting, setUploadProgress, setError, setSuccess, setFailures,
   } = params
-
   const cat = selectedCat.name
-
-  if (isService) {
-    setError(null)
-    setSubmitting(true)
-    try {
-      let spotId = selectedSpotId
-      const created: { is_approved?: boolean }[] = []
-
-      if (creatingNewSpot) {
-        setUploadProgress("Guardando lugar...")
-        const { data: spotData } = await api.post<{ id: number }>("/spots", {
-          name: basic.name,
-          description: basic.description,
-          department: basic.department,
-          category_id: selectedCat.id,
-          email: basic.email || null,
-          whatsapp: formatWhatsapp(basic),
-          instagram: basic.instagram || null,
-          price: basic.price ? parseInt(basic.price) : null,
-          lat: basic.lat ? parseFloat(basic.lat) : null,
-          lng: basic.lng ? parseFloat(basic.lng) : null,
-          owner_email: ownerEmail,
-          is_approved: false,
-          is_public: isPublic,
-          public_transport: publicTransport,
-          season_start: basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null,
-          season_end: basic.season_type === "seasonal" && basic.season_end ? parseInt(basic.season_end) : null,
-        }, { token })
-        spotId = spotData.id
-
-        setUploadProgress("Subiendo imágenes del lugar...")
-        const uploadResults = await Promise.all(
-          images.map(async (file, i) => {
-            const { publicId } = await uploadImageToCloudinary(file, { spotId: spotId as number })
-            return { publicId, index: i }
-          })
-        )
-
-        await Promise.all(
-          uploadResults.map(({ publicId, index }) =>
-            api.post(`/images/spots/${spotId}`, undefined, {
-              token,
-              params: { cloudinary_public_id: publicId, is_main: index === 0, order: index },
-            }).catch(() => {})
-          )
-        )
-      }
-
-      if (cat === "Surf" && surf.name) {
-        if (!creatingNewSpot && !surfPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
-
-        const photoUrls: (string | null)[] = [null, null, null]
-        const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
-        for (let i = 0; i < 3; i++) {
-          const file = surfPhotoFiles[i]
-          if (!file) continue
-          setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file, { spotId: spotId as number })
-          photoUrls[i] = url
-        }
-
-        const { data: school } = await api.post<{ is_approved?: boolean }>("/surfschool/", {
-          spot_id: spotId,
-          name: surf.name,
-          class_type: surf.class_type || null,
-          duration: surf.duration ? parseFloat(surf.duration) : null,
-          equipment_include: surf.equipment_include,
-          season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
-          season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
-          email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
-          photo_1: photoUrls[0], photo_2: photoUrls[1] ?? null, photo_3: photoUrls[2] ?? null,
-        }, { token })
-        created.push(school)
-      }
-      if (cat === "Kayak") {
-        if (!creatingNewSpot && !kayakPhotoFiles[0]) { setError("La foto de portada es obligatoria."); setSubmitting(false); return }
-
-        const kayakPhotoUrls: (string | null)[] = [null, null, null]
-        const photoLabels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
-        for (let i = 0; i < 3; i++) {
-          const file = kayakPhotoFiles[i]
-          if (!file) continue
-          setUploadProgress(`Subiendo ${photoLabels[i]}...`)
-          const { url } = await uploadImageToCloudinary(file, { spotId: spotId as number })
-          kayakPhotoUrls[i] = url
-        }
-
-        for (const k of kayaks) {
-          if (!k.name) continue
-          // Sin .catch silencioso: si el backend rechaza (por ejemplo, el
-          // lugar no es tuyo), el usuario tiene que enterarse.
-          const { data: kayak } = await api.post<{ is_approved?: boolean }>("/kayak/", {
-            spot_id: spotId,
-            name: k.name,
-            water_type: k.water_type || null, difficulty: k.difficulty || null,
-            duration: k.duration ? parseFloat(k.duration) : null,
-            kayak_type: k.kayak_type || null, rental_available: k.rental_available,
-            season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
-            season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
-            email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
-            photo_1: kayakPhotoUrls[0], photo_2: kayakPhotoUrls[1] ?? null, photo_3: kayakPhotoUrls[2] ?? null,
-          }, { token })
-          created.push(kayak)
-        }
-      }
-      trackEvent("add_spot_complete", { category: cat, creating_new_spot: creatingNewSpot })
-      setSuccess(creatingNewSpot ? "spot" : contributionResult(created))
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Error inesperado")
-    } finally {
-      setSubmitting(false)
-      setUploadProgress(null)
-    }
-    return
-  }
 
   if (!basic.lat || !basic.lng) { setError("La ubicación es obligatoria."); return }
   if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
@@ -315,227 +408,128 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     // ninguna imagen. La firma de Cloudinary exige ese spot_id para
     // verificar que el spot es del usuario antes de firmar.
     setUploadProgress("Guardando lugar...")
-    const seasonStart = basic.season_type === "seasonal" && basic.season_start ? parseInt(basic.season_start) : null
-    const seasonEnd   = basic.season_type === "seasonal" && basic.season_end   ? parseInt(basic.season_end)   : null
-    const { data: spot } = await api.post<{ id: number }>("/spots", {
-      name:         basic.name,
-      description:  basic.description,
-      department:   basic.department,
-      category_id:  selectedCat.id,
-      owner_email:  ownerEmail,
-      is_approved:  false,
-      price:        basic.price ? parseInt(basic.price) : null,
-      season_start: seasonStart,
-      season_end:   seasonEnd,
-      email:        basic.email     || null,
-      whatsapp:     formatWhatsapp(basic),
-      instagram:    basic.instagram || null,
-      lat:          basic.lat ? parseFloat(basic.lat) : null,
-      lng:          basic.lng ? parseFloat(basic.lng) : null,
-      is_public:        isPublic,
-      public_transport: publicTransport,
-    }, { token })
+    const { data: spot } = await api.post<{ id: number }>("/spots", spotPayload(params), { token })
     const spotId: number = spot.id
 
-    // 2. Upload images en paralelo
+    // Desde acá el lugar ya existe: cada parte que falle se avisa al final
+    // y se puede reintentar.
+    const failures: Failure[] = []
+    const add = (label: string, task: () => Promise<unknown>) => attempt(failures, label, task)
+
+    // 2. Imágenes en paralelo
     setUploadProgress("Subiendo imágenes...")
-    const uploadResults = await Promise.all(
-      images.map(async (file, i) => {
-        const { publicId } = await uploadImageToCloudinary(file, { spotId })
-        return { publicId, index: i }
-      })
-    )
+    await addImages(failures, images, spotId, token)
 
-    // 3. Add images en paralelo
-    await Promise.all(
-      uploadResults.map(({ publicId, index }) =>
-        api.post(`/images/spots/${spotId}`, undefined, {
-          token,
-          params: { cloudinary_public_id: publicId, is_main: index === 0, order: index },
-        }).catch(() => {})
-      )
-    )
-
-    // 4. Category-specific records
-    if (cat === "Camping" && selectedAmenities.length > 0) {
-      try {
-        const { data: all } = await api.get<{ id: number; name: string }[]>("/amenities/")
-        const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
-        for (const name of selectedAmenities) {
-          const id = nameToId[name]
-          if (id) {
-            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token }).catch(() => {})
-          }
-        }
-      } catch {
-        // no bloquea el submit si falla
-      }
-    }
-
+    // 3. Datos de cada categoría
+    setUploadProgress("Guardando los detalles...")
     if (cat === "Camping") {
-      await api.post(`/spots/${spotId}/camping`, { price: basic.price ? parseFloat(basic.price) : null }, { token })
+      await add("Precio del camping", () =>
+        api.post(`/spots/${spotId}/camping`, { price: basic.price ? parseFloat(basic.price) : null }, { token }))
+      if (selectedAmenities.length > 0) {
+        await add("Servicios del camping", async () => {
+          for (const id of await amenityIds(selectedAmenities)) {
+            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token })
+          }
+        })
+      }
     }
 
     if (cat === "Glamping") {
-      for (const unit of glampingUnits) {
+      for (const [i, unit] of glampingUnits.entries()) {
         if (!unit.accommodation_type && !unit.capacity && !unit.price_per_night && !unit.min_nights) continue
-        await api.post(`/glamping/spots/${spotId}/glamping`, glampingUnitPayload(unit), { token }).catch(() => {})
+        await add(`Alojamiento «${unit.accommodation_type || `Tipo ${i + 1}`}»`, () =>
+          api.post(`/glamping/spots/${spotId}/glamping`, glampingUnitPayload(unit), { token }))
       }
-
-      const amenityPayload: Record<string, boolean> = {}
-      for (const name of selectedAmenities) {
-        const field = GLAMPING_AMENITY_MAP[name]
-        if (field) amenityPayload[field] = true
-      }
+      const amenityPayload = glampingAmenityPayload(selectedAmenities)
       if (Object.keys(amenityPayload).length > 0) {
-        await api.post(`/glamping/spots/${spotId}/amenities`, amenityPayload, { token }).catch(() => {})
-      }
-    }
-
-    if ((cat === "Camping" || cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Motorhome")) {
-      try {
-        await api.post(`/spots/${spotId}/categories`, {
-          category: "Motorhome",
-          motorhome_detail: {
-            capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
-            surface_type: motorhomeDetail.surface_type || null,
-            has_water: motorhomeDetail.has_water,
-            has_electricity: motorhomeDetail.has_electricity,
-            has_dump_station: motorhomeDetail.has_dump_station,
-            max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
-          },
-        }, { token })
-      } catch {
-        // no bloquea el submit si falla el alta de la categoría adicional
-      }
-    }
-
-    if ((cat === "Camping" || cat === "Motorhome") && additionalCategories.includes("Glamping")) {
-      const amenityPayload: Record<string, boolean> = {}
-      for (const name of selectedGlampingAmenities) {
-        const field = GLAMPING_AMENITY_MAP[name]
-        if (field) amenityPayload[field] = true
-      }
-
-      for (let i = 0; i < glampingUnits.length; i++) {
-        const unit = glampingUnits[i]
-        try {
-          await api.post(`/spots/${spotId}/categories`, {
-            category: "Glamping",
-            glamping_detail: {
-              accommodation_type: unit.accommodation_type || null,
-              capacity: unit.capacity ? parseInt(unit.capacity) : null,
-              price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
-              min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
-            },
-            glamping_amenities: i === 0 && Object.keys(amenityPayload).length > 0 ? amenityPayload : null,
-          }, { token })
-        } catch {
-          // No bloquear el éxito de la creación del spot si esto falla
-        }
-      }
-    }
-
-    if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping")) {
-      try {
-        await api.post(`/spots/${spotId}/categories`, {
-          category: "Camping",
-          camping_detail: {
-            price: campingDetail.price ? parseFloat(campingDetail.price) : null,
-          },
-        }, { token })
-      } catch {
-        // No bloquear el éxito de la creación del spot si esto falla
-      }
-    }
-
-    if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping") && selectedCampingAmenities.length > 0) {
-      try {
-        const { data: all } = await api.get<{ id: number; name: string }[]>("/amenities/")
-        const nameToId = Object.fromEntries(all.map(a => [a.name, a.id]))
-        for (const name of selectedCampingAmenities) {
-          const id = nameToId[name]
-          if (id) {
-            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token }).catch(() => {})
-          }
-        }
-      } catch {
-        // No bloquear el éxito de la creación del spot si esto falla
-      }
-    }
-
-    if (cat === "Trekking") {
-      for (const r of routes) {
-        if (!r.name) continue
-        await api.post("/routes/", {
-          spot_id: spotId, name: r.name,
-          distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
-          duration_hours: r.duration_hours ? parseFloat(r.duration_hours) : null,
-          elevation_gain: r.elevation_gain ? parseInt(r.elevation_gain)   : null,
-          elevation_loss: r.elevation_loss ? parseInt(r.elevation_loss)   : null,
-          max_altitude:   r.max_altitude   ? parseInt(r.max_altitude)     : null,
-          min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
-          difficulty: r.difficulty || null, route_type: r.route_type || null,
-          technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
-        }, { token }).catch(() => {})
-      }
-      const hasFeatures = Object.values(trekkingFeatures).some(v => v !== null)
-      if (hasFeatures) {
-        await api.post(`/spots/${spotId}/trekking-detail`, trekkingFeatures, { token }).catch(() => {})
-      }
-    }
-
-    if (cat === "Escalada") {
-      const createdSectorIds: (number | null)[] = []
-      for (const sec of sectors) {
-        if (!sec.name) { createdSectorIds.push(null); continue }
-        try {
-          const { data } = await api.post<{ id: number }>("/sectors/", {
-            spot_id: spotId, name: sec.name,
-            type: sec.type || null,
-            max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
-            restrictions: sec.restrictions || null,
-          }, { token })
-          createdSectorIds.push(data.id)
-        } catch {
-          createdSectorIds.push(null)
-        }
-      }
-
-      for (const r of sectorRoutes) {
-        if (!r.name) continue
-        const sectorId = createdSectorIds[r.sectorIndex]
-        if (!sectorId) continue
-        await api.post("/climbingroutes/", {
-          name: r.name,
-          grade: r.grade || null,
-          type: r.type || null,
-          length: r.length_m ? parseInt(r.length_m) : null,
-          bolts: r.bolts ? parseInt(r.bolts) : null,
-          description: r.description || null,
-          sector_id: sectorId,
-        }, { token }).catch(() => {})
+        await add("Servicios del glamping", () => api.post(`/glamping/spots/${spotId}/amenities`, amenityPayload, { token }))
       }
     }
 
     if (cat === "Motorhome") {
-      await api.post(`/spots/${spotId}/motorhome`, {
+      await add("Datos del área de motorhomes", () => api.post(`/spots/${spotId}/motorhome`, {
         capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
         surface_type: motorhomeDetail.surface_type || null,
         has_water: motorhomeDetail.has_water,
         has_electricity: motorhomeDetail.has_electricity,
         has_dump_station: motorhomeDetail.has_dump_station,
         max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
-      }, { token }).catch(() => {})
+      }, { token }))
     }
 
+    // 4. Categorías adicionales
+    if ((cat === "Camping" || cat === "Glamping") && additionalCategories.includes("Motorhome")) {
+      await add("Categoría adicional Motorhome", () => api.post(`/spots/${spotId}/categories`, {
+        category: "Motorhome",
+        motorhome_detail: {
+          capacity: motorhomeDetail.capacity ? parseInt(motorhomeDetail.capacity) : null,
+          surface_type: motorhomeDetail.surface_type || null,
+          has_water: motorhomeDetail.has_water,
+          has_electricity: motorhomeDetail.has_electricity,
+          has_dump_station: motorhomeDetail.has_dump_station,
+          max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
+        },
+      }, { token }))
+    }
+
+    if ((cat === "Camping" || cat === "Motorhome") && additionalCategories.includes("Glamping")) {
+      const amenityPayload = glampingAmenityPayload(selectedGlampingAmenities)
+      for (const [i, unit] of glampingUnits.entries()) {
+        await add(`Glamping: alojamiento «${unit.accommodation_type || `Tipo ${i + 1}`}»`, () => api.post(`/spots/${spotId}/categories`, {
+          category: "Glamping",
+          glamping_detail: {
+            accommodation_type: unit.accommodation_type || null,
+            capacity: unit.capacity ? parseInt(unit.capacity) : null,
+            price_per_night: unit.price_per_night ? parseFloat(unit.price_per_night) : null,
+            min_nights: unit.min_nights ? parseInt(unit.min_nights) : null,
+          },
+          glamping_amenities: i === 0 && Object.keys(amenityPayload).length > 0 ? amenityPayload : null,
+        }, { token }))
+      }
+    }
+
+    if ((cat === "Glamping" || cat === "Motorhome") && additionalCategories.includes("Camping")) {
+      await add("Categoría adicional Camping", () => api.post(`/spots/${spotId}/categories`, {
+        category: "Camping",
+        camping_detail: { price: campingDetail.price ? parseFloat(campingDetail.price) : null },
+      }, { token }))
+      if (selectedCampingAmenities.length > 0) {
+        await add("Servicios del camping", async () => {
+          for (const id of await amenityIds(selectedCampingAmenities)) {
+            await api.post(`/spots/${spotId}/amenities/${id}`, undefined, { token })
+          }
+        })
+      }
+    }
+
+    // 5. Trekking y escalada
+    if (cat === "Trekking") {
+      for (const r of routes) {
+        if (!r.name) continue
+        await add(`Ruta «${r.name}»`, () => api.post("/routes/", { spot_id: spotId, ...routePayload(r) }, { token }))
+      }
+      if (Object.values(trekkingFeatures).some(v => v !== null)) {
+        await add("Características del lugar", () => api.post(`/spots/${spotId}/trekking-detail`, trekkingFeatures, { token }))
+      }
+    }
+
+    if (cat === "Escalada") {
+      for (const [i, sec] of sectors.entries()) {
+        if (!sec.name) continue
+        const { task } = sectorTask(sec, sectorRoutes.filter(r => r.name && r.sectorIndex === i), spotId, token)
+        await add(`Sector «${sec.name}» y sus vías`, task)
+      }
+    }
+
+    // 6. Experiencias
     for (const exp of experiences) {
       const payload = experiencePayload(exp)
       if (!payload) continue
-      await api.post(`/spots/${spotId}/experiences`, payload, { token }).catch(() => {})
+      await add(`Experiencia «${exp.title}»`, () => api.post(`/spots/${spotId}/experiences`, payload, { token }))
     }
 
     trackEvent("add_spot_complete", { category: cat, creating_new_spot: true })
+    setFailures(failures)
     setSuccess("spot")
   } catch (e: unknown) {
     setError(e instanceof Error ? e.message : "Error inesperado")
