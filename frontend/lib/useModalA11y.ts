@@ -33,8 +33,12 @@ export function useModalA11y(
   // Casi todos los modales pasan onClose como arrow inline, que cambia en
   // cada render. Sin este ref el efecto se re-ejecutaría todo el tiempo,
   // robando el foco y restaurándolo a cada rato.
+  // Se actualiza en un efecto (no durante el render); este corre antes que el
+  // de abajo, así que Escape siempre llama al onClose más reciente.
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!open) return

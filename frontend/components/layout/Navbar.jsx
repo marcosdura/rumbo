@@ -56,9 +56,20 @@ function Navbar() {
   const isActive = (path) => pathname === path
   const isHome = pathname === "/"
 
-  useEffect(() => {
-    if (!isHome) { setHeroGone(false); return }
+  // Al cambiar de página: se cierran el menú y la búsqueda, y en la home el
+  // Navbar arranca oculto hasta que el observer diga que el hero ya pasó.
+  // Se ajusta durante el render (no en un efecto) para no pintar un cuadro
+  // con el estado de la página anterior.
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname)
     setHeroGone(false)
+    setSearchOpen(false)
+    setMenuOpen(false)
+  }
+
+  useEffect(() => {
+    if (!isHome) return
     const hero = document.getElementById("hero-section")
     if (!hero) return
     const observer = new IntersectionObserver(
@@ -76,8 +87,6 @@ function Navbar() {
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [])
-
-  useEffect(() => { setSearchOpen(false); setMenuOpen(false) }, [pathname])
 
   const anyOpen = menuOpen || searchOpen
 

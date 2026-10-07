@@ -41,4 +41,21 @@ describe("ConfirmModal", () => {
     expect(onConfirm).toHaveBeenCalledOnce()
     expect(onCancel).toHaveBeenCalledOnce()
   })
+
+  it("con frase, confirmar se habilita recién al escribirla", () => {
+    render(<ConfirmModal {...base} confirmPhrase="CONFIRMAR" />)
+    const confirm = screen.getByRole("button", { name: "Eliminar" }) as HTMLButtonElement
+    expect(confirm.disabled).toBe(true)
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "CONFIRMAR" } })
+    expect(confirm.disabled).toBe(false)
+  })
+
+  it("al volver a abrir, el campo arranca vacío", () => {
+    const { rerender } = render(<ConfirmModal {...base} confirmPhrase="CONFIRMAR" />)
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "CONFIRMAR" } })
+    rerender(<ConfirmModal {...base} confirmPhrase="CONFIRMAR" open={false} />)
+    rerender(<ConfirmModal {...base} confirmPhrase="CONFIRMAR" />)
+    expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe("")
+    expect((screen.getByRole("button", { name: "Eliminar" }) as HTMLButtonElement).disabled).toBe(true)
+  })
 })

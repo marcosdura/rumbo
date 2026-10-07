@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import { useModalA11y } from "@/lib/useModalA11y"
 
 // Modal de confirmación genérico, mismo estilo visual que el modal de
@@ -53,10 +53,13 @@ export default function ConfirmModal({
   const panelRef = useModalA11y(open, onCancel, confirmPhrase ? inputRef : undefined)
 
   // Al abrir, campo vacío: no arrastrar lo escrito en una confirmación
-  // anterior.
-  useEffect(() => {
+  // anterior. Se ajusta durante el render (no en un efecto) para que no se
+  // vea ni un cuadro con el texto viejo.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
     if (open) setTyped("")
-  }, [open])
+  }
 
   if (!open) return null
 

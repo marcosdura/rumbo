@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 
 let session: { user: { name: string; email: string; image: null } } | null = null
 vi.mock("next-auth/react", () => ({
   useSession: () => ({ data: session, status: session ? "authenticated" : "unauthenticated" }),
   signOut: () => {},
 }))
-vi.mock("next/navigation", () => ({ usePathname: () => "/spots" }))
+let pathname = "/spots"
+vi.mock("next/navigation", () => ({ usePathname: () => pathname }))
 vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 vi.mock("@/components/layout/AuthModal", () => ({ default: () => null }))
 vi.mock("@/components/layout/NotificationBell", () => ({ default: () => <span>campanita</span> }))
@@ -38,5 +39,18 @@ describe("Navbar", () => {
     session = { user: { name: "Ana", email: "ana@test.com", image: null }, id_token: "t" } as never
     render(<Navbar />)
     expect(screen.getByText("campanita")).toBeTruthy()
+  })
+
+  it("al cambiar de página se cierra el menú", () => {
+    session = null
+    pathname = "/spots"
+    const { container, rerender } = render(<Navbar />)
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }))
+    expect(container.querySelector(".dropdown-menu.is-open")).toBeTruthy()
+    pathname = "/favorites"
+    rerender(<Navbar />)
+    expect(container.querySelector(".dropdown-menu.is-open")).toBeNull()
+    expect(container.querySelector(".dropdown-menu.is-closed")).toBeTruthy()
+    pathname = "/spots"
   })
 })
