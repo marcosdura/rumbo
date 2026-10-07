@@ -126,7 +126,7 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
       selectedCat: constants.CATEGORIES.find(c => c.name === "Escalada")!,
       isService: false, creatingNewSpot: false, token: "t",
       basic: { ...constants.emptyBasic(), name: "Arequita", lat: "-34", lng: "-55" },
-      isPublic: null, publicTransport: null, selectedAmenities: [], additionalCategories: [],
+      isPublic: null, publicTransport: null, isResponsible: false, selectedAmenities: [], additionalCategories: [],
       motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
       glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [],
       selectedGlampingAmenities: [], selectedCampingAmenities: [],
@@ -140,6 +140,8 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
     expect(h.setSuccess).toHaveBeenCalledWith("spot")
     expect(failures.map(f => f.label)).toEqual(["Sector «Norte» y sus vías"])
     expect(urls().filter(u => u === "/spots")).toHaveLength(1)
+    // Lo cargó como visitante: el backend lo pasa al admin al aprobarlo.
+    expect(calls[0][1]).toMatchObject({ is_responsible: false })
 
     calls = []
     responses = [ok(false, 40)]

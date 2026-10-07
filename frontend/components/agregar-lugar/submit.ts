@@ -221,6 +221,8 @@ interface SubmitParams {
   basic: BasicInfo
   isPublic: boolean | null
   publicTransport: string | null
+  // False: lo carga un visitante; aprobado, pasa al admin.
+  isResponsible: boolean
   selectedAmenities: string[]
   additionalCategories: string[]
   motorhomeDetail: MotorhomeDetailItem
@@ -249,7 +251,7 @@ interface SubmitParams {
 }
 
 function spotPayload(p: SubmitParams) {
-  const { basic, selectedCat, ownerEmail, isPublic, publicTransport } = p
+  const { basic, selectedCat, ownerEmail, isPublic, publicTransport, isResponsible } = p
   return {
     name:         basic.name,
     description:  basic.description,
@@ -267,6 +269,7 @@ function spotPayload(p: SubmitParams) {
     lng:          basic.lng ? parseFloat(basic.lng) : null,
     is_public:        isPublic,
     public_transport: publicTransport,
+    is_responsible:   isResponsible,
   }
 }
 

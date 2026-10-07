@@ -14,14 +14,21 @@ def is_public_venue(spot: SpotDB) -> bool:
     return bool(spot.category and spot.category.name in PUBLIC_VENUE_CATEGORIES)
 
 
+def is_admin_managed(spot: SpotDB) -> bool:
+    """Aprobado, lo maneja el admin y no quien lo cargó: las playas y
+    lagunas, y los lugares que sugirió un visitante (no el responsable)."""
+    return is_public_venue(spot) or bool(spot.suggested_by_visitor)
+
+
 def can_manage_spot(spot: SpotDB, user: dict) -> bool:
     if is_admin(user):
         return True
     if spot.owner_email != user.get("email"):
         return False
-    # Mientras la playa está en revisión la maneja quien la sugirió (por
-    # ejemplo, para subirle las fotos al crearla); aprobada, solo el admin.
-    return not (is_public_venue(spot) and spot.is_approved)
+    # Mientras la playa (o el lugar sugerido por un visitante) está en
+    # revisión la maneja quien la sugirió (por ejemplo, para subirle las
+    # fotos al crearla); aprobada, solo el admin.
+    return not (is_admin_managed(spot) and spot.is_approved)
 
 
 def get_owned_spot_or_admin(

@@ -113,6 +113,9 @@ export default function SpotsTab({
                     <Pill variant={STATUS_PILL[spotStatus(spot)].variant} size="sm">
                       {STATUS_PILL[spotStatus(spot)].label}
                     </Pill>
+                    {spot.suggested_by_visitor && (
+                      <Pill variant="beige" size="sm">🎒 Sugerido por un visitante</Pill>
+                    )}
                   </div>
                   <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
                     {spot.category?.name} · {spot.department}

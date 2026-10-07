@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user_required, is_admin, get_current_admin_user
-from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue
+from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue, is_admin_managed
 from auth import ADMIN_EMAIL
 from limiter import limiter
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
@@ -67,6 +67,7 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
         slug=generate_slug(spot.name),
         is_public=spot.is_public,
         public_transport=spot.public_transport,
+        suggested_by_visitor=not spot.is_responsible,
     )
 
     db.add(db_spot)
@@ -628,9 +629,9 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
         .order_by(SpotDB.created_at.desc())
         .all()
     )
-    # Una playa o laguna aprobada ya no es de quien la sugirió (es del
-    # admin): no aparece en "Tus lugares".
-    spots = [s for s in spots if is_admin(user) or not (is_public_venue(s) and s.is_approved)]
+    # Una playa o laguna aprobada (o un lugar que sugirió como visitante) ya
+    # no es de quien la sugirió (es del admin): no aparece en "Tus lugares".
+    spots = [s for s in spots if is_admin(user) or not (is_admin_managed(s) and s.is_approved)]
     spot_ids = [s.id for s in spots]
     review_aggs = (
         db.query(
@@ -928,6 +929,7 @@ def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get
             "images": s.images,
             "owner_email": s.owner_email,
             "owner_deleted_at": s.owner_deleted_at,
+            "suggested_by_visitor": bool(s.suggested_by_visitor),
             "slug": s.slug,
             "created_at": s.created_at,
             "review_count": review_counts.get(s.id, 0),
@@ -963,15 +965,19 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
         spot.rejection_reason = None
         spot.rejected_at = None
     # Una playa o laguna aprobada es un lugar público: pasa al admin. Quien
-    # la sugirió sigue siendo dueño de su escuela, no de la playa.
-    # Antes del traspaso de una playa al admin: el aviso es para quien la sugirió.
+    # la sugirió sigue siendo dueño de su escuela, no de la playa. Lo mismo
+    # un lugar que sugirió un visitante (no el responsable).
+    # Antes del traspaso al admin: el aviso es para quien lo sugirió.
     owner_before = spot.owner_email
-    if approved and is_public_venue(spot) and ADMIN_EMAIL:
+    if approved and is_admin_managed(spot) and ADMIN_EMAIL:
         spot.owner_email = ADMIN_EMAIL
     if approved and not spot.slug:
         spot.slug = generate_slug(spot.name)
     if approved and not was_approved and owner_before != admin.get("email"):
-        notify(db, owner_before, "spot_approved", f"Tu lugar «{spot.name}» fue aprobado", body="Ya está publicado en Rumbo.", link=f"/spots/{spot.slug}")
+        if spot.suggested_by_visitor:
+            notify(db, owner_before, "spot_approved", f"Se publicó «{spot.name}», el lugar que sugeriste", body="¡Gracias por sumarlo a Rumbo!", link=f"/spots/{spot.slug}")
+        else:
+            notify(db, owner_before, "spot_approved", f"Tu lugar «{spot.name}» fue aprobado", body="Ya está publicado en Rumbo.", link=f"/spots/{spot.slug}")
     db.commit()
     return {"id": spot.id, "is_approved": spot.is_approved}
 

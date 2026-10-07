@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true, false
 from database import Base
 from sqlalchemy import event
 from sqlalchemy.orm import Session, relationship, with_loader_criteria
@@ -55,6 +55,10 @@ class SpotDB(Base):
 
     is_public        = Column(Boolean, nullable=True)  # True=público, False=privado
     public_transport = Column(String, nullable=True)   # "si" | "no" | "nose"
+    # Lo cargó alguien que no es el responsable ni el dueño (un visitante):
+    # mientras está en revisión lo maneja esa persona; aprobado, pasa al
+    # admin, como las playas (ownership.is_admin_managed).
+    suggested_by_visitor = Column(Boolean, nullable=False, default=False, server_default=false())
     
     category_id = Column(Integer, ForeignKey("categories.id"), index=True)
     category = relationship("Category", back_populates="spots")

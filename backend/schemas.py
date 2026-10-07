@@ -36,6 +36,9 @@ class SpotCreate(BaseModel):
     slug: str | None = Field(default=None, max_length=250)
     is_public: Optional[bool] = None
     public_transport: Optional[str] = Field(default=None, max_length=20)
+    # False: lo carga un visitante, no el responsable ni el dueño. Aprobado,
+    # pasa a manejarlo el admin (ownership.is_admin_managed).
+    is_responsible: bool = True
 
 
 class SpotEditRequest(BaseModel):
@@ -419,6 +422,7 @@ class SpotResponse(BaseModel):
     season_end:   Optional[int] = None  # 1–12
     slug: str | None = None
     created_at: datetime
+    suggested_by_visitor: bool = False
 
     category: CategoryResponse
     categories: list[CategoryResponse] = []

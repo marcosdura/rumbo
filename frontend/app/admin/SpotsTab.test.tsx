@@ -56,4 +56,9 @@ describe("SpotsTab", () => {
     expect(screen.queryByRole("button", { name: "Rechazar" })).toBeNull()
     expect(screen.getByRole("button", { name: "Aprobar" })).toBeTruthy()
   })
+
+  it("marca los lugares sugeridos por un visitante (al aprobarse pasan al admin)", () => {
+    renderTab([spot({ suggested_by_visitor: true }), spot({ id: 2, name: "Otro" })])
+    expect(screen.getAllByText("🎒 Sugerido por un visitante")).toHaveLength(1)
+  })
 })

@@ -17,7 +17,7 @@ export default function StepResumen({
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
   error, onSubmit, onBack, editTo,
   climbingMode, climbingSpotName, climbingSectorName, trekkingSpotName, sectors, climbingNewRoutes,
-  isPublic, publicTransport, creatingNewSpot,
+  isPublic, publicTransport, isResponsible, creatingNewSpot,
   images, previews, surfPhotoPreviews, kayakPhotoPreviews,
   selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
   additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
@@ -50,6 +50,8 @@ export default function StepResumen({
   climbingNewRoutes?: ClimbingRouteItem[]
   isPublic?: boolean | null
   publicTransport?: string | null
+  // null: no se preguntó (playa o laguna nueva).
+  isResponsible?: boolean | null
   creatingNewSpot?: boolean
   images?: File[]
   previews?: string[]
@@ -102,6 +104,9 @@ export default function StepResumen({
             <SummaryRow label="Nombre" value={basic.name} />
             <SummaryRow label="Categoría" value={selectedCat.label} />
             <SummaryRow label="Departamento" value={basic.department} />
+            {isResponsible != null && (
+              <SummaryRow label="Lo cargás como" value={isResponsible ? "Responsable/dueño" : "Visitante"} />
+            )}
           </>
         )}
       </SummaryCard>

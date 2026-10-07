@@ -86,6 +86,8 @@ export default function AgregarLugar() {
   const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
   const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [isPublic, setIsPublic]                   = useState<boolean | null>(null)
+  // ¿Quien lo carga es el responsable o dueño, o un visitante?
+  const [isResponsible, setIsResponsible]         = useState<boolean | null>(null)
   const [publicTransport, setPublicTransport]     = useState<string | null>(null)
   const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
   const [submitting, setSubmitting]               = useState(false)
@@ -361,6 +363,7 @@ export default function AgregarLugar() {
       basic,
       isPublic,
       publicTransport,
+      isResponsible: isService ? true : isResponsible !== false,
       selectedAmenities,
       additionalCategories,
       motorhomeDetail,
@@ -403,7 +406,7 @@ export default function AgregarLugar() {
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
     setFeatureErrors(new Set()); setError(null); setSuccess(null); setFailures([])
     setSelectedSpotId(null); setAvailableSpots([])
-    setIsPublic(null); setPublicTransport(null)
+    setIsPublic(null); setPublicTransport(null); setIsResponsible(null)
     setCreatingNewSpot(false); setClimbingMode(null)
     setClimbingSpotId(null); setClimbingSectorId(null)
     setAvailableSectors([]); setLoadingSectors(false)
@@ -584,6 +587,8 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
+            // Una playa o laguna nueva siempre pasa al admin: no se pregunta.
+            {...(isService ? {} : { isResponsible, setIsResponsible })}
             error={error}
             onBack={goBack}
             onNext={goNext}
@@ -795,6 +800,7 @@ export default function AgregarLugar() {
             climbingNewRoutes={climbingNewRoutes}
             isPublic={isPublic}
             publicTransport={publicTransport}
+            isResponsible={isService ? null : isResponsible}
             creatingNewSpot={creatingNewSpot}
             images={images}
             previews={previews}

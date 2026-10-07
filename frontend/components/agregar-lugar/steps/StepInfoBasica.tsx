@@ -22,6 +22,7 @@ const LocationPicker = dynamic(
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
   error, onBack, onNext, title = "Información básica",
+  isResponsible, setIsResponsible,
 }: {
   basic: BasicInfo
   setBasic: React.Dispatch<React.SetStateAction<BasicInfo>>
@@ -34,7 +35,12 @@ export default function StepInfoBasica({
   onBack: () => void
   onNext: () => void
   title?: string
+  // ¿Quien lo carga es el responsable o dueño? Sin estas props no se
+  // pregunta (una playa o laguna nueva siempre pasa al admin).
+  isResponsible?: boolean | null
+  setIsResponsible?: (v: boolean) => void
 }) {
+  const asksResponsible = setIsResponsible !== undefined
   const [emailError, setEmailError] = useState<string | null>(null)
   const [nameTaken, setNameTaken] = useState(false)
   const [checkingName, setCheckingName] = useState(false)
@@ -90,6 +96,7 @@ export default function StepInfoBasica({
     const normalizedWhatsapp = normalizePhoneDigits(basic.whatsapp.trim(), phoneCountry)
     if (!basic.noContact && basic.whatsapp.trim() && normalizedWhatsapp.length !== phoneCountry.digits) missing.add("whatsapp")
     if (isPublic === null) missing.add("isPublic")
+    if (asksResponsible && (isResponsible === null || isResponsible === undefined)) missing.add("responsible")
     if (!basic.lat || !basic.lng) missing.add("location")
     setFieldErrors(missing)
     return missing.size === 0
@@ -104,6 +111,46 @@ export default function StepInfoBasica({
     <div>
       <h2 style={s.title}>{title}</h2>
       <div style={s.form}>
+        {asksResponsible && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("responsible") ? "#e53e3e" : "#1b1b19" }}>
+              ¿Sos el responsable o dueño de este lugar?{" "}
+              <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {([
+                { value: true,  label: "🏡 Sí, soy el responsable/dueño" },
+                { value: false, label: "🎒 No, lo conozco como visitante" },
+              ] as { value: boolean; label: string }[]).map(opt => (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  aria-pressed={isResponsible === opt.value}
+                  onClick={() => { setIsResponsible!(opt.value); setFieldErrors(prev => { const n = new Set(prev); n.delete("responsible"); return n }) }}
+                  style={{
+                    padding: "6px 16px", borderRadius: 20,
+                    border: `1px solid ${isResponsible === opt.value ? "var(--primary)" : fieldErrors.has("responsible") ? "#e53e3e" : "var(--border)"}`,
+                    background: isResponsible === opt.value ? "var(--primary)" : "#f7f5f0",
+                    color: isResponsible === opt.value ? "#fff" : "#1b1b19",
+                    fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {isResponsible === true && (
+              <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
+                Vas a poder administrarlo desde tu perfil: editar los datos, las fotos y responder a las reseñas.
+              </p>
+            )}
+            {isResponsible === false && (
+              <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
+                ¡Gracias por sumarlo! Lo revisamos y, una vez publicado, lo administra el equipo de Rumbo. Si después aparece el responsable, puede pedir hacerse cargo.
+              </p>
+            )}
+          </div>
+        )}
         <Field label="Nombre del lugar" required={true} hasError={fieldErrors.has("name")}
           errorText={nameTaken ? "Ya existe un lugar con este nombre" : "El nombre es obligatorio"}>
           <input

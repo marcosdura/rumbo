@@ -6,6 +6,8 @@ export type AdminSpot = {
   is_approved: boolean
   owner_email: string | null
   owner_deleted_at: string | null
+  // Lo cargó un visitante (no el responsable): al aprobarlo pasa a ser del admin.
+  suggested_by_visitor?: boolean
   slug: string | null
   created_at: string
   category: { name: string } | null
