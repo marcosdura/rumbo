@@ -21,6 +21,8 @@ vi.mock("next-auth/react", () => ({
 }))
 vi.mock("next/image", () => ({ default: () => null }))
 vi.mock("@/lib/analytics", () => ({ trackEvent: () => {} }))
+// Leaflet necesita un DOM real: el mapa del selector de lugares no se dibuja.
+vi.mock("@/components/forms/SpotPickerMap", () => ({ default: () => null }))
 
 const { default: AgregarLugar } = await import("./AgregarLugar")
 
@@ -140,6 +142,7 @@ describe("AgregarLugar sin link directo", () => {
     openWith("")
     click(/Escalada/)
     click(/Nuevo sector/)
+    fireEvent.focus(await screen.findByRole("combobox", { name: "Buscar lugar" }))
     expect(await screen.findByRole("option", { name: "Cerro Arequita" })).toBeTruthy()
     click("Atrás")
     expect(screen.getByText("¿Qué querés agregar?")).toBeTruthy()
@@ -172,7 +175,8 @@ describe("AgregarLugar: escuelas de surf", () => {
     responses = { "/spots/pins": [{ id: 3, name: "Playa Brava" }, { id: 4, name: "La Paloma" }] }
     openWith("")
     fireEvent.click(await screen.findByText("Surf"))
-    expect(await screen.findByRole("option", { name: "Playa Brava" })).toBeTruthy()
-    expect(screen.getByRole("option", { name: "La Paloma" })).toBeTruthy()
+    fireEvent.focus(await screen.findByRole("combobox", { name: "Buscar lugar" }))
+    expect(await screen.findByRole("option", { name: /Playa Brava/ })).toBeTruthy()
+    expect(screen.getByRole("option", { name: /La Paloma/ })).toBeTruthy()
   })
 })

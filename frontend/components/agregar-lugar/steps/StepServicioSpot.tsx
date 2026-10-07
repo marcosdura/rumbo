@@ -2,6 +2,8 @@
 
 import { s } from "../styles"
 import NavRow from "../ui/NavRow"
+import SpotPicker from "@/components/forms/SpotPicker"
+import type { PickableSpot } from "@/components/forms/spotSearch"
 import type { Category } from "../types"
 
 export default function StepServicioSpot({
@@ -9,7 +11,7 @@ export default function StepServicioSpot({
   onCreateNew, error, onBack, onNext,
 }: {
   selectedCat: Category
-  availableSpots: { id: number; name: string }[]
+  availableSpots: PickableSpot[]
   loadingSpots: boolean
   selectedSpotId: number | null
   setSelectedSpotId: (id: number) => void
@@ -39,16 +41,7 @@ export default function StepServicioSpot({
               Todavía no hay {selectedCat.name === "Surf" ? "playas" : "ríos o lagunas"} cargados. Sugerí el tuyo abajo.
             </p>
           ) : (
-            <select
-              style={s.input}
-              value={selectedSpotId ?? ""}
-              onChange={e => setSelectedSpotId(Number(e.target.value))}
-            >
-              <option value="" disabled>-- Seleccioná un lugar --</option>
-              {availableSpots.map(sp => (
-                <option key={sp.id} value={sp.id}>{sp.name}</option>
-              ))}
-            </select>
+            <SpotPicker spots={availableSpots} selectedId={selectedSpotId} onSelect={setSelectedSpotId} />
           )}
           <button
             type="button"

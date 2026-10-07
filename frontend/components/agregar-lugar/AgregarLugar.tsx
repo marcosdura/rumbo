@@ -20,6 +20,7 @@ import {
   ENTRY_STEP, canEdit, createsSpot, flowSteps, nextStep, previousStep, stepLabel, type StepKey,
 } from "./flow"
 import Link from "next/link"
+import type { PickableSpot } from "@/components/forms/spotSearch"
 import AgregarLugarHeader from "./AgregarLugarHeader"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
@@ -94,7 +95,7 @@ export default function AgregarLugar() {
   // Partes que no se pudieron guardar después de crear el lugar o el sector.
   const [failures, setFailures]                   = useState<Failure[]>([])
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
-  const [availableSpots, setAvailableSpots]       = useState<Option[]>([])
+  const [availableSpots, setAvailableSpots]       = useState<PickableSpot[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
 
   // Climbing & service-spot creation states
@@ -239,10 +240,9 @@ export default function AgregarLugar() {
       // Las playas y lagunas son lugares públicos: cualquiera suma su
       // escuela o servicio a cualquiera de ellas (queda en revisión y pasa a
       // ser su dueño). /spots/pins no pagina y trae solo id+name.
-      api.get<Option[]>("/spots/pins", { params: { activity: cat.name } })
-        .then(({ data }) => {
-          setAvailableSpots(data.map(sp => ({ id: sp.id, name: sp.name })))
-        })
+      // Con departamento y coordenadas: el selector busca y muestra el mapa.
+      api.get<PickableSpot[]>("/spots/pins", { params: { activity: cat.name } })
+        .then(({ data }) => setAvailableSpots(data))
         .catch(() => {
           // proceed with empty list if fetch fails
         })
@@ -276,8 +276,8 @@ export default function AgregarLugar() {
         // Escalada es abierta: cualquiera sugiere sectores y vías en cualquier
         // lugar aprobado (quedan en revisión). /spots/pins no pagina y trae
         // solo id+name.
-        const { data } = await api.get<Option[]>("/spots/pins", { params: { activity: "Escalada" } })
-        setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
+        const { data } = await api.get<PickableSpot[]>("/spots/pins", { params: { activity: "Escalada" } })
+        setAvailableSpots(data)
       } catch {
         // proceed with empty list
       } finally {

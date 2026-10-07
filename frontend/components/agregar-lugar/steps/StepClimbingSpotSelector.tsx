@@ -2,11 +2,13 @@
 
 import { s } from "../styles"
 import NavRow from "../ui/NavRow"
+import SpotPicker from "@/components/forms/SpotPicker"
+import type { PickableSpot } from "@/components/forms/spotSearch"
 
 export default function StepClimbingSpotSelector({
   availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId, error, onBack, onNext,
 }: {
-  availableSpots: { id: number; name: string }[]
+  availableSpots: PickableSpot[]
   loadingSpots: boolean
   selectedSpotId: number | null
   setSelectedSpotId: (id: number) => void
@@ -16,7 +18,7 @@ export default function StepClimbingSpotSelector({
 }) {
   return (
     <div>
-      <h2 style={s.title}>Seleccioná el spot de escalada</h2>
+      <h2 style={s.title}>¿En qué lugar de escalada?</h2>
       <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
         Podés sugerir sectores y vías en cualquier lugar de escalada. Se publican cuando el equipo de Rumbo los revisa.
       </p>
@@ -25,18 +27,9 @@ export default function StepClimbingSpotSelector({
           {loadingSpots ? (
             <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando lugares...</p>
           ) : availableSpots.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--muted)" }}>No hay spots de escalada registrados aún.</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>No hay lugares de escalada registrados aún.</p>
           ) : (
-            <select
-              style={s.input}
-              value={selectedSpotId ?? ""}
-              onChange={e => setSelectedSpotId(Number(e.target.value))}
-            >
-              <option value="" disabled>-- Seleccioná un spot --</option>
-              {availableSpots.map(sp => (
-                <option key={sp.id} value={sp.id}>{sp.name}</option>
-              ))}
-            </select>
+            <SpotPicker spots={availableSpots} selectedId={selectedSpotId} onSelect={setSelectedSpotId} />
           )}
         </div>
       </div>
