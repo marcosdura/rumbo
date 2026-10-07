@@ -4,20 +4,11 @@ import { useRef, useState } from "react"
 import type React from "react"
 import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
-import Toggle from "../ui/Toggle"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
 import type { KayakItem } from "../types"
 import TriStateToggle from "../ui/TriStateToggle"
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>{label}</span>
-      {children}
-    </div>
-  )
-}
 
 export default function StepKayak({
   kayaks, setKayaks, kayakPhotoFiles, setKayakPhotoFiles, kayakPhotoPreviews, setKayakPhotoPreviews,
@@ -72,7 +63,7 @@ export default function StepKayak({
 
   return (
     <div>
-      <h2 style={s.title}>Datos de Kayak</h2>
+      <h2 style={s.title}>Datos del servicio de kayak</h2>
       {kayaks.map((k, i) => (
         <div key={i} style={s.card}>
           <p style={s.cardTitle}>Servicio {i + 1}</p>
@@ -128,13 +119,15 @@ export default function StepKayak({
               <Field label="Instagram" required={false}><input style={s.input} type="text" placeholder="@usuario" value={k.instagram} onChange={e => updKayak(i, "instagram", e.target.value)} /></Field>
               <div />
             </div>
-            <Toggle label="Alquiler disponible" checked={k.rental_available} onChange={v => updKayak(i, "rental_available", v)} />
-            <InfoRow label="¿Incluye guía?">
+            <Field label="¿Alquilás kayaks?" required={false}>
+              <TriStateToggle value={k.rental_available} onChange={v => updKayak(i, "rental_available", v)} />
+            </Field>
+            <Field label="¿Incluye guía?" required={false}>
               <TriStateToggle value={k.includes_guide} onChange={v => updKayak(i, "includes_guide", v)} />
-            </InfoRow>
-            <InfoRow label="¿Incluye chaleco salvavidas?">
+            </Field>
+            <Field label="¿Incluye chaleco salvavidas?" required={false}>
               <TriStateToggle value={k.includes_life_jacket} onChange={v => updKayak(i, "includes_life_jacket", v)} />
-            </InfoRow>
+            </Field>
 
             {i === 0 && (
               <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>

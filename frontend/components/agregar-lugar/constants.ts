@@ -36,6 +36,16 @@ export const DEPARTMENTS = [
   "Salto","San José","Soriano","Tacuarembó","Treinta y Tres",
 ]
 
+// Valores guardados → lo que ve la persona (los desplegables y el resumen
+// usan lo mismo, para que el resumen no muestre "rio" o "11").
+export const SURF_CLASS_LABELS: Record<string, string> = { grupal: "Grupal", privada: "Privada", intensivo: "Intensivo" }
+export const KAYAK_WATER_LABELS: Record<string, string> = { rio: "Río", lago: "Lago", mar: "Mar" }
+export const KAYAK_DIFFICULTY_LABELS: Record<string, string> = { facil: "Fácil", intermedio: "Intermedio", dificil: "Difícil" }
+export const KAYAK_TYPE_LABELS: Record<string, string> = { travesia: "Travesía", recreativo: "Recreativo", rapido: "Rápido" }
+export const SURFACE_LABELS: Record<string, string> = { cesped: "Césped", ripio: "Ripio", asfalto: "Asfalto", tierra: "Tierra" }
+
+export const monthLabel = (value: string) => MONTHS.find(m => m.value === value)?.label ?? "?"
+
 export const MONTHS = [
   { value: "1",  label: "Enero" },    { value: "2",  label: "Febrero" },
   { value: "3",  label: "Marzo" },    { value: "4",  label: "Abril" },
@@ -160,7 +170,7 @@ export const defaultSector = (): SectorItem => ({
 })
 
 export const defaultSurf = (): SurfItem => ({
-  name: "", class_type: "", duration: "", equipment_include: false,
+  name: "", class_type: "", duration: "", equipment_include: null,
   season_type: "all_year", season_start: "", season_end: "",
   email: "", whatsapp: "", instagram: "",
   levels: null, languages: null,
@@ -168,7 +178,7 @@ export const defaultSurf = (): SurfItem => ({
 
 export const defaultKayak = (): KayakItem => ({
   name: "", water_type: "", difficulty: "", duration: "", kayak_type: "",
-  rental_available: false, season_type: "all_year", season_start: "", season_end: "",
+  rental_available: null, season_type: "all_year", season_start: "", season_end: "",
   email: "", whatsapp: "", instagram: "",
   includes_guide: null, includes_life_jacket: null,
 })

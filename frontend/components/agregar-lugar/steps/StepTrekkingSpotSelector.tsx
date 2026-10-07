@@ -16,7 +16,7 @@ export default function StepTrekkingSpotSelector({
 }) {
   return (
     <div>
-      <h2 style={s.title}>¿A qué spot querés agregar la ruta?</h2>
+      <h2 style={s.title}>¿A qué lugar querés agregar la ruta?</h2>
       <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
         Las rutas se suman a lugares que cargaste vos. Si el lugar ya está aprobado, la ruta pasa por revisión antes de publicarse.
       </p>
@@ -31,7 +31,7 @@ export default function StepTrekkingSpotSelector({
             value={selectedSpotId ?? ""}
             onChange={e => setSelectedSpotId(Number(e.target.value))}
           >
-            <option value="" disabled>-- Seleccioná un spot --</option>
+            <option value="" disabled>-- Seleccioná un lugar --</option>
             {availableSpots.map(sp => (
               <option key={sp.id} value={sp.id}>{sp.name}</option>
             ))}

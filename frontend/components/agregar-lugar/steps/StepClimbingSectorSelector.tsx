@@ -16,13 +16,13 @@ export default function StepClimbingSectorSelector({
 }) {
   return (
     <div>
-      <h2 style={s.title}>Seleccioná el sector</h2>
+      <h2 style={s.title}>¿En qué sector?</h2>
       <div style={s.form}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {loadingSectors ? (
             <p style={{ fontSize: 13, color: "var(--muted)" }}>Cargando sectores...</p>
           ) : availableSectors.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--muted)" }}>Este spot no tiene sectores registrados aún.</p>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>Este lugar todavía no tiene sectores. Podés sugerir uno desde «Nuevo sector».</p>
           ) : (
             <select
               style={s.input}

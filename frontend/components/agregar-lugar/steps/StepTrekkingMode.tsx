@@ -14,8 +14,8 @@ export default function StepTrekkingMode({
       <h2 style={s.title}>¿Qué querés agregar?</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
         {[
-          { mode: "new_spot" as const, emoji: "🥾", label: "Nuevo spot de trekking", desc: "Agregar un lugar de trekking nuevo" },
-          { mode: "new_route" as const, emoji: "🗺️", label: "Nueva ruta", desc: "Agregar una ruta a un spot que ya existe" },
+          { mode: "new_spot" as const, emoji: "🥾", label: "Nuevo lugar de trekking", desc: "Agregar un lugar de trekking nuevo" },
+          { mode: "new_route" as const, emoji: "🗺️", label: "Nueva ruta", desc: "Agregar una ruta a un lugar tuyo que ya existe" },
         ].map(opt => (
           <button
             key={opt.mode}

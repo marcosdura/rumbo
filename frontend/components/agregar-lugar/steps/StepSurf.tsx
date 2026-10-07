@@ -4,21 +4,13 @@ import { useRef, useState } from "react"
 import type React from "react"
 import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
-import Toggle from "../ui/Toggle"
+import TriStateToggle from "../ui/TriStateToggle"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
 import type { SurfItem } from "../types"
 import MultiChoiceUnknown from "@/components/ui/MultiChoiceUnknown"
 import { LANGUAGES, SURF_LEVELS } from "@/lib/operatorInfo"
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>{label}</span>
-      {children}
-    </div>
-  )
-}
 
 export default function StepSurf({
   surf, setSurf, surfPhotoFiles, setSurfPhotoFiles, surfPhotoPreviews, setSurfPhotoPreviews,
@@ -64,7 +56,7 @@ export default function StepSurf({
 
   return (
     <div>
-      <h2 style={s.title}>Datos de Surf</h2>
+      <h2 style={s.title}>Datos de la escuela de surf</h2>
       <div style={s.card}>
         <div style={s.form}>
           <Field label="Nombre de la escuela" required={true} hasError={fieldErrors.has("name")} errorText="El nombre de la escuela es obligatorio">
@@ -100,13 +92,15 @@ export default function StepSurf({
             <Field label="Instagram" required={false}><input style={s.input} type="text" placeholder="@usuario" value={surf.instagram} onChange={e => setSurf(p => ({ ...p, instagram: e.target.value }))} /></Field>
             <div />
           </div>
-          <Toggle label="Equipo incluido" checked={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
-          <InfoRow label="¿Para qué niveles?">
+          <Field label="¿Incluye el equipo?" required={false}>
+            <TriStateToggle value={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
+          </Field>
+          <Field label="¿Para qué niveles?" required={false}>
             <MultiChoiceUnknown label="Niveles" options={SURF_LEVELS} value={surf.levels} onChange={v => setSurf(p => ({ ...p, levels: v }))} />
-          </InfoRow>
-          <InfoRow label="¿En qué idiomas dan las clases?">
+          </Field>
+          <Field label="¿En qué idiomas dan las clases?" required={false}>
             <MultiChoiceUnknown label="Idiomas" options={LANGUAGES} value={surf.languages} onChange={v => setSurf(p => ({ ...p, languages: v }))} />
-          </InfoRow>
+          </Field>
 
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: fieldErrors.has("photo") ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>

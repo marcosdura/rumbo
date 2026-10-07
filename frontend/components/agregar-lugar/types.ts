@@ -19,7 +19,7 @@ export type SectorItem = {
 }
 
 export type SurfItem = {
-  name: string; class_type: string; duration: string; equipment_include: boolean
+  name: string; class_type: string; duration: string; equipment_include: boolean | null
   season_type: "all_year" | "seasonal"; season_start: string; season_end: string
   email: string; whatsapp: string; instagram: string
   // null = no sé.
@@ -28,7 +28,7 @@ export type SurfItem = {
 
 export type KayakItem = {
   name: string; water_type: string; difficulty: string; duration: string; kayak_type: string
-  rental_available: boolean
+  rental_available: boolean | null
   season_type: "all_year" | "seasonal"; season_start: string; season_end: string
   email: string; whatsapp: string; instagram: string
   // null = no sé.

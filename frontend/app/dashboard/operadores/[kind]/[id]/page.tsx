@@ -208,14 +208,6 @@ export default function OperatorDashboardPage() {
       {options.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
     </select>
   )
-  const yesNo = (value: boolean | null, onChange: (v: boolean) => void) => (
-    <div style={{ display: "flex", gap: 8 }}>
-      {([[true, "Sí"], [false, "No"]] as [boolean, string][]).map(([v, label]) => (
-        <button key={label} type="button" onClick={() => onChange(v)} style={s.pill(value === v)}>{label}</button>
-      ))}
-    </div>
-  )
-
   return (
     <div style={page}>
       <Navbar />
@@ -271,7 +263,7 @@ export default function OperatorDashboardPage() {
             {kind === "surf_school" ? (
               <>
                 <div><label style={s.label}>Tipo de clase</label>{select(form.class_type, v => upd("class_type", v), [["grupal", "Grupal"], ["privada", "Privada"], ["intensivo", "Intensivo"]])}</div>
-                <div><label style={s.label}>¿Incluye el equipo?</label>{yesNo(form.equipment_include, v => upd("equipment_include", v))}</div>
+                <div><label style={s.label}>¿Incluye el equipo?</label><TriStateToggle value={form.equipment_include} onChange={v => upd("equipment_include", v)} /></div>
                 <div><label style={s.label}>¿Para qué niveles?</label><MultiChoiceUnknown label="Niveles" options={SURF_LEVELS} value={form.levels} onChange={v => upd("levels", v)} /></div>
                 <div><label style={s.label}>¿En qué idiomas dan las clases?</label><MultiChoiceUnknown label="Idiomas" options={LANGUAGES} value={form.languages} onChange={v => upd("languages", v)} /></div>
               </>
@@ -280,7 +272,7 @@ export default function OperatorDashboardPage() {
                 <div><label style={s.label}>Tipo de agua</label>{select(form.water_type, v => upd("water_type", v), [["rio", "Río"], ["lago", "Lago"], ["mar", "Mar"]])}</div>
                 <div><label style={s.label}>Dificultad</label>{select(form.difficulty, v => upd("difficulty", v), [["facil", "Fácil"], ["intermedio", "Intermedio"], ["dificil", "Difícil"]])}</div>
                 <div><label style={s.label}>Tipo de kayak</label>{select(form.kayak_type, v => upd("kayak_type", v), [["travesia", "Travesía"], ["recreativo", "Recreativo"], ["rapido", "Rápido"]])}</div>
-                <div><label style={s.label}>¿Alquilás kayaks?</label>{yesNo(form.rental_available, v => upd("rental_available", v))}</div>
+                <div><label style={s.label}>¿Alquilás kayaks?</label><TriStateToggle value={form.rental_available} onChange={v => upd("rental_available", v)} /></div>
                 <div><label style={s.label}>¿Incluye guía?</label><TriStateToggle value={form.includes_guide} onChange={v => upd("includes_guide", v)} /></div>
                 <div><label style={s.label}>¿Incluye chaleco salvavidas?</label><TriStateToggle value={form.includes_life_jacket} onChange={v => upd("includes_life_jacket", v)} /></div>
               </>

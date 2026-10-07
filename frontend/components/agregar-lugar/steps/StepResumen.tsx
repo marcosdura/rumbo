@@ -1,6 +1,9 @@
 "use client"
 
-import { TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES } from "../constants"
+import {
+  TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, KAYAK_DIFFICULTY_LABELS, KAYAK_TYPE_LABELS,
+  KAYAK_WATER_LABELS, SURFACE_LABELS, SURF_CLASS_LABELS, monthLabel,
+} from "../constants"
 import { s } from "../styles"
 import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
@@ -88,7 +91,7 @@ export default function StepResumen({
   const namedExperiences = (experiences ?? []).filter(e => e.title.trim())
 
   const seasonLabel = basic.season_type === "seasonal"
-    ? `Estacional (${basic.season_start || "?"} a ${basic.season_end || "?"})`
+    ? `Estacional (${monthLabel(basic.season_start)} a ${monthLabel(basic.season_end)})`
     : "Todo el año"
 
   return (
@@ -229,7 +232,7 @@ export default function StepResumen({
       {isMotorhome && motorhomeDetail && (
         <SummaryCard title="Datos del área de motorhomes" onEdit={editTo("motorhome")}>
           {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
-          {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
+          {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={SURFACE_LABELS[motorhomeDetail.surface_type] ?? motorhomeDetail.surface_type} />}
           <SummaryRow label="Agua" value={motorhomeDetail.has_water ? "Sí" : "No"} />
           <SummaryRow label="Electricidad" value={motorhomeDetail.has_electricity ? "Sí" : "No"} />
           <SummaryRow label="Dump station" value={motorhomeDetail.has_dump_station ? "Sí" : "No"} />
@@ -244,7 +247,7 @@ export default function StepResumen({
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", margin: "0 0 6px" }}>🚐 Motorhome</p>
                 {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
-                {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
+                {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={SURFACE_LABELS[motorhomeDetail.surface_type] ?? motorhomeDetail.surface_type} />}
               </div>
             )}
             {additionalCategories.includes("Glamping") && glampingUnits && glampingUnits.length > 0 && (
@@ -382,13 +385,13 @@ export default function StepResumen({
       {selectedCat.name === "Surf" && surf.name && (
         <SummaryCard title="Datos de la escuela de surf" onEdit={editTo("servicio")}>
           <SummaryRow label="Nombre" value={surf.name} />
-          {surf.class_type && <SummaryRow label="Tipo de clase" value={surf.class_type} />}
+          {surf.class_type && <SummaryRow label="Tipo de clase" value={SURF_CLASS_LABELS[surf.class_type] ?? surf.class_type} />}
           {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
           <SummaryRow
             label="Temporada"
-            value={surf.season_type === "seasonal" ? `Estacional (${surf.season_start || "?"} a ${surf.season_end || "?"})` : "Todo el año"}
+            value={surf.season_type === "seasonal" ? `Estacional (${monthLabel(surf.season_start)} a ${monthLabel(surf.season_end)})` : "Todo el año"}
           />
-          <SummaryRow label="Equipo incluido" value={surf.equipment_include ? "Sí" : "No"} />
+          <SummaryRow label="Equipo incluido" value={yesNo(surf.equipment_include) ?? "No sé"} />
           <SummaryRow label="Niveles" value={listLabel(surf.levels, SURF_LEVELS) ?? "No sé"} />
           <SummaryRow label="Idiomas" value={listLabel(surf.languages, LANGUAGES) ?? "No sé"} />
           {surf.email && <SummaryRow label="Email" value={surf.email} />}
@@ -409,15 +412,15 @@ export default function StepResumen({
           {kayaks.filter(k => k.name).map((k, i) => (
             <div key={i} style={{ marginBottom: 10 }}>
               <SummaryRow label="Nombre" value={k.name} />
-              {k.water_type && <SummaryRow label="Tipo de agua" value={k.water_type} />}
-              {k.difficulty && <SummaryRow label="Dificultad" value={k.difficulty} />}
+              {k.water_type && <SummaryRow label="Tipo de agua" value={KAYAK_WATER_LABELS[k.water_type] ?? k.water_type} />}
+              {k.difficulty && <SummaryRow label="Dificultad" value={KAYAK_DIFFICULTY_LABELS[k.difficulty] ?? k.difficulty} />}
               {k.duration && <SummaryRow label="Duración" value={`${k.duration} hs`} />}
-              {k.kayak_type && <SummaryRow label="Tipo de kayak" value={k.kayak_type} />}
+              {k.kayak_type && <SummaryRow label="Tipo de kayak" value={KAYAK_TYPE_LABELS[k.kayak_type] ?? k.kayak_type} />}
               <SummaryRow
                 label="Temporada"
-                value={k.season_type === "seasonal" ? `Estacional (${k.season_start || "?"} a ${k.season_end || "?"})` : "Todo el año"}
+                value={k.season_type === "seasonal" ? `Estacional (${monthLabel(k.season_start)} a ${monthLabel(k.season_end)})` : "Todo el año"}
               />
-              <SummaryRow label="Alquiler disponible" value={k.rental_available ? "Sí" : "No"} />
+              <SummaryRow label="Alquiler disponible" value={yesNo(k.rental_available) ?? "No sé"} />
               <SummaryRow label="Incluye guía" value={yesNo(k.includes_guide) ?? "No sé"} />
               <SummaryRow label="Incluye chaleco" value={yesNo(k.includes_life_jacket) ?? "No sé"} />
               {k.email && <SummaryRow label="Email" value={k.email} />}
@@ -449,7 +452,7 @@ export default function StepResumen({
       )}
 
       <div style={s.navRow}>
-        <button style={s.btnSecondary} onClick={onBack}>Volver</button>
+        <button style={s.btnSecondary} onClick={onBack}>Atrás</button>
         <button
           style={{ ...s.btnPrimary, opacity: submitting ? 0.7 : 1 }}
           onClick={onSubmit}

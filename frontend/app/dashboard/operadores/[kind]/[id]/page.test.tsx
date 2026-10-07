@@ -76,6 +76,14 @@ describe("Dashboard de escuela", () => {
     expect(patches.map(p => p.dry)).toEqual([true, false])
   })
 
+  it("equipo incluido se puede dejar en No sé (como guía, chaleco, niveles e idiomas)", async () => {
+    operator = school()
+    render(<OperatorDashboardPage />)
+    const label = await screen.findByText("¿Incluye el equipo?")
+    const buttons = Array.from(label.parentElement!.querySelectorAll("button")).map(b => b.textContent)
+    expect(buttons).toEqual(["Sí", "No", "No sé"])
+  })
+
   it("con un pedido pendiente, el nombre queda bloqueado y se puede cancelar", async () => {
     operator = school({
       change_request: {

@@ -4,8 +4,8 @@ import NavRow from "../ui/NavRow"
 import { s } from "../styles"
 
 const MODES = [
-  { key: "new_spot"    as const, emoji: "🧗", title: "Nuevo spot de escalada", desc: "Agregar un lugar de escalada nuevo" },
-  { key: "new_sector"  as const, emoji: "📍", title: "Nuevo sector",           desc: "Agregar un sector a un spot que ya existe" },
+  { key: "new_spot"    as const, emoji: "🧗", title: "Nuevo lugar de escalada", desc: "Agregar un lugar de escalada nuevo" },
+  { key: "new_sector"  as const, emoji: "📍", title: "Nuevo sector",           desc: "Agregar un sector a un lugar que ya existe" },
   { key: "new_route"   as const, emoji: "🪨", title: "Nuevas vías",            desc: "Sumar vías a un sector que ya existe" },
 ]
 

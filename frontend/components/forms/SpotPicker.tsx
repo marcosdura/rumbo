@@ -61,8 +61,10 @@ export default function SpotPicker({ spots, selectedId, onSelect, placeholder = 
           onBlur={() => setOpen(false)}
           onKeyDown={onKeyDown}
           style={{
-            width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 12,
+            // Igual que los inputs de agregar-lugar (styles.ts, s.input).
+            width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: 12,
             border: "1px solid var(--border)", fontSize: 14, fontFamily: "inherit", background: "#fff",
+            color: "#1b1b19", outline: "none",
           }}
         />
         {open && (
