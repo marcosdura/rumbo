@@ -37,6 +37,7 @@ import { useSession } from "next-auth/react"
 import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
+import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -304,6 +305,7 @@ useEffect(() => {
               </div>
             </div>
 
+            {spot.suggested_by_visitor && <SuggestedNotice spotId={spot.id} />}
             {viewer.is_owner && <OwnerBar spotId={spot.id} />}
             <PendingNotice pending={viewer.pending} />
 

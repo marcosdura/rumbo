@@ -52,6 +52,6 @@ export type AdminChangeRequest = {
   }
 }
 
-export type AdminMode = "spots" | "cambios" | "reportes" | "fotos" | "cuentas-eliminadas"
+export type AdminMode = "spots" | "cambios" | "reportes" | "reclamos" | "fotos" | "cuentas-eliminadas"
 
 export type SortBy = "name" | "category" | "department" | "date_desc" | "date_asc"

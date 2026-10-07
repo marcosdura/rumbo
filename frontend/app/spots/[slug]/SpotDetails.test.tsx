@@ -94,3 +94,17 @@ describe("Página del lugar: accesos para sumar contenido", () => {
     expect(screen.queryByRole("button", { name: "⚑ Reportar este lugar" })).toBeNull()
   })
 })
+
+describe("Página del lugar sugerido por un visitante", () => {
+  it("avisa que está a confirmar y ofrece reclamarlo", async () => {
+    render(<SpotDetail spot={spot("Camping", { suggested_by_visitor: true })} />)
+    expect(await screen.findByText(/la información está a confirmar/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "¿Sos el responsable o dueño? Reclamalo" })).toBeTruthy()
+  })
+
+  it("un lugar cargado por su responsable no muestra el aviso", async () => {
+    render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    expect(screen.queryByText(/la información está a confirmar/)).toBeNull()
+  })
+})

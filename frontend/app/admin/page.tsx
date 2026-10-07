@@ -17,6 +17,7 @@ import ChangesTab from "./ChangesTab"
 import ContributionsList from "./ContributionsList"
 import OperatorChangesList, { type AdminOperatorChange } from "./OperatorChangesList"
 import ReportsTab, { groupKey, type ReportGroup } from "./ReportsTab"
+import ClaimsTab, { type AdminClaim } from "./ClaimsTab"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 
@@ -63,6 +64,10 @@ export default function AdminPage() {
   const [reportGroups, setReportGroups] = useState<ReportGroup[]>([])
   const [reportsLoading, setReportsLoading] = useState(true)
   const [reportsError, setReportsError] = useState<string | null>(null)
+  // Pedidos para hacerse cargo de un lugar sugerido por un visitante.
+  const [claims, setClaims] = useState<AdminClaim[]>([])
+  const [claimsLoading, setClaimsLoading] = useState(true)
+  const [claimsError, setClaimsError] = useState<string | null>(null)
   // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
   // pedido de cambio de escuela.
   type RejectType = "change" | "contribution" | "operator" | "spot"
@@ -102,6 +107,10 @@ export default function AdminPage() {
       .then(({ data }) => setReportGroups(Array.isArray(data) ? data : []))
       .catch(() => setReportsError("Error al cargar los reportes."))
       .finally(() => setReportsLoading(false))
+    api.get<AdminClaim[]>("/admin/claims", { token })
+      .then(({ data }) => setClaims(Array.isArray(data) ? data : []))
+      .catch(() => setClaimsError("Error al cargar los pedidos de responsables."))
+      .finally(() => setClaimsLoading(false))
   }, [token])
 
   // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
@@ -354,6 +363,7 @@ export default function AdminPage() {
             { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
             { id: "cambios", label: `📝 Cambios pendientes${pendingReviews > 0 ? ` (${pendingReviews})` : ""}` },
             { id: "reportes", label: `⚑ Reportes${reportGroups.length > 0 ? ` (${reportGroups.length})` : ""}` },
+            { id: "reclamos", label: `🙋 Responsables${claims.length > 0 ? ` (${claims.length})` : ""}` },
             { id: "fotos", label: "📷 Gestión de fotos" },
             { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
           ] as { id: AdminMode; label: string }[]).map(m => (
@@ -430,6 +440,20 @@ export default function AdminPage() {
               setReportGroups(prev => prev.filter(g => groupKey(g) !== groupKey(group)))
               // Despublicar o borrar cambia la lista de spots (y sus reseñas).
               if (action !== "dismiss") refreshSpots().catch(() => {})
+            }}
+          />
+        )}
+
+        {mode === "reclamos" && (
+          <ClaimsTab
+            claims={claims}
+            loadError={claimsError}
+            loading={claimsLoading}
+            token={token}
+            onResolved={(claim, approved) => {
+              // Aprobar rechaza los demás pedidos del lugar y le cambia el dueño.
+              setClaims(prev => prev.filter(c => (approved ? c.spot.id !== claim.spot.id : c.id !== claim.id)))
+              if (approved) refreshSpots().catch(() => {})
             }}
           />
         )}

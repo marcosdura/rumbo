@@ -654,6 +654,9 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "review_count": review_count,
         "is_public": spot.is_public,
         "public_transport": spot.public_transport,
+        # Lo sugirió un visitante: la página avisa que está a confirmar y
+        # ofrece reclamarlo (claims.py).
+        "suggested_by_visitor": bool(spot.suggested_by_visitor),
     }
 
 
@@ -782,6 +785,9 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "season_end": spot.season_end,
         "is_public": spot.is_public,
         "public_transport": spot.public_transport,
+        # Lo sugirió un visitante: la página avisa que está a confirmar y
+        # ofrece reclamarlo (claims.py).
+        "suggested_by_visitor": bool(spot.suggested_by_visitor),
     }
 
 @router.post("/spots/{spot_id}/trekking-detail")

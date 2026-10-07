@@ -91,6 +91,14 @@ class SpotReject(BaseModel):
     reason: str = Field(min_length=1, max_length=500)
 
 
+class ClaimCreate(BaseModel):
+    message: str | None = Field(default=None, max_length=500)
+
+
+class ClaimReject(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class ReportCreate(BaseModel):
     target_kind: str = Field(max_length=20)
     target_id: int

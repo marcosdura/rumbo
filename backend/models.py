@@ -191,6 +191,32 @@ class Notification(Base):
     read_at    = Column(DateTime(timezone=True), nullable=True)
 
 
+class SpotClaim(Base):
+    """Pedido de alguien que dice ser el responsable o dueño de un lugar que
+    sugirió un visitante (spots.suggested_by_visitor). Lo decide el admin
+    (claims.py); si lo aprueba, el lugar pasa a ser de esa persona."""
+    __tablename__ = "spot_claims"
+    # Un pedido en revisión por persona y por lugar.
+    __table_args__ = (
+        Index(
+            "uq_claim_pending", "spot_id", "user_email", unique=True,
+            postgresql_where=text("status = 'pending'"),
+            sqlite_where=text("status = 'pending'"),
+        ),
+    )
+
+    id            = Column(Integer, primary_key=True, index=True)
+    spot_id       = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_email    = Column(String, nullable=False, index=True)
+    # Cómo verificarlo (opcional): su rol, un teléfono, una web...
+    message       = Column(String, nullable=True)
+    # pending | approved | rejected
+    status        = Column(String, nullable=False, default="pending", index=True)
+    reject_reason = Column(String, nullable=True)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at   = Column(DateTime(timezone=True), nullable=True)
+
+
 class Report(Base):
     """Un reporte de un usuario sobre algo publicado: un spot, una reseña o
     una escuela/kayak (reports.py). Solo avisa: nada se oculta por cantidad
