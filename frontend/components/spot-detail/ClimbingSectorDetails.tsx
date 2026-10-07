@@ -9,6 +9,7 @@ import { api } from "@/lib/api"
 import { AddButton, SectionHeader } from "./AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import type { ClimbingRoute, SectorDetail } from "@/lib/types"
+import { ROCK_TYPES, SUN_EXPOSURE, approachLabel } from "@/lib/sectorInfo"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const params = useParams()
@@ -187,6 +188,10 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
               { icon: "📍", val: `${sector.routes_count} rutas`, lbl: "Total rutas" },
               { icon: "🎯", val: sector.min_grade ? `${sector.min_grade} – ${sector.max_grade}` : "—", lbl: "Graduación" },
               { icon: "⛰️", val: sector.max_altitude ? `${sector.max_altitude} m` : "—", lbl: "Altitud" },
+              // "—" = quien lo cargó no lo sabía.
+              { icon: "🥾", val: approachLabel(sector.approach_minutes) ?? "—", lbl: "Aproximación" },
+              { icon: "🌤️", val: sector.sun_exposure ? SUN_EXPOSURE[sector.sun_exposure] : "—", lbl: "Sol o sombra" },
+              { icon: "🪨", val: sector.rock_type ? ROCK_TYPES[sector.rock_type] : "—", lbl: "Roca" },
             ].map(({ icon, val, lbl }) => (
               <div key={lbl} style={{
                 background: "#fff", border: "1px solid var(--border)",

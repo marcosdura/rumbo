@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 from datetime import datetime
 from pydantic import field_validator
 
@@ -220,11 +220,19 @@ class RouteResponse(RouteBase):
 
 
 # -------- CLIMBING SECTOR --------
+SunExposure = Literal["sol", "sombra", "mixto"]
+RockType = Literal["granito", "basalto", "arenisca", "cuarcita", "caliza", "otra"]
+
+
 class ClimbingSectorBase(BaseModel):
     name: str = Field(max_length=200)
     type: Optional[str] = Field(default=None, max_length=50)
     max_altitude: Optional[int] = None
     restrictions: Optional[str] = Field(default=None, max_length=500)
+    # None = "no sé".
+    approach_minutes: Optional[int] = Field(default=None, ge=0, le=600)
+    sun_exposure: Optional[SunExposure] = None
+    rock_type: Optional[RockType] = None
     slug: str | None = Field(default=None, max_length=250)
 
 

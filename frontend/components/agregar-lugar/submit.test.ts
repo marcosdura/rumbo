@@ -56,6 +56,14 @@ describe("sumar a un lugar existente", () => {
     expect(h.setSuccess).toHaveBeenCalledWith("published")
   })
 
+  it("el sector manda aproximación, sol y roca; vacío = no sé (null)", async () => {
+    responses = [ok(false, 9)]
+    const h = handlers()
+    const sec = { ...constants.defaultSector(), name: "Placa", approach_minutes: "30", sun_exposure: "sol" }
+    await submitNewClimbingSector({ climbingSpotId: 4, token: "t", sectors: [sec], sectorRoutes: [], ...h })
+    expect(calls[0][1]).toMatchObject({ approach_minutes: 30, sun_exposure: "sol", rock_type: null })
+  })
+
   it("sector sugerido: el resultado es el del sector", async () => {
     responses = [ok(false, 9), ok(false)]  // sector, vía
     const h = handlers()

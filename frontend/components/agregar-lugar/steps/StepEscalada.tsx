@@ -7,6 +7,7 @@ import { s, errorInputBorder, sanitizeNum } from "../styles"
 import { unnamedRows } from "../validation"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
+import SectorExtraFields from "../ui/SectorExtraFields"
 import type { SectorItem } from "../types"
 
 export default function StepEscalada({
@@ -68,6 +69,7 @@ export default function StepEscalada({
                 <input style={s.input} type="number" min={0} value={sec.max_altitude} onChange={e => updSector(i, "max_altitude", sanitizeNum(e.target.value))} />
               </Field>
             </div>
+            <SectorExtraFields sector={sec} upd={(f, v) => updSector(i, f, v)} n={i + 1} />
             <Field label="Restricciones" required={false}>
               <input style={s.input} value={sec.restrictions} onChange={e => updSector(i, "restrictions", e.target.value)} />
             </Field>

@@ -78,6 +78,10 @@ function sectorPayload(sec: SectorItem, spotId: number) {
     type: sec.type || null,
     max_altitude: sec.max_altitude ? parseInt(sec.max_altitude) : null,
     restrictions: sec.restrictions || null,
+    // Vacío = "no sé".
+    approach_minutes: sec.approach_minutes ? parseInt(sec.approach_minutes) : null,
+    sun_exposure: sec.sun_exposure || null,
+    rock_type: sec.rock_type || null,
   }
 }
 

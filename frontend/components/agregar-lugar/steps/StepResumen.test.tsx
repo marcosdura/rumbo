@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import StepResumen from "./StepResumen"
 import {
   CATEGORIES, defaultGlampingDetail, defaultKayak, defaultMotorhomeDetail, defaultCampingDetail,
-  defaultSurf, defaultTrekkingFeatures, emptyBasic,
+  defaultSector, defaultSurf, defaultTrekkingFeatures, emptyBasic,
 } from "../constants"
 import type { StepKey } from "../flow"
 
@@ -69,7 +69,7 @@ describe("StepResumen", () => {
   it("un aporte no muestra datos de un lugar nuevo", () => {
     renderSummary({
       selectedCat: cat("Escalada"), createsSpot: false, climbingMode: "new_sector",
-      climbingSpotName: "Cerro Arequita", sectors: [{ name: "Placa Sur", type: "", max_altitude: "", restrictions: "" }],
+      climbingSpotName: "Cerro Arequita", sectors: [{ ...defaultSector(), name: "Placa Sur" }],
       images: [], previews: [], selectedAmenities: [], glampingUnits: [], additionalCategories: [], experiences: [],
     })
     expect(screen.getByText("Revisá tu aporte")).toBeTruthy()

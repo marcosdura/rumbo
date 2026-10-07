@@ -443,6 +443,10 @@ class ClimbingSector(ReviewedContent, Base):
     type = Column(String)
     max_altitude = Column(Integer)
     restrictions = Column(String)
+    # Datos para el escalador; null = "no sé" (quien lo cargó no lo sabía).
+    approach_minutes = Column(Integer, nullable=True)   # caminata hasta el sector
+    sun_exposure     = Column(String, nullable=True)    # sol | sombra | mixto
+    rock_type        = Column(String, nullable=True)    # granito | basalto | arenisca | cuarcita | caliza | otra
     slug = Column(String, nullable=True, index=True)
 
     spot = relationship("SpotDB", back_populates="climbing_sectors")

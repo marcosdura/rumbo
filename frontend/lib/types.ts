@@ -95,6 +95,10 @@ export type SectorDetail = PublicSector & {
   type: string | null
   restrictions: string | null
   max_altitude: number | null
+  // null = "no sé".
+  approach_minutes: number | null
+  sun_exposure: string | null
+  rock_type: string | null
 }
 
 // GET /sectors/{id}/routes

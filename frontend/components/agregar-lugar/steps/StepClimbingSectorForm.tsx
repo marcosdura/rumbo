@@ -4,6 +4,7 @@ import type React from "react"
 import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
+import SectorExtraFields from "../ui/SectorExtraFields"
 import type { SectorItem } from "../types"
 
 export default function StepClimbingSectorForm({
@@ -41,6 +42,7 @@ export default function StepClimbingSectorForm({
               <input style={s.input} type="number" min={0} value={sec.max_altitude} onChange={e => upd("max_altitude", sanitizeNum(e.target.value))} />
             </Field>
           </div>
+          <SectorExtraFields sector={sec} upd={upd} />
           <Field label="Restricciones" required={false}>
             <input style={s.input} value={sec.restrictions} onChange={e => upd("restrictions", e.target.value)} />
           </Field>

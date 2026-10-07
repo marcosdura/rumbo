@@ -3,10 +3,11 @@ import { render, screen } from "@testing-library/react"
 
 vi.mock("next/navigation", () => ({ useParams: () => ({}), useRouter: () => ({ push: () => {}, back: () => {} }) }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
+let extra: Record<string, unknown> = {}
 vi.mock("@/lib/api", () => ({
   api: {
     get: (url: string) => Promise.resolve({
-      data: url.endsWith("/routes") ? [] : { id: 5, spot_id: 12, name: "Sector Norte", slug: "sector-norte", routes_count: 0 },
+      data: url.endsWith("/routes") ? [] : { id: 5, spot_id: 12, name: "Sector Norte", slug: "sector-norte", routes_count: 0, ...extra },
     }),
   },
 }))
@@ -23,5 +24,15 @@ describe("ClimbingSectorDetails", () => {
   it("sin slug ni id muestra que no existe", () => {
     render(<ClimbingSectorDetails />)
     expect(screen.getByText("Sector no encontrado")).toBeTruthy()
+  })
+
+  it("muestra aproximación, sol o sombra y roca; lo que no se sabe, con un guion", async () => {
+    extra = { approach_minutes: 90, sun_exposure: "mixto", rock_type: null }
+    render(<ClimbingSectorDetails slug="sector-norte" />)
+    expect(await screen.findByText("1 h 30 min")).toBeTruthy()
+    expect(screen.getByText("Sol y sombra")).toBeTruthy()
+    const roca = screen.getByText("Roca").parentElement!
+    expect(roca.textContent).toContain("—")
+    extra = {}
   })
 })

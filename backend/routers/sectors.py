@@ -49,7 +49,7 @@ async def create_sector(request: Request, sector: ClimbingSectorCreate, db: Sess
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
     pending = contributions.decide(spot, "climbing_sector", user)
-    valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id"}
+    valid_fields = {"name", "type", "max_altitude", "restrictions", "spot_id", "approach_minutes", "sun_exposure", "rock_type"}
     sector_data = {k: v for k, v in sector.dict().items() if k in valid_fields}
     db_sector = ClimbingSector(**sector_data)
     db_sector.slug = generate_slug(sector.name)

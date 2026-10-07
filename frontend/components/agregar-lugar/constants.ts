@@ -156,7 +156,10 @@ export const defaultRoute = (): RouteItem => ({
   technical_level: "", physical_demand: "",
 })
 
-export const defaultSector = (): SectorItem => ({ name: "", type: "", max_altitude: "", restrictions: "" })
+export const defaultSector = (): SectorItem => ({
+  name: "", type: "", max_altitude: "", restrictions: "",
+  approach_minutes: "", sun_exposure: "", rock_type: "",
+})
 
 export const defaultSurf = (): SurfItem => ({
   name: "", class_type: "", duration: "", equipment_include: false,

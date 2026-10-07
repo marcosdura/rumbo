@@ -5,12 +5,22 @@ import { s } from "../styles"
 import SummaryCard from "../ui/SummaryCard"
 import SummaryRow from "../ui/SummaryRow"
 import Pill from "@/components/ui/Pill"
+import { ROCK_TYPES, SUN_EXPOSURE, approachLabel } from "@/lib/sectorInfo"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
   TrekkingMode, ClimbingRouteItem, ExperienceItem,
 } from "../types"
 import type { StepKey } from "../flow"
+
+// Una línea por sector: tipo, altitud y lo que se sepa de aproximación, sol y roca.
+function sectorSummary(sec: SectorItem): string[] {
+  return [
+    sec.type, sec.max_altitude && `${sec.max_altitude} m`,
+    approachLabel(sec.approach_minutes ? Number(sec.approach_minutes) : null),
+    SUN_EXPOSURE[sec.sun_exposure], ROCK_TYPES[sec.rock_type],
+  ].filter((x): x is string => !!x)
+}
 
 export default function StepResumen({
   selectedCat, isService, createsSpot, basic, trekkingFeatures, routes,
@@ -299,7 +309,7 @@ export default function StepResumen({
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{sec.name}</p>
                 <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
-                  {[sec.type, sec.max_altitude && `${sec.max_altitude} m`].filter(Boolean).join(" · ")}
+                  {sectorSummary(sec).join(" · ")}
                 </p>
               </div>
             ))}
@@ -333,6 +343,9 @@ export default function StepResumen({
             <>
               <SummaryRow label="Sector" value={sectors[0].name} />
               {sectors[0].type && <SummaryRow label="Tipo" value={sectors[0].type} />}
+              <SummaryRow label="Aproximación" value={approachLabel(sectors[0].approach_minutes ? Number(sectors[0].approach_minutes) : null) ?? "No sé"} />
+              <SummaryRow label="Sol o sombra" value={SUN_EXPOSURE[sectors[0].sun_exposure] ?? "No sé"} />
+              <SummaryRow label="Tipo de roca" value={ROCK_TYPES[sectors[0].rock_type] ?? "No sé"} />
               {sectors[0].restrictions && <SummaryRow label="Restricciones" value={sectors[0].restrictions} />}
             </>
           )}

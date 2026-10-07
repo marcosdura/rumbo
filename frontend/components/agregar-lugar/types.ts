@@ -12,7 +12,11 @@ export type RouteItem = {
   difficulty: string; route_type: string; technical_level: string; physical_demand: string
 }
 
-export type SectorItem = { name: string; type: string; max_altitude: string; restrictions: string }
+export type SectorItem = {
+  name: string; type: string; max_altitude: string; restrictions: string
+  // "" = no sé.
+  approach_minutes: string; sun_exposure: string; rock_type: string
+}
 
 export type SurfItem = {
   name: string; class_type: string; duration: string; equipment_include: boolean

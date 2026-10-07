@@ -697,7 +697,7 @@ export default function AgregarLugar() {
         {/* Vías para un sector existente: al menos una */}
         {step === "vias_nuevas" && (
           <StepClimbingRoutes
-            sectors={[{ name: climbingSectorName || "Sector", type: "", max_altitude: "", restrictions: "" }]}
+            sectors={[{ ...defaultSector(), name: climbingSectorName || "Sector" }]}
             routes={climbingNewRoutes}
             setRoutes={setClimbingNewRoutes}
             required
