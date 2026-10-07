@@ -8,23 +8,25 @@ import Pill from "@/components/ui/Pill"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
-  TrekkingMode, ClimbingRouteItem,
+  TrekkingMode, ClimbingRouteItem, ExperienceItem,
 } from "../types"
+import type { StepKey } from "../flow"
 
 export default function StepResumen({
-  selectedCat, isService, isTrekking, basic, trekkingFeatures, routes,
+  selectedCat, isService, createsSpot, basic, trekkingFeatures, routes,
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
-  error, onSubmit, onBack, onEditStep,
-  climbingMode, climbingSpotName, climbingSectorName, sectors, climbingNewRoutes,
+  error, onSubmit, onBack, editTo,
+  climbingMode, climbingSpotName, climbingSectorName, trekkingSpotName, sectors, climbingNewRoutes,
   isPublic, publicTransport, creatingNewSpot,
   images, previews, surfPhotoPreviews, kayakPhotoPreviews,
   selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
   additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
-  trekkingMode, sectorRoutes,
+  trekkingMode, sectorRoutes, experiences,
 }: {
   selectedCat: Category
   isService: boolean
-  isTrekking: boolean
+  // Se carga un lugar nuevo (y no solo un aporte a uno existente).
+  createsSpot: boolean
   basic: BasicInfo
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
@@ -37,10 +39,13 @@ export default function StepResumen({
   error: string | null
   onSubmit: () => void
   onBack: () => void
-  onEditStep: (n: number) => void
+  // El "Editar" de cada tarjeta: undefined si ese paso no se puede tocar
+  // (por ejemplo, el lugar elegido de un link directo).
+  editTo: (key: StepKey) => (() => void) | undefined
   climbingMode?: ClimbingMode
   climbingSpotName?: string
   climbingSectorName?: string
+  trekkingSpotName?: string
   sectors?: SectorItem[]
   climbingNewRoutes?: ClimbingRouteItem[]
   isPublic?: boolean | null
@@ -59,12 +64,14 @@ export default function StepResumen({
   glampingUnits?: GlampingDetailItem[]
   trekkingMode?: TrekkingMode
   sectorRoutes?: ClimbingRouteItem[]
+  experiences?: ExperienceItem[]
 }) {
   const isCamping = selectedCat.name === "Camping"
   const isGlamping = selectedCat.name === "Glamping"
   const isMotorhome = selectedCat.name === "Motorhome"
   const isEscalada = selectedCat.name === "Escalada"
-  const showBasicInfoCard = !isService || creatingNewSpot
+  const showBasicInfoCard = createsSpot
+  const namedExperiences = (experiences ?? []).filter(e => e.title.trim())
 
   const seasonLabel = basic.season_type === "seasonal"
     ? `Estacional (${basic.season_start || "?"} a ${basic.season_end || "?"})`
@@ -72,9 +79,10 @@ export default function StepResumen({
 
   return (
     <div>
-      <h2 style={s.title}>Revisá tu lugar</h2>
+      <h2 style={s.title}>{createsSpot ? "Revisá tu lugar" : "Revisá tu aporte"}</h2>
 
-      <SummaryCard title="Información general" onEdit={() => onEditStep(2)}>
+      {(createsSpot || isService) && (
+      <SummaryCard title="Información general" onEdit={editTo(createsSpot ? "info" : "lugar")}>
         {isService && !creatingNewSpot ? (
           <>
             <SummaryRow label="Categoría" value={selectedCat.label} />
@@ -97,9 +105,10 @@ export default function StepResumen({
           </>
         )}
       </SummaryCard>
+      )}
 
       {showBasicInfoCard && basic.description && (
-        <SummaryCard title="Descripción" onEdit={() => onEditStep(2)}>
+        <SummaryCard title="Descripción" onEdit={editTo("info")}>
           <p style={{ fontSize: 14, color: "#3d3d3a", margin: 0, lineHeight: 1.6 }}>
             {basic.description.length > 120
               ? basic.description.slice(0, 120) + "…"
@@ -109,14 +118,14 @@ export default function StepResumen({
       )}
 
       {showBasicInfoCard && (
-        <SummaryCard title="Precio y temporada" onEdit={() => onEditStep(2)}>
+        <SummaryCard title="Precio y temporada" onEdit={editTo("info")}>
           <SummaryRow label="Precio" value={basic.price ? `$${basic.price}` : "Gratis"} />
           <SummaryRow label="Temporada" value={seasonLabel} />
         </SummaryCard>
       )}
 
       {showBasicInfoCard && (isPublic !== null && isPublic !== undefined) && (
-        <SummaryCard title="Acceso" onEdit={() => onEditStep(2)}>
+        <SummaryCard title="Acceso" onEdit={editTo("info")}>
           <SummaryRow label="Tipo de acceso" value={isPublic ? "Público" : "Privado"} />
           {publicTransport && (
             <SummaryRow
@@ -128,14 +137,14 @@ export default function StepResumen({
       )}
 
       {showBasicInfoCard && (basic.lat || basic.lng) && (
-        <SummaryCard title="Ubicación" onEdit={() => onEditStep(2)}>
+        <SummaryCard title="Ubicación" onEdit={editTo("info")}>
           <SummaryRow label="Latitud" value={basic.lat} />
           <SummaryRow label="Longitud" value={basic.lng} />
         </SummaryCard>
       )}
 
       {showBasicInfoCard && (basic.email || basic.whatsapp || basic.instagram) && (
-        <SummaryCard title="Contacto" onEdit={() => onEditStep(2)}>
+        <SummaryCard title="Contacto" onEdit={editTo("info")}>
           {basic.email     && <SummaryRow label="Email"     value={basic.email} />}
           {basic.whatsapp  && <SummaryRow label="WhatsApp"  value={basic.whatsapp} />}
           {basic.instagram && <SummaryRow label="Instagram" value={basic.instagram} />}
@@ -143,7 +152,7 @@ export default function StepResumen({
       )}
 
       {images && images.length > 0 && previews && previews.length > 0 && (
-        <SummaryCard title="Imágenes" onEdit={() => onEditStep(isTrekking ? 5 : 4)}>
+        <SummaryCard title="Imágenes" onEdit={editTo("imagenes")}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {previews.map((src, i) => (
               <div key={i} style={{ position: "relative" }}>
@@ -168,7 +177,7 @@ export default function StepResumen({
       )}
 
       {(isCamping || isGlamping) && selectedAmenities && selectedAmenities.length > 0 && (
-        <SummaryCard title={`Amenities del ${isCamping ? "camping" : "glamping"}`} onEdit={() => onEditStep(3)}>
+        <SummaryCard title={`Amenities del ${isCamping ? "camping" : "glamping"}`} onEdit={editTo("amenities")}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {selectedAmenities.map(name => (
               <Pill key={name} variant="subtle-green" hover>{name}</Pill>
@@ -177,14 +186,8 @@ export default function StepResumen({
         </SummaryCard>
       )}
 
-      {isCamping && campingDetail?.price && (
-        <SummaryCard title="Datos del camping" onEdit={() => onEditStep(2)}>
-          <SummaryRow label="Precio por noche" value={`$${campingDetail.price}`} />
-        </SummaryCard>
-      )}
-
       {isGlamping && glampingUnits && glampingUnits.length > 0 && (
-        <SummaryCard title="Tipos de alojamiento" onEdit={() => onEditStep(3)}>
+        <SummaryCard title="Tipos de alojamiento" onEdit={editTo("glamping_unidades")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {glampingUnits.map((unit, i) => (
               <div key={i} style={{ fontSize: 13, color: "#3d3d3a" }}>
@@ -199,7 +202,7 @@ export default function StepResumen({
       )}
 
       {isMotorhome && motorhomeDetail && (
-        <SummaryCard title="Datos del área de motorhomes" onEdit={() => onEditStep(3)}>
+        <SummaryCard title="Datos del área de motorhomes" onEdit={editTo("motorhome")}>
           {motorhomeDetail.capacity && <SummaryRow label="Capacidad" value={`${motorhomeDetail.capacity} motorhome(s)`} />}
           {motorhomeDetail.surface_type && <SummaryRow label="Superficie" value={motorhomeDetail.surface_type} />}
           <SummaryRow label="Agua" value={motorhomeDetail.has_water ? "Sí" : "No"} />
@@ -210,7 +213,7 @@ export default function StepResumen({
       )}
 
       {additionalCategories && additionalCategories.length > 0 && (
-        <SummaryCard title="Categorías adicionales" onEdit={() => onEditStep(5)}>
+        <SummaryCard title="Categorías adicionales" onEdit={editTo("adicionales")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {additionalCategories.includes("Motorhome") && motorhomeDetail && (
               <div>
@@ -249,8 +252,8 @@ export default function StepResumen({
         </SummaryCard>
       )}
 
-      {selectedCat.name === "Trekking" && (
-        <SummaryCard title="Características del lugar" onEdit={() => onEditStep(3)}>
+      {selectedCat.name === "Trekking" && trekkingMode !== "new_route" && (
+        <SummaryCard title="Características del lugar" onEdit={editTo("trekking_caracteristicas")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             {TREKKING_FEATURES.map(({ key, label, emoji }) => {
               const val = trekkingFeatures[key]
@@ -269,7 +272,8 @@ export default function StepResumen({
       )}
 
       {selectedCat.name === "Trekking" && routes.filter(r => r.name).length > 0 && (
-        <SummaryCard title="Rutas" onEdit={() => onEditStep(trekkingMode === "new_route" ? 3 : 4)}>
+        <SummaryCard title="Rutas" onEdit={editTo("rutas")}>
+          {trekkingMode === "new_route" && trekkingSpotName && <SummaryRow label="Lugar" value={trekkingSpotName} />}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {routes.filter(r => r.name).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -284,7 +288,7 @@ export default function StepResumen({
       )}
 
       {isEscalada && (!climbingMode || climbingMode === "new_spot") && sectors && sectors.filter(sec => sec.name).length > 0 && (
-        <SummaryCard title="Sectores" onEdit={() => onEditStep(3)}>
+        <SummaryCard title="Sectores" onEdit={editTo("sectores")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sectors.filter(sec => sec.name).map((sec, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -299,7 +303,7 @@ export default function StepResumen({
       )}
 
       {isEscalada && climbingMode !== "new_route" && sectorRoutes && sectorRoutes.filter(r => r.name).length > 0 && (
-        <SummaryCard title="Rutas de escalada" onEdit={() => onEditStep(4)}>
+        <SummaryCard title="Vías" onEdit={editTo("vias")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sectorRoutes.filter(r => r.name).map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -316,10 +320,10 @@ export default function StepResumen({
 
       {(climbingMode === "new_sector" || climbingMode === "new_route") && (
         <SummaryCard
-          title={climbingMode === "new_sector" ? "Nuevo sector" : "Nueva ruta"}
-          onEdit={() => onEditStep(2)}
+          title={climbingMode === "new_sector" ? "Nuevo sector" : "Nuevas vías"}
+          onEdit={editTo(climbingMode === "new_sector" ? "sector_nuevo" : "vias_nuevas")}
         >
-          {climbingSpotName && <SummaryRow label="Spot" value={climbingSpotName} />}
+          {climbingSpotName && <SummaryRow label="Lugar" value={climbingSpotName} />}
           {climbingMode === "new_sector" && sectors?.[0] && (
             <>
               <SummaryRow label="Sector" value={sectors[0].name} />
@@ -348,7 +352,7 @@ export default function StepResumen({
       )}
 
       {selectedCat.name === "Surf" && surf.name && (
-        <SummaryCard title="Datos de la escuela de surf" onEdit={() => onEditStep(isService ? (creatingNewSpot ? 4 : 3) : 3)}>
+        <SummaryCard title="Datos de la escuela de surf" onEdit={editTo("servicio")}>
           <SummaryRow label="Nombre" value={surf.name} />
           {surf.class_type && <SummaryRow label="Tipo de clase" value={surf.class_type} />}
           {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
@@ -371,7 +375,7 @@ export default function StepResumen({
       )}
 
       {selectedCat.name === "Kayak" && kayaks.filter(k => k.name).length > 0 && (
-        <SummaryCard title="Datos del servicio de kayak" onEdit={() => onEditStep(isService ? (creatingNewSpot ? 4 : 3) : 3)}>
+        <SummaryCard title="Datos del servicio de kayak" onEdit={editTo("servicio")}>
           {kayaks.filter(k => k.name).map((k, i) => (
             <div key={i} style={{ marginBottom: 10 }}>
               <SummaryRow label="Nombre" value={k.name} />
@@ -396,6 +400,19 @@ export default function StepResumen({
               ))}
             </div>
           )}
+        </SummaryCard>
+      )}
+
+      {namedExperiences.length > 0 && (
+        <SummaryCard title="Experiencias" onEdit={editTo("experiencias")}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {namedExperiences.map((exp, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{exp.title}</p>
+                {exp.price && <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, flexShrink: 0 }}>${exp.price}</p>}
+              </div>
+            ))}
+          </div>
         </SummaryCard>
       )}
 

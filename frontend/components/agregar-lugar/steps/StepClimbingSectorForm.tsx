@@ -26,7 +26,7 @@ export default function StepClimbingSectorForm({
       <div style={s.card}>
         <div style={s.form}>
           <Field label="Nombre" required={true}>
-            <input style={s.input} value={sec.name} onChange={e => upd("name", e.target.value)} />
+            <input aria-label="Nombre del sector" style={s.input} value={sec.name} onChange={e => upd("name", e.target.value)} />
           </Field>
           <div className="form-two-col">
             <Field label="Tipo" required={false}>

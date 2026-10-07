@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import type React from "react"
 import { defaultSector } from "../constants"
-import { s, sanitizeNum } from "../styles"
+import { s, errorInputBorder, sanitizeNum } from "../styles"
+import { unnamedRows } from "../validation"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { SectorItem } from "../types"
@@ -16,12 +18,24 @@ export default function StepEscalada({
   onBack: () => void
   onNext: () => void
 }) {
+  const [nameErrors, setNameErrors] = useState<Set<number>>(new Set())
+
   function updSector(i: number, field: string, val: string) {
     setSectors(prev => prev.map((sec, idx) => idx === i ? { ...sec, [field]: val } : sec))
+    if (field === "name") setNameErrors(prev => { const n = new Set(prev); n.delete(i); return n })
   }
 
   function removeSector(i: number) {
     setSectors(prev => prev.filter((_, idx) => idx !== i))
+    setNameErrors(new Set())
+  }
+
+  // Un sector con datos y sin nombre no se puede guardar (antes se
+  // descartaba en silencio, y con él sus vías).
+  function handleNext() {
+    const unnamed = unnamedRows(sectors)
+    setNameErrors(new Set(unnamed))
+    if (unnamed.length === 0) onNext()
   }
 
   return (
@@ -34,8 +48,12 @@ export default function StepEscalada({
           )}
           <p style={s.cardTitle}>Sector {i + 1}</p>
           <div style={s.form}>
-            <Field label="Nombre" required={true}>
-              <input style={s.input} value={sec.name} onChange={e => updSector(i, "name", e.target.value)} />
+            <Field label="Nombre" required={true} hasError={nameErrors.has(i)} errorText="El nombre del sector es obligatorio">
+              <input
+                aria-label={`Nombre del sector ${i + 1}`}
+                style={{ ...s.input, ...(nameErrors.has(i) ? errorInputBorder : {}) }}
+                value={sec.name} onChange={e => updSector(i, "name", e.target.value)}
+              />
             </Field>
             <div className="form-two-col">
               <Field label="Tipo" required={false}>
@@ -57,7 +75,7 @@ export default function StepEscalada({
         </div>
       ))}
       <button style={s.btnAdd} onClick={() => setSectors(prev => [...prev, defaultSector()])}>+ Agregar sector</button>
-      <NavRow onBack={onBack} onNext={onNext} error={error} />
+      <NavRow onBack={onBack} onNext={handleNext} error={error ?? (nameErrors.size > 0 ? "Completá el nombre de cada sector." : null)} />
     </div>
   )
 }

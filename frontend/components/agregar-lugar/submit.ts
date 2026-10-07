@@ -51,6 +51,8 @@ export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParam
       }, { token })
       created.push(data)
     }
+    // El paso ya lo exige; si igual no había nada, no se dice "¡Listo!".
+    if (created.length === 0) { setError("Agregá al menos una ruta."); return }
     setSuccess(contributionResult(created))
   } catch {
     setError("No se pudo guardar la ruta. Intentá de nuevo.")
@@ -132,9 +134,11 @@ export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParam
       }, { token })
       created.push(data)
     }
+    // El paso ya lo exige; si igual no había nada, no se dice "¡Listo!".
+    if (created.length === 0) { setError("Agregá al menos una vía."); return }
     setSuccess(contributionResult(created))
   } catch {
-    setError("No se pudo guardar la ruta. Intentá de nuevo.")
+    setError("No se pudieron guardar las vías. Intentá de nuevo.")
   } finally {
     setSubmitting(false)
   }
@@ -523,33 +527,6 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
         has_dump_station: motorhomeDetail.has_dump_station,
         max_stay_nights: motorhomeDetail.max_stay_nights ? parseInt(motorhomeDetail.max_stay_nights) : null,
       }, { token }).catch(() => {})
-    }
-
-    if (cat === "Surf" && surf.name) {
-      await api.post("/surfschool/", {
-        spot_id: spotId, name: surf.name,
-        class_type: surf.class_type || null,
-        duration: surf.duration ? parseFloat(surf.duration) : null,
-        equipment_include: surf.equipment_include,
-        season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
-        season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
-        email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
-      }, { token }).catch(() => {})
-    }
-
-    if (cat === "Kayak") {
-      for (const k of kayaks) {
-        if (!k.name) continue
-        await api.post("/kayak/", {
-          spot_id: spotId, name: k.name,
-          water_type: k.water_type || null, difficulty: k.difficulty || null,
-          duration: k.duration ? parseFloat(k.duration) : null,
-          kayak_type: k.kayak_type || null, rental_available: k.rental_available,
-          season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
-          season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
-          email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
-        }, { token }).catch(() => {})
-      }
     }
 
     for (const exp of experiences) {

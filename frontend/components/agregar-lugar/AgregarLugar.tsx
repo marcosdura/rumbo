@@ -1,19 +1,23 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { signInWithGoogle } from "@/lib/auth"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
   REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
-  defaultClimbingRouteItem, defaultExperience, CATEGORIES,
+  defaultClimbingRouteItem, CATEGORIES,
 } from "./constants"
 import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute } from "./submit"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 import { RESULT_COPY, mySpotsFor, type MySpot, type SubmitResult } from "./result"
-import { parsePrefill, PREFILL_CATEGORY, PREFILL_STEP, type Prefill } from "./prefill"
+import { parsePrefill, prefillIntro, PREFILL_AGAIN, PREFILL_CATEGORY, type PrefillKind } from "./prefill"
+import {
+  ENTRY_STEP, canEdit, createsSpot, flowSteps, nextStep, previousStep, stepLabel, type StepKey,
+} from "./flow"
 import Link from "next/link"
 import AgregarLugarHeader from "./AgregarLugarHeader"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
@@ -45,11 +49,19 @@ import type {
   MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem,
 } from "./types"
 
+type Option = { id: number; name: string }
+type PrefillSpot = { id: number; name: string; slug: string | null }
+// Lo que fija un link directo (?sumar=...): qué se suma y a qué lugar (y
+// sector). Se guarda para que "Empezar de cero" y "Sumar otra" vuelvan al
+// mismo formulario puntual.
+type Locked = { kind: PrefillKind; spot: PrefillSpot; sector: Option | null }
+
 export default function AgregarLugar() {
   const { data: session, update } = useSession()
+  const router = useRouter()
   const token = session?.id_token
 
-  const [step, setStep]                           = useState(1)
+  const [step, setStep]                           = useState<StepKey>("categoria")
   const [selectedCat, setSelectedCat]             = useState<Category | null>(null)
   const [basic, setBasic]                         = useState<BasicInfo>(emptyBasic())
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
@@ -79,7 +91,7 @@ export default function AgregarLugar() {
   const [error, setError]                         = useState<string | null>(null)
   const [success, setSuccess]                     = useState<SubmitResult | null>(null)
   const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
-  const [availableSpots, setAvailableSpots]       = useState<{ id: number; name: string }[]>([])
+  const [availableSpots, setAvailableSpots]       = useState<Option[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
 
   // Climbing & service-spot creation states
@@ -87,7 +99,7 @@ export default function AgregarLugar() {
   const [creatingNewSpot, setCreatingNewSpot]     = useState(false)
   const [climbingSpotId, setClimbingSpotId]       = useState<number | null>(null)
   const [climbingSectorId, setClimbingSectorId]   = useState<number | null>(null)
-  const [availableSectors, setAvailableSectors]   = useState<{ id: number; name: string }[]>([])
+  const [availableSectors, setAvailableSectors]   = useState<Option[]>([])
   const [loadingSectors, setLoadingSectors]       = useState(false)
   const [climbingNewRoutes, setClimbingNewRoutes] = useState<ClimbingRouteItem[]>([defaultClimbingRouteItem(0)])
   const [sectorRoutes, setSectorRoutes]           = useState<ClimbingRouteItem[]>([])
@@ -95,56 +107,61 @@ export default function AgregarLugar() {
   // Trekking mode states
   const [trekkingMode, setTrekkingMode]                 = useState<TrekkingMode>(null)
   const [trekkingSpotId, setTrekkingSpotId]             = useState<number | null>(null)
-  const [availableTrekkingSpots, setAvailableTrekkingSpots] = useState<{ id: number; name: string }[]>([])
+  const [availableTrekkingSpots, setAvailableTrekkingSpots] = useState<Option[]>([])
   const [loadingTrekkingSpots, setLoadingTrekkingSpots] = useState(false)
 
   const [experiences, setExperiences]                   = useState<ExperienceItem[]>([])
 
-  // Llegada por link directo (?sumar=sector&spot=12): el lugar ya elegido,
-  // para el "Volver a ..." y para no pasar por categoría/modo/lugar.
-  const [prefillSpot, setPrefillSpot] = useState<{ id: number; name: string; slug: string | null } | null>(null)
+  // Llegada por link directo (?sumar=sector&spot=12): el formulario queda
+  // fijo en eso (sin volver a elegir categoría, modo ni lugar).
+  const [locked, setLocked] = useState<Locked | null>(null)
 
   useEffect(() => {
     // window.location y no useSearchParams: este último obliga a envolver la
     // página en un <Suspense> para el prerender.
     const prefill = parsePrefill(new URLSearchParams(window.location.search))
-    if (prefill) applyPrefill(prefill)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!prefill) return
+    const { kind, spotId, sectorId } = prefill
+    ;(async () => {
+      try {
+        // /spots/{id} solo devuelve lugares publicados: un link a uno que no
+        // existe (o no está aprobado) cae en el catch.
+        const { data: spot } = await api.get<PrefillSpot>(`/spots/${spotId}`)
+        let sector: Option | null = null
+        if (kind === "via") {
+          const { data } = await api.get<{ id: number; name: string; spot_id: number }>(`/sectors/${sectorId}`)
+          if (data.spot_id !== spot.id) throw new Error("El sector es de otro lugar")
+          sector = { id: data.id, name: data.name }
+        }
+        enterLocked({ kind, spot: { id: spot.id, name: spot.name, slug: spot.slug }, sector })
+      } catch {
+        setError("No encontramos ese lugar. Podés elegirlo desde el formulario.")
+      }
+    })()
   }, [])
 
-  async function applyPrefill({ kind, spotId, sectorId }: Prefill) {
+  // Deja el formulario en el paso de entrada del link directo, con el lugar
+  // (y el sector) ya elegidos.
+  function enterLocked(lock: Locked) {
+    const { kind, spot, sector } = lock
     const cat = CATEGORIES.find(c => c.name === PREFILL_CATEGORY[kind])
     if (!cat) return
-    try {
-      // /spots/{id} solo devuelve lugares publicados: un link a uno que no
-      // existe (o no está aprobado) cae en el catch.
-      const { data: spot } = await api.get<{ id: number; name: string; slug: string | null }>(`/spots/${spotId}`)
-      let sector: { id: number; name: string } | null = null
-      if (kind === "via") {
-        const { data } = await api.get<{ id: number; name: string; spot_id: number }>(`/sectors/${sectorId}`)
-        if (data.spot_id !== spot.id) throw new Error("El sector es de otro lugar")
-        sector = data
-      }
-      const option = [{ id: spot.id, name: spot.name }]
-      setSelectedCat(cat)
-      if (kind === "ruta") {
-        setTrekkingMode("new_route"); setTrekkingSpotId(spot.id); setAvailableTrekkingSpots(option)
-      } else if (kind === "sector" || kind === "via") {
-        setClimbingMode(kind === "sector" ? "new_sector" : "new_route"); setClimbingSpotId(spot.id); setAvailableSpots(option)
-        if (sector) { setClimbingSectorId(sector.id); setAvailableSectors([{ id: sector.id, name: sector.name }]) }
-      } else {
-        setCreatingNewSpot(false); setSelectedSpotId(spot.id); setAvailableSpots(option)
-      }
-      setPrefillSpot(spot)
-      setStep(PREFILL_STEP[kind])
-    } catch {
-      setError("No encontramos ese lugar. Podés elegirlo desde el formulario.")
+    const option = [{ id: spot.id, name: spot.name }]
+    setSelectedCat(cat)
+    if (kind === "ruta") {
+      setTrekkingMode("new_route"); setTrekkingSpotId(spot.id); setAvailableTrekkingSpots(option)
+    } else if (kind === "sector" || kind === "via") {
+      setClimbingMode(kind === "sector" ? "new_sector" : "new_route"); setClimbingSpotId(spot.id); setAvailableSpots(option)
+      if (sector) { setClimbingSectorId(sector.id); setAvailableSectors([sector]) }
+    } else {
+      setCreatingNewSpot(false); setSelectedSpotId(spot.id); setAvailableSpots(option)
     }
+    setLocked(lock)
+    setStep(ENTRY_STEP[kind])
   }
 
   useEffect(() => {
     trackEvent("add_spot_start")
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -168,20 +185,37 @@ export default function AgregarLugar() {
   const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
-  const isCampingOrGlamping = selectedCat?.name === "Camping" || selectedCat?.name === "Glamping"
-  const isMotorhome = selectedCat?.name === "Motorhome"
-  const isGlamping = selectedCat?.name === "Glamping"
-  const glampingStepOffset = isGlamping ? 1 : 0
-  const climbingStepOffset = isEscalada && climbingMode === "new_spot" ? 1 : 0
-  const experiencesStepOffset = (isCampingOrGlamping || isMotorhome) ? 1 : 0
-  const summaryStep =
-    isService && creatingNewSpot ? 5
-    : isService ? 4
-    : isTrekking && trekkingMode === "new_route" ? 5
-    : isTrekking ? 6
-    : isEscalada && climbingMode === "new_sector" ? 5
-    : isEscalada && climbingMode !== "new_route" ? 6
-    : isCampingOrGlamping ? 7 + glampingStepOffset : isMotorhome ? 7 : 5
+
+  const steps = flowSteps({ category: selectedCat?.name ?? null, climbingMode, trekkingMode, creatingNewSpot })
+  const entry = locked ? ENTRY_STEP[locked.kind] : null
+  const spotUrl = locked ? (locked.spot.slug ? `/spots/${locked.spot.slug}` : "/") : null
+
+  function goTo(key: StepKey) {
+    setError(null)
+    setStep(key)
+  }
+
+  function goNext() {
+    const next = nextStep(steps, step)
+    if (next) goTo(next)
+  }
+
+  function goBack() {
+    const prev = previousStep(steps, step, entry)
+    if (prev) {
+      // Volver a elegir la playa: ya no se está sugiriendo una nueva.
+      if (prev === "lugar" && isService) setCreatingNewSpot(false)
+      goTo(prev)
+    } else if (spotUrl) {
+      // Link directo: el primer paso vuelve al lugar, no a elegir otra cosa.
+      router.push(spotUrl)
+    }
+  }
+
+  // Para los "Editar" del resumen: solo los pasos que se pueden tocar.
+  function editTo(key: StepKey): (() => void) | undefined {
+    return canEdit(steps, key, entry) ? () => goTo(key) : undefined
+  }
 
   function upd(field: string, val: string) {
     setBasic(prev => ({ ...prev, [field]: val }))
@@ -193,20 +227,16 @@ export default function AgregarLugar() {
     )
   }
 
-  function isValidEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
-
   function handleCategorySelect(cat: Category) {
     setSelectedCat(cat)
     const isServ = cat.name === "Surf" || cat.name === "Kayak"
-    setStep(2)
+    goTo(flowSteps({ category: cat.name, climbingMode, trekkingMode, creatingNewSpot })[1])
     if (isServ) {
       setLoadingSpots(true)
       // Las playas y lagunas son lugares públicos: cualquiera suma su
       // escuela o servicio a cualquiera de ellas (queda en revisión y pasa a
       // ser su dueño). /spots/pins no pagina y trae solo id+name.
-      api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: cat.name } })
+      api.get<Option[]>("/spots/pins", { params: { activity: cat.name } })
         .then(({ data }) => {
           setAvailableSpots(data.map(sp => ({ id: sp.id, name: sp.name })))
         })
@@ -221,10 +251,11 @@ export default function AgregarLugar() {
 
   async function handleTrekkingModeSelect(mode: "new_spot" | "new_route") {
     setTrekkingMode(mode)
+    goTo(mode === "new_route" ? "lugar" : "info")
     if (mode === "new_route") {
       setLoadingTrekkingSpots(true)
       try {
-        // Igual que surf y kayak: las rutas se suman solo a lugares propios.
+        // Las rutas se suman solo a lugares propios (el backend lo exige).
         const { data } = await api.get<MySpot[]>("/spots/mine", { token })
         setAvailableTrekkingSpots(mySpotsFor(data, "Trekking"))
       } catch {} finally {
@@ -235,13 +266,14 @@ export default function AgregarLugar() {
 
   async function handleClimbingModeSelect(mode: "new_spot" | "new_sector" | "new_route") {
     setClimbingMode(mode)
+    goTo(mode === "new_spot" ? "info" : "lugar")
     if (mode === "new_sector" || mode === "new_route") {
       setLoadingSpots(true)
       try {
         // Escalada es abierta: cualquiera sugiere sectores y vías en cualquier
         // lugar aprobado (quedan en revisión). /spots/pins no pagina y trae
         // solo id+name.
-        const { data } = await api.get<{ id: number; name: string }[]>("/spots/pins", { params: { activity: "Escalada" } })
+        const { data } = await api.get<Option[]>("/spots/pins", { params: { activity: "Escalada" } })
         setAvailableSpots(data.map((sp) => ({ id: sp.id, name: sp.name })))
       } catch {
         // proceed with empty list
@@ -251,59 +283,42 @@ export default function AgregarLugar() {
     }
   }
 
-  async function goToStep3() {
-    if (isService) {
-      if (creatingNewSpot) {
-        setError(null)
-        setStep(3)
-        return
-      }
-      if (!selectedSpotId) {
-        setError("Seleccioná un lugar para continuar.")
-        return
-      }
-      setError(null)
-      setStep(3)
+  function nextFromServiceSpot() {
+    if (!selectedSpotId) {
+      setError("Seleccioná un lugar para continuar.")
       return
     }
-    setError(null)
-    setStep(3)
+    goNext()
   }
 
-  async function handleSpotImagesAndNext() {
-    if (images.length === 0) { setError("Debés subir al menos una imagen."); return }
-    setError(null)
-    setStep(4)
-  }
-
-  function goToStep4() {
-    if (isTrekking) {
-      const missing = REQUIRED_FEATURE_KEYS.filter(k => trekkingFeatures[k] === null)
-      if (missing.length > 0) {
-        setFeatureErrors(new Set(missing))
-        setError("Completá todas las características obligatorias antes de continuar.")
-        return
-      }
-      setFeatureErrors(new Set())
+  function nextFromTrekkingFeatures() {
+    const missing = REQUIRED_FEATURE_KEYS.filter(k => trekkingFeatures[k] === null)
+    if (missing.length > 0) {
+      setFeatureErrors(new Set(missing))
+      setError("Completá todas las características obligatorias antes de continuar.")
+      return
     }
-    if (isEscalada && climbingMode === "new_sector" && !sectors[0]?.name?.trim()) {
+    setFeatureErrors(new Set())
+    goNext()
+  }
+
+  function nextFromNewSector() {
+    if (!sectors[0]?.name?.trim()) {
       setError("El nombre del sector es obligatorio.")
       return
     }
-    setError(null)
-    setStep(4)
+    goNext()
   }
 
-  async function goToClimbingStep3() {
+  async function nextFromClimbingSpot() {
     if (!climbingSpotId) {
-      setError("Seleccioná un spot para continuar.")
+      setError("Seleccioná un lugar para continuar.")
       return
     }
-    setError(null)
     if (climbingMode === "new_route") {
       setLoadingSectors(true)
       try {
-        const { data } = await api.get<{ id: number; name: string }[]>("/sectors/", { params: { spot_id: climbingSpotId } })
+        const { data } = await api.get<Option[]>("/sectors/", { params: { spot_id: climbingSpotId } })
         setAvailableSectors(data.map((sec) => ({ id: sec.id, name: sec.name })))
       } catch (err) {
         console.error("Error al cargar sectores:", err)
@@ -311,16 +326,15 @@ export default function AgregarLugar() {
         setLoadingSectors(false)
       }
     }
-    setStep(3)
+    goNext()
   }
 
-  function goToClimbingStep4() {
+  function nextFromSectorSelector() {
     if (!climbingSectorId) {
       setError("Seleccioná un sector para continuar.")
       return
     }
-    setError(null)
-    setStep(4)
+    goNext()
   }
 
   async function handleSubmit() {
@@ -372,7 +386,7 @@ export default function AgregarLugar() {
   }
 
   function reset() {
-    setStep(1); setSelectedCat(null); setBasic(emptyBasic())
+    setStep("categoria"); setSelectedCat(null); setBasic(emptyBasic())
     setSelectedAmenities([]); setRoutes([defaultRoute()]); setSectors([defaultSector()])
     setAdditionalCategories([]); setMotorhomeDetail(defaultMotorhomeDetail())
     setCampingDetail(defaultCampingDetail()); setGlampingDetail(defaultGlampingDetail())
@@ -394,14 +408,23 @@ export default function AgregarLugar() {
     setTrekkingMode(null); setTrekkingSpotId(null)
     setAvailableTrekkingSpots([]); setLoadingTrekkingSpots(false)
     setExperiences([])
-    setPrefillSpot(null)
+    // Con link directo se vuelve a empezar lo mismo, en el mismo lugar.
+    if (locked) enterLocked(locked)
   }
 
-  const pageHeader = <AgregarLugarHeader step={step} summaryStep={summaryStep} onReset={reset} />
+  const label = stepLabel(steps, step, entry)
+  const pageHeader = (
+    <AgregarLugarHeader
+      stepLabel={label}
+      canReset={step !== (entry ?? "categoria")}
+      intro={locked ? prefillIntro(locked.kind, locked.spot.name, locked.sector?.name) : undefined}
+      onReset={reset}
+    />
+  )
   // Mismo link que "← Volver al perfil" del dashboard.
-  const backToSpot = prefillSpot?.slug ? (
-    <Link href={`/spots/${prefillSpot.slug}`} style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
-      ← Volver a {prefillSpot.name}
+  const backToSpot = locked && spotUrl ? (
+    <Link href={spotUrl} style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+      ← Volver a {locked.spot.name}
     </Link>
   ) : null
 
@@ -451,19 +474,26 @@ export default function AgregarLugar() {
         <style>{mediaQuery}</style>
         <div style={{ ...s.container, textAlign: "center", paddingTop: 32 }}>
           {pageHeader}
-          {backToSpot}
           <div style={{ marginTop: 48 }}>
             <p style={{ fontSize: 28, fontWeight: 700, color: "#1b1b19", marginBottom: 8 }}>{RESULT_COPY[success].title}</p>
             <p style={{ fontSize: 16, color: "var(--muted-strong)", marginBottom: 36, maxWidth: 440, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5 }}>{RESULT_COPY[success].text}</p>
-            <button style={s.btnPrimary} onClick={reset}>{RESULT_COPY[success].again}</button>
+            {locked && spotUrl ? (
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                <button style={s.btnSecondary} onClick={reset}>{PREFILL_AGAIN[locked.kind]}</button>
+                <Link href={spotUrl} style={{ ...s.btnPrimary, textDecoration: "none" }}>Volver a {locked.spot.name}</Link>
+              </div>
+            ) : (
+              <button style={s.btnPrimary} onClick={reset}>{RESULT_COPY[success].again}</button>
+            )}
           </div>
         </div>
       </div>
     )
   }
 
-  const climbingSpotName  = availableSpots.find(sp => sp.id === climbingSpotId)?.name
+  const climbingSpotName   = availableSpots.find(sp => sp.id === climbingSpotId)?.name
   const climbingSectorName = availableSectors.find(sec => sec.id === climbingSectorId)?.name
+  const trekkingSpotName   = availableTrekkingSpots.find(sp => sp.id === trekkingSpotId)?.name
 
   return (
     <div style={s.page}>
@@ -471,126 +501,77 @@ export default function AgregarLugar() {
       <div style={s.container}>
         {pageHeader}
         {backToSpot}
-        {step === 1 && error && (
+        {step === "categoria" && error && (
           <p style={{ fontSize: 13, color: "var(--danger)", margin: "0 0 12px" }}>{error}</p>
         )}
 
-        {step === 1 && (
+        {step === "categoria" && (
           <StepCategoria onSelect={handleCategorySelect} />
         )}
 
-        {/* Surf/Kayak: selector de spot existente */}
-        {step === 2 && isService && !creatingNewSpot && (
+        {/* ── ¿Qué querés agregar? ── */}
+        {step === "modo" && isTrekking && (
+          <StepTrekkingMode onSelect={handleTrekkingModeSelect} onBack={goBack} />
+        )}
+        {step === "modo" && isEscalada && (
+          <StepClimbingMode onSelect={handleClimbingModeSelect} onBack={goBack} />
+        )}
+
+        {/* ── Elegir un lugar existente ── */}
+        {step === "lugar" && isService && (
           <StepServicioSpot
             selectedCat={selectedCat!}
             availableSpots={availableSpots}
             loadingSpots={loadingSpots}
             selectedSpotId={selectedSpotId}
             setSelectedSpotId={setSelectedSpotId}
-            setCreatingNewSpot={setCreatingNewSpot}
+            onCreateNew={() => { setCreatingNewSpot(true); goTo("info") }}
             error={error}
-            onBack={() => { setStep(1); setSelectedSpotId(null); setAvailableSpots([]) }}
-            onNext={goToStep3}
+            onBack={goBack}
+            onNext={nextFromServiceSpot}
           />
         )}
-
-        {/* Surf/Kayak: crear nuevo spot */}
-        {step === 2 && isService && creatingNewSpot && (
-          <StepInfoBasica
-            title={selectedCat?.name === "Surf" ? "Datos de la playa" : "Datos del río/laguna"}
-            basic={basic}
-            setBasic={setBasic}
-            upd={upd}
-            isPublic={isPublic}
-            setIsPublic={setIsPublic}
-            publicTransport={publicTransport}
-            setPublicTransport={setPublicTransport}
-            error={error}
-            onBack={() => setCreatingNewSpot(false)}
-            onNext={goToStep3}
-          />
-        )}
-
-        {/* Escalada: selector de modo */}
-        {step === 2 && isEscalada && climbingMode === null && (
-          <StepClimbingMode
-            onSelect={handleClimbingModeSelect}
-            onBack={() => setStep(1)}
-          />
-        )}
-
-        {/* Escalada new_spot: formulario info básica */}
-        {step === 2 && isEscalada && climbingMode === "new_spot" && (
-          <StepInfoBasica
-            basic={basic}
-            setBasic={setBasic}
-            upd={upd}
-            isPublic={isPublic}
-            setIsPublic={setIsPublic}
-            publicTransport={publicTransport}
-            setPublicTransport={setPublicTransport}
-            error={error}
-            onBack={() => setClimbingMode(null)}
-            onNext={goToStep3}
-          />
-        )}
-
-        {/* Escalada new_sector/new_route: selector de spot existente */}
-        {step === 2 && isEscalada && (climbingMode === "new_sector" || climbingMode === "new_route") && (
-          <StepClimbingSpotSelector
-            availableSpots={availableSpots}
-            loadingSpots={loadingSpots}
-            selectedSpotId={climbingSpotId}
-            setSelectedSpotId={setClimbingSpotId}
-            error={error}
-            onBack={() => { setClimbingMode(null); setClimbingSpotId(null) }}
-            onNext={goToClimbingStep3}
-          />
-        )}
-
-        {/* Trekking: selector de modo */}
-        {step === 2 && isTrekking && trekkingMode === null && (
-          <StepTrekkingMode
-            onSelect={handleTrekkingModeSelect}
-            onBack={() => setStep(1)}
-          />
-        )}
-
-        {/* Trekking new_spot: info básica */}
-        {step === 2 && isTrekking && trekkingMode === "new_spot" && (
-          <StepInfoBasica
-            basic={basic}
-            setBasic={setBasic}
-            upd={upd}
-            isPublic={isPublic}
-            setIsPublic={setIsPublic}
-            publicTransport={publicTransport}
-            setPublicTransport={setPublicTransport}
-            error={error}
-            onBack={() => setTrekkingMode(null)}
-            onNext={goToStep3}
-          />
-        )}
-
-        {/* Trekking new_route: selector de spot */}
-        {step === 2 && isTrekking && trekkingMode === "new_route" && (
+        {step === "lugar" && isTrekking && (
           <StepTrekkingSpotSelector
             availableSpots={availableTrekkingSpots}
             loadingSpots={loadingTrekkingSpots}
             selectedSpotId={trekkingSpotId}
             setSelectedSpotId={setTrekkingSpotId}
             error={error}
-            onBack={() => { setTrekkingMode(null); setTrekkingSpotId(null) }}
+            onBack={goBack}
             onNext={() => {
-              if (!trekkingSpotId) { setError("Seleccioná un spot para continuar."); return }
-              setError(null); setStep(3)
+              if (!trekkingSpotId) { setError("Seleccioná un lugar para continuar."); return }
+              goNext()
             }}
           />
         )}
+        {step === "lugar" && isEscalada && (
+          <StepClimbingSpotSelector
+            availableSpots={availableSpots}
+            loadingSpots={loadingSpots}
+            selectedSpotId={climbingSpotId}
+            setSelectedSpotId={setClimbingSpotId}
+            error={error}
+            onBack={goBack}
+            onNext={nextFromClimbingSpot}
+          />
+        )}
+        {step === "sector" && (
+          <StepClimbingSectorSelector
+            availableSectors={availableSectors}
+            loadingSectors={loadingSectors}
+            selectedSectorId={climbingSectorId}
+            setSelectedSectorId={setClimbingSectorId}
+            error={error}
+            onBack={() => { setClimbingSectorId(null); goBack() }}
+            onNext={nextFromSectorSelector}
+          />
+        )}
 
-        {/* Otras categorías: info básica */}
-        {step === 2 && !isService && !isEscalada && !isTrekking && (
+        {/* ── Datos del lugar nuevo ── */}
+        {step === "info" && (
           <StepInfoBasica
+            title={selectedCat?.name === "Surf" ? "Datos de la playa" : selectedCat?.name === "Kayak" ? "Datos del río o laguna" : undefined}
             basic={basic}
             setBasic={setBasic}
             upd={upd}
@@ -599,215 +580,155 @@ export default function AgregarLugar() {
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
             error={error}
-            onBack={() => setStep(1)}
-            onNext={goToStep3}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {step === 3 && isMotorhome && (
+        {step === "motorhome" && (
           <StepMotorhomeDetalle
             motorhomeDetail={motorhomeDetail}
             setMotorhomeDetail={setMotorhomeDetail}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(4)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {step === 3 && isGlamping && (
+        {step === "glamping_unidades" && (
           <StepGlampingUnidades
             glampingUnits={glampingUnits}
             setGlampingUnits={setGlampingUnits}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(4)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {step === 4 + glampingStepOffset && (isCampingOrGlamping || isMotorhome) && (
-          <StepExperiencias
-            experiences={experiences}
-            setExperiences={setExperiences}
-            error={error}
-            onBack={() => setStep(3 + glampingStepOffset)}
-            onNext={() => setStep(5 + glampingStepOffset)}
-          />
-        )}
-
-        {((step === 3 && selectedCat?.name === "Camping") || (step === 4 && selectedCat?.name === "Glamping")) && (
+        {step === "amenities" && (
           <StepAmenities
             selectedCat={selectedCat!}
             selectedAmenities={selectedAmenities}
             toggleAmenity={toggleAmenity}
             error={error}
-            onBack={() => setStep(isGlamping ? 3 : 2)}
-            onNext={() => setStep(isGlamping ? 5 : 4)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {step === 3 && isTrekking && trekkingMode !== "new_route" && (
+        {step === "experiencias" && (
+          <StepExperiencias
+            experiences={experiences}
+            setExperiences={setExperiences}
+            error={error}
+            onBack={goBack}
+            onNext={goNext}
+          />
+        )}
+
+        {step === "trekking_caracteristicas" && (
           <StepTrekkingCaracteristicas
             trekkingFeatures={trekkingFeatures}
             setTrekkingFeatures={setTrekkingFeatures}
             featureErrors={featureErrors}
             setFeatureErrors={setFeatureErrors}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={goToStep4}
+            onBack={goBack}
+            onNext={nextFromTrekkingFeatures}
           />
         )}
 
-        {step === 3 && isTrekking && trekkingMode === "new_route" && (
+        {step === "rutas" && (
           <StepRutas
             routes={routes}
             setRoutes={setRoutes}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(summaryStep)}
+            // A un lugar existente se le suma al menos una ruta; un lugar
+            // nuevo puede cargarse sin rutas.
+            required={trekkingMode === "new_route"}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {/* Escalada new_spot: sectores completos */}
-        {step === 3 && isEscalada && (!climbingMode || climbingMode === "new_spot") && (
+        {step === "sectores" && (
           <StepEscalada
             sectors={sectors}
             setSectors={setSectors}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={goToStep4}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {/* Escalada new_sector: formulario de un sector */}
-        {step === 3 && isEscalada && climbingMode === "new_sector" && (
+        {step === "sector_nuevo" && (
           <StepClimbingSectorForm
             sectors={sectors}
             setSectors={setSectors}
             error={error}
-            onBack={() => setStep(2)}
-            onNext={goToStep4}
+            onBack={goBack}
+            onNext={nextFromNewSector}
           />
         )}
 
-        {step === 4 && isEscalada && climbingMode !== "new_route" && (
+        {/* Vías de los sectores nuevos (opcional) */}
+        {step === "vias" && (
           <StepClimbingRoutes
             sectors={sectors}
             routes={sectorRoutes}
             setRoutes={setSectorRoutes}
             error={error}
-            onBack={() => setStep(3)}
-            onNext={() => setStep(climbingMode === "new_sector" ? summaryStep : 5)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {/* Escalada new_route: selector de sector */}
-        {step === 3 && isEscalada && climbingMode === "new_route" && (
-          <StepClimbingSectorSelector
-            availableSectors={availableSectors}
-            loadingSectors={loadingSectors}
-            selectedSectorId={climbingSectorId}
-            setSelectedSectorId={setClimbingSectorId}
-            error={error}
-            onBack={() => { setStep(2); setClimbingSectorId(null); setAvailableSectors([]) }}
-            onNext={goToClimbingStep4}
-          />
-        )}
-
-        {step === 3 && selectedCat?.name === "Surf" && !creatingNewSpot && (
-          <StepSurf
-            surf={surf}
-            setSurf={setSurf}
-            surfPhotoFiles={surfPhotoFiles}
-            setSurfPhotoFiles={setSurfPhotoFiles}
-            surfPhotoPreviews={surfPhotoPreviews}
-            setSurfPhotoPreviews={setSurfPhotoPreviews}
-            error={error}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(4)}
-          />
-        )}
-
-        {step === 3 && selectedCat?.name === "Kayak" && !creatingNewSpot && (
-          <StepKayak
-            kayaks={kayaks}
-            setKayaks={setKayaks}
-            kayakPhotoFiles={kayakPhotoFiles}
-            setKayakPhotoFiles={setKayakPhotoFiles}
-            kayakPhotoPreviews={kayakPhotoPreviews}
-            setKayakPhotoPreviews={setKayakPhotoPreviews}
-            error={error}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(4)}
-          />
-        )}
-
-        {step === 3 && isService && creatingNewSpot && (
-          <StepImagenes
-            images={images}
-            setImages={setImages}
-            previews={previews}
-            setPreviews={setPreviews}
-            setError={setError}
-            error={error}
-            onBack={() => setStep(2)}
-            onNext={handleSpotImagesAndNext}
-          />
-        )}
-
-        {step === 4 && isService && creatingNewSpot && selectedCat?.name === "Surf" && (
-          <StepSurf
-            surf={surf}
-            setSurf={setSurf}
-            surfPhotoFiles={surfPhotoFiles}
-            setSurfPhotoFiles={setSurfPhotoFiles}
-            surfPhotoPreviews={surfPhotoPreviews}
-            setSurfPhotoPreviews={setSurfPhotoPreviews}
-            error={error}
-            optional={true}
-            onBack={() => setStep(3)}
-            onNext={() => setStep(5)}
-            onSkip={() => setStep(5)}
-          />
-        )}
-
-        {step === 4 && isService && creatingNewSpot && selectedCat?.name === "Kayak" && (
-          <StepKayak
-            kayaks={kayaks}
-            setKayaks={setKayaks}
-            kayakPhotoFiles={kayakPhotoFiles}
-            setKayakPhotoFiles={setKayakPhotoFiles}
-            kayakPhotoPreviews={kayakPhotoPreviews}
-            setKayakPhotoPreviews={setKayakPhotoPreviews}
-            error={error}
-            optional={true}
-            onBack={() => setStep(3)}
-            onNext={() => setStep(5)}
-            onSkip={() => setStep(5)}
-          />
-        )}
-
-        {step === 4 && isTrekking && trekkingMode !== "new_route" && (
-          <StepRutas
-            routes={routes}
-            setRoutes={setRoutes}
-            onBack={() => setStep(3)}
-            onNext={() => setStep(5)}
-          />
-        )}
-
-        {/* Escalada new_route: formulario de ruta */}
-        {step === 4 && isEscalada && climbingMode === "new_route" && (
+        {/* Vías para un sector existente: al menos una */}
+        {step === "vias_nuevas" && (
           <StepClimbingRoutes
             sectors={[{ name: climbingSectorName || "Sector", type: "", max_altitude: "", restrictions: "" }]}
             routes={climbingNewRoutes}
             setRoutes={setClimbingNewRoutes}
+            required
             error={error}
-            onBack={() => setStep(3)}
-            onNext={() => setStep(5)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {/* Imágenes: no aplica para escalada new_sector/new_route */}
-        {step === (isTrekking ? 5 : 4 + glampingStepOffset + climbingStepOffset + experiencesStepOffset) && !isService && (!isEscalada || climbingMode === "new_spot") && (
+        {step === "servicio" && selectedCat?.name === "Surf" && (
+          <StepSurf
+            surf={surf}
+            setSurf={setSurf}
+            surfPhotoFiles={surfPhotoFiles}
+            setSurfPhotoFiles={setSurfPhotoFiles}
+            surfPhotoPreviews={surfPhotoPreviews}
+            setSurfPhotoPreviews={setSurfPhotoPreviews}
+            error={error}
+            // Con una playa nueva, la escuela es opcional.
+            optional={creatingNewSpot}
+            onBack={goBack}
+            onNext={goNext}
+            onSkip={creatingNewSpot ? goNext : undefined}
+          />
+        )}
+
+        {step === "servicio" && selectedCat?.name === "Kayak" && (
+          <StepKayak
+            kayaks={kayaks}
+            setKayaks={setKayaks}
+            kayakPhotoFiles={kayakPhotoFiles}
+            setKayakPhotoFiles={setKayakPhotoFiles}
+            kayakPhotoPreviews={kayakPhotoPreviews}
+            setKayakPhotoPreviews={setKayakPhotoPreviews}
+            error={error}
+            optional={creatingNewSpot}
+            onBack={goBack}
+            onNext={goNext}
+            onSkip={creatingNewSpot ? goNext : undefined}
+          />
+        )}
+
+        {step === "imagenes" && (
           <StepImagenes
             images={images}
             setImages={setImages}
@@ -815,12 +736,12 @@ export default function AgregarLugar() {
             setPreviews={setPreviews}
             setError={setError}
             error={error}
-            onBack={() => setStep(isTrekking ? 4 : 3 + glampingStepOffset + climbingStepOffset + experiencesStepOffset)}
-            onNext={() => setStep((isCampingOrGlamping || isMotorhome) ? 6 + glampingStepOffset : summaryStep)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
-        {step === 6 + glampingStepOffset && (isCampingOrGlamping || isMotorhome) && (
+        {step === "adicionales" && (
           <StepCategoriasAdicionales
             primaryCategoryName={selectedCat?.name ?? ""}
             additionalCategories={additionalCategories}
@@ -836,18 +757,18 @@ export default function AgregarLugar() {
             selectedCampingAmenities={selectedCampingAmenities}
             setSelectedCampingAmenities={setSelectedCampingAmenities}
             error={error}
-            onBack={() => setStep(5 + glampingStepOffset)}
-            onNext={() => setStep(summaryStep)}
+            onBack={goBack}
+            onNext={goNext}
           />
         )}
 
         {submitting && <SubmittingOverlay uploadProgress={uploadProgress} />}
 
-        {step === summaryStep && (
+        {step === "resumen" && (
           <StepResumen
             selectedCat={selectedCat!}
             isService={isService ?? false}
-            isTrekking={isTrekking ?? false}
+            createsSpot={createsSpot(steps)}
             basic={basic}
             trekkingFeatures={trekkingFeatures}
             routes={routes}
@@ -859,19 +780,12 @@ export default function AgregarLugar() {
             uploadProgress={uploadProgress}
             error={error}
             onSubmit={handleSubmit}
-            onBack={() => setStep(
-              isService && creatingNewSpot ? 4
-              : isService ? 3
-              : isTrekking && trekkingMode === "new_route" ? 3
-              : isTrekking ? 5
-              : isEscalada && climbingMode === "new_sector" ? 4
-              : isEscalada && climbingMode === "new_spot" ? 5
-              : (isCampingOrGlamping || isMotorhome) ? 6 + glampingStepOffset : 4
-            )}
-            onEditStep={setStep}
+            onBack={goBack}
+            editTo={editTo}
             climbingMode={climbingMode}
             climbingSpotName={climbingSpotName}
             climbingSectorName={climbingSectorName}
+            trekkingSpotName={trekkingSpotName}
             sectors={sectors}
             climbingNewRoutes={climbingNewRoutes}
             isPublic={isPublic}
@@ -890,6 +804,7 @@ export default function AgregarLugar() {
             glampingUnits={glampingUnits}
             trekkingMode={trekkingMode}
             sectorRoutes={sectorRoutes}
+            experiences={experiences}
           />
         )}
       </div>

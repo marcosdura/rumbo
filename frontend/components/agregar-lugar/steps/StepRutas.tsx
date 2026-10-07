@@ -1,33 +1,66 @@
 "use client"
 
+import { useState } from "react"
 import type React from "react"
 import { defaultRoute } from "../constants"
-import { s, sanitizeNum } from "../styles"
+import { s, errorInputBorder, sanitizeNum } from "../styles"
+import { namedCount, unnamedRows } from "../validation"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import type { RouteItem } from "../types"
 
 export default function StepRutas({
-  routes, setRoutes, onBack, onNext,
+  routes, setRoutes, required = false, onBack, onNext,
 }: {
   routes: RouteItem[]
   setRoutes: React.Dispatch<React.SetStateAction<RouteItem[]>>
+  // Sumando rutas a un lugar existente: al menos una.
+  required?: boolean
   onBack: () => void
   onNext: () => void
 }) {
+  const [nameErrors, setNameErrors] = useState<Set<number>>(new Set())
+  const [stepError, setStepError] = useState<string | null>(null)
+
   function updRoute(i: number, field: string, val: string) {
     setRoutes(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
+    if (field === "name") setNameErrors(prev => { const n = new Set(prev); n.delete(i); return n })
+    setStepError(null)
+  }
+
+  function removeRoute(i: number) {
+    setRoutes(prev => prev.filter((_, idx) => idx !== i))
+    setNameErrors(new Set())
+  }
+
+  function handleNext() {
+    const unnamed = unnamedRows(routes)
+    setNameErrors(new Set(unnamed))
+    if (unnamed.length > 0) { setStepError("Completá el nombre de cada ruta."); return }
+    if (required && namedCount(routes) === 0) { setStepError("Agregá al menos una ruta."); return }
+    setStepError(null)
+    onNext()
   }
 
   return (
     <div>
       <h2 style={s.title}>Rutas</h2>
+      {!required && (
+        <p style={s.subtitle}>Opcional: podés cargarlas ahora o más adelante desde el panel del lugar.</p>
+      )}
       {routes.map((r, i) => (
-        <div key={i} style={s.card}>
+        <div key={i} style={{ ...s.card, position: "relative" }}>
+          {routes.length > 1 && (
+            <button onClick={() => removeRoute(i)} style={s.deleteBtn} aria-label={`Quitar ruta ${i + 1}`}>✕</button>
+          )}
           <p style={s.cardTitle}>Ruta {i + 1}</p>
           <div style={s.form}>
-            <Field label="Nombre" required={true}>
-              <input style={s.input} value={r.name} onChange={e => updRoute(i, "name", e.target.value)} />
+            <Field label="Nombre" required={true} hasError={nameErrors.has(i)} errorText="El nombre de la ruta es obligatorio">
+              <input
+                aria-label={`Nombre de la ruta ${i + 1}`}
+                style={{ ...s.input, ...(nameErrors.has(i) ? errorInputBorder : {}) }}
+                value={r.name} onChange={e => updRoute(i, "name", e.target.value)}
+              />
             </Field>
             <div className="form-two-col">
               <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.distance_km} onChange={e => updRoute(i, "distance_km", sanitizeNum(e.target.value))} /></Field>
@@ -80,7 +113,7 @@ export default function StepRutas({
         </div>
       ))}
       <button style={s.btnAdd} onClick={() => setRoutes(prev => [...prev, defaultRoute()])}>+ Agregar ruta</button>
-      <NavRow onBack={onBack} onNext={onNext} />
+      <NavRow onBack={onBack} onNext={handleNext} error={stepError} />
     </div>
   )
 }

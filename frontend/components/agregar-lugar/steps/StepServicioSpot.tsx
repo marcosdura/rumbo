@@ -6,14 +6,15 @@ import type { Category } from "../types"
 
 export default function StepServicioSpot({
   selectedCat, availableSpots, loadingSpots, selectedSpotId, setSelectedSpotId,
-  setCreatingNewSpot, error, onBack, onNext,
+  onCreateNew, error, onBack, onNext,
 }: {
   selectedCat: Category
   availableSpots: { id: number; name: string }[]
   loadingSpots: boolean
   selectedSpotId: number | null
   setSelectedSpotId: (id: number) => void
-  setCreatingNewSpot: (v: boolean) => void
+  // Sugerir una playa o laguna nueva junto con la escuela o el servicio.
+  onCreateNew: () => void
   error: string | null
   onBack: () => void
   onNext: () => void
@@ -51,7 +52,7 @@ export default function StepServicioSpot({
           )}
           <button
             type="button"
-            onClick={() => setCreatingNewSpot(true)}
+            onClick={onCreateNew}
             style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer", textDecoration: "underline", padding: 0, fontFamily: "inherit", textAlign: "left" }}
           >
             + Mi {selectedCat.name === "Surf" ? "playa" : "río/lago"} no está en la lista

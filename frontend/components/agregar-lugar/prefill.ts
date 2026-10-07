@@ -14,10 +14,27 @@ export const PREFILL_CATEGORY: Record<PrefillKind, string> = {
   ruta: "Trekking", sector: "Escalada", via: "Escalada", surf: "Surf", kayak: "Kayak",
 }
 
-// Paso del formulario al que se salta: el que viene después de elegir el
-// lugar (y el sector, para una vía).
-export const PREFILL_STEP: Record<PrefillKind, number> = {
-  ruta: 3, sector: 3, via: 4, surf: 3, kayak: 3,
+// El paso al que se salta está en flow.ts (ENTRY_STEP).
+
+// Encabezado del formulario con link directo: qué se está sumando y dónde.
+export function prefillIntro(kind: PrefillKind, spotName: string, sectorName?: string | null): string {
+  const what = {
+    ruta: `Agregá una ruta a ${spotName}.`,
+    sector: `Sugerí un sector de escalada en ${spotName}.`,
+    via: `Sugerí vías para el sector ${sectorName ?? ""} de ${spotName}.`,
+    surf: `Sumá tu escuela de surf en ${spotName}.`,
+    kayak: `Sumá tu servicio de kayak en ${spotName}.`,
+  }[kind]
+  return `${what} Lo revisamos antes de publicarlo.`
+}
+
+// Botón para sumar otra cosa igual en el mismo lugar, al terminar.
+export const PREFILL_AGAIN: Record<PrefillKind, string> = {
+  ruta: "Agregar otra ruta",
+  sector: "Sugerir otro sector",
+  via: "Sugerir más vías",
+  surf: "Sumar otra escuela",
+  kayak: "Sumar otro servicio",
 }
 
 function positiveInt(value: string | null): number | null {

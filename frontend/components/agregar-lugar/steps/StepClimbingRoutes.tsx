@@ -9,17 +9,20 @@ import type { SectorItem, ClimbingRouteItem } from "../types"
 import { defaultClimbingRouteItem } from "../constants"
 
 export default function StepClimbingRoutes({
-  sectors, routes, setRoutes, error, onBack, onNext,
+  sectors, routes, setRoutes, required = false, error, onBack, onNext,
 }: {
   sectors: SectorItem[]
   routes: ClimbingRouteItem[]
   setRoutes: React.Dispatch<React.SetStateAction<ClimbingRouteItem[]>>
+  // Sumando vías a un sector existente: al menos una (es todo el aporte).
+  required?: boolean
   error: string | null
   onBack: () => void
   onNext: () => void
 }) {
   const showSectorPicker = sectors.length > 1
   const [routeErrors, setRouteErrors] = useState<Record<number, Set<string>>>({})
+  const [noneError, setNoneError] = useState(false)
 
   function upd(i: number, field: keyof ClimbingRouteItem, val: string | number) {
     setRoutes(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
@@ -31,6 +34,7 @@ export default function StepClimbingRoutes({
   }
 
   function addRoute() {
+    setNoneError(false)
     setRoutes(prev => [...prev, defaultClimbingRouteItem(showSectorPicker ? -1 : 0)])
   }
 
@@ -57,7 +61,9 @@ export default function StepClimbingRoutes({
       if (missing.size > 0) { allErrors[i] = missing; ok = false }
     })
     setRouteErrors(allErrors)
-    return ok
+    const none = required && routes.length === 0
+    setNoneError(none)
+    return ok && !none
   }
 
   function handleNext() {
@@ -67,15 +73,24 @@ export default function StepClimbingRoutes({
 
   return (
     <div>
-      <h2 style={s.title}>Rutas (opcional)</h2>
-      <p style={s.subtitle}>
-        Si conocés rutas de {sectors.length > 1 ? "estos sectores" : "este sector"}, podés agregarlas ahora. Podés omitir este paso.
-      </p>
+      {required ? (
+        <>
+          <h2 style={s.title}>Vías</h2>
+          <p style={s.subtitle}>Las vías que conocés del sector {sectors[0]?.name}.</p>
+        </>
+      ) : (
+        <>
+          <h2 style={s.title}>Vías (opcional)</h2>
+          <p style={s.subtitle}>
+            Si conocés vías de {sectors.length > 1 ? "estos sectores" : "este sector"}, podés agregarlas ahora. Podés omitir este paso.
+          </p>
+        </>
+      )}
 
       {routes.map((r, i) => (
         <div key={i} style={{ ...s.card, position: "relative" }}>
-          <button onClick={() => removeRoute(i)} style={s.deleteBtn}>✕</button>
-          <p style={s.cardTitle}>Ruta {i + 1}</p>
+          <button onClick={() => removeRoute(i)} style={s.deleteBtn} aria-label={`Quitar vía ${i + 1}`}>✕</button>
+          <p style={s.cardTitle}>Vía {i + 1}</p>
           <div style={s.form}>
             {showSectorPicker && (
               <Field label="Sector" required={true} hasError={(routeErrors[i] ?? new Set()).has("sectorIndex")} errorText="Seleccioná un sector">
@@ -91,7 +106,7 @@ export default function StepClimbingRoutes({
                 </select>
               </Field>
             )}
-            <Field label="Nombre" required={true} hasError={(routeErrors[i] ?? new Set()).has("name")} errorText="El nombre de la ruta es obligatorio">
+            <Field label="Nombre" required={true} hasError={(routeErrors[i] ?? new Set()).has("name")} errorText="El nombre de la vía es obligatorio">
               <input
                 style={{ ...s.input, ...((routeErrors[i] ?? new Set()).has("name") ? errorInputBorder : {}) }}
                 value={r.name} onChange={e => upd(i, "name", e.target.value)}
@@ -125,8 +140,8 @@ export default function StepClimbingRoutes({
         </div>
       ))}
 
-      <button style={s.btnAdd} onClick={addRoute}>+ Agregar ruta</button>
-      <NavRow onBack={onBack} onNext={handleNext} error={error ?? (Object.keys(routeErrors).length > 0 ? "Completá los campos marcados en rojo." : null)} />
+      <button style={s.btnAdd} onClick={addRoute}>+ Agregar vía</button>
+      <NavRow onBack={onBack} onNext={handleNext} error={error ?? (noneError ? "Agregá al menos una vía." : Object.values(routeErrors).some(e => e.size > 0) ? "Completá los campos marcados en rojo." : null)} />
     </div>
   )
 }
