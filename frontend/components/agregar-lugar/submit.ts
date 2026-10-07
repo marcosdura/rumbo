@@ -274,6 +274,9 @@ function spotPayload(p: SubmitParams) {
     is_public:        isPublic,
     public_transport: publicTransport,
     is_responsible:   isResponsible,
+    pets_allowed:         basic.pets_allowed,
+    reservation_required: basic.reservation_required,
+    cell_signal:          basic.cell_signal,
   }
 }
 

@@ -59,6 +59,12 @@ class SpotDB(Base):
     # mientras está en revisión lo maneja esa persona; aprobado, pasa al
     # admin, como las playas (ownership.is_admin_managed).
     suggested_by_visitor = Column(Boolean, nullable=False, default=False, server_default=false())
+    # Información práctica para cualquier lugar; null = "no sé". Reemplaza a
+    # trekking_details.pet_friendly/signal, glamping_amenities.pet_friendly y
+    # al amenity "Acepta mascotas" (la migración 0013 copió esos datos acá).
+    pets_allowed         = Column(Boolean, nullable=True)
+    reservation_required = Column(Boolean, nullable=True)
+    cell_signal          = Column(Boolean, nullable=True)
     
     category_id = Column(Integer, ForeignKey("categories.id"), index=True)
     category = relationship("Category", back_populates="spots")

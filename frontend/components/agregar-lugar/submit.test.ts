@@ -133,7 +133,7 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
     await submitAgregarLugar({
       selectedCat: constants.CATEGORIES.find(c => c.name === "Escalada")!,
       isService: false, creatingNewSpot: false, token: "t",
-      basic: { ...constants.emptyBasic(), name: "Arequita", lat: "-34", lng: "-55" },
+      basic: { ...constants.emptyBasic(), name: "Arequita", lat: "-34", lng: "-55", pets_allowed: true, cell_signal: false },
       isPublic: null, publicTransport: null, isResponsible: false, selectedAmenities: [], additionalCategories: [],
       motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
       glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [],
@@ -150,6 +150,8 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
     expect(urls().filter(u => u === "/spots")).toHaveLength(1)
     // Lo cargó como visitante: el backend lo pasa al admin al aprobarlo.
     expect(calls[0][1]).toMatchObject({ is_responsible: false })
+    // Información práctica: lo que no se sabe va null.
+    expect(calls[0][1]).toMatchObject({ pets_allowed: true, cell_signal: false, reservation_required: null })
 
     calls = []
     responses = [ok(false, 40)]

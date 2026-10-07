@@ -19,6 +19,7 @@ import ReviewsTab from "./ReviewsTab"
 import ContentTab from "./ContentTab"
 import ChangeRequestBanner from "./ChangeRequestBanner"
 import RejectionBanner from "./RejectionBanner"
+import type { PracticalKey } from "@/lib/practicalInfo"
 
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
 // revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
@@ -69,6 +70,9 @@ export default function SpotDashboardPage() {
   const [editSeasonEnd, setEditSeasonEnd] = useState("")
   const [editIsPublic, setEditIsPublic] = useState<boolean | null>(null)
   const [editPublicTransport, setEditPublicTransport] = useState<string | null>(null)
+  const [editPractical, setEditPractical] = useState<Record<PracticalKey, boolean | null>>({
+    pets_allowed: null, reservation_required: null, cell_signal: null,
+  })
 
   useEffect(() => {
     if (status === "loading") return
@@ -107,6 +111,11 @@ export default function SpotDashboardPage() {
     setEditSeasonEnd(s.season_end ? String(s.season_end) : "")
     setEditIsPublic(s.is_public ?? null)
     setEditPublicTransport(s.public_transport ?? null)
+    setEditPractical({
+      pets_allowed: s.pets_allowed ?? null,
+      reservation_required: s.reservation_required ?? null,
+      cell_signal: s.cell_signal ?? null,
+    })
   }
 
   async function refreshSpot() {
@@ -130,6 +139,7 @@ export default function SpotDashboardPage() {
       season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
       is_public: editIsPublic,
       public_transport: editPublicTransport,
+      ...editPractical,
     }
   }
 
@@ -415,6 +425,7 @@ export default function SpotDashboardPage() {
             editSeasonEnd={editSeasonEnd} setEditSeasonEnd={setEditSeasonEnd}
             editIsPublic={editIsPublic} setEditIsPublic={setEditIsPublic}
             editPublicTransport={editPublicTransport} setEditPublicTransport={setEditPublicTransport}
+            editPractical={editPractical} setEditPractical={(key, v) => setEditPractical(p => ({ ...p, [key]: v }))}
             lockSensitive={pendingRequest !== null}
             pendingName={pendingRequest?.changes.name?.to}
             pendingDescription={pendingRequest?.changes.description?.to}

@@ -64,7 +64,7 @@ export const AMENITY_CATEGORIES = [
   },
   {
     id: "extras", label: "Extras & servicios", emoji: "🔧",
-    names: ["WiFi","Seguridad","Estacionamiento","Acepta mascotas"],
+    names: ["WiFi","Seguridad","Estacionamiento"],
   },
 ]
 
@@ -117,7 +117,7 @@ export const GLAMPING_AMENITY_CATEGORIES = [
     id: "servicios-glamp",
     label: "Servicios",
     emoji: "⚡",
-    names: ["WiFi", "Electricidad", "Agua caliente", "Acepta mascotas", "Estacionamiento"],
+    names: ["WiFi", "Electricidad", "Agua caliente", "Estacionamiento"],
   },
   {
     id: "extras-glamp",
@@ -130,24 +130,22 @@ export const GLAMPING_AMENITY_CATEGORIES = [
 export const TREKKING_FEATURES: { key: TrekkingFeatureKey; label: string; emoji: string }[] = [
   { key: "bathrooms",     label: "Baños",           emoji: "🚽" },
   { key: "potable_water", label: "Agua potable",     emoji: "🚰" },
-  { key: "pet_friendly",  label: "Pet friendly",     emoji: "🐶" },
   { key: "kids_friendly", label: "Apto niños",       emoji: "👶" },
   { key: "camping",       label: "Camping",          emoji: "⛺" },
   { key: "parking",       label: "Estacionamiento",  emoji: "🚗" },
   { key: "fire_pits",     label: "Fogones",          emoji: "🔥" },
   { key: "shelter",       label: "Refugio",          emoji: "🏠" },
   { key: "accessible",    label: "Accesible",        emoji: "♿" },
-  { key: "signal",        label: "Señal móvil",      emoji: "📱" },
 ]
 
 export const REQUIRED_FEATURE_KEYS: TrekkingFeatureKey[] = [
-  "bathrooms", "potable_water", "pet_friendly", "kids_friendly",
+  "bathrooms", "potable_water", "kids_friendly",
   "camping", "parking", "fire_pits", "shelter", "accessible",
 ]
 
 export const defaultTrekkingFeatures = (): TrekkingFeatures => ({
-  bathrooms: null, potable_water: null, pet_friendly: null, kids_friendly: null,
-  camping: null, parking: null, fire_pits: null, shelter: null, accessible: null, signal: null,
+  bathrooms: null, potable_water: null, kids_friendly: null,
+  camping: null, parking: null, fire_pits: null, shelter: null, accessible: null,
 })
 
 export const defaultRoute = (): RouteItem => ({
@@ -180,6 +178,7 @@ export const emptyBasic = (): BasicInfo => ({
   price: "", season_type: "all_year",
   season_start: "", season_end: "",
   email: "", whatsapp: "", whatsappCountry: "UY", instagram: "", noContact: false, lat: "", lng: "",
+  pets_allowed: null, reservation_required: null, cell_signal: null,
 })
 
 export const defaultMotorhomeDetail = (): MotorhomeDetailItem => ({
@@ -200,7 +199,6 @@ export const GLAMPING_AMENITY_MAP: Record<string, string> = {
   "Electricidad": "electricity",
   "WiFi": "wifi",
   "Desayuno incluido": "breakfast_included",
-  "Acepta mascotas": "pet_friendly",
   "Calefacción": "heating",
   "Aire acondicionado": "air_conditioning",
   "Cocina equipada": "kitchen",

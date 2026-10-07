@@ -5,14 +5,12 @@ import Pill from "@/components/ui/Pill"
 const AMENITIES = [
   { key: "bathrooms",     label: "Baños",            emoji: "🚽" },
   { key: "potable_water", label: "Agua potable",      emoji: "🚰" },
-  { key: "pet_friendly",  label: "Pet friendly",      emoji: "🐶" },
   { key: "kids_friendly", label: "Apto niños",        emoji: "👶" },
   { key: "camping",       label: "Camping",           emoji: "⛺" },
   { key: "parking",       label: "Estacionamiento",   emoji: "🚗" },
   { key: "fire_pits",     label: "Fogones",           emoji: "🔥" },
   { key: "shelter",       label: "Refugio",           emoji: "🏠" },
   { key: "accessible",    label: "Accesible",         emoji: "♿" },
-  { key: "signal",        label: "Señal móvil",       emoji: "📱" },
 ]
 
 export default function TrekkingAmenitiesCard({ trekkingDetail }) {

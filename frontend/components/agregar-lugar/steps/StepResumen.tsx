@@ -7,6 +7,7 @@ import SummaryRow from "../ui/SummaryRow"
 import Pill from "@/components/ui/Pill"
 import { ROCK_TYPES, SUN_EXPOSURE, approachLabel } from "@/lib/sectorInfo"
 import { LANGUAGES, SURF_LEVELS, listLabel, yesNo } from "@/lib/operatorInfo"
+import { PRACTICAL_FIELDS } from "@/lib/practicalInfo"
 import type {
   Category, BasicInfo, TrekkingFeatures, RouteItem, SurfItem, KayakItem,
   ClimbingMode, SectorItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem,
@@ -149,6 +150,14 @@ export default function StepResumen({
               value={publicTransport === "si" ? "Accesible" : publicTransport === "no" ? "No accesible" : "No sabe"}
             />
           )}
+        </SummaryCard>
+      )}
+
+      {showBasicInfoCard && (
+        <SummaryCard title="Información práctica" onEdit={editTo("info")}>
+          {PRACTICAL_FIELDS.map(f => (
+            <SummaryRow key={f.key} label={f.question} value={yesNo(basic[f.key]) ?? "No sé"} />
+          ))}
         </SummaryCard>
       )}
 

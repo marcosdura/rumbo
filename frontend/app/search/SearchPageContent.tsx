@@ -139,6 +139,7 @@ export default function SearchPage() {
     if (activity === "Camping") {
       campingFilters.amenityIds.forEach(id => params.append("amenity_ids", String(id)))
       campingFilters.priceRanges.forEach(p => params.append("price_range", p))
+      if (campingFilters.petFriendly) params.append("pet_friendly", "true")
     }
     return params
   }

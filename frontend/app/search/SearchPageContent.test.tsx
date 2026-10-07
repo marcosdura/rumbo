@@ -17,6 +17,11 @@ vi.mock("../../components/spots/TrekkingFilters", () => ({
     <button onClick={() => onApply({ difficulties: ["Difícil"], durations: [], distances: [], amenities: {} })}>filtrar difícil</button>
   ),
 }))
+vi.mock("../../components/spots/CampingFilters", () => ({
+  default: ({ onApply }: { onApply: (f: unknown) => void }) => (
+    <button onClick={() => onApply({ amenityIds: [], priceRanges: [], petFriendly: true })}>filtrar mascotas</button>
+  ),
+}))
 vi.mock("../../lib/api", () => ({
   api: {
     get: (url: string) => {
@@ -70,5 +75,14 @@ describe("SearchPageContent", () => {
     expect(screen.queryByText("Falló la búsqueda")).toBeNull()
     await flush()
     expect(screen.getByText("Cerro Arequita")).toBeTruthy()
+  })
+
+  it("camping: el filtro de mascotas va como pet_friendly", async () => {
+    params = new URLSearchParams("activity=Camping")
+    render(<SearchPage />)
+    await flush()
+    fireEvent.click(screen.getByRole("button", { name: "filtrar mascotas" }))
+    await flush()
+    expect(listRequests.at(-1)).toContain("pet_friendly=true")
   })
 })

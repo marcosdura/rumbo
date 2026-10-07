@@ -16,6 +16,9 @@ const FIELD_LABELS: Record<string, string> = {
   season_end: "temporada",
   is_public: "acceso público/privado",
   public_transport: "transporte público",
+  pets_allowed: "mascotas",
+  reservation_required: "reserva",
+  cell_signal: "señal de celular",
 }
 
 function photosLabel(n: number) {

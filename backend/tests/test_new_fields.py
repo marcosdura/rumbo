@@ -1,6 +1,6 @@
 """Datos nuevos para el visitante: todos opcionales, None = "no sé"."""
 from conftest import ADMIN, as_user
-from models import KayakDetail, SurfSchool
+from models import KayakDetail, SpotCategory, SurfSchool
 
 
 # -------- Sectores de escalada --------
@@ -79,3 +79,29 @@ def test_el_duenio_los_edita_al_instante_y_puede_volver_a_no_se(client, db, make
     db.expire_all()
     assert (db.get(SurfSchool, school.id).levels, db.get(SurfSchool, school.id).languages) == (None, ["portugues"])
     assert db.get(KayakDetail, kayak.id).includes_guide is True
+
+
+# -------- Información práctica de cualquier lugar --------
+
+def test_un_lugar_guarda_mascotas_reserva_y_senial(client, make_spot):
+    spot = make_spot(approved=False, pets_allowed=True, reservation_required=False)
+    r = client.get("/spots/mine", headers=as_user(spot.owner_email)).json()[0]
+    assert (r["pets_allowed"], r["reservation_required"], r["cell_signal"]) == (True, False, None)
+
+
+def test_el_duenio_los_edita_al_instante(client, db, make_spot):
+    spot = make_spot()
+    r = client.patch(f"/admin/spots/{spot.id}", json={"pets_allowed": False, "cell_signal": True}, headers=as_user(spot.owner_email))
+    assert sorted(r.json()["applied"]) == ["cell_signal", "pets_allowed"]
+    assert r.json()["pending"] == []
+    page = client.get(f"/spots/{spot.id}").json()
+    assert (page["pets_allowed"], page["cell_signal"], page["reservation_required"]) == (False, True, None)
+
+
+def test_el_filtro_de_mascotas_vale_para_cualquier_actividad(client, db, make_spot):
+    for name, pets in (("Camping con perros", True), ("Camping sin perros", False), ("Camping no se", None)):
+        spot = make_spot(name=name, category="Camping", pets_allowed=pets)
+        db.add(SpotCategory(spot_id=spot.id, category_id=spot.category_id, is_primary=True))
+    db.commit()
+    r = client.get("/spots", params={"activity": "Camping", "pet_friendly": "true"})
+    assert [s["name"] for s in r.json()] == ["Camping con perros"]

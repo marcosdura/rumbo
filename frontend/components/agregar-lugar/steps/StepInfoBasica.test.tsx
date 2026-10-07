@@ -43,4 +43,12 @@ describe("StepInfoBasica: ¿responsable o visitante?", () => {
     render(<Harness ask={false} />)
     expect(screen.queryByText(QUESTION)).toBeNull()
   })
+
+  it("pregunta mascotas, reserva y señal, con No sé", () => {
+    render(<Harness ask={false} />)
+    for (const q of ["¿Acepta mascotas?", "¿Hace falta reservar?", "¿Hay señal de celular?"]) {
+      expect(screen.getByText(q, { exact: false })).toBeTruthy()
+    }
+    expect(screen.getAllByRole("button", { name: "No sé" }).length).toBeGreaterThanOrEqual(3)
+  })
 })

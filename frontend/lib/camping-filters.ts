@@ -38,7 +38,6 @@ export const CAMPING_AMENITY_GROUPS = [
     amenities: [
       { id: 27, label: "Estacionamiento" },
       { id: 28, label: "Seguridad" },
-      { id: 23, label: "Acepta mascotas" },
       { id: 30, label: "Tomas para camper/van" },
       { id: 31, label: "Área para motorhomes" },
     ],
@@ -57,13 +56,16 @@ export type PriceRangeValue = typeof CAMPING_PRICE_RANGES[number]["value"]
 export interface CampingFilterState {
   amenityIds:  number[]
   priceRanges: PriceRangeValue[]
+  // Mascotas es un dato del lugar (spots.pets_allowed), no un amenity.
+  petFriendly: boolean
 }
 
 export const EMPTY_CAMPING_FILTERS: CampingFilterState = {
   amenityIds:  [],
   priceRanges: [],
+  petFriendly: false,
 }
 
 export function countActiveCampingFilters(f: CampingFilterState): number {
-  return f.amenityIds.length + f.priceRanges.length
+  return f.amenityIds.length + f.priceRanges.length + (f.petFriendly ? 1 : 0)
 }

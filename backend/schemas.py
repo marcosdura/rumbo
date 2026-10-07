@@ -45,6 +45,10 @@ class SpotCreate(BaseModel):
     # False: lo carga un visitante, no el responsable ni el dueño. Aprobado,
     # pasa a manejarlo el admin (ownership.is_admin_managed).
     is_responsible: bool = True
+    # Información práctica; None = "no sé".
+    pets_allowed: Optional[bool] = None
+    reservation_required: Optional[bool] = None
+    cell_signal: Optional[bool] = None
 
 
 class SpotEditRequest(BaseModel):
@@ -66,6 +70,10 @@ class SpotEditRequest(BaseModel):
     public_transport: Optional[str] = Field(default=None, max_length=20)
     # Fotos ya subidas a Cloudinary que el dueño quiere sumar.
     photos_added: list[str] = Field(default_factory=list, max_length=10)
+    # Información práctica; None = "no sé". Se aplica al instante.
+    pets_allowed: Optional[bool] = None
+    reservation_required: Optional[bool] = None
+    cell_signal: Optional[bool] = None
 
 
 class ChangeRequestReject(BaseModel):
@@ -451,6 +459,9 @@ class SpotResponse(BaseModel):
     slug: str | None = None
     created_at: datetime
     suggested_by_visitor: bool = False
+    pets_allowed: bool | None = None
+    reservation_required: bool | None = None
+    cell_signal: bool | None = None
 
     category: CategoryResponse
     categories: list[CategoryResponse] = []

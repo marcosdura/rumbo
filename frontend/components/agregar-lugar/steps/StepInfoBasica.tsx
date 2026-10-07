@@ -11,6 +11,8 @@ import SeasonToggle from "../ui/SeasonToggle"
 import Toggle from "../ui/Toggle"
 import NavRow from "../ui/NavRow"
 import NearbySpotsNotice from "../NearbySpotsNotice"
+import TriStateToggle from "../ui/TriStateToggle"
+import { PRACTICAL_FIELDS } from "@/lib/practicalInfo"
 import type { BasicInfo } from "../types"
 import { api } from "@/lib/api"
 
@@ -329,6 +331,19 @@ export default function StepInfoBasica({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Información práctica: opcional, con "No sé". */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19" }}>
+            Información práctica <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>(opcional)</span>
+          </div>
+          {PRACTICAL_FIELDS.map(f => (
+            <div key={f.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13, color: "#3d3d3a" }}>{f.emoji} {f.question}</span>
+              <TriStateToggle value={basic[f.key]} onChange={v => setBasic(p => ({ ...p, [f.key]: v }))} />
+            </div>
+          ))}
         </div>
 
         <div style={fieldErrors.has("location") ? { border: "1px solid #e53e3e", borderRadius: 12, padding: 10 } : {}}>

@@ -1,6 +1,8 @@
 "use client"
 
 import { s, MONTHS } from "./styles"
+import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
+import { PRACTICAL_FIELDS, type PracticalKey } from "@/lib/practicalInfo"
 
 interface Props {
   editName: string; setEditName: (v: string) => void
@@ -14,6 +16,8 @@ interface Props {
   editSeasonEnd: string; setEditSeasonEnd: (v: string) => void
   editIsPublic: boolean | null; setEditIsPublic: (v: boolean) => void
   editPublicTransport: string | null; setEditPublicTransport: (updater: (prev: string | null) => string | null) => void
+  // Mascotas, reserva y señal: se aplican al instante.
+  editPractical: Record<PracticalKey, boolean | null>; setEditPractical: (key: PracticalKey, v: boolean | null) => void
   // Con un pedido de cambio pendiente, nombre y descripción quedan bloqueados
   // y muestran el valor que está en revisión.
   lockSensitive: boolean
@@ -36,7 +40,7 @@ export default function InfoTab({
   editEmail, setEditEmail, editWhatsapp, setEditWhatsapp, editInstagram, setEditInstagram,
   editPrice, setEditPrice, editSeasonType, setEditSeasonType, editSeasonStart, setEditSeasonStart,
   editSeasonEnd, setEditSeasonEnd, editIsPublic, setEditIsPublic, editPublicTransport, setEditPublicTransport,
-  lockSensitive, pendingName, pendingDescription, sensitiveReviewed,
+  editPractical, setEditPractical, lockSensitive, pendingName, pendingDescription, sensitiveReviewed,
 }: Props) {
   const lockedInput = lockSensitive ? { opacity: 0.6, cursor: "not-allowed" } : {}
   return (
@@ -153,6 +157,12 @@ export default function InfoTab({
                 ))}
               </div>
             </div>
+            {PRACTICAL_FIELDS.map(f => (
+              <div key={f.key}>
+                <label style={s.label}>{f.emoji} {f.question}</label>
+                <TriStateToggle value={editPractical[f.key]} onChange={v => setEditPractical(f.key, v)} />
+              </div>
+            ))}
           </div>
         </div>
 

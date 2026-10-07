@@ -29,7 +29,8 @@ from models import SpotDB, SpotImage, SpotChangeRequest
 from notifications import notify, notify_admin
 
 SENSITIVE_FIELDS = ["name", "description"]
-INSTANT_FIELDS = ["email", "whatsapp", "instagram", "price", "season_start", "season_end", "is_public", "public_transport"]
+INSTANT_FIELDS = ["email", "whatsapp", "instagram", "price", "season_start", "season_end", "is_public", "public_transport",
+                  "pets_allowed", "reservation_required", "cell_signal"]
 ADMIN_ONLY_FIELDS = ["department", "lat", "lng"]
 
 MAX_PHOTOS = 10

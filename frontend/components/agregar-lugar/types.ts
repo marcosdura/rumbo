@@ -1,8 +1,8 @@
 export type Category = { id: number; name: string; label: string; emoji: string }
 
 export type TrekkingFeatureKey =
-  | "bathrooms" | "potable_water" | "pet_friendly" | "kids_friendly"
-  | "camping" | "parking" | "fire_pits" | "shelter" | "accessible" | "signal"
+  | "bathrooms" | "potable_water" | "kids_friendly"
+  | "camping" | "parking" | "fire_pits" | "shelter" | "accessible"
 
 export type TrekkingFeatures = Record<TrekkingFeatureKey, boolean | null>
 
@@ -46,6 +46,8 @@ export type BasicInfo = {
   email: string; whatsapp: string; whatsappCountry: string; instagram: string
   noContact: boolean
   lat: string; lng: string
+  // Información práctica; null = no sé.
+  pets_allowed: boolean | null; reservation_required: boolean | null; cell_signal: boolean | null
 }
 
 export type PhoneCountry = { code: string; name: string; dial: string; digits: number; trunkPrefix?: string; example?: string }

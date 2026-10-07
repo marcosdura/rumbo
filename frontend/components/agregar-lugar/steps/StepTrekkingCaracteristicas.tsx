@@ -42,7 +42,7 @@ export default function StepTrekkingCaracteristicas({
               >
                 <span style={{ fontSize: 14, color: hasError ? "var(--danger)" : "#1b1b19" }}>
                   {emoji} {label}
-                  {key !== "signal" && <span style={{ color: "#e53e3e", marginLeft: 3, fontSize: 12 }}>*</span>}
+                  <span style={{ color: "#e53e3e", marginLeft: 3, fontSize: 12 }}>*</span>
                 </span>
                 <TriStateToggle
                   value={trekkingFeatures[key]}

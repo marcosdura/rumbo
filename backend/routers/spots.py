@@ -70,6 +70,9 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
         is_public=spot.is_public,
         public_transport=spot.public_transport,
         suggested_by_visitor=not spot.is_responsible,
+        pets_allowed=spot.pets_allowed,
+        reservation_required=spot.reservation_required,
+        cell_signal=spot.cell_signal,
     )
 
     db.add(db_spot)
@@ -231,10 +234,14 @@ def build_spots_filter_query(
     if routes_joined:
         query = query.distinct()
 
+    # Mascotas: dato del lugar, para cualquier actividad (antes era solo de
+    # trekking, y en camping un amenity aparte).
+    if pet_friendly is not None:
+        query = query.filter(SpotDB.pets_allowed == pet_friendly)
+
     amenity_filters = {
         "parking": parking,
         "potable_water": potable_water,
-        "pet_friendly": pet_friendly,
         "kids_friendly": kids_friendly,
         "bathrooms": bathrooms,
         "fire_pits": camping_amenity,
@@ -657,6 +664,9 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         # Lo sugirió un visitante: la página avisa que está a confirmar y
         # ofrece reclamarlo (claims.py).
         "suggested_by_visitor": bool(spot.suggested_by_visitor),
+        "pets_allowed": spot.pets_allowed,
+        "reservation_required": spot.reservation_required,
+        "cell_signal": spot.cell_signal,
     }
 
 
@@ -706,6 +716,9 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             "season_end": s.season_end,
             "is_public": s.is_public,
             "public_transport": s.public_transport,
+            "pets_allowed": s.pets_allowed,
+            "reservation_required": s.reservation_required,
+            "cell_signal": s.cell_signal,
             "is_approved": s.is_approved,
             "rejection_reason": s.rejection_reason,
             "rejected_at": s.rejected_at.isoformat() if s.rejected_at else None,
@@ -788,6 +801,9 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         # Lo sugirió un visitante: la página avisa que está a confirmar y
         # ofrece reclamarlo (claims.py).
         "suggested_by_visitor": bool(spot.suggested_by_visitor),
+        "pets_allowed": spot.pets_allowed,
+        "reservation_required": spot.reservation_required,
+        "cell_signal": spot.cell_signal,
     }
 
 @router.post("/spots/{spot_id}/trekking-detail")

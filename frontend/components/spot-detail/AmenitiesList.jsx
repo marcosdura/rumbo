@@ -31,7 +31,7 @@ const CATEGORIES = [
     id: "extras",
     label: "Extras & servicios",
     emoji: "🔧",
-    names: ["WiFi", "Seguridad", "Estacionamiento", "Acepta mascotas"],
+    names: ["WiFi", "Seguridad", "Estacionamiento"],
   },
   {
     id: "alojamiento",
@@ -100,7 +100,11 @@ const AMENITY_ICONS = {
   "Zona de descanso exterior":  "🌿",
 }
 
-function AmenitiesList({ amenities }) {
+// "Acepta mascotas" (amenity viejo) se muestra en la información práctica.
+const SHOWN_ELSEWHERE = ["Acepta mascotas"]
+
+function AmenitiesList({ amenities: all }) {
+  const amenities = all.filter((a) => !SHOWN_ELSEWHERE.includes(a.name))
   const categorized = CATEGORIES.map((cat) => ({
     ...cat,
     items: amenities.filter((a) => cat.names.includes(a.name)),

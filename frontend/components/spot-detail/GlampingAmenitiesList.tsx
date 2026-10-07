@@ -7,7 +7,6 @@ export interface GlampingAmenities {
   electricity?: boolean | null
   wifi?: boolean | null
   breakfast_included?: boolean | null
-  pet_friendly?: boolean | null
   heating?: boolean | null
   air_conditioning?: boolean | null
   kitchen?: boolean | null
@@ -20,7 +19,6 @@ const GLAMPING_AMENITY_LABELS: Record<keyof GlampingAmenities, { label: string; 
   electricity:        { label: "Electricidad",       emoji: "⚡" },
   wifi:                { label: "WiFi",               emoji: "🛜" },
   breakfast_included: { label: "Desayuno incluido",  emoji: "🥐" },
-  pet_friendly:        { label: "Acepta mascotas",    emoji: "🐶" },
   heating:             { label: "Calefacción",        emoji: "🌡️" },
   air_conditioning:    { label: "Aire acondicionado", emoji: "❄️" },
   kitchen:             { label: "Cocina equipada",    emoji: "🍳" },
@@ -33,7 +31,9 @@ interface Props {
 }
 
 export default function GlampingAmenitiesList({ amenities }: Props) {
-  const active = Object.entries(amenities || {}).filter(([, v]) => v === true)
+  // Solo las que tienen etiqueta: pet_friendly (dato viejo) ahora se muestra
+  // en la información práctica del lugar.
+  const active = Object.entries(amenities || {}).filter(([k, v]) => v === true && k in GLAMPING_AMENITY_LABELS)
 
   if (active.length === 0) return null
 

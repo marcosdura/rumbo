@@ -38,6 +38,7 @@ import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/s
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
 import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
+import PracticalInfoCard from "@/components/spot-detail/PracticalInfoCard"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -357,6 +358,9 @@ useEffect(() => {
                 {/* Derecha: detalles y contacto */}
                 <div className="fade-up fade-up-4 spot-right-panel">
                   <SpotDetails spot={spot} />
+                  <div style={{ marginTop: 16 }}>
+                    <PracticalInfoCard info={spot} />
+                  </div>
                 </div>
               </div>
 

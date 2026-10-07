@@ -31,6 +31,8 @@ export type Spot = {
   instagram: string | null; price: number | null
   season_start: number | null; season_end: number | null
   is_public: boolean | null; public_transport: string | null
+  // Información práctica; null = no sé.
+  pets_allowed?: boolean | null; reservation_required?: boolean | null; cell_signal?: boolean | null
   is_approved: boolean; category: { name: string } | null
   images: SpotImage[]; average_rating: number | null; review_count: number
   change_request: ChangeRequest | null
