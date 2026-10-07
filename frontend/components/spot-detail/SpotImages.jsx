@@ -5,38 +5,32 @@ import { CldImage } from "next-cloudinary"
 import ImageGallery from "./ImageGallery"
 
 
-function SpotImages({ images = [], name }) {
-  const [galleryIndex, setGalleryIndex] = useState(null)
+const sharedProps = {
+  fill: true,
+  crop: "fill",
+  gravity: "auto",
+  loading: "eager",
+  className: "object-cover",
+  quality: "auto",
+  format: "auto",
+  priority: true,
+}
 
-  const count = images.length
-  if (count === 0) return null
+const wrapStyle = (borderRadius = 14) => ({
+  overflow: "hidden",
+  borderRadius,
+  position: "relative",
+  cursor: "pointer",
+})
 
-  const open = (i) => setGalleryIndex(i)
-  const close = () => setGalleryIndex(null)
-
-  const sharedProps = {
-    fill: true,
-    crop: "fill",
-    gravity: "auto",
-    loading: "eager",
-    className: "object-cover",
-    quality: "auto",
-    format: "auto",
-    priority: true,
-  }
-
-  const wrapStyle = (borderRadius = 14, index = 0) => ({
-    overflow: "hidden",
-    borderRadius,
-    position: "relative",
-    cursor: "pointer",
-  })
-
-  const Img = ({ img, index, sizes, borderRadius = 14 }) => (
+// Fuera de SpotImages: definido adentro, cada render (por ejemplo, al abrir
+// la galería) lo volvía un componente nuevo y React re-montaba las fotos.
+function Img({ img, index, sizes, borderRadius = 14, name, onOpen }) {
+  return (
     <div
-      style={wrapStyle(borderRadius, index)}
+      style={wrapStyle(borderRadius)}
       className="img-reveal img-zoom"
-      onClick={() => open(index)}
+      onClick={() => onOpen(index)}
     >
       <CldImage
         src={img.cloudinary_public_id}
@@ -46,6 +40,16 @@ function SpotImages({ images = [], name }) {
       />
     </div>
   )
+}
+
+function SpotImages({ images = [], name }) {
+  const [galleryIndex, setGalleryIndex] = useState(null)
+
+  const count = images.length
+  if (count === 0) return null
+
+  const open = (i) => setGalleryIndex(i)
+  const close = () => setGalleryIndex(null)
 
   return (
     <>
@@ -79,28 +83,28 @@ function SpotImages({ images = [], name }) {
 
       {count === 2 && (
         <div className="spot-img-grid-2">
-          {images.map((img, i) => <Img key={i} img={img} index={i} sizes="50vw" borderRadius={18} />)}
+          {images.map((img, i) => <Img name={name} onOpen={open} key={i} img={img} index={i} sizes="50vw" borderRadius={18} />)}
         </div>
       )}
 
       {count === 3 && (
         <div className="spot-img-grid-3">
-          <Img img={images[0]} index={0} sizes="50vw" borderRadius={18} />
+          <Img name={name} onOpen={open} img={images[0]} index={0} sizes="50vw" borderRadius={18} />
           <div className="spot-img-sub-3">
-            {images.slice(1).map((img, i) => <Img key={i} img={img} index={i + 1} sizes="25vw" borderRadius={12} />)}
+            {images.slice(1).map((img, i) => <Img name={name} onOpen={open} key={i} img={img} index={i + 1} sizes="25vw" borderRadius={12} />)}
           </div>
         </div>
       )}
 
       {count === 4 && (
         <div className="spot-img-grid-4">
-          {images.map((img, i) => <Img key={i} img={img} index={i} sizes="50vw" borderRadius={i === 0 ? 18 : 12} />)}
+          {images.map((img, i) => <Img name={name} onOpen={open} key={i} img={img} index={i} sizes="50vw" borderRadius={i === 0 ? 18 : 12} />)}
         </div>
       )}
 
       {count >= 5 && (
         <div className="spot-img-grid-5">
-          <Img img={images[0]} index={0} sizes="50vw" borderRadius={18} />
+          <Img name={name} onOpen={open} img={images[0]} index={0} sizes="50vw" borderRadius={18} />
           <div className="spot-img-sub-5">
             {images.slice(1, 5).map((img, i) => {
               const isLast = i === 3

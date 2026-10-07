@@ -14,11 +14,13 @@ const icon = L.icon({
 })
 
 function MapCard({ lat, lng, name }) {
-  if (!lat || !lng) return null
-
   // instanceId changes on every component mount (including HMR), so the wrapper
   // div always gets a fresh key → Leaflet never finds an existing _leaflet_id
+  // Va antes del return: los hooks se llaman siempre, haya coordenadas o no.
   const [instanceId] = useState(() => Math.random().toString(36).slice(2, 8))
+
+  if (!lat || !lng) return null
+
   const mapKey = `${instanceId}-${lat}-${lng}`
 
   const position = [lat, lng]
