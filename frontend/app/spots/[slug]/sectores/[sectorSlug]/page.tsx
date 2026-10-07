@@ -2,6 +2,8 @@ import React from "react"
 import { Metadata } from "next"
 import ClimbingSectorDetails from "../../../../../components/spot-detail/ClimbingSectorDetails"
 import { api } from "@/lib/api"
+import { sectorDescription } from "@/lib/metadata"
+import type { PublicSector } from "@/lib/types"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>
@@ -9,11 +11,11 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sectorSlug } = await params
-  const sector: any = await api.get(`/sectors/by-slug/${sectorSlug}`).then(r => r.data).catch(() => ({}))
+  const sector = await api.get<PublicSector>(`/sectors/by-slug/${sectorSlug}`).then(r => r.data).catch(() => null)
 
   return {
-    title: `${sector.name ?? sectorSlug} | Rumbo`,
-    description: `Sector de escalada con ${sector.routes_number ?? "—"} rutas. Graduación: ${sector.min_grade}–${sector.max_grade}.`,
+    title: `${sector?.name ?? sectorSlug} | Rumbo`,
+    description: sectorDescription(sector),
   }
 }
 

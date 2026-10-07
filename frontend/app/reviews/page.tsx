@@ -10,6 +10,7 @@ import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import { api } from "@/lib/api"
+import type { MyReview } from "@/lib/types"
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime()
@@ -25,7 +26,7 @@ function timeAgo(dateStr: string) {
 
 export default function ReviewsPage() {
   const { data: session, status } = useSession()
-  const [reviews, setReviews] = useState<any[]>([])
+  const [reviews, setReviews] = useState<MyReview[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -41,7 +42,7 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     if (status === "loading" || !token) return
-    api.get<any[]>("/reviews/user/me", { token })
+    api.get<MyReview[]>("/reviews/user/me", { token })
       .then(({ data }) => setReviews(data))
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -62,7 +63,7 @@ export default function ReviewsPage() {
     setDeleting(false)
   }
 
-  const startEditing = (review: any) => {
+  const startEditing = (review: MyReview) => {
     setEditingId(review.id)
     setEditRating(review.rating)
     setEditComment(review.comment ?? "")
@@ -81,7 +82,7 @@ export default function ReviewsPage() {
     setSaving(true)
     setSaveError(false)
     try {
-      const { data } = await api.patch<any>(
+      const { data } = await api.patch<Pick<MyReview, "rating" | "comment" | "updated_at">>(
         `/reviews/${editingId}`,
         { rating: editRating, comment: editComment },
         { token },

@@ -10,12 +10,14 @@ import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
+import type { PublicSurfSchool, ReviewSummary } from "@/lib/types"
 
 type Props = {
   params: Promise<{ slug: string }>
 }
 
 const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
+const monthName = (m: number | null) => (m ? MONTHS_FULL[m] : "")
 
 const CLASS_CONFIG: Record<string, { label: string; icon: string }> = {
   grupal:    { label: "Grupal",    icon: "👥" },
@@ -27,9 +29,9 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Escuela de Surf | Rumbo" }
-  let school: any
+  let school: PublicSurfSchool
   try {
-    school = (await api.get<any>(`/surfschool/${id}`)).data
+    school = (await api.get<PublicSurfSchool>(`/surfschool/${id}`)).data
   } catch {
     return { title: "Escuela de Surf | Rumbo" }
   }
@@ -54,13 +56,13 @@ export default async function SurfSchoolPage({ params }: Props) {
   if (id === null) notFound()
 
   const [schoolResult, summaryResult] = await Promise.allSettled([
-    api.get<any>(`/surfschool/${id}`, { cache: "no-store" }),
-    api.get<any>(`/surf-reviews/${id}/summary`, { cache: "no-store" }),
+    api.get<PublicSurfSchool>(`/surfschool/${id}`, { cache: "no-store" }),
+    api.get<ReviewSummary>(`/surf-reviews/${id}/summary`, { cache: "no-store" }),
   ])
   if (schoolResult.status !== "fulfilled") notFound()
 
   const school = schoolResult.value.data
-  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 }
+  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 } satisfies ReviewSummary
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -225,7 +227,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                     <p className="surf-section-title">Temporada</p>
                   </div>
                   <p style={{ fontSize: 15, color: "#3a3730", margin: 0 }}>
-                    {MONTHS_FULL[school.season_start]} — {MONTHS_FULL[school.season_end]}
+                    {monthName(school.season_start)} — {monthName(school.season_end)}
                   </p>
                 </div>
               )}
@@ -276,7 +278,7 @@ export default async function SurfSchoolPage({ params }: Props) {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Temporada</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
-                        {MONTHS_FULL[school.season_start]} – {MONTHS_FULL[school.season_end]}
+                        {monthName(school.season_start)} – {monthName(school.season_end)}
                       </span>
                     </div>
                   )}

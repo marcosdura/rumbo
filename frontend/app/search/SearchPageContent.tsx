@@ -38,6 +38,7 @@ import {
 } from "../../lib/camping-filters"
 import { trackEvent } from "../../lib/analytics"
 import { api } from "../../lib/api"
+import type { SpotListItem } from "../../lib/types"
 import "./search.css"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
@@ -49,14 +50,14 @@ export default function SearchPage() {
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
 
-  const [spots, setSpots]                         = useState<any[]>([])
+  const [spots, setSpots]                         = useState<SpotListItem[]>([])
   const [total, setTotal]                         = useState<number | null>(null)
   const [loading, setLoading]                     = useState(true)
   const [error, setError]                         = useState<string | null>(null)
   const [retryTick, setRetryTick]                 = useState(0)
   const [loadingMore, setLoadingMore]             = useState(false)
   const [loadMoreError, setLoadMoreError]         = useState<string | null>(null)
-  const [mapSpots, setMapSpots]                   = useState<any[]>([])
+  const [mapSpots, setMapSpots]                   = useState<SpotListItem[]>([])
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]             = useState(false)
   const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
@@ -161,7 +162,7 @@ export default function SearchPage() {
     const listParams = buildFilterParams()
     listParams.set("limit", String(PAGE_SIZE))
     listParams.set("offset", "0")
-    api.get<any[]>(`/spots?${listParams.toString()}`, { signal: controller.signal })
+    api.get<SpotListItem[]>(`/spots?${listParams.toString()}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         setTotal(totalCount)
         setSpots(data)
@@ -184,7 +185,7 @@ export default function SearchPage() {
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
     // Si falla, el mapa se queda vacío (degrada solo, no bloquea la lista).
     const mapParams = buildFilterParams()
-    api.get<any[]>(`/spots/pins?${mapParams.toString()}`, { signal: controller.signal })
+    api.get<SpotListItem[]>(`/spots/pins?${mapParams.toString()}`, { signal: controller.signal })
       .then(({ data }) => setMapSpots(Array.isArray(data) ? data : []))
       .catch(e => {
         if (e?.name === "AbortError") return
@@ -208,7 +209,7 @@ export default function SearchPage() {
     const params = buildFilterParams()
     params.set("limit", String(PAGE_SIZE))
     params.set("offset", String(spots.length))
-    api.get<any[]>(`/spots?${params.toString()}`, { signal: controller.signal })
+    api.get<SpotListItem[]>(`/spots?${params.toString()}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         if (totalCount != null) setTotal(totalCount)
         setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])

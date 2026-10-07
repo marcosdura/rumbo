@@ -8,13 +8,14 @@ import Pill, { type PillVariant } from "@/components/ui/Pill"
 import { api } from "@/lib/api"
 import { AddButton, SectionHeader } from "./AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
+import type { ClimbingRoute, SectorDetail } from "@/lib/types"
 
 function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   const params = useParams()
   const id = params?.id
   const router = useRouter()
-  const [sector, setSector] = useState<any>(null)
-  const [routes, setRoutes] = useState<any[]>([])
+  const [sector, setSector] = useState<SectorDetail | null>(null)
+  const [routes, setRoutes] = useState<ClimbingRoute[]>([])
   const [fetchError, setError] = useState(false)
   // Sin slug ni id no hay nada que pedir.
   const error = fetchError || (!slugProp && !id)
@@ -22,9 +23,9 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
   useEffect(() => {
     if (!slugProp && !id) return
     const path = slugProp ? `/sectors/by-slug/${slugProp}` : `/sectors/${id}`
-    api.get<any>(path)
+    api.get<SectorDetail>(path)
       .then(({ data }) => {
-        if (!data || data.detail) { setError(true); return }
+        if (!data) { setError(true); return }
         setSector(data)
       })
       .catch(() => setError(true))
@@ -32,12 +33,12 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
 
   useEffect(() => {
     if (!sector?.id) return
-    api.get<any[]>(`/sectors/${sector.id}/routes`)
+    api.get<ClimbingRoute[]>(`/sectors/${sector.id}/routes`)
       .then(({ data }) => setRoutes(Array.isArray(data) ? data : []))
       .catch(() => setRoutes([]))
   }, [sector?.id])
 
-  const gradeVariant = (grade: any): PillVariant => {
+  const gradeVariant = (grade: string | null): PillVariant => {
     if (!grade) return "muted"
     const g = grade.toLowerCase()
     if (g.startsWith("v")) {
@@ -250,7 +251,7 @@ function ClimbingSectorDetails({ slug: slugProp }: { slug?: string } = {}) {
                 </div>
 
                 {/* Filas */}
-                {routes.map((route: any, i: number) => {
+                {routes.map((route, i) => {
                   return (
                     <div key={route.id} className="route-row">
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

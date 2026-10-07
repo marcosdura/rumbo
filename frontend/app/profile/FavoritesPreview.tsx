@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { CldImage } from "next-cloudinary"
 import { s } from "./styles"
+import type { SpotListItem } from "@/lib/types"
 
 interface Props {
-  favorites: any[]
+  favorites: SpotListItem[]
 }
 
 export default function FavoritesPreview({ favorites }: Props) {
@@ -28,7 +29,7 @@ export default function FavoritesPreview({ favorites }: Props) {
       </div>
       <div className="profile-favs-grid">
         {favorites.slice(0, 3).map(spot => {
-          const main = spot.images?.find((i: any) => i.is_main) || spot.images?.[0]
+          const main = spot.images?.find(i => i.is_main) || spot.images?.[0]
           return (
             <Link key={spot.id} href={`/spots/${spot.slug}`} style={{ textDecoration: "none" }}>
               <div className="fav-thumb" style={{ borderRadius: 12, overflow: "hidden", aspectRatio: "1", background: "#f7f5f0", position: "relative", transition: "transform 0.2s" }}>

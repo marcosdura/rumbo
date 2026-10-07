@@ -5,6 +5,7 @@ import LoadingScreen from "@/components/ui/LoadingScreen"
 import { useState, useEffect, useRef } from "react"
 import Navbar from "@/components/layout/Navbar"
 import { api, ApiError } from "@/lib/api"
+import type { MyReview, MySpotSummary, SpotListItem } from "@/lib/types"
 import ProfileInfoCard from "./ProfileInfoCard"
 import AccountActions from "./AccountActions"
 import StatsRow from "./StatsRow"
@@ -16,9 +17,9 @@ import DeleteAccountModal from "./DeleteAccountModal"
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
-  const [favorites, setFavorites] = useState<any[]>([])
-  const [reviews, setReviews] = useState<any[]>([])
-  const [mySpots, setMySpots] = useState<any[]>([])
+  const [favorites, setFavorites] = useState<SpotListItem[]>([])
+  const [reviews, setReviews] = useState<MyReview[]>([])
+  const [mySpots, setMySpots] = useState<MySpotSummary[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [confirmText, setConfirmText] = useState("")
   const [deleteError, setDeleteError] = useState("")
@@ -35,16 +36,17 @@ export default function ProfilePage() {
 
   const fetchAll = (idToken: string) => {
     return Promise.allSettled([
-      api.get<any[]>("/favorites", { token: idToken }),
-      api.get<any[]>("/reviews/user/me", { token: idToken }),
-      api.get<any[]>("/spots/mine", { token: idToken }),
+      api.get<SpotListItem[]>("/favorites", { token: idToken }),
+      api.get<MyReview[]>("/reviews/user/me", { token: idToken }),
+      api.get<MySpotSummary[]>("/spots/mine", { token: idToken }),
     ])
   }
 
-  const is401 = (r: PromiseSettledResult<{ data: any[] }>) =>
+  const is401 = (r: PromiseSettledResult<unknown>) =>
     r.status === "rejected" && r.reason instanceof ApiError && r.reason.status === 401
-  const toData = (r: PromiseSettledResult<{ data: any[] }>) =>
-    r.status === "fulfilled" && Array.isArray(r.value.data) ? r.value.data : []
+  function toData<T>(r: PromiseSettledResult<{ data: T[] }>): T[] {
+    return r.status === "fulfilled" && Array.isArray(r.value.data) ? r.value.data : []
+  }
 
   fetchAll(session.id_token)
     .then(async (results) => {
@@ -63,10 +65,10 @@ export default function ProfilePage() {
         signOut({ redirect: false })
         return
       }
-      const [favData, reviewData, spotsData] = results.map(toData)
-      setFavorites(favData)
-      setReviews(reviewData)
-      setMySpots(spotsData)
+      const [favResult, reviewResult, spotsResult] = results
+      setFavorites(toData(favResult))
+      setReviews(toData(reviewResult))
+      setMySpots(toData(spotsResult))
     })
     .finally(() => { if (!cancelled) setDataLoading(false) })
 

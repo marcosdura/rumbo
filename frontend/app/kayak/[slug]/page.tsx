@@ -9,12 +9,14 @@ import Pill from "@/components/ui/Pill"
 import JsonLd from "@/components/seo/JsonLd"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
+import type { PublicKayak, ReviewSummary } from "@/lib/types"
 
 type Props = {
   params: Promise<{ slug: string }>
 }
 
 const MONTHS_FULL = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
+const monthName = (m: number | null) => (m ? MONTHS_FULL[m] : "")
 
 const WATER_TYPE: Record<string, { label: string; icon: string }> = {
   rio:  { label: "Río",  icon: "🏞️" },
@@ -38,9 +40,9 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Kayak | Rumbo" }
-  let kayak: any
+  let kayak: PublicKayak
   try {
-    kayak = (await api.get<any>(`/kayak/${id}`)).data
+    kayak = (await api.get<PublicKayak>(`/kayak/${id}`)).data
   } catch {
     return { title: "Kayak | Rumbo" }
   }
@@ -65,13 +67,13 @@ export default async function KayakDetailPage({ params }: Props) {
   if (id === null) notFound()
 
   const [kayakResult, summaryResult] = await Promise.allSettled([
-    api.get<any>(`/kayak/${id}`, { cache: "no-store" }),
-    api.get<any>(`/kayak-reviews/${id}/summary`, { cache: "no-store" }),
+    api.get<PublicKayak>(`/kayak/${id}`, { cache: "no-store" }),
+    api.get<ReviewSummary>(`/kayak-reviews/${id}/summary`, { cache: "no-store" }),
   ])
   if (kayakResult.status !== "fulfilled") notFound()
 
   const kayak = kayakResult.value.data
-  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 }
+  const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 } satisfies ReviewSummary
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -222,7 +224,7 @@ export default async function KayakDetailPage({ params }: Props) {
                     <p className="kayak-section-title">Temporada</p>
                   </div>
                   <p style={{ fontSize: 15, color: "#3a3730", margin: 0 }}>
-                    {MONTHS_FULL[kayak.season_start]} — {MONTHS_FULL[kayak.season_end]}
+                    {monthName(kayak.season_start)} — {monthName(kayak.season_end)}
                   </p>
                 </div>
               )}
@@ -281,7 +283,7 @@ export default async function KayakDetailPage({ params }: Props) {
                     <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>Temporada</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#1b1b19" }}>
                       {isSeasonal
-                        ? `${MONTHS_FULL[kayak.season_start]} – ${MONTHS_FULL[kayak.season_end]}`
+                        ? `${monthName(kayak.season_start)} – ${monthName(kayak.season_end)}`
                         : "Todo el año"}
                     </span>
                   </div>

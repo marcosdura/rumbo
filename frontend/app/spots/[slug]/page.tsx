@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import SpotDetails from "./SpotDetails"
 import JsonLd from "@/components/seo/JsonLd"
 import { api } from "@/lib/api"
+import type { PublicSpot } from "@/lib/types"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -13,20 +14,20 @@ type Props = {
 // separado — cache() de React dedupea ambas llamadas dentro del mismo
 // render en vez de pegarle dos veces al backend por cada carga.
 const getSpotBySlug = cache(async (slug: string) => {
-  const { data } = await api.get<any>(`/spots/by-slug/${slug}`)
+  const { data } = await api.get<PublicSpot>(`/spots/by-slug/${slug}`)
   return data
 })
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  let spot: any
+  let spot: PublicSpot
   try {
     spot = await getSpotBySlug(slug)
   } catch {
     return { title: "Rumbo" }
   }
 
-  const mainImage = spot.images?.find((img: any) => img.is_main) ?? spot.images?.[0]
+  const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage
     ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${mainImage.cloudinary_public_id}`
     : undefined
@@ -51,14 +52,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SpotPage({ params }: Props) {
   const { slug } = await params
-  let spot: any
+  let spot: PublicSpot
   try {
     spot = await getSpotBySlug(slug)
   } catch {
     notFound()
   }
 
-  const mainImage = spot.images?.find((img: any) => img.is_main) ?? spot.images?.[0]
+  const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage
     ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${mainImage.cloudinary_public_id}`
     : undefined

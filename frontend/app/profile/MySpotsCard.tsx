@@ -3,9 +3,10 @@
 import Link from "next/link"
 import Pill from "@/components/ui/Pill"
 import { s } from "./styles"
+import type { MySpotSummary } from "@/lib/types"
 
 interface Props {
-  mySpots: any[]
+  mySpots: MySpotSummary[]
 }
 
 // Mismo estilo que el link "Administrar →" de cada lugar.
@@ -34,7 +35,7 @@ export default function MySpotsCard({ mySpots }: Props) {
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {mySpots.map(spot => {
-          const main = spot.images?.find((i: any) => i.is_main) || spot.images?.[0]
+          const main = spot.images?.find(i => i.is_main) || spot.images?.[0]
           return (
             <div key={spot.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #ede9e1" }}>
               <div style={{ width: 48, height: 48, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#f7f5f0" }}>
