@@ -10,6 +10,7 @@ import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
 import Toggle from "../ui/Toggle"
 import NavRow from "../ui/NavRow"
+import NearbySpotsNotice from "../NearbySpotsNotice"
 import type { BasicInfo } from "../types"
 import { api } from "@/lib/api"
 
@@ -342,6 +343,7 @@ export default function StepInfoBasica({
           {fieldErrors.has("location") && (
             <p style={errorHintText}>Seleccioná una ubicación en el mapa</p>
           )}
+          <NearbySpotsNotice lat={basic.lat} lng={basic.lng} />
         </div>
       </div>
       <NavRow onBack={onBack} onNext={handleNext} error={error ?? (fieldErrors.size > 0 ? "Completá los campos marcados en rojo." : null)} />

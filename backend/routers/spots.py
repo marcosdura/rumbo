@@ -1,3 +1,5 @@
+import math
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import get_db
@@ -104,6 +106,48 @@ def get_spot_ids(db: Session = Depends(get_db)):
 async def check_spot_name(request: Request, name: str, db: Session = Depends(get_db)):
     existing = db.query(SpotDB).filter(func.lower(SpotDB.name) == func.lower(name)).first()
     return {"exists": existing is not None}
+
+
+NEARBY_RADIUS_KM = 1.0
+
+
+def distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Distancia entre dos puntos (haversine)."""
+    r = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = math.radians(lat2 - lat1), math.radians(lng2 - lng1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+@router.get("/spots/nearby")
+@limiter.limit("30/minute")
+def nearby_spots(request: Request, lat: float, lng: float, db: Session = Depends(get_db)):
+    """Lugares publicados a menos de 1 km de un punto: agregar-lugar avisa
+    "¿Es alguno de estos?" al marcar la ubicación, para no cargar uno que ya
+    existe con otro nombre. Primero se acota con un recuadro (barato) y
+    después se mide la distancia real."""
+    dlat = NEARBY_RADIUS_KM / 111.0
+    dlng = NEARBY_RADIUS_KM / (111.0 * max(math.cos(math.radians(lat)), 0.01))
+    candidates = (
+        db.query(SpotDB)
+        .options(joinedload(SpotDB.category))
+        .filter(
+            SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None),
+            SpotDB.lat.between(lat - dlat, lat + dlat), SpotDB.lng.between(lng - dlng, lng + dlng),
+        )
+        .all()
+    )
+    found = []
+    for spot in candidates:
+        d = distance_km(lat, lng, spot.lat, spot.lng)
+        if d <= NEARBY_RADIUS_KM:
+            found.append({
+                "id": spot.id, "name": spot.name, "slug": spot.slug,
+                "category": spot.category.name if spot.category else None,
+                "distance_m": round(d * 1000),
+            })
+    return sorted(found, key=lambda f: f["distance_m"])
 
 
 def build_spots_filter_query(
