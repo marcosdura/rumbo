@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
 import Navbar from "../../components/layout/Navbar"
@@ -38,6 +39,7 @@ import {
 } from "../../lib/camping-filters"
 import { trackEvent } from "../../lib/analytics"
 import { api } from "../../lib/api"
+import { categoryEmoji } from "../../lib/categories"
 import type { SpotListItem } from "../../lib/types"
 import "./search.css"
 
@@ -225,11 +227,20 @@ export default function SearchPage() {
 
   const hasMore = total !== null && spots.length < total
 
+  // Vuelve a los filtros vacíos de la actividad (actividad y departamento quedan).
+  function clearFilters() {
+    setTrekkingFilters(EMPTY_TREKKING_FILTERS)
+    setKayakFilters(EMPTY_KAYAK_FILTERS)
+    setSurfFilters(EMPTY_SURF_FILTERS)
+    setClimbingFilters(EMPTY_CLIMBING_FILTERS)
+    setCampingFilters(EMPTY_CAMPING_FILTERS)
+  }
+
   const title = activity && department
     ? `${activity} en ${department}`
     : activity   ? activity
-    : department ? `Spots en ${department}`
-    : "Todos los spots"
+    : department ? `Lugares en ${department}`
+    : "Todos los lugares"
 
   const activeFilterCount =
     activity === "Trekking"  ? countActiveFilters(trekkingFilters)           :
@@ -283,7 +294,7 @@ export default function SearchPage() {
                         <circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/>
                       </svg>
                     </span>
-                    {activeFilterCount > 0 ? `Filtros · ${activeFilterCount}` : "Filtros"}
+                    Filtros
                     {activeFilterCount > 0 && (
                       <span className="filter-badge">{activeFilterCount}</span>
                     )}
@@ -296,7 +307,7 @@ export default function SearchPage() {
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {activity && (
                   <Pill variant="green" hover>
-                    {({ Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶" } as Record<string,string>)[activity] ?? "🏃"} {activity}
+                    {categoryEmoji(activity)} {activity}
                   </Pill>
                 )}
                 {department && (
@@ -366,11 +377,20 @@ export default function SearchPage() {
                 }}>
                   <p style={{ fontSize: 36, marginBottom: 12, opacity: 0.2 }}>🗺️</p>
                   <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", marginBottom: 6 }}>
-                    No se encontraron spots
+                    {activeFilterCount > 0 ? "No hay lugares con estos filtros" : "Todavía no hay lugares acá"}
                   </p>
-                  <p style={{ fontSize: 13, color: "var(--muted)" }}>
-                    Probá con otros filtros
-                  </p>
+                  {activeFilterCount > 0 ? (
+                    <button onClick={clearFilters} style={{
+                      marginTop: 8, padding: "9px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                      fontFamily: "inherit", cursor: "pointer", background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
+                    }}>
+                      Quitar filtros
+                    </button>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                      ¿Conocés uno? <Link href="/agregar-lugar" style={{ color: "var(--primary)", fontWeight: 600 }}>Sumalo</Link>
+                    </p>
+                  )}
                 </div>
               ) : (
                 <>
@@ -434,10 +454,10 @@ export default function SearchPage() {
                 borderRadius: 16, padding: "14px 22px", textAlign: "center",
               }}>
                 <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                  No hay spots en esta zona
+                  No hay lugares para mostrar en el mapa
                 </p>
                 <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
-                  Probá con otros filtros
+                  {activeFilterCount > 0 ? "Probá quitando algún filtro" : "Ninguno tiene ubicación cargada"}
                 </p>
               </div>
             )}

@@ -161,7 +161,7 @@ function FitBounds({ spots, mapExpanded }) {
   return null
 }
 
-const createPopupHtml = (spot, categories) => {
+export const createPopupHtml = (spot, categories) => {
   const pillsHtml = categories.map(cat => `
     <span style="
       display:inline-flex; align-items:center; gap:4px;
@@ -173,7 +173,7 @@ const createPopupHtml = (spot, categories) => {
   `).join('')
 
   return `
-    <a href="/spots/${spot.slug}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+    <a href="/spots/${spot.slug}" style="text-decoration:none;">
       <div style="cursor:pointer; font-family: var(--font-dm-sans), sans-serif; min-width:180px; padding:2px 0;">
         <p style="font-family: var(--font-playfair-display), serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
           ${escapeHtml(spot.name)}

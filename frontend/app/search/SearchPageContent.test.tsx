@@ -6,6 +6,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 let params = new URLSearchParams("activity=Trekking")
 let listRequests: string[] = []
 let failList = false
+let emptyResults = false
 vi.mock("next/navigation", () => ({ useSearchParams: () => params }))
 vi.mock("next/dynamic", () => ({ default: () => () => null }))
 vi.mock("../../components/layout/Navbar", () => ({ default: () => null }))
@@ -28,6 +29,7 @@ vi.mock("../../lib/api", () => ({
       if (url.startsWith("/spots/pins")) return Promise.resolve({ data: [] })
       listRequests.push(url)
       if (failList) return Promise.reject(new Error("Falló la búsqueda"))
+      if (emptyResults) return Promise.resolve({ data: [], totalCount: 0 })
       return Promise.resolve({ data: [{ id: 1, name: "Cerro Arequita" }], totalCount: 1 })
     },
   },
@@ -39,6 +41,7 @@ afterEach(() => {
   params = new URLSearchParams("activity=Trekking")
   listRequests = []
   failList = false
+  emptyResults = false
 })
 
 const flush = () => act(() => Promise.resolve())
@@ -84,5 +87,28 @@ describe("SearchPageContent", () => {
     fireEvent.click(screen.getByRole("button", { name: "filtrar mascotas" }))
     await flush()
     expect(listRequests.at(-1)).toContain("pet_friendly=true")
+  })
+
+  it("sin resultados y con filtros: ofrece quitarlos", async () => {
+    render(<SearchPage />)
+    await flush()
+    emptyResults = true
+    fireEvent.click(screen.getByRole("button", { name: "filtrar difícil" }))
+    await flush()
+    expect(screen.getByText("No hay lugares con estos filtros")).toBeTruthy()
+    emptyResults = false
+    fireEvent.click(screen.getByRole("button", { name: "Quitar filtros" }))
+    await flush()
+    expect(listRequests.at(-1)).not.toContain("difficulty")
+  })
+
+  it("sin resultados y sin filtros: invita a sumar un lugar; el título dice lugares", async () => {
+    params = new URLSearchParams("department=Flores")
+    emptyResults = true
+    render(<SearchPage />)
+    await flush()
+    expect(screen.getByRole("heading", { name: "Lugares en Flores" })).toBeTruthy()
+    expect(screen.getByText("Todavía no hay lugares acá")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Sumalo" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 })
