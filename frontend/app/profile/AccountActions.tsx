@@ -14,12 +14,13 @@ export default function AccountActions({ onDeleteRequest }: Props) {
   return (
     <div className="fade-up fade-up-3" style={{ ...s.card, padding: 12 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {/* Cerrar sesión no es peligroso: botón común (antes estaba en rojo). */}
         <button
-          className="action-btn-danger"
-          style={{ ...s.actionBtn, color: "var(--danger)", border: "1px solid #f5c0c0", background: "#fdf0f0" }}
+          className="action-link"
+          style={s.actionBtn}
           onClick={() => signOut({ callbackUrl: "/" })}
         >
-          <div style={{ ...s.actionBtnIcon, background: "#fdf0f0", border: "1px solid #f5c0c0" }}>↩</div>
+          <div style={s.actionBtnIcon}>↩</div>
           Cerrar sesión
         </button>
 
