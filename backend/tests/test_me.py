@@ -49,8 +49,8 @@ def test_resumen_cuenta_lo_de_cada_fila(client, db, make_spot, camping):
     s = client.get("/me/summary", headers=as_user(OWNER)).json()
     assert s["member_since"]
     assert (s["favorites"], s["reviews"]) == (1, 1)
-    # Mío + Rechazado + el sugerido (mientras se revisa lo maneja quien lo cargó).
-    assert (s["managed"], s["managed_rejected"]) == (3, 1)
+    # Mío + Rechazado; el sugerido se cuenta aparte, no dos veces.
+    assert (s["managed"], s["managed_rejected"]) == (2, 1)
     assert s["suggested"] == 1
     assert (s["contributions"], s["contributions_pending"]) == (1, 1)
     assert (s["requests"], s["requests_pending"]) == (0, 0)

@@ -124,7 +124,9 @@ def summary(db: Session = Depends(get_db), user: dict = Depends(get_current_user
         "member_since": _iso(db_user.created_at) if db_user else None,
         "favorites": db.query(Favorite).filter(Favorite.user_id == sub).count(),
         "reviews": db.query(Review).filter(Review.user_id == sub).count(),
-        "managed": len(spots) + len(owned_operators(db, email)),
+        # Un lugar sugerido en revisión es suyo mientras se revisa, pero se
+        # cuenta (y se muestra) en "sugeridos", no dos veces.
+        "managed": sum(1 for s in spots if s.suggested_by_email != email) + len(owned_operators(db, email)),
         "managed_rejected": sum(1 for s in spots if not s.is_approved and s.rejected_at),
         "suggested": db.query(SpotDB).filter(SpotDB.suggested_by_email == email, SpotDB.owner_deleted_at.is_(None)).count(),
         "contributions": len(contributions),
