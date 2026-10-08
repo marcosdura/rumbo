@@ -12,7 +12,8 @@ from schemas import ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCrea
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, case, select
+import home as home_domain
 from typing import Optional, List
 from slugs import generate_slug
 import contributions
@@ -180,7 +181,12 @@ def build_spots_filter_query(
     no_restrictions: Optional[bool] = None,
     amenity_ids: Optional[List[int]] = None,
     price_range: Optional[List[str]] = None,
-    sort: Optional[str] = "recent",  # recent | oldest
+    reservation_required: Optional[bool] = None,
+    cell_signal: Optional[bool] = None,
+    glamping_price: Optional[List[str]] = None,
+    glamping_amenity: Optional[List[str]] = None,
+    motorhome_service: Optional[List[str]] = None,
+    sort: Optional[str] = "recent",  # recent | oldest | recommended | rating | name
 ):
     """Arma la query de /spots con todos los filtros de actividad, sin los
     joinedload/selectinload (esos los agrega cada caller aparte, según qué
@@ -239,6 +245,11 @@ def build_spots_filter_query(
     # trekking, y en camping un amenity aparte).
     if pet_friendly is not None:
         query = query.filter(SpotDB.pets_allowed == pet_friendly)
+    # Reserva y señal, como mascotas: datos del lugar, para cualquier actividad.
+    if reservation_required is not None:
+        query = query.filter(SpotDB.reservation_required == reservation_required)
+    if cell_signal is not None:
+        query = query.filter(SpotDB.cell_signal == cell_signal)
 
     amenity_filters = {
         "parking": parking,
@@ -380,12 +391,83 @@ def build_spots_filter_query(
         if pr_conds:
             query = query.filter(or_(*pr_conds))
 
-    if sort == "oldest":
-        query = query.order_by(SpotDB.created_at.asc())
-    else:
-        query = query.order_by(SpotDB.created_at.desc())
+    if activity == "Glamping" and glamping_price:
+        # Por el alojamiento más barato del lugar (lo que muestra la card).
+        cheapest = (
+            db.query(GlampingDetail.spot_id, func.min(GlampingDetail.price_per_night).label("p"))
+            .filter(GlampingDetail.price_per_night > 0)
+            .group_by(GlampingDetail.spot_id).subquery()
+        )
+        ranges = {
+            "bajo": cheapest.c.p < GLAMPING_PRICE_LOW,
+            "medio": and_(cheapest.c.p >= GLAMPING_PRICE_LOW, cheapest.c.p <= GLAMPING_PRICE_HIGH),
+            "alto": cheapest.c.p > GLAMPING_PRICE_HIGH,
+        }
+        conds = [ranges[r] for r in glamping_price if r in ranges]
+        if conds:
+            query = query.filter(SpotDB.id.in_(select(cheapest.c.spot_id).where(or_(*conds))))
 
-    return query
+    if activity == "Glamping" and glamping_amenity:
+        for key in glamping_amenity:
+            if key in GLAMPING_AMENITY_FILTERS:
+                query = query.filter(SpotDB.id.in_(
+                    select(GlampingAmenity.spot_id).where(getattr(GlampingAmenity, key) == True)  # noqa: E712
+                ))
+
+    if activity == "Motorhome" and motorhome_service:
+        for service in motorhome_service:
+            column = MOTORHOME_SERVICE_FILTERS.get(service)
+            if column is not None:
+                query = query.filter(SpotDB.id.in_(select(MotorhomeDetail.spot_id).where(column == True)))  # noqa: E712
+
+    return sort_spots(db, query, sort)
+
+
+# Precio por noche del glamping (pesos), para los rangos del filtro.
+GLAMPING_PRICE_LOW, GLAMPING_PRICE_HIGH = 3000, 6000
+GLAMPING_AMENITY_FILTERS = {
+    "private_bathroom", "electricity", "wifi", "breakfast_included", "heating",
+    "air_conditioning", "kitchen", "towels_included", "parking",
+}
+MOTORHOME_SERVICE_FILTERS = {
+    "water": MotorhomeDetail.has_water,
+    "electricity": MotorhomeDetail.has_electricity,
+    "dump": MotorhomeDetail.has_dump_station,
+}
+
+
+def sort_spots(db: Session, query, sort: Optional[str]):
+    """Ordena los lugares que dejaron los filtros. Primero se toman solo los
+    ids (los filtros pueden usar DISTINCT, y Postgres no deja ordenar un
+    DISTINCT por algo que no esté en el SELECT) y el orden va afuera.
+    - recommended: la puntuación de populares (home.py); lo que no la tiene,
+      lo más nuevo primero.
+    - rating: el promedio de reseñas (y la cantidad, para desempatar); los
+      que no tienen reseñas, al final (nullslast: en Postgres un DESC pone
+      los NULL primero).
+    - name: alfabético.
+    - recent / oldest: por fecha de carga."""
+    ids = query.order_by(None).with_entities(SpotDB.id.label("id")).distinct().subquery()
+    base = db.query(SpotDB).filter(SpotDB.id.in_(select(ids.c.id)))
+    if sort == "name":
+        return base.order_by(func.lower(SpotDB.name), SpotDB.id)
+    if sort == "rating":
+        agg = (
+            db.query(models.Review.spot_id.label("sid"), func.avg(models.Review.rating).label("avg"), func.count(models.Review.id).label("n"))
+            .group_by(models.Review.spot_id).subquery()
+        )
+        return base.outerjoin(agg, agg.c.sid == SpotDB.id).order_by(
+            agg.c.avg.desc().nullslast(), agg.c.n.desc().nullslast(), SpotDB.created_at.desc(), SpotDB.id,
+        )
+    if sort == "recommended":
+        scores = home_domain.popularity(db)
+        if scores:
+            score = case(scores, value=SpotDB.id, else_=0.0)
+            return base.order_by(score.desc(), SpotDB.created_at.desc(), SpotDB.id)
+        return base.order_by(SpotDB.created_at.desc(), SpotDB.id)
+    if sort == "oldest":
+        return base.order_by(SpotDB.created_at.asc(), SpotDB.id)
+    return base.order_by(SpotDB.created_at.desc(), SpotDB.id)
 
 
 @router.get("/spots", response_model=list[SpotResponse])
@@ -416,6 +498,11 @@ def get_spots(
     no_restrictions: Optional[bool] = None,
     amenity_ids: Optional[List[int]] = Query(default=None),
     price_range: Optional[List[str]] = Query(default=None),
+    reservation_required: Optional[bool] = None,
+    cell_signal: Optional[bool] = None,
+    glamping_price: Optional[List[str]] = Query(default=None),
+    glamping_amenity: Optional[List[str]] = Query(default=None),
+    motorhome_service: Optional[List[str]] = Query(default=None),
     sort: Optional[str] = Query(default="recent"),  # recent | oldest
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -428,7 +515,10 @@ def get_spots(
         kayak_duration=kayak_duration, rental_available=rental_available, class_type=class_type,
         surf_duration=surf_duration, equipment_included=equipment_included, has_surf_school=has_surf_school,
         climbing_type=climbing_type, grade_range=grade_range, no_restrictions=no_restrictions,
-        amenity_ids=amenity_ids, price_range=price_range, sort=sort,
+        amenity_ids=amenity_ids, price_range=price_range,
+        reservation_required=reservation_required, cell_signal=cell_signal,
+        glamping_price=glamping_price, glamping_amenity=glamping_amenity,
+        motorhome_service=motorhome_service, sort=sort,
     )
 
     # Total antes de paginar — calculado antes de sumar los joinedload/
@@ -519,6 +609,11 @@ def get_spot_pins(
     no_restrictions: Optional[bool] = None,
     amenity_ids: Optional[List[int]] = Query(default=None),
     price_range: Optional[List[str]] = Query(default=None),
+    reservation_required: Optional[bool] = None,
+    cell_signal: Optional[bool] = None,
+    glamping_price: Optional[List[str]] = Query(default=None),
+    glamping_amenity: Optional[List[str]] = Query(default=None),
+    motorhome_service: Optional[List[str]] = Query(default=None),
     sort: Optional[str] = Query(default="recent"),
 ):
     """Para el mapa de /search: los mismos filtros que GET /spots, pero sin
@@ -533,7 +628,10 @@ def get_spot_pins(
         kayak_duration=kayak_duration, rental_available=rental_available, class_type=class_type,
         surf_duration=surf_duration, equipment_included=equipment_included, has_surf_school=has_surf_school,
         climbing_type=climbing_type, grade_range=grade_range, no_restrictions=no_restrictions,
-        amenity_ids=amenity_ids, price_range=price_range, sort=sort,
+        amenity_ids=amenity_ids, price_range=price_range,
+        reservation_required=reservation_required, cell_signal=cell_signal,
+        glamping_price=glamping_price, glamping_amenity=glamping_amenity,
+        motorhome_service=motorhome_service, sort=sort,
     )
     query = query.options(
         joinedload(SpotDB.category),
