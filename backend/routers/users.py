@@ -22,7 +22,8 @@ async def get_me(
     db_user = db.query(User).filter(User.id == user.get("sub")).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return {"id": db_user.id}
+    # created_at: "Miembro desde" en /profile.
+    return {"id": db_user.id, "created_at": db_user.created_at.isoformat() if db_user.created_at else None}
 
 
 @router.delete("/me")

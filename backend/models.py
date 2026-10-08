@@ -59,6 +59,9 @@ class SpotDB(Base):
     # mientras está en revisión lo maneja esa persona; aprobado, pasa al
     # admin, como las playas (ownership.is_admin_managed).
     suggested_by_visitor = Column(Boolean, nullable=False, default=False, server_default=false())
+    # Quién lo sugirió como visitante. Queda aunque el lugar pase al admin (o
+    # a quien lo reclame): es lo que muestra "Lugares que sugeriste".
+    suggested_by_email   = Column(String, nullable=True, index=True)
     # Información práctica para cualquier lugar; null = "no sé". Reemplaza a
     # trekking_details.pet_friendly/signal, glamping_amenities.pet_friendly y
     # al amenity "Acepta mascotas" (la migración 0013 copió esos datos acá).
@@ -235,6 +238,10 @@ class SpotClaim(Base):
     reject_reason = Column(String, nullable=True)
     created_at    = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     resolved_at   = Column(DateTime(timezone=True), nullable=True)
+    # Quien lo pidió cerró el aviso del resultado en "Mis pedidos".
+    user_dismissed_at = Column(DateTime(timezone=True), nullable=True)
+
+    spot = relationship("SpotDB")
 
 
 class Report(Base):

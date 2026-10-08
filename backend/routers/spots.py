@@ -70,6 +70,7 @@ async def create_spot(request: Request, spot: SpotCreate, db: Session = Depends(
         is_public=spot.is_public,
         public_transport=spot.public_transport,
         suggested_by_visitor=not spot.is_responsible,
+        suggested_by_email=None if spot.is_responsible else user.get("email"),
         pets_allowed=spot.pets_allowed,
         reservation_required=spot.reservation_required,
         cell_signal=spot.cell_signal,
