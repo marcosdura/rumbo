@@ -7,7 +7,8 @@ vi.mock("next-cloudinary", () => ({
 }))
 vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: () => <button>favorito</button> }))
 
-const { default: SpotCard } = await import("./SpotCard")
+// SpotCard es .jsx: TypeScript infiere sus props como obligatorias.
+const SpotCard = (await import("./SpotCard")).default as unknown as (props: { spot: Record<string, unknown> }) => React.ReactElement
 
 const base = {
   id: 1, name: "Camping del Arroyo", slug: "camping-del-arroyo", department: "Rocha",

@@ -29,9 +29,20 @@ describe("priceLabel", () => {
     expect(priceLabel({ category: { name: "Glamping" }, glamping_detail: [] })).toBeNull()
   })
 
-  it("las demás: la entrada; manda la categoría principal", () => {
-    expect(priceLabel({ category: { name: "Trekking" }, price: 200 })).toBe("Entrada $200")
+  it("motorhome: por noche", () => {
+    expect(priceLabel({ category: { name: "Motorhome" }, price: 250 })).toBe("$250 / noche")
+  })
+
+  it("trekking, escalada, surf y kayak no tienen precio propio del lugar: no se muestra", () => {
+    for (const name of ["Trekking", "Escalada", "Surf", "Kayak"]) {
+      expect(priceLabel({ category: { name }, price: 200 })).toBeNull()
+      expect(priceLabel({ category: { name }, price: 0 })).toBeNull()
+    }
+  })
+
+  it("manda la categoría principal", () => {
     expect(priceLabel({ categories: [{ name: "Camping" }, { name: "Trekking" }], price: 300 })).toBe("$300 / noche")
+    expect(priceLabel({ categories: [{ name: "Trekking" }, { name: "Camping" }], price: 300 })).toBeNull()
   })
 })
 

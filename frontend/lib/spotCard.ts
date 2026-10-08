@@ -42,17 +42,21 @@ export function ratingLabel(spot: CardSpot, now = new Date()): { kind: "rating" 
   return { kind: "none", text: "Sin reseñas" }
 }
 
-// El precio según la categoría principal: por noche en camping, "desde" el
-// alojamiento más barato en glamping; si no, la entrada. null si no se sabe.
+// Solo los alojamientos tienen un precio propio del lugar (por noche). En
+// trekking, escalada, surf o kayak el precio no es del lugar (lo cobra, si
+// acaso, una escuela o un servicio): no se muestra.
+const PRICED_PER_NIGHT = ["Camping", "Motorhome"]
+
+// El precio según la categoría principal: por noche en camping y motorhome,
+// "desde" el alojamiento más barato en glamping. null si no aplica o no se sabe.
 export function priceLabel(spot: CardSpot): string | null {
   const category = primaryCategory(spot)
   if (category === "Glamping") {
     const prices = (spot.glamping_detail ?? []).map(u => u.price_per_night).filter((p): p is number => typeof p === "number" && p > 0)
     return prices.length ? `Desde ${money(Math.min(...prices))} / noche` : null
   }
-  if (spot.price == null) return null
-  if (spot.price === 0) return "Gratis"
-  return category === "Camping" ? `${money(spot.price)} / noche` : `Entrada ${money(spot.price)}`
+  if (!category || !PRICED_PER_NIGHT.includes(category) || spot.price == null) return null
+  return spot.price === 0 ? "Gratis" : `${money(spot.price)} / noche`
 }
 
 // "Abre en noviembre" si hoy está fuera de temporada. La temporada puede
