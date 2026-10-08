@@ -8,6 +8,10 @@ import { KAYAK_FILTERS, EMPTY_KAYAK_FILTERS, type KayakFilterState } from "./kay
 import { SURF_FILTERS, EMPTY_SURF_FILTERS, type SurfFilterState } from "./surf-filters"
 import { CLIMBING_FILTERS, EMPTY_CLIMBING_FILTERS, type ClimbingFilterState } from "./climbing-filters"
 import { CAMPING_AMENITY_GROUPS, CAMPING_PRICE_RANGES, EMPTY_CAMPING_FILTERS, type CampingFilterState } from "./camping-filters"
+import {
+  EMPTY_GLAMPING_FILTERS, EMPTY_MOTORHOME_FILTERS, GLAMPING_AMENITIES, GLAMPING_PRICE_RANGES, MOTORHOME_SERVICES,
+  type GlampingFilterState, type MotorhomeFilterState,
+} from "./stay-filters"
 
 type Codec<T> = {
   keys: string[]
@@ -99,8 +103,26 @@ export const CAMPING_CODEC: Codec<CampingFilterState> = {
   count: s => s.amenityIds.length + s.priceRanges.length,
 }
 
+export const GLAMPING_CODEC: Codec<GlampingFilterState> = {
+  keys: ["glamping_price", "glamping_amenity"],
+  fromParams: p => ({ priceRanges: all(p, "glamping_price"), amenities: all(p, "glamping_amenity") }),
+  toParams: (s, p) => {
+    appendAll(p, "glamping_price", s.priceRanges)
+    appendAll(p, "glamping_amenity", s.amenities)
+  },
+  count: s => s.priceRanges.length + s.amenities.length,
+}
+
+export const MOTORHOME_CODEC: Codec<MotorhomeFilterState> = {
+  keys: ["motorhome_service"],
+  fromParams: p => ({ services: all(p, "motorhome_service") }),
+  toParams: (s, p) => appendAll(p, "motorhome_service", s.services),
+  count: s => s.services.length,
+}
+
 export const CODECS = {
   Trekking: TREKKING_CODEC, Kayak: KAYAK_CODEC, Surf: SURF_CODEC, Escalada: CLIMBING_CODEC, Camping: CAMPING_CODEC,
+  Glamping: GLAMPING_CODEC, Motorhome: MOTORHOME_CODEC,
 } as const
 
 export type FilterActivity = keyof typeof CODECS
@@ -108,6 +130,7 @@ export type FilterActivity = keyof typeof CODECS
 export const EMPTY_FILTERS = {
   Trekking: EMPTY_TREKKING_FILTERS, Kayak: EMPTY_KAYAK_FILTERS, Surf: EMPTY_SURF_FILTERS,
   Escalada: EMPTY_CLIMBING_FILTERS, Camping: EMPTY_CAMPING_FILTERS,
+  Glamping: EMPTY_GLAMPING_FILTERS, Motorhome: EMPTY_MOTORHOME_FILTERS,
 }
 
 export function hasFilterPanel(activity: string): activity is FilterActivity {
@@ -209,6 +232,9 @@ const LABELS: Record<string, Record<string, string>> = {
   climbing_type: optionLabels({ d: CLIMBING_FILTERS.type }),
   grade_range: optionLabels({ d: CLIMBING_FILTERS.gradeRange }),
   price_range: Object.fromEntries(CAMPING_PRICE_RANGES.map(o => [o.value, `Precio: ${o.label}`])),
+  glamping_price: Object.fromEntries(GLAMPING_PRICE_RANGES.map(o => [o.value, `Precio: ${o.label}`])),
+  glamping_amenity: Object.fromEntries(GLAMPING_AMENITIES.map(o => [o.value, `${o.emoji} ${o.label}`])),
+  motorhome_service: Object.fromEntries(MOTORHOME_SERVICES.map(o => [o.value, `${o.emoji} ${o.label}`])),
   amenity_ids: Object.fromEntries(
     CAMPING_AMENITY_GROUPS.flatMap(g => g.amenities as readonly { id: number; label: string }[]).map(a => [String(a.id), a.label]),
   ),

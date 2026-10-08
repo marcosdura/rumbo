@@ -12,6 +12,8 @@ import KayakFilterDrawer from "../../components/spots/KayakFilters"
 import SurfFilterDrawer from "../../components/spots/SurfFilters"
 import ClimbingFilterDrawer from "../../components/spots/ClimbingFilters"
 import CampingFilterDrawer from "../../components/spots/CampingFilters"
+import { GlampingFilterDrawer, MotorhomeFilterDrawer } from "../../components/spots/StayFilters"
+import type { GlampingFilterState, MotorhomeFilterState } from "../../lib/stay-filters"
 import type { TrekkingFilterState } from "../../lib/trekking-filters"
 import type { KayakFilterState } from "../../lib/kayak-filters"
 import type { SurfFilterState } from "../../lib/surf-filters"
@@ -500,6 +502,22 @@ export default function SearchPage() {
           onClose={() => setFilterOpen(false)}
           appliedFilters={panelFilters as CampingFilterState}
           onApply={f => applyPanel("Camping", f)}
+        />
+      )}
+      {panelActivity === "Glamping" && (
+        <GlampingFilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={panelFilters as GlampingFilterState}
+          onApply={f => applyPanel("Glamping", f)}
+        />
+      )}
+      {panelActivity === "Motorhome" && (
+        <MotorhomeFilterDrawer
+          isOpen={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          appliedFilters={panelFilters as MotorhomeFilterState}
+          onApply={f => applyPanel("Motorhome", f)}
         />
       )}
     </div>
