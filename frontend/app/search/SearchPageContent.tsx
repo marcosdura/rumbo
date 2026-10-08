@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
@@ -12,31 +12,16 @@ import KayakFilterDrawer from "../../components/spots/KayakFilters"
 import SurfFilterDrawer from "../../components/spots/SurfFilters"
 import ClimbingFilterDrawer from "../../components/spots/ClimbingFilters"
 import CampingFilterDrawer from "../../components/spots/CampingFilters"
+import type { TrekkingFilterState } from "../../lib/trekking-filters"
+import type { KayakFilterState } from "../../lib/kayak-filters"
+import type { SurfFilterState } from "../../lib/surf-filters"
+import type { ClimbingFilterState } from "../../lib/climbing-filters"
+import type { CampingFilterState } from "../../lib/camping-filters"
 import {
-  TrekkingFilterState,
-  EMPTY_TREKKING_FILTERS,
-  countActiveFilters,
-} from "../../lib/trekking-filters"
-import {
-  KayakFilterState,
-  EMPTY_KAYAK_FILTERS,
-  countActiveKayakFilters,
-} from "../../lib/kayak-filters"
-import {
-  SurfFilterState,
-  EMPTY_SURF_FILTERS,
-  countActiveSurfFilters,
-} from "../../lib/surf-filters"
-import {
-  ClimbingFilterState,
-  EMPTY_CLIMBING_FILTERS,
-  countActiveClimbingFilters,
-} from "../../lib/climbing-filters"
-import {
-  CampingFilterState,
-  EMPTY_CAMPING_FILTERS,
-  countActiveCampingFilters,
-} from "../../lib/camping-filters"
+  CODECS, PRACTICAL_FILTERS, SORT_OPTIONS, filterChips, hasFilterPanel, isPracticalOn, sortOf,
+  withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters, withoutPair,
+  type FilterActivity,
+} from "../../lib/searchFilters"
 import { trackEvent } from "../../lib/analytics"
 import { api } from "../../lib/api"
 import { categoryEmoji } from "../../lib/categories"
@@ -49,8 +34,10 @@ const PAGE_SIZE = 24
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
+  const sort = sortOf(searchParams)
 
   const [spots, setSpots]                         = useState<SpotListItem[]>([])
   const [total, setTotal]                         = useState<number | null>(null)
@@ -62,24 +49,28 @@ export default function SearchPage() {
   const [mapSpots, setMapSpots]                   = useState<SpotListItem[]>([])
   const [highlightedSpotId, setHighlightedSpotId] = useState<number | null>(null)
   const [mapExpanded, setMapExpanded]             = useState(false)
-  const [trekkingFilters, setTrekkingFilters] = useState<TrekkingFilterState>(EMPTY_TREKKING_FILTERS)
-  const [kayakFilters, setKayakFilters]       = useState<KayakFilterState>(EMPTY_KAYAK_FILTERS)
-  const [surfFilters, setSurfFilters]             = useState<SurfFilterState>(EMPTY_SURF_FILTERS)
-  const [climbingFilters, setClimbingFilters]     = useState<ClimbingFilterState>(EMPTY_CLIMBING_FILTERS)
-  const [campingFilters, setCampingFilters]       = useState<CampingFilterState>(EMPTY_CAMPING_FILTERS)
   const [filterOpen, setFilterOpen]               = useState(false)
 
-  // Otra actividad: los filtros de la anterior no aplican. Se limpian durante
-  // el render (no en un efecto) para que la búsqueda salga una sola vez, ya
-  // sin ellos.
-  const [filtersFor, setFiltersFor] = useState(activity)
-  if (activity !== filtersFor) {
-    setFiltersFor(activity)
-    setTrekkingFilters(EMPTY_TREKKING_FILTERS)
-    setKayakFilters(EMPTY_KAYAK_FILTERS)
-    setSurfFilters(EMPTY_SURF_FILTERS)
-    setClimbingFilters(EMPTY_CLIMBING_FILTERS)
-    setCampingFilters(EMPTY_CAMPING_FILTERS)
+  // Los filtros viven en la URL (lib/searchFilters.ts): se leen de ahí y
+  // aplicarlos, quitarlos u ordenar cambia la URL. Así sobreviven a recargar
+  // y a volver atrás, y el link se puede compartir.
+  const panelActivity: FilterActivity | null = hasFilterPanel(activity) ? activity : null
+  const panelFilters = panelActivity ? CODECS[panelActivity].fromParams(searchParams) : null
+  const panelCount = panelActivity && panelFilters
+    ? (CODECS[panelActivity].count as (s: typeof panelFilters) => number)(panelFilters)
+    : 0
+  const allChips = filterChips(searchParams)
+  // Los prácticos se ven como botones prendidos; acá van los del panel.
+  const panelChips = allChips.filter(c => !PRACTICAL_FILTERS.some(f => f.param === c.key))
+  const activeFilterCount = allChips.length
+
+  function go(params: URLSearchParams) {
+    const query = params.toString()
+    router.replace(query ? `/search?${query}` : "/search", { scroll: false })
+  }
+
+  function applyPanel<A extends FilterActivity>(a: A, state: unknown) {
+    go(withPanelFilters(searchParams, a, state as never))
   }
 
   // Compartido entre el efecto principal y "Cargar más": si cambian los
@@ -107,49 +98,18 @@ export default function SearchPage() {
     setAtBottom(el.scrollTop >= el.scrollHeight - el.clientHeight - 8)
   }, [spots, loading])
 
-  // Los mismos filtros alimentan dos requests separados: la lista pagina,
-  // el mapa no (necesita todos los pines que matcheen para el clustering).
-  const buildFilterParams = () => {
-    const params = new URLSearchParams()
-    if (activity)   params.append("activity", activity)
-    if (department) params.append("department", department)
-    if (activity === "Trekking") {
-      trekkingFilters.difficulties.forEach(d => params.append("difficulty", d))
-      trekkingFilters.durations.forEach(d => params.append("duration", d))
-      trekkingFilters.distances.forEach(d => params.append("distance", d))
-      Object.entries(trekkingFilters.amenities).forEach(([k, v]) => {
-        if (v) params.append(k, "true")
-      })
-    }
-    if (activity === "Kayak") {
-      kayakFilters.waterTypes.forEach(w => params.append("water_type", w))
-      kayakFilters.difficulties.forEach(d => params.append("kayak_difficulty", d))
-      kayakFilters.durations.forEach(d => params.append("kayak_duration", d))
-      if (kayakFilters.rentalAvailable) params.append("rental_available", "true")
-    }
-    if (activity === "Surf") {
-      surfFilters.classTypes.forEach(c => params.append("class_type", c))
-      surfFilters.durations.forEach(d => params.append("surf_duration", d))
-      if (surfFilters.equipmentIncluded) params.append("equipment_included", "true")
-      if (surfFilters.hasSurfSchool) params.append("has_surf_school", "true")
-    }
-    if (activity === "Escalada") {
-      climbingFilters.types.forEach(t => params.append("climbing_type", t))
-      climbingFilters.gradeRanges.forEach(g => params.append("grade_range", g))
-      if (climbingFilters.hasRestrictions) params.append("no_restrictions", "true")
-    }
-    if (activity === "Camping") {
-      campingFilters.amenityIds.forEach(id => params.append("amenity_ids", String(id)))
-      campingFilters.priceRanges.forEach(p => params.append("price_range", p))
-      if (campingFilters.petFriendly) params.append("pet_friendly", "true")
-    }
+  // Lo que se le pide al backend: lo mismo que la URL, con el orden siempre
+  // explícito. El mapa no ordena ni pagina (necesita todos los pines).
+  const listParams = () => {
+    const params = new URLSearchParams(searchParams)
+    params.set("sort", sort)
     return params
   }
 
   // Lo que define la búsqueda: si cambia (o se reintenta), se vuelve a pedir.
   // "Cargando" se prende durante el render, no en el efecto, para no pintar
   // un cuadro con los resultados viejos y sin aviso.
-  const searchKey = `${buildFilterParams().toString()}#${retryTick}`
+  const searchKey = `${searchParams.toString()}#${retryTick}`
   const [searchedKey, setSearchedKey] = useState(searchKey)
   if (searchKey !== searchedKey) {
     setSearchedKey(searchKey)
@@ -162,10 +122,10 @@ export default function SearchPage() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    const listParams = buildFilterParams()
-    listParams.set("limit", String(PAGE_SIZE))
-    listParams.set("offset", "0")
-    api.get<SpotListItem[]>(`/spots?${listParams.toString()}`, { signal: controller.signal })
+    const params = listParams()
+    params.set("limit", String(PAGE_SIZE))
+    params.set("offset", "0")
+    api.get<SpotListItem[]>(`/spots?${params.toString()}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         setTotal(totalCount)
         setSpots(data)
@@ -174,20 +134,21 @@ export default function SearchPage() {
           search_term: activity || department || "todos",
           activity: activity || undefined,
           department: department || undefined,
-          filter_count: Array.from(listParams.keys()).length,
+          filter_count: activeFilterCount,
           result_count: Array.isArray(data) ? data.length : undefined,
         })
       })
       .catch(e => {
         if (e?.name === "AbortError") return
-        setError(e instanceof Error ? e.message : "Error al cargar los spots.")
+        setError(e instanceof Error ? e.message : "Error al cargar los lugares.")
         setLoading(false)
       })
 
     // Pines del mapa: mismos filtros, sin paginar — no se vuelve a pedir
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
     // Si falla, el mapa se queda vacío (degrada solo, no bloquea la lista).
-    const mapParams = buildFilterParams()
+    const mapParams = new URLSearchParams(searchParams)
+    mapParams.delete("sort")
     api.get<SpotListItem[]>(`/spots/pins?${mapParams.toString()}`, { signal: controller.signal })
       .then(({ data }) => setMapSpots(Array.isArray(data) ? data : []))
       .catch(e => {
@@ -196,7 +157,7 @@ export default function SearchPage() {
       })
 
     return () => controller.abort()
-    // searchKey resume activity, department, los filtros y retryTick.
+    // searchKey resume la URL (actividad, departamento, filtros y orden) y retryTick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKey])
 
@@ -209,7 +170,7 @@ export default function SearchPage() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    const params = buildFilterParams()
+    const params = listParams()
     params.set("limit", String(PAGE_SIZE))
     params.set("offset", String(spots.length))
     api.get<SpotListItem[]>(`/spots?${params.toString()}`, { signal: controller.signal })
@@ -220,20 +181,16 @@ export default function SearchPage() {
       })
       .catch(e => {
         if (e?.name === "AbortError") return
-        setLoadMoreError(e instanceof Error ? e.message : "Error al cargar más spots.")
+        setLoadMoreError(e instanceof Error ? e.message : "Error al cargar más lugares.")
         setLoadingMore(false)
       })
   }
 
   const hasMore = total !== null && spots.length < total
 
-  // Vuelve a los filtros vacíos de la actividad (actividad y departamento quedan).
+  // Sin filtros (quedan actividad, departamento y orden).
   function clearFilters() {
-    setTrekkingFilters(EMPTY_TREKKING_FILTERS)
-    setKayakFilters(EMPTY_KAYAK_FILTERS)
-    setSurfFilters(EMPTY_SURF_FILTERS)
-    setClimbingFilters(EMPTY_CLIMBING_FILTERS)
-    setCampingFilters(EMPTY_CAMPING_FILTERS)
+    go(withoutFilters(searchParams))
   }
 
   const title = activity && department
@@ -242,13 +199,7 @@ export default function SearchPage() {
     : department ? `Lugares en ${department}`
     : "Todos los lugares"
 
-  const activeFilterCount =
-    activity === "Trekking"  ? countActiveFilters(trekkingFilters)           :
-    activity === "Kayak"     ? countActiveKayakFilters(kayakFilters)         :
-    activity === "Surf"      ? countActiveSurfFilters(surfFilters)           :
-    activity === "Escalada"  ? countActiveClimbingFilters(climbingFilters)   :
-    activity === "Camping"   ? countActiveCampingFilters(campingFilters)     : 0
-  const canFilter = !!activity
+  const canFilter = !!panelActivity
 
   return (
     <div className="search-root">
@@ -278,9 +229,17 @@ export default function SearchPage() {
                     {total ?? spots.length}
                   </Pill>
                 )}
+                <select
+                  aria-label="Ordenar"
+                  className="search-sort"
+                  value={sort}
+                  onChange={e => go(withSort(searchParams, e.target.value))}
+                >
+                  {SORT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
                 {canFilter && (
                   <button
-                    className={`filter-trigger-btn${activeFilterCount > 0 ? " has-filters" : ""}`}
+                    className={`filter-trigger-btn${panelCount > 0 ? " has-filters" : ""}`}
                     onClick={() => setFilterOpen(true)}
                   >
                     <span className="filter-trigger-icon">
@@ -295,26 +254,57 @@ export default function SearchPage() {
                       </svg>
                     </span>
                     Filtros
-                    {activeFilterCount > 0 && (
-                      <span className="filter-badge">{activeFilterCount}</span>
+                    {panelCount > 0 && (
+                      <span className="filter-badge">{panelCount}</span>
                     )}
                   </button>
                 )}
               </div>
             </div>
 
-            {(activity || department) && (
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            {/* Lo aplicado, cada uno con ✕ para quitarlo. */}
+            {(activity || department || panelChips.length > 0) && (
+              <div className="search-chips" aria-label="Filtros aplicados">
                 {activity && (
-                  <Pill variant="green" hover>
+                  <span className="search-chip">
                     {categoryEmoji(activity)} {activity}
-                  </Pill>
+                    <button aria-label={`Quitar ${activity}`} onClick={() => go(withoutActivity(searchParams))}>✕</button>
+                  </span>
                 )}
                 {department && (
-                  <Pill variant="dark-green" hover>📍 {department}</Pill>
+                  <span className="search-chip is-dark">
+                    📍 {department}
+                    <button aria-label={`Quitar ${department}`} onClick={() => go(withoutPair(searchParams, "department", department))}>✕</button>
+                  </span>
+                )}
+                {panelChips.map(chip => (
+                  <span key={`${chip.key}=${chip.value}`} className="search-chip is-light">
+                    {chip.label}
+                    <button aria-label={`Quitar ${chip.label}`} onClick={() => go(withoutPair(searchParams, chip.key, chip.value))}>✕</button>
+                  </span>
+                ))}
+                {activeFilterCount > 0 && (
+                  <button className="search-clear" onClick={clearFilters}>Limpiar filtros</button>
                 )}
               </div>
             )}
+
+            {/* Información práctica: para cualquier búsqueda. */}
+            <div className="search-chips" aria-label="Filtros rápidos">
+              {PRACTICAL_FILTERS.map(f => {
+                const on = isPracticalOn(searchParams, f.param)
+                return (
+                  <button
+                    key={f.param}
+                    className={`search-toggle${on ? " is-on" : ""}`}
+                    aria-pressed={on}
+                    onClick={() => go(withPractical(searchParams, f.param, !on))}
+                  >
+                    {f.label}
+                  </button>
+                )
+              })}
+            </div>
 
             <div className="fade-up fade-up-2" style={{ height: 1, background: "var(--border)", marginTop: 16 }} />
           </div>
@@ -472,44 +462,44 @@ export default function SearchPage() {
 
       </div>
 
-      {activity === "Trekking" && (
+      {panelActivity === "Trekking" && (
         <FilterDrawer
           isOpen={filterOpen}
           onClose={() => setFilterOpen(false)}
-          appliedFilters={trekkingFilters}
-          onApply={setTrekkingFilters}
+          appliedFilters={panelFilters as TrekkingFilterState}
+          onApply={f => applyPanel("Trekking", f)}
         />
       )}
-      {activity === "Kayak" && (
+      {panelActivity === "Kayak" && (
         <KayakFilterDrawer
           isOpen={filterOpen}
           onClose={() => setFilterOpen(false)}
-          appliedFilters={kayakFilters}
-          onApply={setKayakFilters}
+          appliedFilters={panelFilters as KayakFilterState}
+          onApply={f => applyPanel("Kayak", f)}
         />
       )}
-      {activity === "Surf" && (
+      {panelActivity === "Surf" && (
         <SurfFilterDrawer
           isOpen={filterOpen}
           onClose={() => setFilterOpen(false)}
-          appliedFilters={surfFilters}
-          onApply={setSurfFilters}
+          appliedFilters={panelFilters as SurfFilterState}
+          onApply={f => applyPanel("Surf", f)}
         />
       )}
-      {activity === "Escalada" && (
+      {panelActivity === "Escalada" && (
         <ClimbingFilterDrawer
           isOpen={filterOpen}
           onClose={() => setFilterOpen(false)}
-          appliedFilters={climbingFilters}
-          onApply={setClimbingFilters}
+          appliedFilters={panelFilters as ClimbingFilterState}
+          onApply={f => applyPanel("Escalada", f)}
         />
       )}
-      {activity === "Camping" && (
+      {panelActivity === "Camping" && (
         <CampingFilterDrawer
           isOpen={filterOpen}
           onClose={() => setFilterOpen(false)}
-          appliedFilters={campingFilters}
-          onApply={setCampingFilters}
+          appliedFilters={panelFilters as CampingFilterState}
+          onApply={f => applyPanel("Camping", f)}
         />
       )}
     </div>

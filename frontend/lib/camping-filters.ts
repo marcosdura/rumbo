@@ -56,16 +56,13 @@ export type PriceRangeValue = typeof CAMPING_PRICE_RANGES[number]["value"]
 export interface CampingFilterState {
   amenityIds:  number[]
   priceRanges: PriceRangeValue[]
-  // Mascotas es un dato del lugar (spots.pets_allowed), no un amenity.
-  petFriendly: boolean
 }
 
 export const EMPTY_CAMPING_FILTERS: CampingFilterState = {
   amenityIds:  [],
   priceRanges: [],
-  petFriendly: false,
 }
 
 export function countActiveCampingFilters(f: CampingFilterState): number {
-  return f.amenityIds.length + f.priceRanges.length + (f.petFriendly ? 1 : 0)
+  return f.amenityIds.length + f.priceRanges.length
 }

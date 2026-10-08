@@ -92,6 +92,75 @@
   flex-shrink: 0;
 }
 
+/* Chips de lo aplicado (con ✕) y filtros rápidos: mismos colores que Pill. */
+.search-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 10px;
+}
+.search-chip {
+  font-family: var(--font-dm-sans), sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #e8f5ee;
+  color: var(--primary-dark);
+  border: 1px solid #b7dfc8;
+}
+.search-chip.is-dark  { background: var(--primary-dark); color: #d8f3dc; border-color: var(--primary); }
+.search-chip.is-light { background: #f7f5f0; color: #4a443b; border-color: var(--border); }
+.search-chip button {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.08);
+  color: inherit;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.search-chip button:hover { background: rgba(0,0,0,0.16); }
+.search-clear {
+  font-family: var(--font-dm-sans), sans-serif;
+  background: none; border: none; padding: 4px 6px;
+  font-size: 12px; font-weight: 600; color: var(--muted-strong);
+  text-decoration: underline; cursor: pointer;
+}
+.search-toggle {
+  font-family: var(--font-dm-sans), sans-serif;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #3d3d3a;
+  transition: background 0.15s, border-color 0.15s;
+}
+.search-toggle:hover { background: #f0f7f3; border-color: #b7dfc8; }
+.search-toggle.is-on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.search-sort {
+  font-family: var(--font-dm-sans), sans-serif;
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #3d3d3a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .mobile-map-btn-wrap { display: none; }
 .mobile-map-btn {
   width: 100%;

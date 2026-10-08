@@ -26,7 +26,6 @@ export const TREKKING_FILTERS = {
   amenities: [
     { key: "parking",         label: "Estacionamiento", emoji: "🅿️" },
     { key: "potable_water",   label: "Agua potable",     emoji: "💧" },
-    { key: "pet_friendly",    label: "Pet friendly",     emoji: "🐾" },
     { key: "kids_friendly",   label: "Apto niños",       emoji: "👶" },
     { key: "bathrooms",       label: "Baños",            emoji: "🚿" },
     { key: "camping_amenity", label: "Fogones",          emoji: "🔥" },

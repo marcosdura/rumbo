@@ -72,16 +72,6 @@ export default function CampingFilterDrawer({ isOpen, onClose, appliedFilters, o
               </div>
             </div>
 
-            {/* Mascotas: dato del lugar */}
-            <div className="fd-section">
-              <p className="fd-section-label">Mascotas</p>
-              <button
-                className={`fd-toggle${pending.petFriendly ? " active" : ""}`}
-                onClick={() => setPending(p => ({ ...p, petFriendly: !p.petFriendly }))}
-              >
-                🐶 Acepta mascotas
-              </button>
-            </div>
 
             {/* Amenidades agrupadas */}
             {CAMPING_AMENITY_GROUPS.map((group) => (
