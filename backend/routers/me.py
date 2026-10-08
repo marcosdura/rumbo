@@ -46,6 +46,8 @@ def my_requests(db: Session, user: dict) -> list[dict]:
             items.append({
                 "kind": "spot_change", "id": r.id, "status": r.status,
                 "fields": sorted((r.changes or {}).keys()),
+                # Para "2 fotos nuevas".
+                "photo_count": len((r.changes or {}).get("photos_added", [])),
                 "target": {"name": spot.name, "href": f"/dashboard/spots/{spot.id}"},
                 "reject_reason": r.reject_reason,
                 "created_at": _iso(r.created_at), "resolved_at": _iso(r.resolved_at),

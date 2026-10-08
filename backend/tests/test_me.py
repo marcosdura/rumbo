@@ -65,6 +65,7 @@ def test_pedido_de_cambio_de_un_lugar_aparece_en_revision(client, make_spot):
     items = client.get("/me/requests", headers=as_user(OWNER)).json()
     assert [(i["kind"], i["status"], i["fields"], i["target"]["name"]) for i in items] == [("spot_change", "pending", ["name"], "Mío")]
     assert items[0]["target"]["href"] == f"/dashboard/spots/{spot.id}"
+    assert items[0]["photo_count"] == 0
     assert client.get("/me/summary", headers=as_user(OWNER)).json()["requests_pending"] == 1
 
 
