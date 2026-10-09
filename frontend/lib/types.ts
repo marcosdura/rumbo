@@ -13,6 +13,8 @@ export type PublicOperatorBase = {
   season_start: number | null; season_end: number | null
   photo_1: string | null; photo_2: string | null; photo_3: string | null
   spot_id: number | null; spot_name: string | null; spot_department: string | null
+  // La playa o laguna: para llevar a su página y a "Cómo llegar".
+  spot_slug: string | null; spot_lat: number | null; spot_lng: number | null
 }
 
 export type PublicSurfSchool = PublicOperatorBase & {

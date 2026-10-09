@@ -5,7 +5,7 @@ import type { PublicKayak, PublicSurfSchool } from "./types"
 const base = {
   id: 4, name: "X", duration: null, email: null, whatsapp: null, instagram: null,
   season_start: null, season_end: null, photo_1: null, photo_2: null, photo_3: null,
-  spot_id: 3, spot_name: "Playa Brava", spot_department: "Rocha",
+  spot_id: 3, spot_name: "Playa Brava", spot_department: "Rocha", spot_slug: null, spot_lat: null, spot_lng: null,
 }
 const surf = (extra: Partial<PublicSurfSchool>): PublicSurfSchool =>
   ({ ...base, class_type: null, equipment_include: null, levels: null, languages: null, ...extra })

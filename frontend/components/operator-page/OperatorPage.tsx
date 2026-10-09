@@ -1,14 +1,16 @@
 // La página pública de una escuela de surf o un servicio de kayak. Antes
 // eran dos páginas casi iguales (app/surf y app/kayak, ~360 líneas cada
 // una): cada mejora había que hacerla dos veces.
+import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
+import EmailContact from "@/components/ui/EmailContact"
 import Footer from "@/components/layout/Footer"
 import Pill from "@/components/ui/Pill"
 import ReportButton from "@/components/ui/ReportButton"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import BackButton from "./BackButton"
 import OperatorPhotos from "./OperatorPhotos"
-import { offSeasonNotice } from "@/lib/spotDetail"
+import { directionsUrl, offSeasonNotice, whatsappUrl } from "@/lib/spotDetail"
 import type { InfoRow } from "@/lib/operatorPage"
 import type { PublicOperatorBase, ReviewSummary } from "@/lib/types"
 
@@ -31,7 +33,6 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 export default function OperatorPage({ operator, summary, activity, rows, reviewEntity, report }: Props) {
-  const whatsappUrl = operator.whatsapp ? `https://wa.me/${operator.whatsapp.replace(/\D/g, "")}` : null
   const instagramHandle = operator.instagram ? operator.instagram.replace(/^@/, "") : null
   const hasContact = operator.email || operator.whatsapp || operator.instagram
   const photos = [operator.photo_1, operator.photo_2, operator.photo_3].filter(Boolean) as string[]
@@ -39,6 +40,8 @@ export default function OperatorPage({ operator, summary, activity, rows, review
   // Sin nada a la izquierda, el panel ocupa el ancho (antes la columna
   // quedaba vacía y la página se veía rota).
   const hasMain = photos.length > 0
+  const beachUrl = operator.spot_slug ? `/spots/${operator.spot_slug}` : null
+  const canGetThere = operator.spot_lat != null && operator.spot_lng != null
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
@@ -59,6 +62,13 @@ export default function OperatorPage({ operator, summary, activity, rows, review
         .op-contact-row:last-child { border-bottom: none; }
         .op-contact-link { font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: opacity 0.15s; min-width: 0; word-break: break-all; }
         .op-contact-link:hover { opacity: 0.7; }
+        .op-directions {
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          background: var(--primary-dark); color: #fff; font-size: 13px; font-weight: 600;
+          padding: 12px 20px; border-radius: 999px; text-decoration: none; letter-spacing: 0.03em;
+          transition: background 0.22s;
+        }
+        .op-directions:hover { background: var(--primary); }
         .op-rating { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: #3d3d3a; text-decoration: none; }
         .op-rating .star { color: var(--primary); font-size: 18px; }
         .op-rating .count { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
@@ -74,12 +84,14 @@ export default function OperatorPage({ operator, summary, activity, rows, review
 
       <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div className="op-inner">
-          <BackButton />
+          <BackButton fallback={beachUrl ?? "/search"} />
 
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Pill variant="beige" hover>{activity.emoji} {activity.label}</Pill>
-              {operator.spot_name && <Pill variant="green" hover>📍 {operator.spot_name}</Pill>}
+              {operator.spot_name && (beachUrl
+                ? <Link href={beachUrl} style={{ textDecoration: "none" }}><Pill variant="green" hover>📍 {operator.spot_name}</Pill></Link>
+                : <Pill variant="green">📍 {operator.spot_name}</Pill>)}
               {operator.spot_department && <Pill variant="dark-green" hover>{operator.spot_department}</Pill>}
               {offSeason && (
                 <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
@@ -137,13 +149,13 @@ export default function OperatorPage({ operator, summary, activity, rows, review
                     {operator.email && (
                       <div className="op-contact-row">
                         <span className="op-row-label">✉️ Email</span>
-                        <a href={`mailto:${operator.email}`} className="op-contact-link">{operator.email}</a>
+                        <EmailContact email={operator.email} linkClassName="op-contact-link" />
                       </div>
                     )}
-                    {whatsappUrl && (
+                    {operator.whatsapp && (
                       <div className="op-contact-row">
                         <span className="op-row-label">💬 WhatsApp</span>
-                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="op-contact-link">
+                        <a href={whatsappUrl(operator.whatsapp, operator.name)} target="_blank" rel="noopener noreferrer" className="op-contact-link">
                           {operator.whatsapp} <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
                         </a>
                       </div>
@@ -158,6 +170,12 @@ export default function OperatorPage({ operator, summary, activity, rows, review
                     )}
                   </div>
                 </div>
+              )}
+
+              {canGetThere && (
+                <a href={directionsUrl(operator.spot_lat!, operator.spot_lng!)} target="_blank" rel="noopener noreferrer" className="op-directions">
+                  📍 Cómo llegar{operator.spot_name ? ` a ${operator.spot_name}` : ""}
+                </a>
               )}
             </div>
           </div>

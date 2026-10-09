@@ -57,6 +57,18 @@ def test_una_escuela_rechaza_niveles_o_idiomas_que_no_existen(client, make_spot)
         assert r.status_code == 422, bad
 
 
+def test_escuelas_y_kayaks_traen_slug_y_ubicacion_de_su_playa(client, make_spot):
+    # Para llevar a la playa y a "Cómo llegar" desde su página.
+    beach = make_spot(name="Playa Brava", category="Surf", slug="playa-brava", lat=-34.96, lng=-54.94)
+    lake = make_spot(name="Laguna", category="Kayak", slug="laguna", lat=-34.6, lng=-54.2)
+    school = client.post("/surfschool/", json={"spot_id": beach.id, "name": "Escuela Ola"}, headers=as_user(ADMIN)).json()
+    kayak = client.post("/kayak/", json={"spot_id": lake.id, "name": "Kayak Sur"}, headers=as_user(ADMIN)).json()
+    s = client.get(f"/surfschool/{school['id']}").json()
+    k = client.get(f"/kayak/{kayak['id']}").json()
+    assert (s["spot_slug"], s["spot_lat"], s["spot_lng"]) == ("playa-brava", -34.96, -54.94)
+    assert (k["spot_slug"], k["spot_lat"], k["spot_lng"]) == ("laguna", -34.6, -54.2)
+
+
 def test_un_kayak_guarda_guia_y_chaleco(client, make_spot):
     lake = make_spot(name="Laguna", category="Kayak")
     r = client.post("/kayak/", json={"spot_id": lake.id, "name": "Kayak Sur", "includes_guide": True, "includes_life_jacket": False}, headers=as_user(ADMIN))

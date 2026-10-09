@@ -538,6 +538,19 @@ class KayakDetail(ReviewedContent, Base):
     def spot_department(self):
         return self.spot.department if self.spot else None
 
+    # La página pública lleva a la playa y a "Cómo llegar".
+    @property
+    def spot_slug(self):
+        return self.spot.slug if self.spot else None
+
+    @property
+    def spot_lat(self):
+        return self.spot.lat if self.spot else None
+
+    @property
+    def spot_lng(self):
+        return self.spot.lng if self.spot else None
+
 
 class SurfSchool(ReviewedContent, Base):
     __tablename__ = "surf_beach"
@@ -577,6 +590,19 @@ class SurfSchool(ReviewedContent, Base):
     @property
     def spot_department(self):
         return self.spot.department if self.spot else None
+
+    # La página pública lleva a la playa y a "Cómo llegar".
+    @property
+    def spot_slug(self):
+        return self.spot.slug if self.spot else None
+
+    @property
+    def spot_lat(self):
+        return self.spot.lat if self.spot else None
+
+    @property
+    def spot_lng(self):
+        return self.spot.lng if self.spot else None
 
 
 class User(Base):

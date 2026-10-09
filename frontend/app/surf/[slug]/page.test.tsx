@@ -87,3 +87,35 @@ describe("Página de la escuela: encabezado y panel", () => {
     expect(again.container.querySelector(".op-grid")!.className).not.toContain("is-panel-only")
   })
 })
+
+describe("Página de la escuela: contactar y llegar", () => {
+  const beach = { spot_slug: "playa-brava", spot_lat: -34.96, spot_lng: -54.94 }
+
+  it("la pill de la playa lleva a su página", async () => {
+    school = { ...base, ...beach }
+    await page()
+    expect(screen.getByRole("link", { name: "📍 Playa Brava" }).getAttribute("href")).toBe("/spots/playa-brava")
+  })
+
+  it("WhatsApp con el mensaje escrito; el email abre el correo y se copia", async () => {
+    school = { ...base, whatsapp: "099 123 456", email: "hola@ola.uy" }
+    await page()
+    const wa = new URL(screen.getByRole("link", { name: /099 123 456/ }).getAttribute("href")!)
+    expect(wa.searchParams.get("text")).toBe("Hola, te escribo por Escuela Ola, que vi en Rumbo.")
+    expect(screen.getByRole("link", { name: "hola@ola.uy" }).getAttribute("href")).toBe("mailto:hola@ola.uy")
+    expect(screen.getByRole("button", { name: "Copiar" })).toBeTruthy()
+  })
+
+  it("Cómo llegar va a las coordenadas de la playa", async () => {
+    school = { ...base, ...beach }
+    await page()
+    expect(screen.getByRole("link", { name: "📍 Cómo llegar a Playa Brava" }).getAttribute("href"))
+      .toBe("https://www.google.com/maps/dir/?api=1&destination=-34.96,-54.94")
+  })
+
+  it("sin ubicación de la playa no ofrece Cómo llegar", async () => {
+    school = { ...base }
+    await page()
+    expect(screen.queryByRole("link", { name: /Cómo llegar/ })).toBeNull()
+  })
+})

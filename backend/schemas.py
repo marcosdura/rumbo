@@ -322,6 +322,9 @@ class KayakDetailResponse(KayakDetail):
     spot_id: Optional[int] = None
     spot_name: Optional[str] = None
     spot_department: Optional[str] = None
+    spot_slug: Optional[str] = None
+    spot_lat: Optional[float] = None
+    spot_lng: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -357,6 +360,9 @@ class SurfSchoolResponse(SurfSchool):
     spot_id: Optional[int] = None
     spot_name: Optional[str] = None
     spot_department: Optional[str] = None
+    spot_slug: Optional[str] = None
+    spot_lat: Optional[float] = None
+    spot_lng: Optional[float] = None
 
     class Config:
         from_attributes = True

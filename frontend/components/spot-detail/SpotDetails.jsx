@@ -1,7 +1,7 @@
-import { useState } from "react"
 import { detailRows, whatsappUrl } from "@/lib/spotDetail"
 import { knownPractical } from "@/lib/practicalInfo"
 import PracticalInfoCard from "./PracticalInfoCard"
+import EmailContact from "@/components/ui/EmailContact"
 
 // Panel derecho de la página del lugar: Detalles (precio, temporada,
 // transporte), Información práctica y Contacto, en ese orden. Solo lo que se
@@ -18,7 +18,6 @@ export function SectionLabel({ children, first = false }) {
 }
 
 function SpotDetails({ spot }) {
-  const [copied, setCopied] = useState(false)
   const rows = detailRows(spot)
   const hasPractical = knownPractical(spot).length > 0
   const hasContact = spot.email || spot.whatsapp || spot.instagram
@@ -29,20 +28,7 @@ function SpotDetails({ spot }) {
   const contactRows = [
     spot.email ? {
       label: <><span>✉️</span><span>Email</span></>,
-      node: (
-        // Tocarlo abre el correo; copiar queda al lado (sin app de correo
-        // configurada, mailto no hace nada).
-        <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <a href={`mailto:${spot.email}`} className="detail-link">{spot.email}</a>
-          <button
-            type="button"
-            onClick={() => { navigator.clipboard.writeText(spot.email); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="detail-copy"
-          >
-            {copied ? "¡Copiado! ✓" : "Copiar"}
-          </button>
-        </span>
-      ),
+      node: <EmailContact email={spot.email} linkClassName="detail-link" />,
     } : null,
     spot.whatsapp ? {
       label: <><span>💬</span><span>WhatsApp</span></>,
@@ -131,18 +117,6 @@ function SpotDetails({ spot }) {
           text-align: right;
           min-width: 0;
           word-break: break-all;
-        }
-
-        .detail-copy {
-          font-size: 12px;
-          color: var(--muted);
-          background: none;
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 2px 8px;
-          cursor: pointer;
-          flex-shrink: 0;
-          font-family: inherit;
         }
 
         @media (max-width: 480px) {
