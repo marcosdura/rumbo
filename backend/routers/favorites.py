@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
 from database import get_db
 from models import Favorite, SpotDB
-from schemas import SpotResponse
+import home
 from auth import get_current_user_required
 from limiter import limiter
 
@@ -12,17 +11,21 @@ router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 
 
-@router.get("", response_model=list[SpotResponse])
+@router.get("")
 def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    user_id = user["sub"]
+    """Los favoritos como los muestra SpotCard (el mismo armado que la
+    búsqueda y la home), del último guardado al primero, solo los
+    publicados. Antes devolvía el lugar entero: con el email y el teléfono
+    de su dueño, sin el puntaje de reseñas y también los despublicados."""
+    from routers.spots import SPOT_LIST_OPTIONS, serialize_spot_list  # spots importa este módulo
     spots = (
-        db.query(SpotDB)
+        home.visible(db.query(SpotDB).options(*SPOT_LIST_OPTIONS))
         .join(Favorite, Favorite.spot_id == SpotDB.id)
-        .filter(Favorite.user_id == user_id)
-        .options(joinedload(SpotDB.amenities))
+        .filter(Favorite.user_id == user["sub"])
+        .order_by(Favorite.created_at.desc(), Favorite.id.desc())
         .all()
     )
-    return spots
+    return serialize_spot_list(db, spots)
 
 
 @router.post("/{spot_id}", status_code=status.HTTP_201_CREATED)

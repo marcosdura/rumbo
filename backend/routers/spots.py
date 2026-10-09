@@ -546,6 +546,16 @@ SPOT_LIST_OPTIONS = (
 )
 
 
+# Columnas del lugar que no salen en los listados públicos (home, cercanos,
+# favoritos): datos de personas y de la moderación. Antes solo se sacaban
+# owner_email y owner_phone, y la home mostraba el email de quien sugirió el
+# lugar y el motivo de un rechazo.
+PRIVATE_SPOT_FIELDS = (
+    "owner_email", "owner_phone", "suggested_by_email",
+    "rejection_reason", "rejected_at", "owner_deleted_at", "spot_categories",
+)
+
+
 def serialize_spot_list(db: Session, spots: list) -> list[dict]:
     """Los lugares como los muestra SpotCard, con su puntaje de reseñas."""
     spot_ids = [s.id for s in spots]
@@ -576,8 +586,8 @@ def serialize_spot_list(db: Session, spots: list) -> list[dict]:
             "average_rating": round(float(agg.average_rating), 1) if agg else None,
             "review_count": agg.review_count if agg else 0,
         }
-        item.pop("owner_email", None)
-        item.pop("owner_phone", None)
+        for field in PRIVATE_SPOT_FIELDS:
+            item.pop(field, None)
         result.append(item)
 
     return result
