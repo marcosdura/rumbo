@@ -184,3 +184,29 @@ def test_cercanos_sin_ubicacion_o_sin_publicar(client, make_spot):
     assert client.get(f"/spots/{sin_ubicacion.id}/nearby").json() == []
     oculto = make_spot(name="Oculto", lat=LAT, lng=LNG, approved=False)
     assert client.get(f"/spots/{oculto.id}/nearby").status_code == 404
+
+
+# -------- Estadísticas para el panel del dueño --------
+
+def test_visitas_de_los_ultimos_30_dias_y_favoritos(client, db, make_spot):
+    from datetime import date, timedelta
+    import views
+    spot = make_spot(name="Lugar")
+    otro = make_spot(name="Otro")
+    today = date.today()
+    for i, days_ago in enumerate((0, 5, 29, 30, 60)):
+        views.record_view(db, spot.id, f"persona{i}", today - timedelta(days=days_ago))
+    views.record_view(db, otro.id, "persona", today)
+    for n in range(2):
+        u = user(db, 100 + n)
+        db.add(Favorite(user_id=u.id, spot_id=spot.id))
+    db.commit()
+    r = client.get(f"/spots/{spot.id}/owner-stats", headers=as_user(OWNER))
+    assert r.status_code == 200, r.text
+    # Hoy, hace 5 y hace 29 entran; hace 30 y 60, no.
+    assert r.json() == {"views_30d": 3, "favorites": 2}
+
+
+def test_las_estadisticas_son_solo_del_duenio(client, make_spot):
+    spot = make_spot(name="Lugar")
+    assert client.get(f"/spots/{spot.id}/owner-stats", headers=as_user("otro@test.com")).status_code == 403

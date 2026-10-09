@@ -64,6 +64,8 @@ export default function SpotDashboardPage() {
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  // Visitas (últimos 30 días) y favoritos: un extra, sin esto el panel anda igual.
+  const [stats, setStats] = useState<{ views_30d: number; favorites: number } | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [tab, setTab] = useState<Tab>("info")
   const [saving, setSaving] = useState(false)
@@ -128,6 +130,13 @@ export default function SpotDashboardPage() {
       // Antes no había catch: si fallaba, quedaba en "Cargando..." para siempre.
       .catch(() => { setLoadError(true); setLoading(false) })
   }, [token, spotId, loadAttempt])
+
+  useEffect(() => {
+    if (!token) return
+    api.get<{ views_30d: number; favorites: number }>(`/spots/${spotId}/owner-stats`, { token })
+      .then(({ data }) => setStats(data))
+      .catch(() => {})
+  }, [token, spotId])
 
   async function loadMoreReviews() {
     setLoadingMoreReviews(true)
@@ -456,8 +465,12 @@ export default function SpotDashboardPage() {
         )}
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+        <div className="owner-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
           {[
+            ...(stats ? [
+              { label: "Visitas (30 días)", value: stats.views_30d, emoji: "👀" },
+              { label: "En favoritos", value: stats.favorites, emoji: "❤️" },
+            ] : []),
             { label: "Reseñas", value: spot.review_count ?? 0, emoji: "💬" },
             { label: "Calificación", value: spot.average_rating ? `${spot.average_rating} ★` : "—", emoji: "⭐" },
           ].map(stat => (

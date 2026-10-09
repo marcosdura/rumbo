@@ -10,6 +10,7 @@ from auth import get_current_user
 from database import get_db
 from limiter import get_client_ip, limiter
 from models import SpotDB
+from ownership import get_owned_spot_or_admin
 from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
 
 router = APIRouter(tags=["home"])
@@ -101,3 +102,9 @@ def spots_near_spot(spot_id: int, db: Session = Depends(get_db)):
     for item, (d, _) in zip(items, near):
         item["distance_km"] = round(d, 1)
     return items
+
+
+@router.get("/spots/{spot_id}/owner-stats")
+def spot_owner_stats(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """Visitas de los últimos 30 días y favoritos, para el panel del dueño."""
+    return views.owner_stats(db, spot.id)

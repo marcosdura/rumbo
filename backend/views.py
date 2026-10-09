@@ -41,3 +41,19 @@ def record_view(db: Session, spot_id: int, identity: str, day: date | None = Non
     except IntegrityError:
         db.rollback()
         return False
+
+
+STATS_DAYS = 30
+
+
+def owner_stats(db: Session, spot_id: int, today: date | None = None) -> dict:
+    """Para el panel del dueño: personas que vieron la página en los últimos
+    30 días (una por día, como se cuentan) y cuántos lo tienen en favoritos."""
+    from datetime import timedelta
+    from models import Favorite
+    today = today or date.today()
+    since = today - timedelta(days=STATS_DAYS - 1)
+    return {
+        "views_30d": db.query(SpotView).filter(SpotView.spot_id == spot_id, SpotView.day >= since).count(),
+        "favorites": db.query(Favorite).filter(Favorite.spot_id == spot_id).count(),
+    }

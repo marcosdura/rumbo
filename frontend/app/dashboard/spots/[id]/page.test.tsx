@@ -7,6 +7,7 @@ let failMine = false
 let reviewPages: { data: unknown[]; totalCount: number }[] = []
 let reviewParams: unknown[] = []
 let pushed: string[] = []
+let stats: { views_30d: number; favorites: number } | null = null
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: { id_token: "t" }, status: "authenticated" }) }))
 vi.mock("next/navigation", () => ({ useParams: () => ({ id: "5" }), useRouter: () => ({ push: (u: string) => pushed.push(u) }) }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
@@ -16,6 +17,7 @@ vi.mock("@/lib/api", () => ({
   api: {
     get: (url: string, opts?: { params?: unknown }) => {
       if (url === "/spots/mine") return failMine ? Promise.reject(new Error("500")) : Promise.resolve({ data: mine })
+      if (url.endsWith("/owner-stats")) return stats ? Promise.resolve({ data: stats }) : Promise.reject(new Error("500"))
       reviewParams.push(opts?.params)
       return Promise.resolve(reviewPages.shift() ?? { data: [], totalCount: 0 })
     },
@@ -32,7 +34,7 @@ const spot = (extra: object = {}) => ({
 })
 const review = (id: number) => ({ id, rating: 5, comment: `Reseña ${id}`, created_at: "2026-09-01T00:00:00", user: { name: "Ana", image: null } })
 
-afterEach(() => { mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = [] })
+afterEach(() => { mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = []; stats = null })
 
 const load = async () => { render(<DashboardPage />); await act(() => Promise.resolve()) }
 
@@ -81,5 +83,21 @@ describe("Panel del dueño", () => {
     const after = new Event("beforeunload", { cancelable: true })
     window.dispatchEvent(after)
     expect(after.defaultPrevented).toBe(true)
+  })
+
+  it("muestra visitas de los últimos 30 días y cuántos lo guardaron", async () => {
+    mine = [spot()]
+    stats = { views_30d: 128, favorites: 7 }
+    await load()
+    await act(() => Promise.resolve())
+    expect(screen.getByText("Visitas (30 días)").previousElementSibling!.textContent).toBe("128")
+    expect(screen.getByText("En favoritos").previousElementSibling!.textContent).toBe("7")
+  })
+
+  it("si no llegan las estadísticas, el panel anda igual", async () => {
+    mine = [spot()]
+    await load()
+    expect(screen.queryByText("Visitas (30 días)")).toBeNull()
+    expect(screen.getByText("Reseñas")).toBeTruthy()
   })
 })
