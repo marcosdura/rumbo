@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 
 let school: Record<string, unknown> = {}
 let summary = { average: null as number | null, total: 0 }
@@ -15,7 +15,7 @@ vi.mock("@/lib/api", () => ({
   api: { get: (url: string) => Promise.resolve({ data: url.endsWith("/summary") ? summary : school }) },
 }))
 
-const { default: SurfSchoolPage } = await import("./page")
+const { default: SurfSchoolPage, generateMetadata } = await import("./page")
 
 const base = {
   id: 4, name: "Escuela Ola", duration: null, email: null, whatsapp: null, instagram: null,
@@ -117,5 +117,22 @@ describe("Página de la escuela: contactar y llegar", () => {
     school = { ...base }
     await page()
     expect(screen.queryByRole("link", { name: /Cómo llegar/ })).toBeNull()
+  })
+})
+
+describe("Página de la escuela: compartir", () => {
+  it("tiene Compartir, con el mismo modal que el lugar", async () => {
+    school = { ...base }
+    await page()
+    fireEvent.click(screen.getByRole("button", { name: "🔗 Compartir" }))
+    expect(screen.getByText("Copiar link")).toBeTruthy()
+  })
+
+  it("al compartir, la foto va recortada a 1200×630", async () => {
+    school = { ...base, photo_1: "https://res.cloudinary.com/rumbo/image/upload/v1/rumbo/3/abc.jpg" }
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: "escuela-ola-4" }) })
+    const og = (meta.openGraph?.images as { url: string; width: number }[])[0]
+    expect(og.url).toBe("https://res.cloudinary.com/rumbo/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/v1/rumbo/3/abc.jpg")
+    expect(og.width).toBe(1200)
   })
 })

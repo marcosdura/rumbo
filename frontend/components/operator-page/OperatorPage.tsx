@@ -10,6 +10,7 @@ import ReportButton from "@/components/ui/ReportButton"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import BackButton from "./BackButton"
 import OperatorPhotos from "./OperatorPhotos"
+import ShareButton from "./ShareButton"
 import { directionsUrl, offSeasonNotice, whatsappUrl } from "@/lib/spotDetail"
 import type { InfoRow } from "@/lib/operatorPage"
 import type { PublicOperatorBase, ReviewSummary } from "@/lib/types"
@@ -99,9 +100,12 @@ export default function OperatorPage({ operator, summary, activity, rows, review
                 </span>
               )}
             </div>
-            <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: "0 0 10px" }}>
-              {operator.name}
-            </h1>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 600, color: "#1b1b19", lineHeight: 1.2, margin: 0 }}>
+                {operator.name}
+              </h1>
+              <ShareButton name={operator.name} />
+            </div>
             {/* El puntaje ya lo calcula el servidor (antes solo iba al JSON-LD). */}
             <a href="#reviews" className="op-rating">
               <span className="star">★</span>

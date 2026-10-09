@@ -6,6 +6,8 @@ import { publicIdFromUrl } from "@/lib/cloudinary"
 interface Props {
   src: string
   alt: string
+  // Solo la foto principal: lo primero que se ve. Las demás, en diferido.
+  priority?: boolean
 }
 
 // Wrapper para las fotos de kayak/surf, guardadas como secure_url completa
@@ -15,12 +17,12 @@ interface Props {
 // ImageGallery.jsx); si no puede, cae a un <img> crudo para no romper la
 // página. El contenedor padre necesita position:relative — lo mismo que
 // ya exige cualquier uso de CldImage/next-image con `fill`.
-export default function CloudinaryPhoto({ src, alt }: Props) {
+export default function CloudinaryPhoto({ src, alt, priority = false }: Props) {
   const publicId = publicIdFromUrl(src)
   if (!publicId) {
     return (
-      <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img src={src} alt={alt} loading={priority ? "eager" : "lazy"} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
     )
   }
-  return <CldImage src={publicId} alt={alt} fill className="object-cover" />
+  return <CldImage src={publicId} alt={alt} fill className="object-cover" {...(priority ? { priority: true } : { loading: "lazy" as const })} />
 }

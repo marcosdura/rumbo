@@ -71,6 +71,15 @@ export function kayakInfoRows(k: PublicKayak): InfoRow[] {
   ])
 }
 
+// La foto al compartir el link: recortada a 1200×630 por Cloudinary (la
+// original puede pesar varios MB y a veces no aparece). Las fotos de
+// escuelas y servicios se guardan como URL completa.
+export function operatorShareImage(url: string): string {
+  return url.includes("/image/upload/")
+    ? url.replace("/image/upload/", "/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/")
+    : url
+}
+
 // "Escuela de surf en Playa Brava, Rocha." (metadatos y JSON-LD).
 export function operatorDescription(what: string, op: { spot_name: string | null; spot_department: string | null }): string {
   return op.spot_name ? `${what} en ${op.spot_name}, ${op.spot_department}.` : `${what} en Uruguay.`

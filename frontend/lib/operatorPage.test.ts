@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { durationLabel, kayakInfoRows, operatorSeason, surfInfoRows } from "./operatorPage"
+import { durationLabel, kayakInfoRows, operatorSeason, operatorShareImage, surfInfoRows } from "./operatorPage"
 import type { PublicKayak, PublicSurfSchool } from "./types"
 
 const base = {
@@ -37,5 +37,13 @@ describe("Información de escuelas y servicios", () => {
     expect(text(rows)).toContain("🧭 Guía: Sí")
     expect(rows.map(r => r.label)).not.toContain("🦺 Chaleco salvavidas")
     expect(kayakInfoRows(kayak({})).map(r => r.label)).toEqual([])
+  })
+})
+
+describe("Foto al compartir", () => {
+  it("se recorta si es de Cloudinary; si no, queda igual", () => {
+    expect(operatorShareImage("https://res.cloudinary.com/r/image/upload/v1/x.jpg"))
+      .toBe("https://res.cloudinary.com/r/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/v1/x.jpg")
+    expect(operatorShareImage("https://otro.com/x.jpg")).toBe("https://otro.com/x.jpg")
   })
 })

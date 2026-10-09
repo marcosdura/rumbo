@@ -39,7 +39,7 @@ export default function OperatorPhotos({ photos, name }: { photos: string[]; nam
 
       {photos.length === 1 && (
         <div className="op-photo-grid-1" onClick={() => open(0)}>
-          <CloudinaryPhoto src={photos[0]} alt={name} />
+          <CloudinaryPhoto src={photos[0]} alt={name} priority />
         </div>
       )}
 
@@ -47,7 +47,7 @@ export default function OperatorPhotos({ photos, name }: { photos: string[]; nam
         <div className="op-photo-grid-2">
           {photos.map((src, i) => (
             <div key={i} className="op-photo-item" onClick={() => open(i)}>
-              <CloudinaryPhoto src={src} alt={`${name} ${i + 1}`} />
+              <CloudinaryPhoto src={src} alt={`${name} ${i + 1}`} priority={i === 0} />
             </div>
           ))}
         </div>
@@ -56,7 +56,7 @@ export default function OperatorPhotos({ photos, name }: { photos: string[]; nam
       {photos.length >= 3 && (
         <div className="op-photo-grid-3">
           <div className="op-photo-item" onClick={() => open(0)}>
-            <CloudinaryPhoto src={photos[0]} alt={name} />
+            <CloudinaryPhoto src={photos[0]} alt={name} priority />
           </div>
           <div className="op-photo-sub">
             {photos.slice(1, 3).map((src, i) => (

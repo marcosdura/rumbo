@@ -3,7 +3,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
-import { operatorDescription, surfInfoRows } from "@/lib/operatorPage"
+import { operatorDescription, operatorShareImage, surfInfoRows } from "@/lib/operatorPage"
 import type { PublicSurfSchool, ReviewSummary } from "@/lib/types"
 
 type Props = {
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       title: `${school.name} | Rumbo`,
       description,
-      images: school.photo_1 ? [{ url: school.photo_1 }] : [],
+      images: school.photo_1 ? [{ url: operatorShareImage(school.photo_1), width: 1200, height: 630 }] : [],
       type: "website",
     },
   }

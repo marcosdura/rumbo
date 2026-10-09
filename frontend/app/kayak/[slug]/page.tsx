@@ -3,7 +3,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
-import { operatorDescription, kayakInfoRows } from "@/lib/operatorPage"
+import { operatorDescription, operatorShareImage, kayakInfoRows } from "@/lib/operatorPage"
 import type { PublicKayak, ReviewSummary } from "@/lib/types"
 
 type Props = {
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       title: `${kayak.name} | Rumbo`,
       description,
-      images: kayak.photo_1 ? [{ url: kayak.photo_1 }] : [],
+      images: kayak.photo_1 ? [{ url: operatorShareImage(kayak.photo_1), width: 1200, height: 630 }] : [],
       type: "website",
     },
   }
