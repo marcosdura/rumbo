@@ -13,10 +13,11 @@ export type InfoRow = {
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
 
-// "Noviembre – Marzo". Sin los dos meses no se sabe: null (antes decía
-// "Todo el año", que es afirmar algo que nadie cargó).
-export function operatorSeason(start: number | null, end: number | null): string | null {
-  if (!start || !end) return null
+// "Noviembre – Marzo". Sin meses es "Todo el año": en agregar lugar y en el
+// panel del dueño se elige entre "Todo el año" (sin meses, la opción por
+// defecto) y una temporada con sus meses.
+export function operatorSeason(start: number | null, end: number | null): string {
+  if (!start || !end) return "Todo el año"
   return `${MONTHS[start - 1]} – ${MONTHS[end - 1]}`
 }
 

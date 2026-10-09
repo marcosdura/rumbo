@@ -19,10 +19,9 @@ describe("Información de escuelas y servicios", () => {
     expect(durationLabel(1)).toBe("⏱️ 1 hora")
   })
 
-  it("temporada solo si se sabe (antes decía Todo el año)", () => {
+  it("temporada: sin meses es Todo el año (la opción por defecto del formulario)", () => {
     expect(operatorSeason(11, 3)).toBe("Noviembre – Marzo")
-    expect(operatorSeason(null, null)).toBeNull()
-    expect(surfInfoRows(surf({})).map(r => r.label)).not.toContain("Temporada")
+    expect(operatorSeason(null, null)).toBe("Todo el año")
   })
 
   it("surf, en orden y solo lo que se sabe", () => {
@@ -36,7 +35,7 @@ describe("Información de escuelas y servicios", () => {
     expect(text(rows)).toContain("Alquiler: 🏪 No disponible")
     expect(text(rows)).toContain("🧭 Guía: Sí")
     expect(rows.map(r => r.label)).not.toContain("🦺 Chaleco salvavidas")
-    expect(kayakInfoRows(kayak({})).map(r => r.label)).toEqual([])
+    expect(kayakInfoRows(kayak({})).map(r => r.label)).toEqual(["Temporada"])
   })
 })
 

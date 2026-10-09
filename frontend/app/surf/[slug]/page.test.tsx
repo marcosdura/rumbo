@@ -58,17 +58,16 @@ describe("Página de la escuela: encabezado y panel", () => {
     expect(screen.getByText("¡Sé el primero en reseñar!")).toBeTruthy()
   })
 
-  it("la temporada aparece una vez, y sin cargar no dice Todo el año", async () => {
+  it("la temporada aparece una vez", async () => {
     school = { ...base, season_start: 12, season_end: 3 }
     await page()
     expect(screen.getAllByText("Diciembre – Marzo")).toHaveLength(1)
   })
 
-  it("sin temporada no inventa una", async () => {
+  it("sin meses es Todo el año (la opción por defecto del formulario)", async () => {
     school = { ...base }
     await page()
-    expect(screen.queryByText("Todo el año")).toBeNull()
-    expect(screen.queryByText("Temporada")).toBeNull()
+    expect(screen.getAllByText("Todo el año")).toHaveLength(1)
   })
 
   it("fuera de temporada, lo avisa arriba", async () => {

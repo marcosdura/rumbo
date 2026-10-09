@@ -9,10 +9,11 @@ export type DetailSpot = CardSpot & {
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
-// "Nov – Mar". Sin los dos meses no se sabe la temporada: null (antes decía
-// "Todo el año", que es afirmar algo que nadie cargó).
-export function seasonLabel(start?: number | null, end?: number | null): string | null {
-  if (!start || !end) return null
+// "Nov – Mar". Sin meses es "Todo el año": en agregar lugar y en el panel
+// del dueño la temporada se elige entre "Todo el año" (sin meses, la opción
+// por defecto) y una temporada con sus meses.
+export function seasonLabel(start?: number | null, end?: number | null): string {
+  if (!start || !end) return "Todo el año"
   return `${MESES[start - 1]} – ${MESES[end - 1]}`
 }
 
