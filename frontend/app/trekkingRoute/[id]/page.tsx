@@ -1,29 +1,16 @@
-import React from "react"
-import TrekkingRouteDetails from "./TrekkingRouteDetails"
-import type { Metadata } from "next"
+// Dirección vieja de una ruta de trekking (/trekkingRoute/{id}): lleva a la
+// página de la ruta dentro de su lugar. Antes era una segunda copia.
+import { notFound, permanentRedirect } from "next/navigation"
 import { api } from "@/lib/api"
-import { routeDescription } from "@/lib/metadata"
-import type { PublicRoute } from "@/lib/types"
 
 type Props = { params: Promise<{ id: string }> }
 
-const Details = TrekkingRouteDetails as React.ComponentType<{ slug?: string }>
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export default async function LegacyTrekkingRoutePage({ params }: Props) {
   const { id } = await params
-  let route: PublicRoute
-  try {
-    route = (await api.get<PublicRoute>(`/routes/${id}`)).data
-  } catch {
-    return { title: "Ruta de trekking | Rumbo" }
-  }
-  return {
-    title: `${route.name} | Rumbo`,
-    description: routeDescription(route),
-  }
-}
-
-export default async function TrekkingRoutePage({ params }: Props) {
-  const { id } = await params
-  return <Details slug={id} />
+  const route = await api
+    .get<{ slug: string | null; spot_slug: string | null }>(`/routes/${encodeURIComponent(id)}`, { cache: "no-store" })
+    .then(r => r.data)
+    .catch(() => null)
+  if (!route?.slug || !route.spot_slug) notFound()
+  permanentRedirect(`/spots/${route.spot_slug}/rutas/${route.slug}`)
 }

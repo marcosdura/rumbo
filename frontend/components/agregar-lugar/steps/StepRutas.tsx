@@ -62,6 +62,15 @@ export default function StepRutas({
                 value={r.name} onChange={e => updRoute(i, "name", e.target.value)}
               />
             </Field>
+            <Field label="Descripción" required={false}>
+              <textarea
+                aria-label={`Descripción de la ruta ${i + 1}`}
+                style={{ ...s.input, height: 88, resize: "vertical" } as React.CSSProperties}
+                maxLength={2000}
+                placeholder="Por dónde va, qué se ve, qué tener en cuenta…"
+                value={r.description} onChange={e => updRoute(i, "description", e.target.value)}
+              />
+            </Field>
             <div className="form-two-col">
               <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.distance_km} onChange={e => updRoute(i, "distance_km", sanitizeNum(e.target.value))} /></Field>
               <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", sanitizeNum(e.target.value))} /></Field>

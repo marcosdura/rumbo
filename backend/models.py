@@ -457,7 +457,16 @@ class Route(ReviewedContent, Base):
     technical_level = Column(String)   # bajo / medio / alto
     physical_demand = Column(String)   # bajo / medio / alto
 
+    # Cómo es el recorrido, qué se ve, qué tener en cuenta.
+    description = Column(Text, nullable=True)
+
     slug = Column(String, nullable=True, index=True)
+
+    # Para llevar de /trekkingRoute/{id} (la dirección vieja) a la página de
+    # la ruta dentro de su lugar.
+    @property
+    def spot_slug(self):
+        return self.spot.slug if self.spot else None
 
 
 class ClimbingSector(ReviewedContent, Base): 

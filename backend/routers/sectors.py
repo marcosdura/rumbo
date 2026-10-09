@@ -89,6 +89,28 @@ def get_sector_by_slug(slug: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Sector not found")
     return _attach_sector_stats(sector)
 
+@router.get("/page/{spot_slug}/{sector_slug}")
+def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_db)):
+    """Todo lo de la página de un sector, buscado dentro de su lugar (el
+    slug de un sector no es único entre lugares: "Sector Norte" hay en
+    muchos, y /by-slug devolvía el primero), con sus vías."""
+    from routers.routes import visible_spot_by_slug
+    spot = visible_spot_by_slug(db, spot_slug)
+    sector = (
+        db.query(ClimbingSector)
+        .filter(ClimbingSector.spot_id == spot.id, ClimbingSector.slug == sector_slug)
+        .order_by(ClimbingSector.id).first()
+    )
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector not found")
+    _attach_sector_stats(sector)
+    return {
+        "sector": ClimbingSectorResponse.model_validate(sector).model_dump(mode="json"),
+        "spot": {"id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department},
+        "routes": [ClimbingRouteResponse.model_validate(r).model_dump(mode="json") for r in sorted(sector.routes, key=lambda r: r.id)],
+    }
+
+
 @router.get("/{sector_id}", response_model=ClimbingSectorResponse)
 def get_sector(sector_id: int, db: Session = Depends(get_db)):
     sector = db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()

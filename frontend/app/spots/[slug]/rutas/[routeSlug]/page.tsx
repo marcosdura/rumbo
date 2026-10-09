@@ -1,29 +1,53 @@
-import React from "react"
 import { Metadata } from "next"
-import TrekkingRouteDetails from "../../../../trekkingRoute/[id]/TrekkingRouteDetails"
+import { cache } from "react"
+import { notFound } from "next/navigation"
+import TrailLayout, { SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
+import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
+import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { api } from "@/lib/api"
 import { routeDescription } from "@/lib/metadata"
-import type { PublicRoute, PublicSpot } from "@/lib/types"
+import { routeStats, type RoutePage } from "@/lib/trailPage"
 
 type Props = {
   params: Promise<{ slug: string; routeSlug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { routeSlug } = await params
-  const route = await api.get<PublicRoute>(`/routes/by-slug/${routeSlug}`).then(r => r.data).catch(() => null)
+// La ruta se busca dentro de su lugar: el slug de una ruta no es único
+// entre lugares. cache(): metadata y página piden lo mismo una sola vez.
+const getRoutePage = cache(async (spotSlug: string, routeSlug: string) =>
+  api.get<RoutePage>(`/routes/page/${spotSlug}/${routeSlug}`, { cache: "no-store" }).then(r => r.data).catch(() => null),
+)
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug, routeSlug } = await params
+  const page = await getRoutePage(slug, routeSlug)
   return {
-    title: `${route?.name ?? routeSlug} | Rumbo`,
-    description: routeDescription(route),
+    title: `${page?.route.name ?? routeSlug} | Rumbo`,
+    description: page?.route.description?.trim().slice(0, 160) || routeDescription(page?.route ?? null),
   }
 }
 
+// Las características de la ruta y del lugar son componentes .jsx.
+const RouteCard = TrekkingRouteCard as unknown as (p: { route: unknown }) => React.ReactElement | null
+const AmenitiesCard = TrekkingAmenitiesCard as unknown as (p: { trekkingDetail: unknown }) => React.ReactElement | null
+
 export default async function TrekkingRoutePage({ params }: Props) {
   const { slug, routeSlug } = await params
+  const page = await getRoutePage(slug, routeSlug)
+  if (!page) notFound()
+  const { route, spot } = page
+  const description = route.description?.trim()
 
-  const spot = await api.get<PublicSpot>(`/spots/by-slug/${slug}`).then(r => r.data).catch(() => null)
-
-  const Details = TrekkingRouteDetails as React.ComponentType<{ slug?: string; trekkingDetail?: unknown }>
-  return <Details slug={routeSlug} trekkingDetail={spot?.trekking_detail ?? null} />
+  return (
+    <TrailLayout spot={spot} eyebrow="Ruta de trekking" title={route.name}>
+      <StatGrid stats={routeStats(route)} />
+      <RouteCard route={route} />
+      {description && (
+        <SectionCard title="Descripción">
+          <p style={{ fontSize: 15, color: "#2c2c2a", lineHeight: 1.75, margin: 0, whiteSpace: "pre-line" }}>{description}</p>
+        </SectionCard>
+      )}
+      <AmenitiesCard trekkingDetail={spot.trekking_detail} />
+    </TrailLayout>
+  )
 }

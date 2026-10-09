@@ -34,3 +34,12 @@ describe("Descripción y precio en agregar lugar", () => {
       .toMatchObject({ description: "Salidas", price_from: null, price_note: null })
   })
 })
+
+describe("Rutas de trekking: descripción", () => {
+  it("se manda al crear la ruta; vacía va como null", async () => {
+    const { routePayload } = await import("../submit")
+    const { defaultRoute } = await import("../constants")
+    expect(routePayload({ ...defaultRoute(), name: "Cumbre", description: " Por el bosque. " }).description).toBe("Por el bosque.")
+    expect(routePayload({ ...defaultRoute(), name: "Cumbre" }).description).toBeNull()
+  })
+})

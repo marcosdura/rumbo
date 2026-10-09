@@ -46,7 +46,7 @@ export async function retryFailures(failures: Failure[]): Promise<Failure[]> {
 
 type Created = { id: number; is_approved?: boolean }
 
-function routePayload(r: RouteItem) {
+export function routePayload(r: RouteItem) {
   return {
     name: r.name,
     distance_km:    r.distance_km    ? parseFloat(r.distance_km)    : null,
@@ -57,6 +57,8 @@ function routePayload(r: RouteItem) {
     min_altitude:   r.min_altitude   ? parseInt(r.min_altitude)     : null,
     difficulty: r.difficulty || null, route_type: r.route_type || null,
     technical_level: r.technical_level || null, physical_demand: r.physical_demand || null,
+    // ?? "": un borrador guardado antes de que existiera el campo no lo trae.
+    description: (r.description ?? "").trim() || null,
   }
 }
 
@@ -299,9 +301,10 @@ function operatorPhotos(files: (File | null)[], spotId: number, setUploadProgres
 // Descripción y precio, igual para escuelas y servicios.
 export function aboutPayload(a: OperatorAbout) {
   return {
-    description: a.description.trim() || null,
-    price_from: a.price_from !== "" ? parseInt(a.price_from) : null,
-    price_note: a.price_note.trim() || null,
+    // ?? "": un borrador guardado antes de que existieran no los trae.
+    description: (a.description ?? "").trim() || null,
+    price_from: a.price_from ? parseInt(a.price_from) : null,
+    price_note: (a.price_note ?? "").trim() || null,
   }
 }
 

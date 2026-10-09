@@ -224,6 +224,8 @@ class RouteBase(BaseModel):
     technical_level: Optional[str] = Field(default=None, max_length=50)   # bajo / medio / alto
     physical_demand: Optional[str] = Field(default=None, max_length=50)   # bajo / medio / alto
 
+    description: Optional[str] = Field(default=None, max_length=2000)
+
     slug: str | None = Field(default=None, max_length=250)
 
 
@@ -235,6 +237,7 @@ class RouteResponse(RouteBase):
     # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
     is_approved: bool = True
     id: int
+    spot_slug: Optional[str] = None
 
     class Config:
         from_attributes = True

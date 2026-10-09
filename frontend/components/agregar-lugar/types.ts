@@ -10,6 +10,7 @@ export type RouteItem = {
   name: string; distance_km: string; duration_hours: string
   elevation_gain: string; elevation_loss: string; max_altitude: string; min_altitude: string
   difficulty: string; route_type: string; technical_level: string; physical_demand: string
+  description: string
 }
 
 export type SectorItem = {

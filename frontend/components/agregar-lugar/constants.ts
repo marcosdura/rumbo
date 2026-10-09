@@ -161,7 +161,7 @@ export const defaultTrekkingFeatures = (): TrekkingFeatures => ({
 export const defaultRoute = (): RouteItem => ({
   name: "", distance_km: "", duration_hours: "", elevation_gain: "", elevation_loss: "",
   max_altitude: "", min_altitude: "", difficulty: "", route_type: "",
-  technical_level: "", physical_demand: "",
+  technical_level: "", physical_demand: "", description: "",
 })
 
 export const defaultSector = (): SectorItem => ({

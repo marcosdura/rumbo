@@ -1,6 +1,6 @@
 "use client"
 
-// "🔗 Compartir" en escuelas y servicios: el mismo modal que la página del
+// "🔗 Compartir" (escuelas, servicios, rutas, sectores): el mismo modal que la página del
 // lugar (copiar el link o mandarlo por WhatsApp).
 import { useState } from "react"
 import ShareModal from "@/components/spot-detail/ShareModal"
