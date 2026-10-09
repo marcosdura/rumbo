@@ -38,7 +38,7 @@ import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/s
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
 import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
-import PracticalInfoCard from "@/components/spot-detail/PracticalInfoCard"
+import { offSeasonNotice } from "@/lib/spotDetail"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -50,7 +50,6 @@ function SpotDetail({ spot }) {
   const kayakDetails = spot.kayak_detail ?? []
   const surfSchools = spot.surf_schools ?? []
   const [showShare, setShowShare] = useState(false)
-  const [reviewSummary, setReviewSummary] = useState(null)
   const router = useRouter()
   const { data: session, status } = useSession()
   // Quién mira: si es el dueño y qué aportes suyos están en revisión acá.
@@ -73,18 +72,14 @@ function SpotDetail({ spot }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una por lugar y por carga de sesión
   }, [spot?.id, status])
 
-useEffect(() => {
-  if (!spot?.id) return
-  const controller = new AbortController()
-  api.get(`/reviews/${spot.id}/summary`, { signal: controller.signal })
-    .then(({ data }) => setReviewSummary(data))
-    .catch(e => { if (e?.name !== "AbortError") throw e })
-  return () => controller.abort()
-}, [spot?.id])
+  // El puntaje del encabezado viene con el lugar (el servidor ya lo calcula):
+  // antes se pedía aparte y se veía "★ —" hasta que llegaba.
+  const reviewCount = spot.review_count ?? 0
+  const offSeason = offSeasonNotice(spot)
 
   const stayCards = {
     Camping: spot.camping_detail ? (
-      <CampingCard key="camping" price={spot.price} amenities={spot.amenities} />
+      <CampingCard key="camping" amenities={spot.amenities} />
     ) : null,
     Glamping: spot.glamping_detail && spot.glamping_detail.length > 0 ? (
       <GlampingCard key="glamping" glampingDetail={spot.glamping_detail} glampingAmenities={spot.glamping_amenities} />
@@ -281,7 +276,7 @@ useEffect(() => {
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span className="rating-badge">
                   <span className="star">★</span>
-                  <strong>{reviewSummary?.total > 0 ? reviewSummary.average : "—"}</strong>
+                  <strong>{reviewCount > 0 ? spot.average_rating : "—"}</strong>
                   <span
                     className="reviews-link"
                     onClick={() => {
@@ -292,8 +287,8 @@ useEffect(() => {
                     }}
                     style={{ cursor: "pointer" }}
                   >
-                    {reviewSummary?.total > 0
-                      ? `${reviewSummary.total} reseña${reviewSummary.total !== 1 ? "s" : ""}`
+                    {reviewCount > 0
+                      ? `${reviewCount} reseña${reviewCount !== 1 ? "s" : ""}`
                       : "¡Sé el primero en reseñar!"}
                   </span>
                 </span>
@@ -312,6 +307,11 @@ useEffect(() => {
                   </Pill>
                 )}
                 <Pill variant="dark-green" hover>{spot.department || "Sin departamento"}</Pill>
+                {offSeason && (
+                  <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
+                    ⚠️ {offSeason}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -367,9 +367,6 @@ useEffect(() => {
                 {/* Derecha: detalles y contacto */}
                 <div className="fade-up fade-up-4 spot-right-panel">
                   <SpotDetails spot={spot} />
-                  <div style={{ marginTop: 16 }}>
-                    <PracticalInfoCard info={spot} />
-                  </div>
                 </div>
               </div>
 

@@ -3,13 +3,14 @@ import { render, screen } from "@testing-library/react"
 import CampingCard from "./CampingCard"
 
 describe("CampingCard", () => {
-  it("muestra el precio del lugar (el que edita el dueño)", () => {
-    render(<CampingCard price={650} amenities={[]} />)
-    expect(screen.getByText("$650")).toBeTruthy()
+  it("muestra los servicios, sin repetir el precio (va en Detalles)", () => {
+    render(<CampingCard amenities={[{ id: 22, name: "WiFi" }]} />)
+    expect(screen.getByText(/WiFi/)).toBeTruthy()
+    expect(screen.queryByText(/Precio/)).toBeNull()
   })
 
-  it("sin precio no muestra la celda", () => {
-    render(<CampingCard price={null} amenities={[]} />)
-    expect(screen.queryByText("Precio por noche")).toBeNull()
+  it("sin servicios no aparece", () => {
+    const { container } = render(<CampingCard amenities={[]} />)
+    expect(container.innerHTML).toBe("")
   })
 })

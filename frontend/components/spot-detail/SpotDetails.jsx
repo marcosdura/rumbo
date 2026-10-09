@@ -1,36 +1,27 @@
 import { useState } from "react"
+import { detailRows } from "@/lib/spotDetail"
+import { knownPractical } from "@/lib/practicalInfo"
+import PracticalInfoCard from "./PracticalInfoCard"
 
-const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
-
-function getSeason(start, end) {
-  if (!start && !end) return "Todo el año"
-  return `${MESES[start - 1]} – ${MESES[end - 1]}`
+// Panel derecho de la página del lugar: Detalles (precio, temporada,
+// transporte), Información práctica y Contacto, en ese orden. Solo lo que se
+// sabe; departamento, categoría y acceso ya están en el encabezado y el banner.
+export function SectionLabel({ children, first = false }) {
+  return (
+    <div className={first ? "detail-section-label" : "detail-contact-label"}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
+      <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
+        {children}
+      </h2>
+    </div>
+  )
 }
 
 function SpotDetails({ spot }) {
   const [copied, setCopied] = useState(false)
-
-  const price = spot.price != null
-    ? "$" + spot.price + " UYU"
-    : "Información no disponible"
-
+  const rows = detailRows(spot)
+  const hasPractical = knownPractical(spot).length > 0
   const hasContact = spot.email || spot.whatsapp || spot.instagram
-
-  const rows = [
-    { label: "Departamento", value: spot.department || "—" },
-    { label: "Categoría",    value: spot.category?.name || "—" },
-    { label: "Precio",       value: price },
-    { label: "Temporada",    value: getSeason(spot.season_start, spot.season_end) },
-    spot.is_public != null
-      ? { label: "Acceso", value: spot.is_public ? "🏛️ Público" : "🔒 Privado" }
-      : null,
-    spot.public_transport != null
-      ? { label: "Transporte público",
-          value: spot.public_transport === "si"   ? "🚌 Accesible"
-               : spot.public_transport === "no"   ? "🚗 No accesible"
-               : "🤷 Sin información" }
-      : null,
-  ].filter(Boolean)
 
   const whatsappNumber = spot.whatsapp ? spot.whatsapp.replace(/\D/g, "") : ""
   const whatsappUrl = "https://wa.me/" + whatsappNumber
@@ -147,36 +138,32 @@ function SpotDetails({ spot }) {
 
       <div style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
 
-        {/* Detalles */}
-        <div className="detail-section-label">
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-            Detalles
-          </h2>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className="detail-row"
-              style={{ borderTop: i === 0 ? "1px solid #ede9e1" : "none" }}
-            >
-              <span className="detail-label">{row.label}</span>
-              <span className={row.value === "Información no disponible" ? "detail-value-dim" : "detail-value"}>
-                {row.value}
-              </span>
+        {rows.length > 0 && (
+          <>
+            <SectionLabel first>Detalles</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {rows.map((row, i) => (
+                <div
+                  key={row.label}
+                  className="detail-row"
+                  style={{ borderTop: i === 0 ? "1px solid #ede9e1" : "none" }}
+                >
+                  <span className="detail-label">{row.label}</span>
+                  <span className="detail-value">{row.value}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
-        {/* Contacto */}
-        <div className="detail-contact-label">
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
-          <h2 style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-            Contacto
-          </h2>
-        </div>
+        {hasPractical && (
+          <>
+            <SectionLabel first={rows.length === 0}>Información práctica</SectionLabel>
+            <PracticalInfoCard info={spot} />
+          </>
+        )}
+
+        <SectionLabel first={rows.length === 0 && !hasPractical}>Contacto</SectionLabel>
 
         {hasContact ? (
           <div style={{ display: "flex", flexDirection: "column" }}>

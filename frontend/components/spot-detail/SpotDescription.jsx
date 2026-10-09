@@ -71,7 +71,7 @@ function SpotDescription({ description }) {
           className="spot-desc-text-wrap"
           style={{ maxHeight: shouldClamp ? COLLAPSED_HEIGHT : 4000 }}
         >
-          <p ref={textRef} style={{ fontSize: 15, lineHeight: 1.75, color: "#2c2c2a", margin: 0, fontWeight: 400 }}>
+          <p ref={textRef} style={{ fontSize: 15, lineHeight: 1.75, color: "#2c2c2a", margin: 0, fontWeight: 400, whiteSpace: "pre-line" }}>
             {description}
           </p>
         </div>

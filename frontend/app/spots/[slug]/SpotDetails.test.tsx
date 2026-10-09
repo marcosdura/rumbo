@@ -7,9 +7,10 @@ let viewer = { is_owner: false, is_admin: false, pending: [] as { id: number; ki
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: session }) }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, back: () => {} }), usePathname: () => "/spots/x" }))
 let views: { url: string; token: string | undefined }[] = []
+let gets: string[] = []
 vi.mock("@/lib/api", () => ({
   api: {
-    get: (url: string) => Promise.resolve({ data: url.endsWith("/viewer") ? viewer : { average: null, total: 0 } }),
+    get: (url: string) => { gets.push(url); return Promise.resolve({ data: url.endsWith("/viewer") ? viewer : { average: null, total: 0 } }) },
     post: (url: string, _body: unknown, opts: { token?: string }) => { views.push({ url, token: opts?.token }); return Promise.resolve({ data: null }) },
   },
 }))
@@ -115,5 +116,33 @@ describe("Página del lugar sugerido por un visitante", () => {
     render(<SpotDetail spot={spot("Camping")} />)
     await screen.findByText("Cerro Arequita")
     expect(views).toEqual([{ url: "/spots/12/view", token: undefined }])
+  })
+})
+
+describe("Página del lugar: encabezado y panel", () => {
+  it("el puntaje viene con el lugar, sin pedirlo aparte", async () => {
+    gets = []
+    render(<SpotDetail spot={spot("Camping", { average_rating: 4.6, review_count: 12 })} />)
+    expect(await screen.findByText("4.6")).toBeTruthy()
+    expect(screen.getByText("12 reseñas")).toBeTruthy()
+    expect(gets.filter(u => u.includes("/reviews/"))).toEqual([])
+  })
+
+  it("avisa en el encabezado si está fuera de temporada", async () => {
+    const month = new Date().getMonth() + 1
+    const next = (month % 12) + 1
+    // Temporada de un solo mes, el que viene: hoy está cerrado.
+    render(<SpotDetail spot={spot("Camping", { season_start: next, season_end: next })} />)
+    expect(await screen.findByText(/⚠️ Fuera de temporada · abre en/)).toBeTruthy()
+  })
+
+  it("el panel no repite departamento, categoría ni acceso", async () => {
+    render(<SpotDetail spot={spot("Camping", { price: 450, is_public: false, pets_allowed: true })} />)
+    await screen.findByText("Cerro Arequita")
+    expect(screen.getByText("$450 / noche")).toBeTruthy()
+    expect(screen.getByText("Acepta mascotas")).toBeTruthy()
+    expect(screen.queryByText("Departamento")).toBeNull()
+    expect(screen.queryByText("Categoría")).toBeNull()
+    expect(screen.queryByText("🔒 Privado")).toBeNull()
   })
 })

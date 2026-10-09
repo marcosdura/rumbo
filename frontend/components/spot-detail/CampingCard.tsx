@@ -1,7 +1,6 @@
 "use client"
 
 import AmenitiesList from "./AmenitiesList"
-import DetailCell from "./DetailCell"
 
 interface Amenity {
   id: number
@@ -9,27 +8,20 @@ interface Amenity {
 }
 
 interface CampingCardProps {
-  // El precio del lugar (spot.price), el que edita el dueño: el del detalle
-  // del camping puede estar viejo.
-  price?: number | null
   amenities?: Amenity[]
 }
 
-export default function CampingCard({ price, amenities }: CampingCardProps) {
+// Los servicios del camping. El precio va en el panel de Detalles (es el del
+// lugar): acá se repetía.
+export default function CampingCard({ amenities }: CampingCardProps) {
+  if (!amenities || amenities.length === 0) return null
   return (
     <div className="amenities-card">
       <div className="amenities-label">
         <div className="amenities-dot" />
         <p className="amenities-title">⛺ Información del Camping</p>
       </div>
-      {price != null && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: amenities && amenities.length > 0 ? 18 : 0 }}>
-          <DetailCell label="Precio por noche" value={`$${price}`} />
-        </div>
-      )}
-      {amenities && amenities.length > 0 && (
-        <AmenitiesList amenities={amenities} />
-      )}
+      <AmenitiesList amenities={amenities} />
     </div>
   )
 }
