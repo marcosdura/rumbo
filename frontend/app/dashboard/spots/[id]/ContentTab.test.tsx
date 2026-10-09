@@ -9,12 +9,15 @@ let content: OwnerContent
 let postResponse: { is_approved: boolean }
 let posts: [string, unknown][] = []
 let deletes: string[] = []
+let edits: [string, string, unknown][] = []
 vi.mock("@/lib/api", () => ({
   ApiError: class extends Error { status = 0 },
   api: {
     get: () => Promise.resolve({ data: content }),
     post: (url: string, body: unknown) => { posts.push([url, body]); return Promise.resolve({ data: postResponse }) },
     del: (url: string) => { deletes.push(url); return Promise.resolve({ data: {} }) },
+    patch: (url: string, body: unknown) => { edits.push(["patch", url, body]); return Promise.resolve({ data: {} }) },
+    put: (url: string, body: unknown) => { edits.push(["put", url, body]); return Promise.resolve({ data: {} }) },
   },
 }))
 
@@ -160,5 +163,75 @@ describe("ContentTab según el tipo de lugar", () => {
     renderTab(false, "Surf")
     expect(await screen.findByText("Escuela Ola")).toBeTruthy()
     expect(screen.getByRole("link", { name: "＋ Agregar una escuela" }).getAttribute("href")).toBe("/agregar-lugar?sumar=surf&spot=5")
+  })
+})
+
+
+describe("ContentTab: corregir lo ya cargado (al instante)", () => {
+  beforeEach(() => { edits = [] })
+
+  it("editar una ruta manda solo sus datos y cierra el formulario", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Trekking" showExperiences={false} showGlamping={false} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Sendero al mirador" }))
+    fireEvent.change(screen.getByLabelText("Distancia (km)"), { target: { value: "7.5" } })
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0][0]).toBe("patch")
+    expect(edits[0][1]).toBe("/routes/21")
+    expect(edits[0][2]).toMatchObject({ name: "Sendero al mirador", distance_km: 7.5, difficulty: "moderado" })
+    expect(await screen.findByText("✓ Sendero al mirador: guardado")).toBeTruthy()
+    expect(screen.queryByLabelText("Distancia (km)")).toBeNull()
+  })
+
+  it("una ruta sin nombre no se guarda", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Trekking" showExperiences={false} showGlamping={false} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Sendero al mirador" }))
+    fireEvent.change(screen.getByLabelText("Nombre de la ruta"), { target: { value: " " } })
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }))
+    expect(screen.getByRole("alert").textContent).toBe("La ruta tiene que tener nombre.")
+    expect(edits).toEqual([])
+  })
+
+  it("características del trekking", async () => {
+    content.trekking_detail = { bathrooms: true }
+    render(<ContentTab spotId={3} token="t" reviewed category="Trekking" showExperiences={false} showGlamping={false} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Guardar características" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0][1]).toBe("/spots/3/trekking-detail")
+    expect(edits[0][2]).toMatchObject({ bathrooms: true, fire_pits: null })
+  })
+
+  it("servicios del camping: quedan los elegidos", async () => {
+    content.amenity_ids = [22]
+    render(<ContentTab spotId={3} token="t" reviewed category="Camping" showExperiences showGlamping={false} activities={["Camping"]} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Ducha" }))
+    fireEvent.click(screen.getByRole("button", { name: "WiFi" }))
+    fireEvent.click(screen.getByRole("button", { name: "Guardar servicios" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0]).toEqual(["put", "/spots/3/camping-amenities", { amenity_ids: [1] }])
+  })
+
+  it("servicios para motorhomes, solo si el lugar es de motorhome", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Camping" showExperiences showGlamping={false} activities={["Camping"]} />)
+    await screen.findByText("Servicios del camping")
+    expect(screen.queryByText("Servicios para motorhomes")).toBeNull()
+  })
+
+  it("editar un alojamiento de glamping", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Glamping" showExperiences showGlamping activities={["Glamping"]} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Domo" }))
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0]).toEqual(["patch", "/glamping/units/7", { accommodation_type: "domo", capacity: 2, price_per_night: 3500, min_nights: 1 }])
+  })
+
+  it("editar una experiencia no manda la categoría", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Camping" showExperiences showGlamping={false} activities={["Camping"]} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Cabalgata" }))
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0][1]).toBe("/spots/3/experiences/1")
+    expect(edits[0][2]).not.toHaveProperty("category_id")
+    expect(edits[0][2]).toMatchObject({ title: "Cabalgata", price: 900 })
   })
 })

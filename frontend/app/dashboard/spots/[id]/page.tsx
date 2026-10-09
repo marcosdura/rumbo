@@ -551,6 +551,7 @@ export default function SpotDashboardPage() {
               category={spot.category?.name ?? null}
               showExperiences={showExperiences}
               showGlamping={showGlamping}
+              activities={spot.activities ?? (spot.category ? [spot.category.name] : [])}
             />
           </div>
         )}

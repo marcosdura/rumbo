@@ -47,7 +47,9 @@ export type Spot = {
 // GET /spots/{id}/owner-content: lo del dueño, incluido lo que está en revisión.
 export type OwnedExperience = {
   id: number; title: string; price: number | null; is_approved: boolean
-  category: { name: string } | null
+  category: { id?: number; name: string } | null
+  category_id?: number
+  description?: string | null; schedule?: string | null; contact?: string | null
 }
 export type OwnedGlampingUnit = {
   id: number; accommodation_type: string | null; capacity: number | null
@@ -56,6 +58,9 @@ export type OwnedGlampingUnit = {
 export type OwnedRoute = {
   id: number; name: string; is_approved: boolean
   distance_km?: number | null; difficulty?: string | null; grade?: string | null
+  // Rutas de trekking (para editarlas).
+  duration_hours?: number | null; elevation_gain?: number | null; elevation_loss?: number | null
+  route_type?: string | null; description?: string | null
 }
 export type OwnedSector = { id: number; name: string; type: string | null; is_approved: boolean; routes: OwnedRoute[] }
 export type OwnedOperator = { id: number; name: string; is_approved: boolean }
@@ -66,6 +71,10 @@ export type OwnerContent = {
   sectors: OwnedSector[]
   surf_schools: OwnedOperator[]
   kayaks: OwnedOperator[]
+  // Para corregirlos desde el panel (null = todavía no se cargaron).
+  trekking_detail?: Record<string, boolean | null> | null
+  motorhome_detail?: Record<string, unknown> | null
+  amenity_ids?: number[]
 }
 
 export type Tab = "info" | "fotos" | "contenido" | "reviews"

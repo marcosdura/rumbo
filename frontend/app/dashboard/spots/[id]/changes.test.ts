@@ -86,9 +86,9 @@ describe("isStaySpot", () => {
 
 describe("contentTabLabel", () => {
   it("nombra la pestaña según qué se le puede sumar al lugar", () => {
-    expect(contentTabLabel("Camping", false)).toBe("🧭 Experiencias")
-    expect(contentTabLabel("Glamping", true)).toBe("🧭 Experiencias y alojamiento")
-    expect(contentTabLabel("Trekking", false)).toBe("🥾 Rutas")
+    expect(contentTabLabel("Camping", false)).toBe("🧭 Servicios y experiencias")
+    expect(contentTabLabel("Glamping", true)).toBe("🧭 Servicios, experiencias y alojamiento")
+    expect(contentTabLabel("Trekking", false)).toBe("🥾 Rutas y características")
     expect(contentTabLabel("Escalada", false)).toBe("🧗 Sectores y vías")
     expect(contentTabLabel(null, false)).toBeNull()
   })

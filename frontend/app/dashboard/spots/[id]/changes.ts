@@ -104,9 +104,9 @@ export function priceMode(activities: string[]): PriceMode {
 // Nombre de la pestaña de contenido del dashboard según el tipo de lugar
 // (qué se le puede sumar). null = el lugar no tiene esa pestaña.
 export function contentTabLabel(categoryName: string | null | undefined, hasGlamping: boolean): string | null {
-  if (isStaySpot(categoryName)) return hasGlamping ? "🧭 Experiencias y alojamiento" : "🧭 Experiencias"
+  if (isStaySpot(categoryName)) return hasGlamping ? "🧭 Servicios, experiencias y alojamiento" : "🧭 Servicios y experiencias"
   switch (categoryName) {
-    case "Trekking": return "🥾 Rutas"
+    case "Trekking": return "🥾 Rutas y características"
     case "Escalada": return "🧗 Sectores y vías"
     case "Surf": return "🏄 Escuelas de surf"
     case "Kayak": return "🛶 Kayak"

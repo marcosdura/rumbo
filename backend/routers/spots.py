@@ -1406,6 +1406,13 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
         ],
         "surf_schools": [dump(SurfSchoolResponse, s) for s in surf_schools],
         "kayaks": [dump(KayakDetailResponse, k) for k in kayaks],
+        # Para editarlos desde el panel (routers/owner_edits.py).
+        "trekking_detail": TrekkingDetailCreate.model_validate(spot.trekking_detail).model_dump() if spot.trekking_detail else None,
+        "motorhome_detail": (
+            MotorhomeDetailCreate.model_validate(spot.motorhome_detail, from_attributes=True).model_dump()
+            if spot.motorhome_detail else None
+        ),
+        "amenity_ids": sorted(sa.amenity_id for sa in spot.amenities),
     }
 
 

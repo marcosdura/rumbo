@@ -14,6 +14,9 @@ import type { ExperienceItem, GlampingDetailItem } from "@/components/agregar-lu
 import { s } from "./styles"
 import { errorMessage } from "./changes"
 import type { OwnerContent } from "./types"
+import {
+  CampingAmenitiesForm, ExperienceEditForm, GlampingUnitEditForm, MotorhomeServicesForm, RouteEditForm, TrekkingFeaturesForm,
+} from "./EditForms"
 
 interface Props {
   spotId: number
@@ -23,6 +26,8 @@ interface Props {
   category: string | null
   showExperiences: boolean
   showGlamping: boolean
+  // Actividades del lugar: qué servicios se corrigen acá (camping, motorhome).
+  activities?: string[]
 }
 
 const ACCOMMODATION_LABELS: Record<string, string> = {
@@ -49,8 +54,11 @@ export function savedMessage(created: { is_approved?: boolean }[]) {
 // Qué se está por borrar: cada elemento sabe su endpoint.
 type ToDelete = { url: string; title: string; pending: boolean; note?: string }
 
-export default function ContentTab({ spotId, token, reviewed, category, showExperiences, showGlamping }: Props) {
+export default function ContentTab({ spotId, token, reviewed, category, showExperiences, showGlamping, activities = [] }: Props) {
   const [content, setContent] = useState<OwnerContent | null>(null)
+  // Lo que se está corrigiendo ("route-3", "exp-5"...) y el último guardado.
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editMsg, setEditMsg] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const [expDrafts, setExpDrafts] = useState<ExperienceItem[]>([])
@@ -141,6 +149,16 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
     await load()
   }
 
+  // Corregir algo ya cargado: se aplica al instante (owner_edits.py).
+  function saveEdit(method: "patch" | "put", url: string, what: string) {
+    return async (payload: object) => {
+      await api[method](url, payload, { token })
+      setEditing(null)
+      setEditMsg(`✓ ${what}: guardado`)
+      await load()
+    }
+  }
+
   function askDelete(target: ToDelete) {
     setDeleteError(null)
     setToDelete(target)
@@ -170,8 +188,34 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {reviewed && (
         <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
-          Lo que sumes pasa por revisión antes de publicarse. Borrar algo se aplica al instante.
+          Lo que sumes pasa por revisión antes de publicarse. Corregir o borrar algo se aplica al instante.
         </p>
+      )}
+      {editMsg && <p role="status" style={{ fontSize: 13, color: "var(--primary)", fontWeight: 600, margin: 0 }}>{editMsg}</p>}
+
+      {/* Características del trekking: antes solo se cargaban al crear el lugar. */}
+      {category === "Trekking" && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Características del lugar</p>
+          <TrekkingFeaturesForm initial={content.trekking_detail ?? null}
+            onSave={saveEdit("put", `/spots/${spotId}/trekking-detail`, "Características")} />
+        </div>
+      )}
+
+      {activities.includes("Camping") && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Servicios del camping</p>
+          <CampingAmenitiesForm initial={content.amenity_ids ?? []}
+            onSave={saveEdit("put", `/spots/${spotId}/camping-amenities`, "Servicios del camping")} />
+        </div>
+      )}
+
+      {activities.includes("Motorhome") && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Servicios para motorhomes</p>
+          <MotorhomeServicesForm initial={content.motorhome_detail ?? null}
+            onSave={saveEdit("put", `/spots/${spotId}/motorhome-detail`, "Servicios para motorhomes")} />
+        </div>
       )}
 
       {/* Experiencias (solo alojamientos) */}
@@ -189,8 +233,14 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
               title={exp.title}
               detail={[exp.category?.name, exp.price != null ? `$ ${exp.price}` : null].filter(Boolean).join(" · ")}
               pending={!exp.is_approved}
+              onEdit={() => setEditing(`exp-${exp.id}`)}
               onDelete={() => askDelete({ url: `/spots/${spotId}/experiences/${exp.id}`, title: exp.title, pending: !exp.is_approved })}
-            />
+            >
+              {editing === `exp-${exp.id}` && (
+                <ExperienceEditForm exp={exp} onCancel={() => setEditing(null)}
+                  onSave={saveEdit("patch", `/spots/${spotId}/experiences/${exp.id}`, exp.title)} />
+              )}
+            </ItemRow>
           ))}
 
           {expDrafts.length > 0 && (
@@ -220,7 +270,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
       {showGlamping && (
         <div style={{ ...s.card, padding: 24 }}>
           <p style={sectionTitle}>Tipos de alojamiento</p>
-          {content.glamping_units.map(unit => {
+          {content.glamping_units.map((unit, index) => {
             const label = ACCOMMODATION_LABELS[unit.accommodation_type ?? ""] ?? unit.accommodation_type ?? "Alojamiento"
             return (
               <ItemRow
@@ -231,8 +281,14 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
                   unit.price_per_night != null ? `$ ${unit.price_per_night} por noche` : null,
                 ].filter(Boolean).join(" · ")}
                 pending={!unit.is_approved}
+                onEdit={() => setEditing(`unit-${unit.id}`)}
                 onDelete={() => askDelete({ url: `/glamping/glamping/${unit.id}`, title: label, pending: !unit.is_approved })}
-              />
+              >
+                {editing === `unit-${unit.id}` && (
+                  <GlampingUnitEditForm unit={unit} index={index} onCancel={() => setEditing(null)}
+                    onSave={saveEdit("patch", `/glamping/units/${unit.id}`, label)} />
+                )}
+              </ItemRow>
             )
           })}
 
@@ -287,8 +343,13 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
               title={r.name}
               detail={[r.distance_km != null ? `${r.distance_km} km` : null, r.difficulty].filter(Boolean).join(" · ")}
               pending={!r.is_approved}
+              onEdit={() => setEditing(`route-${r.id}`)}
               onDelete={() => askDelete({ url: `/routes/${r.id}`, title: r.name, pending: !r.is_approved })}
-            />
+            >
+              {editing === `route-${r.id}` && (
+                <RouteEditForm route={r} onCancel={() => setEditing(null)} onSave={saveEdit("patch", `/routes/${r.id}`, r.name)} />
+              )}
+            </ItemRow>
           ))}
           <div style={{ marginTop: 16 }}>
             <Link href={addToSpotUrl("ruta", spotId)} style={addLink}>＋ Agregar una ruta</Link>
@@ -382,18 +443,27 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
   )
 }
 
-// Fila de lista, como las de "Tus lugares" en /profile.
-function ItemRow({ title, detail, pending, onDelete }: { title: string; detail: string; pending: boolean; onDelete: () => void }) {
+// Fila de lista, como las de "Tus lugares" en /profile. Con onEdit, "Editar"
+// abre abajo el formulario (children).
+function ItemRow({ title, detail, pending, onDelete, onEdit, children }: {
+  title: string; detail: string; pending: boolean; onDelete: () => void; onEdit?: () => void; children?: React.ReactNode
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #ede9e1" }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{title}</span>
-          {pending && <Pill variant="yellow" size="sm">En revisión</Pill>}
+    <div style={{ borderBottom: "1px solid #ede9e1" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{title}</span>
+            {pending && <Pill variant="yellow" size="sm">En revisión</Pill>}
+          </div>
+          {detail && <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>{detail}</p>}
         </div>
-        {detail && <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>{detail}</p>}
+        {onEdit && !children && (
+          <button onClick={onEdit} aria-label={`Editar ${title}`} style={{ ...deleteBtn, color: "var(--primary)", border: "1px solid var(--border)" }}>Editar</button>
+        )}
+        <button onClick={onDelete} aria-label={`Eliminar ${title}`} style={deleteBtn}>✕</button>
       </div>
-      <button onClick={onDelete} aria-label={`Eliminar ${title}`} style={deleteBtn}>✕</button>
+      {children}
     </div>
   )
 }

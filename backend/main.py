@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews, surf_reviews, kayak_reviews, users, glamping, climbingroutes, change_requests, contributions, operators, reports, notifications, claims, home, me, item_photos
+from routers import spots, categories, amenities, routes, sectors, kayak, surfschools, upsert, images, favorites, reviews, surf_reviews, kayak_reviews, users, glamping, climbingroutes, change_requests, contributions, operators, reports, notifications, claims, home, me, item_photos, owner_edits
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -73,3 +73,4 @@ app.include_router(claims.router)
 app.include_router(home.router)
 app.include_router(me.router)
 app.include_router(item_photos.router)
+app.include_router(owner_edits.router)
