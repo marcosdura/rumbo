@@ -36,3 +36,16 @@ export function offSeasonNotice(spot: CardSpot, now = new Date()): string | null
   const notice = seasonNotice(spot, now)
   return notice ? `Fuera de temporada · ${notice.charAt(0).toLowerCase()}${notice.slice(1)}` : null
 }
+
+// Cómo llegar: Google Maps directo a las coordenadas. Antes buscaba por el
+// nombre, y con otro lugar llamado igual abría el equivocado.
+export function directionsUrl(lat: number, lng: number): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+}
+
+// WhatsApp con el mensaje ya escrito: le dice al lugar de dónde viene la
+// consulta.
+export function whatsappUrl(phone: string, spotName: string): string {
+  const text = `Hola, te escribo por ${spotName}, que vi en Rumbo.`
+  return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`
+}

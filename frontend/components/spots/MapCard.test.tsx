@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 // Leaflet necesita un DOM real con medidas; para el test alcanza con cajas.
+// El mapa simulado deja ver con qué zoom y rueda se armó.
 vi.mock("react-leaflet", () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="map">{children}</div>,
+  MapContainer: ({ children, zoom, scrollWheelZoom }: { children: React.ReactNode; zoom: number; scrollWheelZoom: boolean }) =>
+    <div data-testid="map" data-zoom={zoom} data-wheel={String(scrollWheelZoom)}>{children}</div>,
   TileLayer: () => null,
   Marker: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Popup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -29,5 +31,14 @@ describe("MapCard", () => {
     const { container, rerender } = render(<MapCard lat={-34.6} lng={-58.4} name="Cascada" />)
     rerender(<MapCard lat={null} lng={null} name="Otro" />)
     expect(container.innerHTML).toBe("")
+  })
+
+  it("cerca del lugar, sin robarle la rueda a la página, y Cómo llegar a las coordenadas", () => {
+    render(<MapCard lat={-34.9} lng={-54.95} name="Cascada" />)
+    const map = screen.getByTestId("map")
+    expect(map.dataset.zoom).toBe("13")
+    expect(map.dataset.wheel).toBe("false")
+    expect(screen.getByRole("link", { name: /Cómo llegar/ }).getAttribute("href"))
+      .toBe("https://www.google.com/maps/dir/?api=1&destination=-34.9,-54.95")
   })
 })

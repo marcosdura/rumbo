@@ -245,6 +245,9 @@ function SpotDetail({ spot }) {
           .spot-right-panel {
             position: static;
             padding: 20px 16px;
+            /* En el celular, precio y contacto antes que la descripción y el
+               mapa: es lo que se busca para ir. */
+            order: -1;
           }
         }
       `}</style>

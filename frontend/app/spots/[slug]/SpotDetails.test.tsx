@@ -146,3 +146,22 @@ describe("Página del lugar: encabezado y panel", () => {
     expect(screen.queryByText("🔒 Privado")).toBeNull()
   })
 })
+
+describe("Página del lugar: contacto y orden en el celular", () => {
+  it("WhatsApp con mensaje; el email abre el correo y se puede copiar", async () => {
+    render(<SpotDetail spot={spot("Camping", { whatsapp: "099 123 456", email: "hola@aguada.uy" })} />)
+    await screen.findByText("Cerro Arequita")
+    const wa = screen.getByRole("link", { name: /099 123 456/ }).getAttribute("href")!
+    expect(new URL(wa).searchParams.get("text")).toBe("Hola, te escribo por Cerro Arequita, que vi en Rumbo.")
+    expect(screen.getByRole("link", { name: "hola@aguada.uy" }).getAttribute("href")).toBe("mailto:hola@aguada.uy")
+    expect(screen.getByRole("button", { name: "Copiar" })).toBeTruthy()
+  })
+
+  it("en el celular el panel de detalles va antes que la descripción", async () => {
+    const { container } = render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
+    expect(mobile).toMatch(/\.spot-right-panel \{[^}]*order: -1;/)
+  })
+})

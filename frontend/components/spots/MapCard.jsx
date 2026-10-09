@@ -4,6 +4,7 @@ import { useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
+import { directionsUrl } from "@/lib/spotDetail"
 
 const icon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -24,7 +25,6 @@ function MapCard({ lat, lng, name }) {
   const mapKey = `${instanceId}-${lat}-${lng}`
 
   const position = [lat, lng]
-  const directionsUrl = `https://www.google.com/maps/search/${encodeURIComponent(name)}/@${lat},${lng},13z`
 
   return (
     <div style={{
@@ -89,9 +89,11 @@ function MapCard({ lat, lng, name }) {
       >
         <MapContainer
           center={position}
-          zoom={8}
+          zoom={13}
           style={{ height: "100%", width: "100%" }}
-          scrollWheelZoom={true}
+          // La rueda del mouse baja por la página: con true hacía zoom en el
+          // mapa al pasar por encima. Quedan los botones + / −.
+          scrollWheelZoom={false}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -104,13 +106,13 @@ function MapCard({ lat, lng, name }) {
       </div>
 
       <a
-        href={directionsUrl}
+        href={directionsUrl(lat, lng)}
         target="_blank"
         rel="noopener noreferrer"
         className="mapcard-btn"
       >
         <span>📍</span>
-        <span>Abrir en Google Maps</span>
+        <span>Cómo llegar</span>
       </a>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { detailRows } from "@/lib/spotDetail"
+import { detailRows, whatsappUrl } from "@/lib/spotDetail"
 import { knownPractical } from "@/lib/practicalInfo"
 import PracticalInfoCard from "./PracticalInfoCard"
 
@@ -23,8 +23,6 @@ function SpotDetails({ spot }) {
   const hasPractical = knownPractical(spot).length > 0
   const hasContact = spot.email || spot.whatsapp || spot.instagram
 
-  const whatsappNumber = spot.whatsapp ? spot.whatsapp.replace(/\D/g, "") : ""
-  const whatsappUrl = "https://wa.me/" + whatsappNumber
   const instagramHandle = spot.instagram ? spot.instagram.replace(/^@/, "") : ""
   const instagramUrl = "https://instagram.com/" + instagramHandle
 
@@ -32,19 +30,24 @@ function SpotDetails({ spot }) {
     spot.email ? {
       label: <><span>✉️</span><span>Email</span></>,
       node: (
-        <span
-          onClick={() => { navigator.clipboard.writeText(spot.email); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-          className="detail-link"
-          title="Copiar email"
-        >
-          {copied ? "¡Copiado! ✓" : spot.email}
+        // Tocarlo abre el correo; copiar queda al lado (sin app de correo
+        // configurada, mailto no hace nada).
+        <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <a href={`mailto:${spot.email}`} className="detail-link">{spot.email}</a>
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(spot.email); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            className="detail-copy"
+          >
+            {copied ? "¡Copiado! ✓" : "Copiar"}
+          </button>
         </span>
       ),
     } : null,
     spot.whatsapp ? {
       label: <><span>💬</span><span>WhatsApp</span></>,
       node: (
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="detail-link">
+        <a href={whatsappUrl(spot.whatsapp, spot.name)} target="_blank" rel="noopener noreferrer" className="detail-link">
           <span>{spot.whatsapp}</span>
           <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
         </a>
@@ -128,6 +131,18 @@ function SpotDetails({ spot }) {
           text-align: right;
           min-width: 0;
           word-break: break-all;
+        }
+
+        .detail-copy {
+          font-size: 12px;
+          color: var(--muted);
+          background: none;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 2px 8px;
+          cursor: pointer;
+          flex-shrink: 0;
+          font-family: inherit;
         }
 
         @media (max-width: 480px) {

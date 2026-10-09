@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { detailRows, offSeasonNotice, seasonLabel } from "./spotDetail"
+import { detailRows, directionsUrl, offSeasonNotice, seasonLabel, whatsappUrl } from "./spotDetail"
 
 const labels = (rows: { label: string; value: string }[]) => rows.map(r => `${r.label}: ${r.value}`)
 
@@ -34,5 +34,17 @@ describe("Panel Detalles: solo lo que se sabe y no está en otro lado", () => {
     const julio = new Date(2026, 6, 15)
     expect(offSeasonNotice({ season_start: 11, season_end: 3 }, julio)).toBe("Fuera de temporada · abre en noviembre")
     expect(offSeasonNotice({ season_start: 11, season_end: 3 }, new Date(2026, 0, 10))).toBeNull()
+  })
+})
+
+describe("Llegar y contactar", () => {
+  it("cómo llegar va a las coordenadas, no a una búsqueda por nombre", () => {
+    expect(directionsUrl(-34.9, -54.95)).toBe("https://www.google.com/maps/dir/?api=1&destination=-34.9,-54.95")
+  })
+
+  it("WhatsApp con el mensaje escrito y el número limpio", () => {
+    const url = new URL(whatsappUrl("+598 99 123 456", "Camping La Aguada"))
+    expect(url.origin + url.pathname).toBe("https://wa.me/59899123456")
+    expect(url.searchParams.get("text")).toBe("Hola, te escribo por Camping La Aguada, que vi en Rumbo.")
   })
 })
