@@ -10,18 +10,8 @@ import ReportButton from "@/components/ui/ReportButton"
 // Tipo de reporte de una reseña según de qué es (backend/reports.py).
 const REVIEW_REPORT_KIND = { spot: "review", surf: "surf_review", kayak: "kayak_review" }
 import { trackEvent } from "@/lib/analytics"
+import { timeAgo } from "@/lib/timeAgo"
 import { api } from "@/lib/api"
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr + "Z").getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 60) return `hace ${mins} min`
-  if (hours < 24) return `hace ${hours}h`
-  if (days < 30) return `hace ${days} día${days !== 1 ? "s" : ""}`
-  return new Date(dateStr).toLocaleDateString("es-UY", { month: "short", year: "numeric" })
-}
 
 function Avatar({ user, size = 36 }) {
   const initials = user?.name

@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session, joinedload
 import operators
 from auth import get_current_user_required, is_admin
 from database import get_db
-from models import Contribution, Favorite, Review, SpotClaim, SpotDB, User
+from models import Contribution, Favorite, SpotClaim, SpotDB, User
 from ownership import is_admin_managed
 from spot_changes import owner_visible_request
+from routers.reviews import my_reviews_count
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -125,7 +126,8 @@ def summary(db: Session = Depends(get_db), user: dict = Depends(get_current_user
     return {
         "member_since": _iso(db_user.created_at) if db_user else None,
         "favorites": db.query(Favorite).filter(Favorite.user_id == sub).count(),
-        "reviews": db.query(Review).filter(Review.user_id == sub).count(),
+        # Las de lugares, escuelas de surf y servicios de kayak.
+        "reviews": my_reviews_count(db, sub),
         # Un lugar sugerido en revisión es suyo mientras se revisa, pero se
         # cuenta (y se muestra) en "sugeridos", no dos veces.
         "managed": sum(1 for s in spots if s.suggested_by_email != email) + len(owned_operators(db, email)),

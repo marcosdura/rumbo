@@ -88,11 +88,13 @@ export type MySpotSummary = SpotListItem & {
 }
 
 // GET /reviews/user/me
+// GET /reviews/user/me: de un lugar, una escuela de surf o un servicio de
+// kayak. `href` lleva a las reseñas de esa página.
 export type MyReview = {
+  kind: "spot" | "surf" | "kayak"
   id: number
-  spot_id: number
-  spot_name: string
-  spot_slug: string | null
+  target_name: string | null
+  href: string | null
   rating: number
   comment: string | null
   created_at: string
