@@ -31,14 +31,14 @@ afterEach(() => { page = null; requested = [] })
 
 describe("metadata de la ruta", () => {
   it("con los datos de la ruta", async () => {
-    page = { route, spot }
+    page = { route, spot, others: [] }
     const meta = await generateMetadata({ params })
     expect(meta.title).toBe("Cumbre | Rumbo")
     expect(meta.description).toBe("Ruta de trekking: 4 km, 1.5 h, dificultad moderado.")
   })
 
   it("con descripción, la usa", async () => {
-    page = { route: { ...route, description: "Sube por el bosque hasta la cruz." }, spot }
+    page = { route: { ...route, description: "Sube por el bosque hasta la cruz." }, spot, others: [] }
     expect((await generateMetadata({ params })).description).toBe("Sube por el bosque hasta la cruz.")
   })
 
@@ -51,13 +51,13 @@ describe("metadata de la ruta", () => {
 
 describe("página de la ruta", () => {
   it("se busca dentro de su lugar", async () => {
-    page = { route, spot }
+    page = { route, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(requested.at(-1)).toBe("/routes/page/arequita/cumbre")
   })
 
   it("solo los datos que se saben, con coma decimal", async () => {
-    page = { route, spot }
+    page = { route, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByText("1,5 h")).toBeTruthy()
     expect(screen.getByText("300 m")).toBeTruthy()
@@ -66,13 +66,13 @@ describe("página de la ruta", () => {
   })
 
   it("muestra la descripción con sus párrafos", async () => {
-    page = { route: { ...route, description: "Sube por el bosque.\n\nOjo con la bajada." }, spot }
+    page = { route: { ...route, description: "Sube por el bosque.\n\nOjo con la bajada." }, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByText(/Sube por el bosque/).textContent).toBe("Sube por el bosque.\n\nOjo con la bajada.")
   })
 
   it("vuelve al lugar y Compartir abre el modal", async () => {
-    page = { route, spot }
+    page = { route, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByRole("link", { name: "← Cerro Arequita" }).getAttribute("href")).toBe("/spots/arequita")
     fireEvent.click(screen.getByRole("button", { name: "🔗 Compartir" }))
@@ -86,21 +86,21 @@ describe("página de la ruta", () => {
 
 describe("fotos de la ruta", () => {
   it("sin fotos invita a subir las primeras", async () => {
-    page = { route, spot }
+    page = { route, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByText("Esta ruta todavía no tiene fotos. ¿La hiciste? Sumá las tuyas.")).toBeTruthy()
     expect(screen.getByRole("button", { name: "＋ Subir fotos" })).toBeTruthy()
   })
 
   it("con fotos las muestra y ofrece sumar más si hay lugar", async () => {
-    page = { route: { ...route, photos: [{ id: 1, cloudinary_public_id: "rumbo/spots/7/a" }], photo_slots: 2 }, spot }
+    page = { route: { ...route, photos: [{ id: 1, cloudinary_public_id: "rumbo/spots/7/a" }], photo_slots: 2 }, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByAltText("Cumbre 1")).toBeTruthy()
     expect(screen.getByRole("button", { name: "＋ Sumar fotos" })).toBeTruthy()
   })
 
   it("sin lugar para más: no ofrece subir", async () => {
-    page = { route: { ...route, photo_slots: 0 }, spot }
+    page = { route: { ...route, photo_slots: 0 }, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.queryByRole("button", { name: /Subir fotos|Sumar fotos/ })).toBeNull()
     expect(screen.getByText(/Hay fotos en revisión/)).toBeTruthy()
@@ -109,12 +109,40 @@ describe("fotos de la ruta", () => {
 
 describe("recorrido de la ruta", () => {
   it("con recorrido, el mapa; sin, la invitación", async () => {
-    page = { route: { ...route, track: { points: [[1, 2, null], [3, 4, null], [5, 6, null]], distance_km: 2, elevation_gain: null, elevation_loss: null } }, spot }
+    page = { route: { ...route, track: { points: [[1, 2, null], [3, 4, null], [5, 6, null]], distance_km: 2, elevation_gain: null, elevation_loss: null } }, spot, others: [] }
     const { unmount } = render(await TrekkingRoutePage({ params }))
     expect(screen.getByTestId("track-map").textContent).toBe("3 puntos")
     unmount()
-    page = { route, spot }
+    page = { route, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
     expect(screen.getByRole("button", { name: "＋ Subir el recorrido (GPX)" })).toBeTruthy()
+  })
+})
+
+describe("para seguir navegando y compartir", () => {
+  it("las otras rutas del lugar", async () => {
+    page = { route, spot, others: [{ name: "Al mirador", slug: "al-mirador", distance_km: 2.5, difficulty: "fácil" }] }
+    render(await TrekkingRoutePage({ params }))
+    const link = screen.getByRole("link", { name: /Al mirador/ })
+    expect(link.getAttribute("href")).toBe("/spots/arequita/rutas/al-mirador")
+    expect(link.textContent).toContain("2,5 km · fácil")
+    expect(screen.getByText("Otras rutas en Cerro Arequita")).toBeTruthy()
+  })
+
+  it("sin otras, no aparece la sección", async () => {
+    page = { route, spot, others: [] }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.queryByText(/Otras rutas/)).toBeNull()
+  })
+
+  it("al compartir: la primera foto de la ruta; si no tiene, la del lugar", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME", "rumbo")
+    page = { route: { ...route, photos: [{ id: 1, cloudinary_public_id: "rumbo/spots/7/ruta" }] }, spot: { ...spot, image: "rumbo/spots/7/lugar" }, others: [] }
+    let og = (await generateMetadata({ params })).openGraph?.images as { url: string }[]
+    expect(og[0].url).toBe("https://res.cloudinary.com/rumbo/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/rumbo/spots/7/ruta")
+    page = { route, spot: { ...spot, image: "rumbo/spots/7/lugar" }, others: [] }
+    og = (await generateMetadata({ params })).openGraph?.images as { url: string }[]
+    expect(og[0].url).toContain("/rumbo/spots/7/lugar")
+    vi.unstubAllEnvs()
   })
 })

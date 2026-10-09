@@ -23,6 +23,23 @@ export function SectionCard({ title, action, children }: { title: string; action
   )
 }
 
+// "Otras rutas en este lugar" / "Otros sectores": antes había que volver al lugar.
+export function OtherLinks({ title, items }: { title: string; items: { href: string; name: string; facts: string }[] }) {
+  if (items.length === 0) return null
+  return (
+    <SectionCard title={title}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {items.map(i => (
+          <Link key={i.href} href={i.href} className="trail-other">
+            <span style={{ fontWeight: 600, color: "#1b1b19" }}>{i.name}</span>
+            <span style={{ color: "var(--muted)", fontSize: 13 }}>{i.facts} →</span>
+          </Link>
+        ))}
+      </div>
+    </SectionCard>
+  )
+}
+
 // Solo los datos que se saben (lib/trailPage.ts).
 export function StatGrid({ stats }: { stats: Stat[] }) {
   if (stats.length === 0) return null
@@ -56,6 +73,9 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
         .trail-stat { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .trail-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .trail-body { display: flex; flex-direction: column; gap: 20px; }
+        .trail-other { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 10px; border-bottom: 1px solid #ede9e1; text-decoration: none; font-size: 14px; border-radius: 10px; }
+        .trail-other:last-child { border-bottom: none; }
+        .trail-other:hover { background: #f7f5f0; }
         @media (max-width: 640px) {
           .trail-inner { padding: 20px 16px 48px; }
           .trail-stats { grid-template-columns: repeat(2, 1fr); }

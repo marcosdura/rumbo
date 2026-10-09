@@ -97,7 +97,7 @@ def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_
     """Todo lo de la página de un sector, buscado dentro de su lugar (el
     slug de un sector no es único entre lugares: "Sector Norte" hay en
     muchos, y /by-slug devolvía el primero), con sus vías."""
-    from routers.routes import visible_spot_by_slug
+    from routers.routes import spot_main_image, visible_spot_by_slug
     spot = visible_spot_by_slug(db, spot_slug)
     sector = (
         db.query(ClimbingSector)
@@ -111,13 +111,23 @@ def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_
     via_ids = [v.id for v in vias]
     via_photos = item_photos.photos_of(db, "climbing_route", via_ids)
     via_slots = item_photos.slots_of(db, "climbing_route", via_ids)
+    # "Otros sectores de este lugar".
+    others = (
+        db.query(ClimbingSector)
+        .filter(ClimbingSector.spot_id == spot.id, ClimbingSector.id != sector.id)
+        .order_by(ClimbingSector.id).all()
+    )
     return {
         "sector": {
             **ClimbingSectorResponse.model_validate(sector).model_dump(mode="json"),
             "photos": item_photos.photos_of(db, "climbing_sector", [sector.id])[sector.id],
             "photo_slots": item_photos.slots_of(db, "climbing_sector", [sector.id])[sector.id],
         },
-        "spot": {"id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department},
+        "spot": {"id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department, "image": spot_main_image(spot)},
+        "others": [
+            {"name": o.name, "slug": o.slug, "routes_count": _attach_sector_stats(o).routes_count}
+            for o in others if o.slug
+        ],
         "routes": [
             {**ClimbingRouteResponse.model_validate(v).model_dump(mode="json"), "photos": via_photos[v.id], "photo_slots": via_slots[v.id]}
             for v in vias

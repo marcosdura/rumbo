@@ -55,6 +55,12 @@ def get_route_by_slug(slug: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Route not found")
     return route
 
+def spot_main_image(spot: SpotDB):
+    """La foto principal del lugar (para compartir una ruta o sector sin fotos)."""
+    images = sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id))
+    return images[0].cloudinary_public_id if images else None
+
+
 def visible_spot_by_slug(db: Session, slug: str) -> SpotDB:
     """El lugar publicado de una página de ruta o sector (404 si no)."""
     spot = home.visible(db.query(SpotDB)).filter(SpotDB.slug == slug).first()
@@ -77,6 +83,8 @@ def get_route_page(spot_slug: str, route_slug: str, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Route not found")
     detail = spot.trekking_detail
     track, track_pending = route_tracks.public_track(db, route.id)
+    # "Otras rutas en este lugar": antes había que volver al lugar.
+    others = db.query(Route).filter(Route.spot_id == spot.id, Route.id != route.id).order_by(Route.id).all()
     return {
         "route": {
             **RouteResponse.model_validate(route).model_dump(mode="json"),
@@ -89,7 +97,12 @@ def get_route_page(spot_slug: str, route_slug: str, db: Session = Depends(get_db
         "spot": {
             "id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department,
             "trekking_detail": {f: getattr(detail, f) for f in TREKKING_FEATURES} if detail else None,
+            "image": spot_main_image(spot),
         },
+        "others": [
+            {"name": o.name, "slug": o.slug, "distance_km": o.distance_km, "difficulty": o.difficulty}
+            for o in others if o.slug
+        ],
     }
 
 

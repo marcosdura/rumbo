@@ -1,14 +1,15 @@
 import { Metadata } from "next"
 import { cache } from "react"
 import { notFound } from "next/navigation"
-import TrailLayout, { SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
+import TrailLayout, { OtherLinks, SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
 import ItemPhotos from "@/components/trail-page/ItemPhotos"
 import RouteTrack from "@/components/trail-page/RouteTrack"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { api } from "@/lib/api"
 import { routeDescription } from "@/lib/metadata"
-import { routeStats, type RoutePage } from "@/lib/trailPage"
+import { otherRouteFacts, routeStats, sharePhoto, type RoutePage } from "@/lib/trailPage"
+import { shareImageUrl } from "@/lib/spotDetail"
 
 type Props = {
   params: Promise<{ slug: string; routeSlug: string }>
@@ -23,9 +24,11 @@ const getRoutePage = cache(async (spotSlug: string, routeSlug: string) =>
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, routeSlug } = await params
   const page = await getRoutePage(slug, routeSlug)
+  const photo = page ? sharePhoto(page.route.photos, page.spot) : null
   return {
     title: `${page?.route.name ?? routeSlug} | Rumbo`,
     description: page?.route.description?.trim().slice(0, 160) || routeDescription(page?.route ?? null),
+    ...(photo ? { openGraph: { images: [{ url: shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo), width: 1200, height: 630 }] } } : {}),
   }
 }
 
@@ -37,7 +40,7 @@ export default async function TrekkingRoutePage({ params }: Props) {
   const { slug, routeSlug } = await params
   const page = await getRoutePage(slug, routeSlug)
   if (!page) notFound()
-  const { route, spot } = page
+  const { route, spot, others } = page
   const description = route.description?.trim()
 
   return (
@@ -60,6 +63,10 @@ export default async function TrekkingRoutePage({ params }: Props) {
         </SectionCard>
       )}
       <AmenitiesCard trekkingDetail={spot.trekking_detail} />
+      <OtherLinks
+        title={`Otras rutas en ${spot.name}`}
+        items={others.map(o => ({ href: `/spots/${spot.slug}/rutas/${o.slug}`, name: o.name, facts: otherRouteFacts(o) }))}
+      />
     </TrailLayout>
   )
 }

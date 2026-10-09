@@ -21,7 +21,11 @@ export type RouteTrackData = {
   elevation_loss: number | null
 }
 
-export type TrailSpot = { id: number; name: string; slug: string; department: string | null }
+export type TrailSpot = {
+  id: number; name: string; slug: string; department: string | null
+  // La foto principal del lugar: para compartir si la ruta o el sector no tiene.
+  image?: string | null
+}
 
 export type TrekkingRoute = PublicRoute & {
   id: number
@@ -37,12 +41,30 @@ export type TrekkingRoute = PublicRoute & {
 export type RoutePage = {
   route: TrekkingRoute
   spot: TrailSpot & { trekking_detail: Record<string, boolean | null> | null }
+  // Las otras rutas del lugar.
+  others: { name: string; slug: string; distance_km: number | null; difficulty: string | null }[]
 }
 
 export type SectorPage = {
   sector: SectorDetail & WithPhotos
   spot: TrailSpot
   routes: Via[]
+  // Los otros sectores del lugar.
+  others: { name: string; slug: string; routes_count: number }[]
+}
+
+// La foto al compartir: la primera de la ruta o el sector; si no tiene, la
+// del lugar.
+export function sharePhoto(photos: ItemPhoto[], spot: TrailSpot): string | null {
+  return photos[0]?.cloudinary_public_id ?? spot.image ?? null
+}
+
+export function otherRouteFacts(o: RoutePage["others"][number]): string {
+  return [o.distance_km != null ? `${o.distance_km.toLocaleString("es-UY")} km` : null, o.difficulty].filter(Boolean).join(" · ")
+}
+
+export function otherSectorFacts(o: SectorPage["others"][number]): string {
+  return o.routes_count ? `${o.routes_count} ${o.routes_count === 1 ? "vía" : "vías"}` : ""
 }
 
 export type Stat = { icon: string; value: string; label: string }

@@ -84,3 +84,32 @@ def test_migracion_0018_genera_los_slugs_que_faltan():
         assert sectors == ["penon-norte"]
     finally:
         os.environ["DATABASE_URL"] = DB_URL
+
+
+def test_la_ruta_trae_las_otras_rutas_del_lugar_y_su_foto(client, db, make_spot):
+    from models import SpotImage
+    spot = make_spot(name="Cerro", category="Trekking", slug="cerro")
+    db.add_all([
+        Route(spot_id=spot.id, name="Uno", slug="uno"),
+        Route(spot_id=spot.id, name="Dos", slug="dos", distance_km=5, difficulty="fácil"),
+        Route(spot_id=spot.id, name="Pendiente", slug="pendiente", is_approved=False),
+        SpotImage(spot_id=spot.id, cloudinary_public_id="rumbo/spots/1/b", is_main=False, order=0),
+        SpotImage(spot_id=spot.id, cloudinary_public_id="rumbo/spots/1/a", is_main=True, order=1),
+    ])
+    db.commit()
+    data = client.get("/routes/page/cerro/uno").json()
+    assert data["others"] == [{"name": "Dos", "slug": "dos", "distance_km": 5, "difficulty": "fácil"}]
+    assert data["spot"]["image"] == "rumbo/spots/1/a"
+
+
+def test_el_sector_trae_los_otros_sectores_con_sus_vias(client, db, make_spot):
+    spot = make_spot(name="Peña", category="Escalada", slug="pena")
+    norte = ClimbingSector(spot_id=spot.id, name="Norte", slug="norte")
+    sur = ClimbingSector(spot_id=spot.id, name="Sur", slug="sur")
+    db.add_all([norte, sur])
+    db.flush()
+    db.add_all([ClimbingRoute(sector_id=sur.id, name="A", grade="5"), ClimbingRoute(sector_id=sur.id, name="B", grade="6a")])
+    db.commit()
+    data = client.get("/sectors/page/pena/norte").json()
+    assert data["others"] == [{"name": "Sur", "slug": "sur", "routes_count": 2}]
+    assert data["spot"]["image"] is None

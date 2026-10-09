@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { cache } from "react"
 import { notFound } from "next/navigation"
-import TrailLayout, { SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
+import TrailLayout, { OtherLinks, SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
 import ViasTable from "@/components/trail-page/ViasTable"
 import ItemPhotos from "@/components/trail-page/ItemPhotos"
 import Pill from "@/components/ui/Pill"
@@ -9,7 +9,8 @@ import { AddButton } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import { api } from "@/lib/api"
 import { sectorDescription } from "@/lib/metadata"
-import { sectorStats, type SectorPage } from "@/lib/trailPage"
+import { otherSectorFacts, sectorStats, sharePhoto, type SectorPage } from "@/lib/trailPage"
+import { shareImageUrl } from "@/lib/spotDetail"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>
@@ -23,9 +24,11 @@ const getSectorPage = cache(async (spotSlug: string, sectorSlug: string) =>
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, sectorSlug } = await params
   const page = await getSectorPage(slug, sectorSlug)
+  const photo = page ? sharePhoto(page.sector.photos, page.spot) : null
   return {
     title: `${page?.sector.name ?? sectorSlug} | Rumbo`,
     description: sectorDescription(page?.sector ?? null),
+    ...(photo ? { openGraph: { images: [{ url: shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo), width: 1200, height: 630 }] } } : {}),
   }
 }
 
@@ -33,7 +36,7 @@ export default async function SectorPage({ params }: Props) {
   const { slug, sectorSlug } = await params
   const page = await getSectorPage(slug, sectorSlug)
   if (!page) notFound()
-  const { sector, spot, routes } = page
+  const { sector, spot, routes, others } = page
   const restrictions = sector.restrictions?.trim()
 
   return (
@@ -62,6 +65,10 @@ export default async function SectorPage({ params }: Props) {
       >
         <ViasTable vias={routes} spotId={spot.id} />
       </SectionCard>
+      <OtherLinks
+        title={`Otros sectores en ${spot.name}`}
+        items={others.map(o => ({ href: `/spots/${spot.slug}/sectores/${o.slug}`, name: o.name, facts: otherSectorFacts(o) }))}
+      />
     </TrailLayout>
   )
 }

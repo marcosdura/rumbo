@@ -31,7 +31,7 @@ afterEach(() => { page = null; requested = [] })
 
 describe("metadata del sector", () => {
   it("cuenta las vías con routes_count", async () => {
-    page = { sector: { ...sector, routes_count: 8 }, spot, routes }
+    page = { sector: { ...sector, routes_count: 8 }, spot, routes, others: [] }
     const meta = await generateMetadata({ params })
     expect(meta.title).toBe("Norte | Rumbo")
     expect(meta.description).toBe("Sector de escalada: 8 vías, graduación 5b–6c.")
@@ -46,7 +46,7 @@ describe("metadata del sector", () => {
 
 describe("página del sector", () => {
   it("se busca dentro de su lugar y muestra sus vías", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     expect(requested.at(-1)).toBe("/sectors/page/arequita/norte")
     expect(screen.getByText("Fisura")).toBeTruthy()
@@ -54,13 +54,13 @@ describe("página del sector", () => {
   })
 
   it("cualquiera puede sugerir una vía", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     expect(screen.getByRole("link", { name: "＋ Sugerir una vía" }).getAttribute("href")).toBe("/agregar-lugar?sumar=via&spot=12&sector=5")
   })
 
   it("solo los datos que se saben", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     expect(screen.getByText("1 h 30 min")).toBeTruthy()
     expect(screen.getByText("Sol y sombra")).toBeTruthy()
@@ -69,14 +69,14 @@ describe("página del sector", () => {
   })
 
   it("las restricciones van como aviso; sin características no dice nada", async () => {
-    page = { sector: { ...sector, type: null, restrictions: "Cerrado de agosto a noviembre." }, spot, routes }
+    page = { sector: { ...sector, type: null, restrictions: "Cerrado de agosto a noviembre." }, spot, routes, others: [] }
     render(await SectorPage({ params }))
     expect(screen.getByRole("note").textContent).toBe("⚠️ Restricciones: Cerrado de agosto a noviembre.")
     expect(screen.queryByText("Sin características registradas.")).toBeNull()
   })
 
   it("sin vías, lo dice", async () => {
-    page = { sector: { ...sector, routes_count: 0 }, spot, routes: [] }
+    page = { sector: { ...sector, routes_count: 0 }, spot, routes: [], others: [] }
     render(await SectorPage({ params }))
     expect(screen.getByText("Todavía no hay vías cargadas en este sector.")).toBeTruthy()
   })
@@ -88,13 +88,13 @@ describe("página del sector", () => {
 
 describe("fotos del sector y de las vías", () => {
   it("el sector sin fotos invita a subir", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     expect(screen.getByText("Este sector todavía no tiene fotos. ¿Escalaste acá? Sumá las tuyas.")).toBeTruthy()
   })
 
   it("tocar una vía la abre: descripción completa, sus fotos y subir", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     const techo = screen.getByRole("button", { name: /Techo/ })
     expect(techo.getAttribute("aria-expanded")).toBe("false")
@@ -109,9 +109,19 @@ describe("fotos del sector y de las vías", () => {
   })
 
   it("una vía sin fotos invita a subir", async () => {
-    page = { sector, spot, routes }
+    page = { sector, spot, routes, others: [] }
     render(await SectorPage({ params }))
     fireEvent.click(screen.getByRole("button", { name: /Fisura/ }))
     expect(screen.getByText("Esta vía todavía no tiene fotos. ¿La escalaste? Sumá las tuyas.")).toBeTruthy()
+  })
+})
+
+describe("otros sectores", () => {
+  it("los otros sectores del lugar, con sus vías", async () => {
+    page = { sector, spot, routes, others: [{ name: "Sur", slug: "sur", routes_count: 1 }] }
+    render(await SectorPage({ params }))
+    const link = screen.getByRole("link", { name: /Sur/ })
+    expect(link.getAttribute("href")).toBe("/spots/arequita/sectores/sur")
+    expect(link.textContent).toContain("1 vía")
   })
 })
