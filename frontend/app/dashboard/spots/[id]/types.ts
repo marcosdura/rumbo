@@ -55,14 +55,20 @@ export type OwnedGlampingUnit = {
   id: number; accommodation_type: string | null; capacity: number | null
   price_per_night: number | null; min_nights: number | null; is_approved: boolean
 }
+// Foto de una ruta, sector o vía (de cualquiera; también en revisión).
+export type OwnedPhoto = { id: number; cloudinary_public_id: string; is_approved: boolean }
+
 export type OwnedRoute = {
   id: number; name: string; is_approved: boolean
+  photos?: OwnedPhoto[]
+  // El recorrido (GPX) de una ruta de trekking.
+  track?: { distance_km: number | null; points_count: number; is_approved: boolean } | null
   distance_km?: number | null; difficulty?: string | null; grade?: string | null
   // Rutas de trekking (para editarlas).
   duration_hours?: number | null; elevation_gain?: number | null; elevation_loss?: number | null
   route_type?: string | null; description?: string | null
 }
-export type OwnedSector = { id: number; name: string; type: string | null; is_approved: boolean; routes: OwnedRoute[] }
+export type OwnedSector = { id: number; name: string; type: string | null; is_approved: boolean; routes: OwnedRoute[]; photos?: OwnedPhoto[] }
 export type OwnedOperator = { id: number; name: string; is_approved: boolean }
 export type OwnerContent = {
   experiences: OwnedExperience[]

@@ -13,7 +13,8 @@ import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import type { ExperienceItem, GlampingDetailItem } from "@/components/agregar-lugar/types"
 import { s } from "./styles"
 import { errorMessage } from "./changes"
-import type { OwnerContent } from "./types"
+import type { OwnedPhoto, OwnedRoute, OwnerContent } from "./types"
+import { CldImage } from "next-cloudinary"
 import {
   CampingAmenitiesForm, ExperienceEditForm, GlampingUnitEditForm, MotorhomeServicesForm, RouteEditForm, TrekkingFeaturesForm,
 } from "./EditForms"
@@ -345,6 +346,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
               pending={!r.is_approved}
               onEdit={() => setEditing(`route-${r.id}`)}
               onDelete={() => askDelete({ url: `/routes/${r.id}`, title: r.name, pending: !r.is_approved })}
+              media={<Media photos={r.photos} track={r.track} routeId={r.id} name={r.name} askDelete={askDelete} />}
             >
               {editing === `route-${r.id}` && (
                 <RouteEditForm route={r} onCancel={() => setEditing(null)} onSave={saveEdit("patch", `/routes/${r.id}`, r.name)} />
@@ -372,6 +374,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
                   url: `/sectors/${sector.id}`, title: sector.name, pending: !sector.is_approved,
                   note: sector.routes.length ? `Se borran también sus ${sector.routes.length} vías. No se puede deshacer.` : undefined,
                 })}
+                media={<Media photos={sector.photos} name={sector.name} askDelete={askDelete} />}
               />
               <div style={{ paddingLeft: 18 }}>
                 {sector.routes.map(r => (
@@ -381,6 +384,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
                     detail={r.grade ?? ""}
                     pending={!r.is_approved}
                     onDelete={() => askDelete({ url: `/climbingroutes/${r.id}`, title: r.name, pending: !r.is_approved })}
+                    media={<Media photos={r.photos} name={r.name} askDelete={askDelete} />}
                   />
                 ))}
                 {/* Un sector en revisión solo lo amplía quien lo sugirió. */}
@@ -445,8 +449,11 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
 
 // Fila de lista, como las de "Tus lugares" en /profile. Con onEdit, "Editar"
 // abre abajo el formulario (children).
-function ItemRow({ title, detail, pending, onDelete, onEdit, children }: {
-  title: string; detail: string; pending: boolean; onDelete: () => void; onEdit?: () => void; children?: React.ReactNode
+function ItemRow({ title, detail, pending, onDelete, onEdit, media, children }: {
+  title: string; detail: string; pending: boolean; onDelete: () => void; onEdit?: () => void
+  // Fotos y recorrido, debajo de la fila.
+  media?: React.ReactNode
+  children?: React.ReactNode
 }) {
   return (
     <div style={{ borderBottom: "1px solid #ede9e1" }}>
@@ -463,7 +470,50 @@ function ItemRow({ title, detail, pending, onDelete, onEdit, children }: {
         )}
         <button onClick={onDelete} aria-label={`Eliminar ${title}`} style={deleteBtn}>✕</button>
       </div>
+      {media}
       {children}
+    </div>
+  )
+}
+
+// Las fotos y el recorrido de una ruta, sector o vía (los haya subido quien
+// sea, también en revisión): el dueño los ve y saca los que no corresponden.
+function Media({ photos = [], track, routeId, name, askDelete }: {
+  photos?: OwnedPhoto[]
+  track?: OwnedRoute["track"]
+  routeId?: number
+  name: string
+  askDelete: (t: ToDelete) => void
+}) {
+  if (photos.length === 0 && !track) return null
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "0 0 10px" }}>
+      {photos.map((p, i) => (
+        <div key={p.id} style={{ position: "relative", width: 72, height: 54, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}>
+          <CldImage src={p.cloudinary_public_id} alt={`Foto ${i + 1} de ${name}`} fill sizes="72px" crop="fill" gravity="auto" className="object-cover" />
+          {!p.is_approved && (
+            <span style={{ position: "absolute", left: 3, bottom: 3, fontSize: 9, fontWeight: 700, background: "#fef9e7", color: "#78590a", borderRadius: 4, padding: "0 4px" }}>En revisión</span>
+          )}
+          <button
+            type="button"
+            aria-label={`Sacar foto ${i + 1} de ${name}`}
+            onClick={() => askDelete({ url: `/photos/${p.id}`, title: `la foto ${i + 1} de ${name}`, pending: !p.is_approved, note: "Deja de verse. No se puede deshacer." })}
+            style={{ position: "absolute", top: 2, right: 2, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 11, cursor: "pointer", lineHeight: 1 }}
+          >✕</button>
+        </div>
+      ))}
+      {track && routeId != null && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted-strong)" }}>
+          🗺️ Recorrido{track.distance_km != null ? ` (${track.distance_km.toLocaleString("es-UY")} km)` : ""}
+          {!track.is_approved && <Pill variant="yellow" size="sm">En revisión</Pill>}
+          <button
+            type="button"
+            aria-label={`Sacar el recorrido de ${name}`}
+            onClick={() => askDelete({ url: `/routes/${routeId}/track`, title: `el recorrido de ${name}`, pending: !track.is_approved, note: "Deja de verse en el mapa. No se puede deshacer." })}
+            style={deleteBtn}
+          >✕</button>
+        </span>
+      )}
     </div>
   )
 }

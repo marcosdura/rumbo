@@ -1394,14 +1394,26 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
     def dump(schema, obj):
         return schema.model_validate(obj).model_dump(mode="json")
 
+    # Fotos y recorridos (también los en revisión, de cualquiera): el dueño
+    # los ve y puede sacarlos (item_photos.owner_remove, route_tracks.owner_remove).
+    import route_tracks
+    route_photos = item_photos_domain.owner_view(db, "trekking_route", [r.id for r in routes])
+    sector_photos = item_photos_domain.owner_view(db, "climbing_sector", [s.id for s in sectors])
+    via_photos = item_photos_domain.owner_view(db, "climbing_route", [v.id for s in sectors for v in s.routes])
     return {
         "experiences": [dump(ExperienceResponse, e) for e in experiences],
         "glamping_units": [dump(GlampingDetailResponse, g) for g in glamping_units],
-        "routes": [dump(RouteResponse, r) for r in routes],
+        "routes": [
+            {**dump(RouteResponse, r), "photos": route_photos[r.id], "track": route_tracks.owner_summary(db, r.id)}
+            for r in routes
+        ],
         # sector.routes: carga de relación desde una consulta con
         # include_pending, así que trae también las vías en revisión.
         "sectors": [
-            {**dump(ClimbingSectorResponse, s), "routes": [dump(ClimbingRouteResponse, r) for r in sorted(s.routes, key=lambda r: r.id)]}
+            {
+                **dump(ClimbingSectorResponse, s), "photos": sector_photos[s.id],
+                "routes": [{**dump(ClimbingRouteResponse, r), "photos": via_photos[r.id]} for r in sorted(s.routes, key=lambda r: r.id)],
+            }
             for s in sectors
         ],
         "surf_schools": [dump(SurfSchoolResponse, s) for s in surf_schools],

@@ -120,6 +120,15 @@ def add_route_track(request: Request, route_id: int, body: TrackCreate, db: Sess
     return {"pending": not track.is_approved, "distance_km": track.distance_km}
 
 
+@router.delete("/{route_id}/track")
+@limiter.limit("20/minute")
+def remove_route_track(request: Request, route_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """El dueño del lugar o el admin saca el recorrido (route_tracks.owner_remove)."""
+    route_tracks.owner_remove(db, route_id, user)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/{route_id}", response_model=RouteResponse)
 def get_route(route_id: int, db: Session = Depends(get_db)):
     route = db.query(Route).filter(Route.id == route_id).first()

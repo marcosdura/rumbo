@@ -173,3 +173,45 @@ def test_firma_para_subir_con_el_primer_sector_todavia_en_revision(client, make_
     client.post("/sectors/", json={"spot_id": pena.id, "name": "Sur"}, headers=as_user(OTHER))
     r = client.get(f"/spots/{pena.id}/can-upload", params={"public_id": f"{pena.id}/{9:016x}"}, headers=as_user(OTHER))
     assert r.status_code == 200, r.text
+
+
+# -------- El dueño las ve y las saca --------
+
+def test_el_duenio_ve_todas_las_fotos_y_el_recorrido_en_su_panel(client, db, world):
+    from models import RouteTrack
+    c, p = world["cerro"], world["pena"]
+    upload(client, "trekking_route", world["route"].id, [pid(c.id, 1)])
+    upload(client, "climbing_route", world["via"].id, [pid(p.id, 2)])
+    db.add(RouteTrack(route_id=world["route"].id, spot_id=c.id, points=[[1, 2, None], [3, 4, None]], distance_km=2.5, is_approved=False))
+    db.commit()
+    route = client.get(f"/spots/{c.id}/owner-content", headers=as_user(OWNER)).json()["routes"][0]
+    assert [(ph["cloudinary_public_id"], ph["is_approved"]) for ph in route["photos"]] == [(pid(c.id, 1), False)]
+    assert route["track"] == {"distance_km": 2.5, "points_count": 2, "is_approved": False}
+    via = client.get(f"/spots/{p.id}/owner-content", headers=as_user(OWNER)).json()["sectors"][0]["routes"][0]
+    assert [ph["cloudinary_public_id"] for ph in via["photos"]] == [pid(p.id, 2)]
+
+
+def test_el_duenio_saca_una_foto_que_subio_otro(client, db, world, destroyed):
+    from models import Notification
+    c = world["cerro"]
+    upload(client, "trekking_route", world["route"].id, [pid(c.id, 1)])
+    photo_id = every(db, ItemPhoto).one().id
+    assert client.delete(f"/photos/{photo_id}", headers=as_user(OTHER)).status_code == 403
+    r = client.delete(f"/photos/{photo_id}", headers=as_user(OWNER))
+    assert r.status_code == 200, r.text
+    assert every(db, ItemPhoto).count() == 0
+    assert destroyed == [pid(c.id, 1)]
+    assert db.query(Contribution).filter_by(kind="photo").one().status == "withdrawn"
+    assert db.query(Notification).filter_by(kind="admin_content_removed").count() == 1
+
+
+def test_el_duenio_saca_el_recorrido(client, db, world):
+    from models import Notification, RouteTrack
+    c = world["cerro"]
+    db.add(RouteTrack(route_id=world["route"].id, spot_id=c.id, points=[[1, 2, None], [3, 4, None]]))
+    db.commit()
+    assert client.delete(f"/routes/{world['route'].id}/track", headers=as_user(OTHER)).status_code == 403
+    assert client.delete(f"/routes/{world['route'].id}/track", headers=as_user(OWNER)).status_code == 200
+    assert every(db, RouteTrack).count() == 0
+    assert client.delete(f"/routes/{world['route'].id}/track", headers=as_user(OWNER)).status_code == 404
+    assert db.query(Notification).filter_by(kind="admin_content_removed").count() == 1

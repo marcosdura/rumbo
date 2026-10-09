@@ -21,6 +21,8 @@ vi.mock("@/lib/api", () => ({
   },
 }))
 
+vi.mock("next-cloudinary", () => ({ CldImage: ({ alt }: { alt: string }) => <img alt={alt} /> }))
+
 const { default: ContentTab, savedMessage } = await import("./ContentTab")
 
 beforeEach(() => {
@@ -233,5 +235,42 @@ describe("ContentTab: corregir lo ya cargado (al instante)", () => {
     expect(edits[0][1]).toBe("/spots/3/experiences/1")
     expect(edits[0][2]).not.toHaveProperty("category_id")
     expect(edits[0][2]).toMatchObject({ title: "Cabalgata", price: 900 })
+  })
+})
+
+
+describe("ContentTab: fotos y recorridos que subió la gente", () => {
+  beforeEach(() => {
+    deletes = []
+    content.routes = [{
+      id: 21, name: "Sendero al mirador", is_approved: true,
+      photos: [{ id: 9, cloudinary_public_id: "rumbo/spots/3/a", is_approved: true }, { id: 10, cloudinary_public_id: "rumbo/spots/3/b", is_approved: false }],
+      track: { distance_km: 7.4, points_count: 300, is_approved: true },
+    }]
+  })
+
+  it("el dueño los ve, con los que están en revisión marcados", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Trekking" showExperiences={false} showGlamping={false} />)
+    expect(await screen.findByAltText("Foto 1 de Sendero al mirador")).toBeTruthy()
+    expect(screen.getByAltText("Foto 2 de Sendero al mirador").parentElement!.textContent).toContain("En revisión")
+    expect(screen.getByText(/Recorrido \(7,4 km\)/)).toBeTruthy()
+  })
+
+  it("saca una foto o el recorrido", async () => {
+    render(<ContentTab spotId={3} token="t" reviewed category="Trekking" showExperiences={false} showGlamping={false} />)
+    fireEvent.click(await screen.findByRole("button", { name: "Sacar foto 1 de Sendero al mirador" }))
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
+    await waitFor(() => expect(deletes).toEqual(["/photos/9"]))
+    fireEvent.click(await screen.findByRole("button", { name: "Sacar el recorrido de Sendero al mirador" }))
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
+    await waitFor(() => expect(deletes).toEqual(["/photos/9", "/routes/21/track"]))
+  })
+
+  it("las de un sector y sus vías también", async () => {
+    content.sectors[0].photos = [{ id: 11, cloudinary_public_id: "rumbo/spots/3/c", is_approved: true }]
+    content.sectors[0].routes[0].photos = [{ id: 12, cloudinary_public_id: "rumbo/spots/3/d", is_approved: true }]
+    render(<ContentTab spotId={3} token="t" reviewed category="Escalada" showExperiences={false} showGlamping={false} />)
+    expect(await screen.findByAltText("Foto 1 de Sector Norte")).toBeTruthy()
+    expect(screen.getByAltText("Foto 1 de La Diagonal")).toBeTruthy()
   })
 })

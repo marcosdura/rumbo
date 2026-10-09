@@ -8,6 +8,7 @@ import item_photos
 from auth import get_current_user_required
 from database import get_db
 from limiter import limiter
+from spot_changes import destroy_cloudinary_images
 
 router = APIRouter(tags=["photos"])
 
@@ -30,3 +31,13 @@ def add_photos(request: Request, body: PhotosCreate, db: Session = Depends(get_d
         "pending": any(not p.is_approved for p in created),
         "photos": [{"id": p.id, "cloudinary_public_id": p.cloudinary_public_id} for p in created],
     }
+
+
+@router.delete("/photos/{photo_id}")
+@limiter.limit("30/minute")
+def remove_photo(request: Request, photo_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """El dueño del lugar o el admin (item_photos.owner_remove)."""
+    public_id = item_photos.owner_remove(db, photo_id, user)
+    db.commit()
+    destroy_cloudinary_images([public_id])
+    return {"ok": True}

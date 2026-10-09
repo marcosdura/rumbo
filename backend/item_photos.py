@@ -154,6 +154,38 @@ def slots_of(db: Session, target: str, target_ids: list[int]) -> dict[int, int]:
     return {i: max(0, MAX_PHOTOS - n) for i, n in counts.items()}
 
 
+def owner_view(db: Session, target: str, target_ids: list[int]) -> dict[int, list[dict]]:
+    """Para el panel del dueño: todas las fotos, también las en revisión."""
+    if not target_ids:
+        return {}
+    _, column = TARGETS[target]
+    col = getattr(ItemPhoto, column)
+    rows = db.query(ItemPhoto).execution_options(include_pending=True).filter(col.in_(target_ids)).order_by(ItemPhoto.id).all()
+    result: dict[int, list[dict]] = {i: [] for i in target_ids}
+    for p in rows:
+        result[getattr(p, column)].append({"id": p.id, "cloudinary_public_id": p.cloudinary_public_id, "is_approved": p.is_approved})
+    return result
+
+
+def owner_remove(db: Session, photo_id: int, user: dict) -> str:
+    """El dueño del lugar (o el admin) saca una foto de una ruta, sector o
+    vía, aunque la haya subido otra persona: es su lugar, y sacar no publica
+    nada nuevo. Si estaba en revisión, su aporte queda retirado. El admin se
+    entera. Devuelve el archivo a destruir después del commit."""
+    from notifications import notify_admin
+    from ownership import assert_owns_spot
+    photo = db.query(ItemPhoto).execution_options(include_pending=True).filter(ItemPhoto.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    spot = assert_owns_spot(db, photo.spot_id, user)
+    contributions.withdraw_for_deleted_item(db, "photo", photo.id, user.get("email"))
+    if not is_admin(user):
+        notify_admin(db, "admin_content_removed", f"El dueño de «{spot.name}» sacó una foto de «{photo.target_name}»", body=user.get("email"))
+    public_id = photo.cloudinary_public_id
+    db.delete(photo)
+    return public_id
+
+
 def photos_for_deleted(db: Session, column: str, ids: list[int], by: str) -> list[str]:
     """Al borrar rutas, sectores o vías: se borran sus fotos (también las en
     revisión; a mano, sin depender del ON DELETE CASCADE), se cierran sus

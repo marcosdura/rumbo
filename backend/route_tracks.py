@@ -134,6 +134,31 @@ def public_track(db: Session, route_id: int):
     }, False
 
 
+def owner_summary(db: Session, route_id: int):
+    """Para el panel del dueño: el recorrido (publicado o en revisión), sin los puntos."""
+    track = existing_track(db, route_id)
+    if not track:
+        return None
+    return {"distance_km": track.distance_km, "points_count": len(track.points or []), "is_approved": track.is_approved}
+
+
+def owner_remove(db: Session, route_id: int, user: dict):
+    """El dueño (o el admin) saca el recorrido de una ruta de su lugar,
+    aunque lo haya subido otra persona. El admin se entera."""
+    from notifications import notify_admin
+    from ownership import assert_owns_spot
+    route = db.query(Route).execution_options(include_pending=True).filter(Route.id == route_id).first()
+    if not route:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    spot = assert_owns_spot(db, route.spot_id, user)
+    track = existing_track(db, route_id)
+    if not track:
+        raise HTTPException(status_code=404, detail="Esta ruta no tiene recorrido.")
+    delete_for_route(db, route_id, user.get("email"))
+    if not is_admin(user):
+        notify_admin(db, "admin_content_removed", f"El dueño de «{spot.name}» sacó el recorrido de «{route.name}»", body=user.get("email"))
+
+
 def delete_for_route(db: Session, route_id: int, by: str):
     """Al borrar la ruta: su recorrido (también en revisión) y su aporte."""
     track = existing_track(db, route_id)
