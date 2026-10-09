@@ -12,17 +12,22 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
 @router.get("/")
-def my_notifications(limit: int = 50, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+def my_notifications(limit: int = 50, offset: int = 0, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """De la más nueva a la más vieja, de a `limit` (hasta 100). `has_more`:
+    hay más para "Ver más" (antes la página mostraba las últimas 100 y las
+    anteriores no se podían ver)."""
     email = user.get("email")
+    limit = min(max(limit, 1), 100)
     rows = (
         db.query(Notification)
         .filter(Notification.user_email == email)
         .order_by(Notification.created_at.desc(), Notification.id.desc())
-        .limit(min(max(limit, 1), 100))
+        .offset(max(offset, 0))
+        .limit(limit + 1)
         .all()
     )
     unread = db.query(Notification).filter(Notification.user_email == email, Notification.read_at.is_(None)).count()
-    return {"unread": unread, "items": [notifications.serialize(n) for n in rows]}
+    return {"unread": unread, "items": [notifications.serialize(n) for n in rows[:limit]], "has_more": len(rows) > limit}
 
 
 @router.get("/unread-count")

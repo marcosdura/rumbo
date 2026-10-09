@@ -10,7 +10,7 @@ import ReportButton from "@/components/ui/ReportButton"
 // Tipo de reporte de una reseña según de qué es (backend/reports.py).
 const REVIEW_REPORT_KIND = { spot: "review", surf: "surf_review", kayak: "kayak_review" }
 import { trackEvent } from "@/lib/analytics"
-import { timeAgo } from "@/lib/timeAgo"
+import { timeAgo } from "@/lib/notifications"
 import { api } from "@/lib/api"
 
 function Avatar({ user, size = 36 }) {

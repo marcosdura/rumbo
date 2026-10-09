@@ -9,7 +9,7 @@ import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import ProfileSubpage from "@/app/profile/ProfileSubpage"
 import { api } from "@/lib/api"
-import { timeAgo } from "@/lib/timeAgo"
+import { timeAgo } from "@/lib/notifications"
 import type { MyReview } from "@/lib/types"
 
 // A qué endpoint va cada una para editarla o borrarla.

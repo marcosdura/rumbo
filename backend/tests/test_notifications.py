@@ -18,6 +18,16 @@ def kinds(db, email):
 
 # -------- Endpoints --------
 
+def test_de_a_paginas_con_ver_mas(client, db):
+    for i in range(5):
+        db.add(Notification(user_email=OWNER, kind="x", title=f"Aviso {i}"))
+    db.commit()
+    first = client.get("/notifications/", params={"limit": 2}, headers=as_user(OWNER)).json()
+    assert ([n["title"] for n in first["items"]], first["has_more"]) == (["Aviso 4", "Aviso 3"], True)
+    last = client.get("/notifications/", params={"limit": 2, "offset": 4}, headers=as_user(OWNER)).json()
+    assert ([n["title"] for n in last["items"]], last["has_more"]) == (["Aviso 0"], False)
+
+
 def test_listar_contar_y_marcar_leidas(client, db):
     for i in range(3):
         db.add(Notification(user_email=OWNER, kind="x", title=f"Aviso {i}"))

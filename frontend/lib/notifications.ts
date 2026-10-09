@@ -11,11 +11,11 @@ export type AppNotification = {
   read: boolean
 }
 
-export type NotificationList = { unread: number; items: AppNotification[] }
+export type NotificationList = { unread: number; items: AppNotification[]; has_more?: boolean }
 
-// Mismo formato que las reseñas ("hace 3h"). Acepta fechas con o sin zona
-// horaria: las de las reseñas vienen sin (UTC implícito), las de las
-// notificaciones con.
+// "hace 3h": notificaciones, las reseñas de cada página y "Mis reseñas".
+// Acepta fechas con o sin zona horaria: las de las reseñas vienen sin (UTC
+// implícito), las de las notificaciones con.
 export function timeAgo(dateStr: string | null, now: number = Date.now()): string {
   if (!dateStr) return ""
   const hasZone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(dateStr)
