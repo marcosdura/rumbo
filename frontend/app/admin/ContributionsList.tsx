@@ -1,7 +1,12 @@
 "use client"
 
 import Pill from "@/components/ui/Pill"
+import dynamic from "next/dynamic"
 import { KIND_LABELS, itemDetails, itemPhotos, type AdminContribution } from "@/lib/contributions"
+import type { TrackPoint } from "@/lib/gpx"
+
+// El recorrido de una ruta (GPX): se revisa viéndolo en el mapa.
+const TrackMap = dynamic(() => import("@/components/trail-page/TrackMap"), { ssr: false })
 
 interface Props {
   contributions: AdminContribution[]
@@ -39,6 +44,7 @@ export default function ContributionsList({ contributions, loadError, loading, a
             const details = itemDetails(c.kind, c.item)
             const photos = itemPhotos(c.item)
             const routes = c.item?.routes ?? []
+            const trackPoints = c.kind === "track" && Array.isArray(c.item?.points) ? (c.item.points as TrackPoint[]) : null
             const ownSpot = c.spot.owner_email === c.author_email
             return (
               <div key={c.id} className="spot-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 14 }}>
@@ -84,7 +90,7 @@ export default function ContributionsList({ contributions, loadError, loading, a
                   <p style={{ fontSize: 13, color: "var(--danger)", margin: 0 }}>{actionErrors[c.id]}</p>
                 )}
 
-                {(details.length > 0 || photos.length > 0 || routes.length > 0) && (
+                {(details.length > 0 || photos.length > 0 || routes.length > 0 || trackPoints) && (
                   <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
                     {details.length > 0 && (
                       <dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "4px 14px", margin: 0, fontSize: 13 }}>
@@ -106,6 +112,7 @@ export default function ContributionsList({ contributions, loadError, loading, a
                         </ul>
                       </div>
                     )}
+                    {trackPoints && trackPoints.length >= 2 && <TrackMap points={trackPoints} />}
                     {photos.length > 0 && (
                       <div className="photo-grid" style={{ marginTop: 0 }}>
                         {photos.map(url => (

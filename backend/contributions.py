@@ -277,6 +277,8 @@ def serialize(db: Session, contribution: Contribution, with_item: bool = False) 
         if contribution.kind == "track":
             data["item"] = {
                 "target_name": item.target_name, "points_count": len(item.points or []),
+                # Para ver el recorrido en el mapa antes de aprobarlo.
+                "points": item.points,
                 "distance_km": item.distance_km, "elevation_gain": item.elevation_gain,
             } if item else None
             return data

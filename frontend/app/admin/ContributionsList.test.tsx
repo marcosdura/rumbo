@@ -4,6 +4,9 @@ import type { ComponentProps } from "react"
 import ContributionsList from "./ContributionsList"
 import type { AdminContribution } from "@/lib/contributions"
 
+// El mapa (Leaflet) no corre en jsdom: alcanza con saber cuántos puntos recibe.
+vi.mock("next/dynamic", () => ({ default: () => ({ points }: { points: unknown[] }) => <div data-testid="track-map">{points.length} puntos</div> }))
+
 const spot = { id: 3, name: "Cerro Arequita", slug: "cerro-arequita", department: "Lavalleja", category: { name: "Escalada" }, owner_email: "duenio@test.com" }
 
 function contribution(overrides: Partial<AdminContribution>): AdminContribution {
@@ -67,5 +70,22 @@ describe("ContributionsList", () => {
   it("sin aportes", () => {
     renderList({ contributions: [] })
     expect(screen.getByText("No hay aportes pendientes.")).toBeTruthy()
+  })
+})
+
+describe("ContributionsList: recorrido (GPX)", () => {
+  it("se revisa viéndolo en el mapa", () => {
+    const points = [[-34.3, -55.2, 100], [-34.31, -55.2, 120], [-34.32, -55.2, null]]
+    renderList({ contributions: [contribution({
+      kind: "track", title: "Recorrido de «Cumbre»",
+      item: { target_name: "Cumbre", points_count: 3, distance_km: 2.2, elevation_gain: 20, points },
+    })] })
+    expect(screen.getByTestId("track-map").textContent).toBe("3 puntos")
+    expect(screen.getByText("Recorrido (GPX)")).toBeTruthy()
+  })
+
+  it("las demás no muestran mapa", () => {
+    renderList()
+    expect(screen.queryByTestId("track-map")).toBeNull()
   })
 })

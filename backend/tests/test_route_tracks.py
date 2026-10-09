@@ -93,6 +93,8 @@ def test_el_admin_ve_el_resumen(client, route):
     send(client, route, line())
     [c] = client.get("/admin/contributions", headers=as_user(ADMIN)).json()
     assert c["item"]["target_name"] == "Cumbre" and c["item"]["points_count"] == 10
+    # Los puntos, para verlo en el mapa antes de aprobarlo.
+    assert len(c["item"]["points"]) == 10
 
 
 def test_borrar_la_ruta_borra_el_recorrido_y_cierra_el_aporte(client, db, route):
