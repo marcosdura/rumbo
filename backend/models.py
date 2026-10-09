@@ -543,6 +543,32 @@ class ItemPhoto(ReviewedContent, Base):
         return target.name if target else None
 
 
+class RouteTrack(ReviewedContent, Base):
+    """El recorrido de una ruta de trekking sobre el mapa (route_tracks.py),
+    de un GPX. Lo sube cualquier usuario logueado y pasa por revisión (salvo
+    el admin). Uno por ruta. Aparte de routes: puede estar en revisión sin
+    esconder la ruta, y los puntos no viajan en los listados."""
+    __tablename__ = "route_tracks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    route_id = Column(Integer, ForeignKey("routes.id", ondelete="CASCADE"), unique=True, nullable=False)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True, nullable=False)
+    # [[lat, lng, altura o null], ...], ya simplificado (hasta 1.500 puntos).
+    points = Column(JSON, nullable=False)
+    # Calculados del recorrido en el backend.
+    distance_km = Column(Float, nullable=True)
+    elevation_gain = Column(Integer, nullable=True)
+    elevation_loss = Column(Integer, nullable=True)
+    uploaded_by = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    route = relationship("Route")
+
+    @property
+    def target_name(self):
+        return self.route.name if self.route else None
+
+
 class KayakDetail(ReviewedContent, Base):
     __tablename__ = "kayak_details"
 

@@ -13,6 +13,14 @@ type WithPhotos = { photos: ItemPhoto[]; photo_slots: number }
 
 export type Via = ClimbingRoute & WithPhotos
 
+// El recorrido publicado (backend/route_tracks.py).
+export type RouteTrackData = {
+  points: [number, number, number | null][]
+  distance_km: number | null
+  elevation_gain: number | null
+  elevation_loss: number | null
+}
+
 export type TrailSpot = { id: number; name: string; slug: string; department: string | null }
 
 export type TrekkingRoute = PublicRoute & {
@@ -22,6 +30,8 @@ export type TrekkingRoute = PublicRoute & {
   max_altitude: number | null; min_altitude: number | null
   route_type: string | null; technical_level: string | null; physical_demand: string | null
   description: string | null
+  track: RouteTrackData | null
+  track_pending: boolean
 } & WithPhotos
 
 export type RoutePage = {

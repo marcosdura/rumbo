@@ -5,7 +5,7 @@ import type { SectorDetail } from "./types"
 const route = (extra: Partial<TrekkingRoute>): TrekkingRoute => ({
   id: 1, name: "R", slug: "r", distance_km: null, duration_hours: null, difficulty: null,
   elevation_gain: null, elevation_loss: null, max_altitude: null, min_altitude: null,
-  route_type: null, technical_level: null, physical_demand: null, description: null, photos: [], photo_slots: 3, ...extra,
+  route_type: null, technical_level: null, physical_demand: null, description: null, photos: [], photo_slots: 3, track: null, track_pending: false, ...extra,
 })
 
 describe("Datos de rutas y sectores", () => {

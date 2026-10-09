@@ -3,6 +3,7 @@ import { cache } from "react"
 import { notFound } from "next/navigation"
 import TrailLayout, { SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
 import ItemPhotos from "@/components/trail-page/ItemPhotos"
+import RouteTrack from "@/components/trail-page/RouteTrack"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { api } from "@/lib/api"
@@ -41,6 +42,9 @@ export default async function TrekkingRoutePage({ params }: Props) {
 
   return (
     <TrailLayout spot={spot} eyebrow="Ruta de trekking" title={route.name}>
+      <SectionCard title="Recorrido">
+        <RouteTrack routeId={route.id} routeName={route.name} routeSlug={route.slug} track={route.track} pending={route.track_pending} />
+      </SectionCard>
       <StatGrid stats={routeStats(route)} />
       <SectionCard title="Fotos">
         <ItemPhotos

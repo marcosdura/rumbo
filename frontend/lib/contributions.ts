@@ -4,7 +4,7 @@
 
 export type ContributionKind =
   | "experience" | "glamping_unit" | "trekking_route" | "climbing_sector"
-  | "climbing_route" | "surf_school" | "kayak" | "photo"
+  | "climbing_route" | "surf_school" | "kayak" | "photo" | "track"
 
 export type ContributionStatus = "pending" | "approved" | "rejected" | "withdrawn"
 
@@ -42,6 +42,7 @@ export const KIND_LABELS: Record<ContributionKind, string> = {
   surf_school: "Escuela de surf",
   kayak: "Kayak",
   photo: "Foto",
+  track: "Recorrido (GPX)",
 }
 
 // Campos del elemento que se muestran al admin para revisarlo, por tipo.
@@ -56,6 +57,8 @@ export const KIND_FIELDS: Record<ContributionKind, [string, string][]> = {
   kayak: [["name", "Nombre"], ["water_type", "Tipo de agua"], ["difficulty", "Dificultad"], ["duration", "Duración (h)"], ["email", "Email"], ["whatsapp", "WhatsApp"]],
   // Foto de una ruta, sector o vía: la foto se ve en itemPhotos.
   photo: [["target_name", "De"]],
+  // El recorrido de una ruta: un resumen (el mapa se ve al aprobarlo).
+  track: [["target_name", "Ruta"], ["distance_km", "Distancia (km)"], ["elevation_gain", "Desnivel +"], ["points_count", "Puntos"]],
 }
 
 // Pares [etiqueta, valor] con lo que el elemento tiene cargado.

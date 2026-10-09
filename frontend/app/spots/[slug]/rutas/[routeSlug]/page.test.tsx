@@ -8,6 +8,8 @@ vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }))
+// El mapa (Leaflet) no corre en jsdom: alcanza con saber cuántos puntos recibe.
+vi.mock("next/dynamic", () => ({ default: () => ({ points }: { points: unknown[] }) => <div data-testid="track-map">{points.length} puntos</div> }))
 vi.mock("next-cloudinary", () => ({ CldImage: ({ alt }: { alt: string }) => <img alt={alt} /> }))
 vi.mock("@/lib/api", () => ({
   api: { get: (url: string) => { requested.push(url); return page ? Promise.resolve({ data: page }) : Promise.reject(new Error("404")) } },
@@ -21,6 +23,7 @@ const route = {
   elevation_gain: null, elevation_loss: null, max_altitude: 300, min_altitude: null,
   route_type: "circular", technical_level: null, physical_demand: null, description: null,
   photos: [] as { id: number; cloudinary_public_id: string }[], photo_slots: 3,
+  track: null as unknown, track_pending: false,
 }
 const spot = { id: 7, name: "Cerro Arequita", slug: "arequita", department: "Lavalleja", trekking_detail: { bathrooms: true } }
 
@@ -101,5 +104,17 @@ describe("fotos de la ruta", () => {
     render(await TrekkingRoutePage({ params }))
     expect(screen.queryByRole("button", { name: /Subir fotos|Sumar fotos/ })).toBeNull()
     expect(screen.getByText(/Hay fotos en revisión/)).toBeTruthy()
+  })
+})
+
+describe("recorrido de la ruta", () => {
+  it("con recorrido, el mapa; sin, la invitación", async () => {
+    page = { route: { ...route, track: { points: [[1, 2, null], [3, 4, null], [5, 6, null]], distance_km: 2, elevation_gain: null, elevation_loss: null } }, spot }
+    const { unmount } = render(await TrekkingRoutePage({ params }))
+    expect(screen.getByTestId("track-map").textContent).toBe("3 puntos")
+    unmount()
+    page = { route, spot }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.getByRole("button", { name: "＋ Subir el recorrido (GPX)" })).toBeTruthy()
   })
 })

@@ -10,6 +10,8 @@ from limiter import limiter
 from slugs import generate_slug
 import contributions
 import item_photos
+import route_tracks
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/routes", tags=["routes"])
 
@@ -74,17 +76,35 @@ def get_route_page(spot_slug: str, route_slug: str, db: Session = Depends(get_db
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
     detail = spot.trekking_detail
+    track, track_pending = route_tracks.public_track(db, route.id)
     return {
         "route": {
             **RouteResponse.model_validate(route).model_dump(mode="json"),
             "photos": item_photos.photos_of(db, "trekking_route", [route.id])[route.id],
             "photo_slots": item_photos.slots_of(db, "trekking_route", [route.id])[route.id],
+            "track": track,
+            # Hay uno en revisión: no se ofrece subir otro.
+            "track_pending": track_pending,
         },
         "spot": {
             "id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department,
             "trekking_detail": {f: getattr(detail, f) for f in TREKKING_FEATURES} if detail else None,
         },
     }
+
+
+class TrackCreate(BaseModel):
+    # [[lat, lng, altura o null], ...], leído del GPX en el navegador.
+    points: list[list]
+
+
+@router.post("/{route_id}/track")
+@limiter.limit("10/minute")
+def add_route_track(request: Request, route_id: int, body: TrackCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """El recorrido de la ruta (route_tracks.py). Pasa por revisión, salvo el admin."""
+    track = route_tracks.add_track(db, route_id, body.points, user)
+    db.commit()
+    return {"pending": not track.is_approved, "distance_km": track.distance_km}
 
 
 @router.get("/{route_id}", response_model=RouteResponse)
