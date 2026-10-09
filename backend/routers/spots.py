@@ -377,17 +377,17 @@ def build_spots_filter_query(
             )
 
     if is_camping and price_range:
-        query = query.outerjoin(SpotDB.camping_detail)
+        # El precio del lugar: el que edita el dueño y muestra la card.
         pr_conds = []
         for p in price_range:
             if p == "gratis":
-                pr_conds.append(or_(CampingDetail.price == 0, CampingDetail.price == None))
+                pr_conds.append(or_(SpotDB.price == 0, SpotDB.price == None))
             elif p == "bajo":
-                pr_conds.append(and_(CampingDetail.price > 0, CampingDetail.price < 300))
+                pr_conds.append(and_(SpotDB.price > 0, SpotDB.price < 300))
             elif p == "medio":
-                pr_conds.append(and_(CampingDetail.price >= 300, CampingDetail.price <= 800))
+                pr_conds.append(and_(SpotDB.price >= 300, SpotDB.price <= 800))
             elif p == "alto":
-                pr_conds.append(CampingDetail.price > 800)
+                pr_conds.append(SpotDB.price > 800)
         if pr_conds:
             query = query.filter(or_(*pr_conds))
 
@@ -949,6 +949,13 @@ def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), sp
     return {"message": "Amenity agregada"}
 
 
+def _price_from_camping(spot: SpotDB, price):
+    """El precio que se lee es el del lugar (spots.price): si el lugar no
+    tenía, toma el del camping. camping_details.price queda solo como dato."""
+    if spot.price is None and price is not None:
+        spot.price = round(price)
+
+
 @router.post("/spots/{spot_id}/categories")
 def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     # Una categoría secundaria hace aparecer el spot en otras búsquedas: sobre
@@ -985,6 +992,7 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
             raise HTTPException(status_code=400, detail="Spot already has camping details")
         camping = CampingDetail(spot_id=spot_id, price=data.camping_detail.price)
         db.add(camping)
+        _price_from_camping(spot, data.camping_detail.price)
 
     elif data.category == "Glamping" and data.glamping_detail:
         glamping = GlampingDetail(
@@ -1020,6 +1028,7 @@ def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = De
     )
 
     db.add(camping)
+    _price_from_camping(spot, data.price)
     db.commit()
     db.refresh(camping)
 

@@ -2,7 +2,8 @@
 y motorhome."""
 from datetime import datetime, timedelta, timezone
 
-from models import Favorite, GlampingAmenity, GlampingDetail, MotorhomeDetail, Review, SpotCategory, User
+from conftest import OWNER, as_user
+from models import CampingDetail, Category, Favorite, GlampingAmenity, GlampingDetail, MotorhomeDetail, Review, SpotCategory, User
 
 
 def with_category(db, spot):
@@ -99,3 +100,28 @@ def test_motorhome_por_servicios(client, db, make_spot):
     db.commit()
     assert sorted(names(client, activity="Motorhome", motorhome_service="water")) == ["Completo", "Solo agua"]
     assert names(client, activity="Motorhome", motorhome_service=["water", "electricity"]) == ["Completo"]
+
+
+# -------- Precio del camping --------
+
+def test_camping_filtra_por_el_precio_del_lugar(client, db, make_spot):
+    # El dueño editó el precio (spots.price); el del detalle quedó viejo.
+    editado = with_category(db, make_spot(name="Editado", category="Camping", price=1000))
+    gratis = with_category(db, make_spot(name="Gratis", category="Camping", price=0))
+    db.add_all([CampingDetail(spot_id=editado.id, price=200), CampingDetail(spot_id=gratis.id, price=500)])
+    db.commit()
+    assert names(client, activity="Camping", price_range="alto") == ["Editado"]
+    assert names(client, activity="Camping", price_range="bajo") == []
+    assert names(client, activity="Camping", price_range="gratis") == ["Gratis"]
+
+
+def test_sumar_camping_a_un_lugar_sin_precio_le_pone_el_precio(client, db, make_spot):
+    sin_precio = make_spot(name="Sin precio", category="Trekking", approved=False)
+    con_precio = make_spot(name="Con precio", category="Trekking", approved=False, price=700)
+    db.add(Category(name="Camping"))
+    db.commit()
+    for spot in (sin_precio, con_precio):
+        r = client.post(f"/spots/{spot.id}/categories", json={"category": "Camping", "camping_detail": {"price": 450}}, headers=as_user(OWNER))
+        assert r.status_code == 200, r.text
+    db.expire_all()
+    assert (sin_precio.price, con_precio.price) == (450, 700)

@@ -84,7 +84,7 @@ useEffect(() => {
 
   const stayCards = {
     Camping: spot.camping_detail ? (
-      <CampingCard key="camping" campingDetail={spot.camping_detail} amenities={spot.amenities} />
+      <CampingCard key="camping" price={spot.price} amenities={spot.amenities} />
     ) : null,
     Glamping: spot.glamping_detail && spot.glamping_detail.length > 0 ? (
       <GlampingCard key="glamping" glampingDetail={spot.glamping_detail} glampingAmenities={spot.glamping_amenities} />
