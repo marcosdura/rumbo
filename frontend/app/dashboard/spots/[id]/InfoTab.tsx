@@ -3,6 +3,7 @@
 import { s, MONTHS } from "./styles"
 import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
 import { PRACTICAL_FIELDS, type PracticalKey } from "@/lib/practicalInfo"
+import type { PriceMode } from "./changes"
 
 interface Props {
   editName: string; setEditName: (v: string) => void
@@ -25,6 +26,8 @@ interface Props {
   pendingDescription?: string
   // El spot está aprobado: cambiar nombre o descripción pasa por revisión.
   sensitiveReviewed: boolean
+  // Dónde va el precio (changes.priceMode).
+  priceMode: PriceMode
 }
 
 function PendingHint({ value }: { value: string }) {
@@ -40,7 +43,7 @@ export default function InfoTab({
   editEmail, setEditEmail, editWhatsapp, setEditWhatsapp, editInstagram, setEditInstagram,
   editPrice, setEditPrice, editSeasonType, setEditSeasonType, editSeasonStart, setEditSeasonStart,
   editSeasonEnd, setEditSeasonEnd, editIsPublic, setEditIsPublic, editPublicTransport, setEditPublicTransport,
-  editPractical, setEditPractical, lockSensitive, pendingName, pendingDescription, sensitiveReviewed,
+  editPractical, setEditPractical, lockSensitive, pendingName, pendingDescription, sensitiveReviewed, priceMode,
 }: Props) {
   const lockedInput = lockSensitive ? { opacity: 0.6, cursor: "not-allowed" } : {}
   return (
@@ -86,12 +89,21 @@ export default function InfoTab({
 
         {/* Precio y temporada */}
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Precio y temporada</p>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>
+            {priceMode === "own" ? "Precio y temporada" : "Temporada"}
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <label style={s.label}>Precio (UYU) — poné 0 si es gratis</label>
-              <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
-            </div>
+            {priceMode === "own" && (
+              <div>
+                <label style={s.label}>Precio por noche (UYU) — poné 0 si es gratis</label>
+                <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
+              </div>
+            )}
+            {priceMode === "glamping" && (
+              <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
+                El precio por noche va en cada alojamiento (pestaña de alojamiento); la card muestra el más barato.
+              </p>
+            )}
             <div>
               <label style={s.label}>Temporada</label>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>

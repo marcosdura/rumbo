@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api"
-import { checkNewPhotos, describeFields, describeRequest, errorMessage, isStaySpot, joinLabels, contentTabLabel } from "./changes"
+import { checkNewPhotos, describeFields, describeRequest, errorMessage, isStaySpot, joinLabels, contentTabLabel, priceMode } from "./changes"
 import type { ChangeRequest } from "./types"
 
 const image = (name = "a.jpg", type = "image/jpeg", bytes = 1000) =>
@@ -91,5 +91,15 @@ describe("contentTabLabel", () => {
     expect(contentTabLabel("Trekking", false)).toBe("🥾 Rutas")
     expect(contentTabLabel("Escalada", false)).toBe("🧗 Sectores y vías")
     expect(contentTabLabel(null, false)).toBeNull()
+  })
+})
+
+describe("priceMode", () => {
+  it("camping o motorhome tienen precio propio; glamping va por alojamiento; el resto no", () => {
+    expect(priceMode(["Camping"])).toBe("own")
+    expect(priceMode(["Glamping", "Motorhome"])).toBe("own")
+    expect(priceMode(["Glamping"])).toBe("glamping")
+    expect(priceMode(["Trekking"])).toBe("none")
+    expect(priceMode([])).toBe("none")
   })
 })

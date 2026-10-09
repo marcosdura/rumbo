@@ -90,6 +90,17 @@ export function isStaySpot(categoryName: string | null | undefined) {
   return !!categoryName && STAY_CATEGORIES.includes(categoryName)
 }
 
+// El precio del lugar solo se muestra en Camping y Motorhome (por noche;
+// lib/spotCard.ts). En Glamping va en cada alojamiento. En el resto no hay
+// precio propio: antes el panel lo pedía igual y nunca se veía.
+export type PriceMode = "own" | "glamping" | "none"
+
+export function priceMode(activities: string[]): PriceMode {
+  if (activities.includes("Camping") || activities.includes("Motorhome")) return "own"
+  if (activities.includes("Glamping")) return "glamping"
+  return "none"
+}
+
 // Nombre de la pestaña de contenido del dashboard según el tipo de lugar
 // (qué se le puede sumar). null = el lugar no tiene esa pestaña.
 export function contentTabLabel(categoryName: string | null | undefined, hasGlamping: boolean): string | null {

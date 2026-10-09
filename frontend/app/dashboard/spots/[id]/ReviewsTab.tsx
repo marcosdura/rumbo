@@ -5,14 +5,19 @@ import type { Review } from "./types"
 
 interface Props {
   reviews: Review[]
+  // Todas las del lugar: el backend las da de a tandas (antes se veían las
+  // últimas 10 y nada más).
+  total: number
+  onMore: () => void
+  loadingMore: boolean
 }
 
-export default function ReviewsTab({ reviews }: Props) {
+export default function ReviewsTab({ reviews, total, onMore, loadingMore }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {reviews.length === 0 ? (
         <div style={{ ...s.card, padding: 24, textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>Todavía no hay reseñas para este spot.</p>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>Todavía no hay reseñas para este lugar.</p>
         </div>
       ) : reviews.map(review => (
         <div key={review.id} style={{ ...s.card, padding: "16px 20px" }}>
@@ -42,6 +47,12 @@ export default function ReviewsTab({ reviews }: Props) {
           )}
         </div>
       ))}
+      {reviews.length < total && (
+        <button type="button" onClick={onMore} disabled={loadingMore}
+          style={{ alignSelf: "center", fontSize: 13, fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 4 }}>
+          {loadingMore ? "Cargando..." : `Ver más (${total - reviews.length})`}
+        </button>
+      )}
     </div>
   )
 }

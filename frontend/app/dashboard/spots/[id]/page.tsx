@@ -12,7 +12,7 @@ import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import { api } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
 import type { Spot, Review, Tab, StagedPhoto } from "./types"
-import { describeFields, checkNewPhotos, errorMessage, isStaySpot, contentTabLabel } from "./changes"
+import { describeFields, checkNewPhotos, errorMessage, isStaySpot, contentTabLabel, priceMode } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
@@ -20,6 +20,32 @@ import ContentTab from "./ContentTab"
 import ChangeRequestBanner from "./ChangeRequestBanner"
 import RejectionBanner from "./RejectionBanner"
 import type { PracticalKey } from "@/lib/practicalInfo"
+
+const REVIEWS_PAGE = 50
+
+type PayloadFields = {
+  name: string; description: string; email: string; whatsapp: string; instagram: string; price: string
+  seasonType: "all_year" | "seasonal"; seasonStart: string; seasonEnd: string
+  isPublic: boolean | null; publicTransport: string | null; practical: Record<PracticalKey, boolean | null>
+}
+
+// Lo que se manda a PATCH /admin/spots/{id}. También sirve para saber si hay
+// cambios sin guardar (comparando con lo que se cargó).
+function payloadFrom(f: PayloadFields) {
+  return {
+    name: f.name,
+    description: f.description,
+    email: f.email || null,
+    whatsapp: f.whatsapp || null,
+    instagram: f.instagram || null,
+    price: f.price !== "" ? parseFloat(f.price) : null,
+    season_start: f.seasonType === "seasonal" && f.seasonStart ? parseInt(f.seasonStart) : null,
+    season_end: f.seasonType === "seasonal" && f.seasonEnd ? parseInt(f.seasonEnd) : null,
+    is_public: f.isPublic,
+    public_transport: f.publicTransport,
+    ...f.practical,
+  }
+}
 
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
 // revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
@@ -34,7 +60,11 @@ export default function SpotDashboardPage() {
 
   const [spot, setSpot] = useState<Spot | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewsTotal, setReviewsTotal] = useState(0)
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [tab, setTab] = useState<Tab>("info")
   const [saving, setSaving] = useState(false)
   const [saveOk, setSaveOk] = useState<string | null>(null)
@@ -82,17 +112,44 @@ export default function SpotDashboardPage() {
   useEffect(() => {
     if (!token) return
     Promise.all([
-      api.get<Spot[]>("/spots/mine", { token }).then(r => r.data),
-      api.get<Review[]>(`/reviews/${spotId}`).then(r => r.data),
-    ]).then(([mySpots, reviewsData]) => {
-      const found = Array.isArray(mySpots) ? mySpots.find((s: Spot) => String(s.id) === spotId) : null
+      api.get<Spot[]>("/spots/mine", { token }),
+      api.get<Review[]>(`/reviews/${spotId}`, { params: { limit: REVIEWS_PAGE } }),
+    ]).then(([mine, reviewsRes]) => {
+      const found = Array.isArray(mine.data) ? mine.data.find((s: Spot) => String(s.id) === spotId) : null
       if (!found) { router.push("/profile"); return }
       setSpot(found)
       populateFields(found)
-      setReviews(Array.isArray(reviewsData) ? reviewsData : [])
+      const list = Array.isArray(reviewsRes.data) ? reviewsRes.data : []
+      setReviews(list)
+      setReviewsTotal(reviewsRes.totalCount ?? list.length)
+      setLoadError(false)
       setLoading(false)
     })
-  }, [token, spotId])
+      // Antes no había catch: si fallaba, quedaba en "Cargando..." para siempre.
+      .catch(() => { setLoadError(true); setLoading(false) })
+  }, [token, spotId, loadAttempt])
+
+  async function loadMoreReviews() {
+    setLoadingMoreReviews(true)
+    try {
+      const { data, totalCount } = await api.get<Review[]>(`/reviews/${spotId}`, { params: { limit: REVIEWS_PAGE, offset: reviews.length } })
+      setReviews(prev => [...prev, ...(Array.isArray(data) ? data : [])])
+      if (totalCount != null) setReviewsTotal(totalCount)
+    } catch {
+      // Queda el botón para volver a intentar.
+    }
+    setLoadingMoreReviews(false)
+  }
+
+  // Cambios sin guardar: el navegador avisa antes de salir de la página.
+  const baseline = useRef<string | null>(null)
+  const dirty = spot !== null && (stagedPhotos.length > 0 || (baseline.current !== null && JSON.stringify(buildPayload()) !== baseline.current))
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = "" }
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [dirty])
 
   // Liberar las previews (URL.createObjectURL) al salir de la página.
   const stagedRef = useRef(stagedPhotos)
@@ -111,11 +168,19 @@ export default function SpotDashboardPage() {
     setEditSeasonEnd(s.season_end ? String(s.season_end) : "")
     setEditIsPublic(s.is_public ?? null)
     setEditPublicTransport(s.public_transport ?? null)
-    setEditPractical({
+    const practical = {
       pets_allowed: s.pets_allowed ?? null,
       reservation_required: s.reservation_required ?? null,
       cell_signal: s.cell_signal ?? null,
-    })
+    }
+    setEditPractical(practical)
+    baseline.current = JSON.stringify(payloadFrom({
+      name: s.name ?? "", description: s.description ?? "", email: s.email ?? "", whatsapp: s.whatsapp ?? "",
+      instagram: s.instagram ?? "", price: s.price != null ? String(s.price) : "",
+      seasonType: s.season_start ? "seasonal" : "all_year",
+      seasonStart: s.season_start ? String(s.season_start) : "", seasonEnd: s.season_end ? String(s.season_end) : "",
+      isPublic: s.is_public ?? null, publicTransport: s.public_transport ?? null, practical,
+    }))
   }
 
   async function refreshSpot() {
@@ -128,19 +193,11 @@ export default function SpotDashboardPage() {
   }
 
   function buildPayload() {
-    return {
-      name: editName,
-      description: editDescription,
-      email: editEmail || null,
-      whatsapp: editWhatsapp || null,
-      instagram: editInstagram || null,
-      price: editPrice !== "" ? parseFloat(editPrice) : null,
-      season_start: editSeasonType === "seasonal" && editSeasonStart ? parseInt(editSeasonStart) : null,
-      season_end: editSeasonType === "seasonal" && editSeasonEnd ? parseInt(editSeasonEnd) : null,
-      is_public: editIsPublic,
-      public_transport: editPublicTransport,
-      ...editPractical,
-    }
+    return payloadFrom({
+      name: editName, description: editDescription, email: editEmail, whatsapp: editWhatsapp, instagram: editInstagram,
+      price: editPrice, seasonType: editSeasonType, seasonStart: editSeasonStart, seasonEnd: editSeasonEnd,
+      isPublic: editIsPublic, publicTransport: editPublicTransport, practical: editPractical,
+    })
   }
 
   function showSaveOk(message: string) {
@@ -305,6 +362,21 @@ export default function SpotDashboardPage() {
     }
   }
 
+  if (loadError) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
+        <Navbar />
+        <div role="alert" style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
+          <p style={{ color: "var(--danger)", fontSize: 14, margin: "0 0 12px" }}>No se pudo cargar tu lugar.</p>
+          <button type="button" onClick={() => { setLoadError(false); setLoading(true); setLoadAttempt(n => n + 1) }}
+            style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontFamily: "inherit", border: "1px solid var(--border)", background: "#fff", cursor: "pointer" }}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (status === "loading" || loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
@@ -355,10 +427,11 @@ export default function SpotDashboardPage() {
                 )}
               </div>
             </div>
-            {spot.slug && (
+            {/* Sin aprobar, la página pública no existe todavía (daba 404). */}
+            {spot.slug && spot.is_approved && (
               <a href={`/spots/${spot.slug}`} target="_blank" rel="noopener noreferrer"
                 style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
-                Ver spot →
+                Ver lugar →
               </a>
             )}
           </div>
@@ -406,7 +479,7 @@ export default function SpotDashboardPage() {
             { id: "info", label: "✏️ Información" },
             { id: "fotos", label: `📷 Fotos (${photoCount}/${MAX_PHOTOS})` },
             ...(contentLabel ? [{ id: "contenido", label: contentLabel }] : []),
-            { id: "reviews", label: `💬 Reseñas (${reviews.length})` },
+            { id: "reviews", label: `💬 Reseñas (${reviewsTotal})` },
           ] as { id: Tab; label: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={s.tab(tab === t.id)}>{t.label}</button>
           ))}
@@ -430,6 +503,7 @@ export default function SpotDashboardPage() {
             pendingName={pendingRequest?.changes.name?.to}
             pendingDescription={pendingRequest?.changes.description?.to}
             sensitiveReviewed={spot.is_approved}
+            priceMode={priceMode(spot.activities ?? (spot.category ? [spot.category.name] : []))}
           />
         )}
 
@@ -488,7 +562,7 @@ export default function SpotDashboardPage() {
           </div>
         )}
 
-        {tab === "reviews" && <ReviewsTab reviews={reviews} />}
+        {tab === "reviews" && <ReviewsTab reviews={reviews} total={reviewsTotal} onMore={loadMoreReviews} loadingMore={loadingMoreReviews} />}
 
       </div>
 
