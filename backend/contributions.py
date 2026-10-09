@@ -194,7 +194,7 @@ def discard(db: Session, contribution: Contribution, status: str, by: str, reaso
     item = get_item(db, contribution)
     photos = []
     if item is not None:
-        photos = item_photos(contribution.kind, item)
+        photos = item_photos(contribution.kind, item) + _children_photos(db, contribution.kind, item, by)
         db.delete(item)
     _close(contribution, status, by, reason)
     if status == "rejected":
@@ -210,26 +210,34 @@ def withdraw_for_deleted_item(db: Session, kind: str, item_id: int, by: str):
         _close(contribution, "withdrawn", by)
 
 
+def _children_photos(db: Session, kind: str, item, by: str) -> list:
+    """Lo que se va con una ruta, sector o vía (borrada o rechazada): sus
+    fotos (y las de las vías del sector) y el recorrido de la ruta, también
+    los que estaban en revisión, con sus aportes cerrados. Devuelve los
+    archivos a destruir después del commit."""
+    import item_photos as item_photos_domain  # importa este módulo
+    import route_tracks  # importa este módulo
+    photos = []
+    if kind == "trekking_route":
+        photos += item_photos_domain.photos_for_deleted(db, "trekking_route_id", [item.id], by)
+        route_tracks.delete_for_route(db, item.id, by)
+    if kind == "climbing_sector":
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_sector_id", [item.id], by)
+        vias = db.query(ClimbingRoute).execution_options(include_pending=True).filter(ClimbingRoute.sector_id == item.id).all()
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [v.id for v in vias], by)
+    if kind == "climbing_route":
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [item.id], by)
+    return photos
+
+
 def delete_item(db: Session, kind: str, item, by: str):
     """El dueño del spot (o el admin) borra un elemento, aprobado o no. Si
     estaba en revisión, su aporte queda retirado; un sector se lleva sus
     vías (y los aportes pendientes de esas vías). Devuelve las fotos a
     destruir después del commit. `item` tiene que venir cargado con
     include_pending, para que el sector traiga también sus vías pendientes."""
-    import item_photos as item_photos_domain  # importa este módulo
-    photos = item_photos(kind, item)
+    photos = item_photos(kind, item) + _children_photos(db, kind, item, by)
     withdraw_for_deleted_item(db, kind, item.id, by)
-    # Las fotos de la ruta, sector o vía (y de las vías del sector) se van
-    # con ella por la cascada: se cierran sus aportes y se borran sus archivos.
-    if kind == "trekking_route":
-        photos += item_photos_domain.photos_for_deleted(db, "trekking_route_id", [item.id], by)
-        import route_tracks  # importa este módulo
-        route_tracks.delete_for_route(db, item.id, by)
-    if kind == "climbing_sector":
-        photos += item_photos_domain.photos_for_deleted(db, "climbing_sector_id", [item.id], by)
-        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [r.id for r in item.routes], by)
-    if kind == "climbing_route":
-        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [item.id], by)
     if kind == "climbing_sector":
         for route in item.routes:
             withdraw_for_deleted_item(db, "climbing_route", route.id, by)

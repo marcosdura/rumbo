@@ -5,6 +5,7 @@ import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, normalizePhoneDigits } from "./c
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
+import type { PhotoTarget } from "@/lib/trailPage"
 
 function formatWhatsapp(basic: BasicInfo): string | null {
   if (!basic.whatsapp.trim()) return null
@@ -91,16 +92,56 @@ function sectorPayload(sec: SectorItem, spotId: number) {
 // sector ni las vías que ya se guardaron.
 function sectorTask(sec: SectorItem, routes: ClimbingRouteItem[], spotId: number, token: string | undefined) {
   let sector: Created | null = null
-  const done = new Set<number>()
+  // Índice de la vía -> id creado (para subir sus fotos).
+  const done = new Map<number, number>()
   const task = async () => {
     if (!sector) sector = (await api.post<Created>("/sectors/", sectorPayload(sec, spotId), { token })).data
     for (const [i, r] of routes.entries()) {
       if (done.has(i)) continue
-      await api.post("/climbingroutes/", climbingRoutePayload(r, sector.id), { token })
-      done.add(i)
+      const { data } = await api.post<Created>("/climbingroutes/", climbingRoutePayload(r, sector.id), { token })
+      done.set(i, data.id)
     }
   }
-  return { task, created: () => sector }
+  return { task, created: () => sector, viaId: (i: number) => done.get(i) }
+}
+
+// Las fotos del sector y de cada vía, después de crearlos.
+async function addSectorPhotos(
+  failures: Failure[], sec: SectorItem, routes: ClimbingRouteItem[],
+  t: ReturnType<typeof sectorTask>, spotId: number, token: string | undefined,
+) {
+  await addItemPhotos(failures, `Fotos del sector «${sec.name}»`, sec.photos, "climbing_sector", () => t.created()?.id, spotId, token)
+  for (const [i, r] of routes.entries()) {
+    await addItemPhotos(failures, `Fotos de la vía «${r.name}»`, r.photos, "climbing_route", () => t.viaId(i), spotId, token)
+  }
+}
+
+// Las fotos de una ruta, sector o vía recién creada (backend/item_photos.py):
+// se suben a la carpeta del lugar y se registran juntas; pasan por revisión.
+// Si se subieron y falló el registro, reintentar no las vuelve a subir. Si
+// todavía no se creó la ruta (falló antes), falla y se reintenta después.
+export function itemPhotosTask(files: File[], target: PhotoTarget, itemId: () => number | null | undefined, spotId: number, token: string | undefined) {
+  const uploaded: (string | null)[] = files.map(() => null)
+  let posted = false
+  return async () => {
+    const id = itemId()
+    if (!id) throw new Error("Todavía no se creó")
+    for (const [i, file] of files.entries()) {
+      if (!uploaded[i]) uploaded[i] = (await uploadImageToCloudinary(file, { spotId })).publicId
+    }
+    if (!posted) {
+      await api.post("/photos", { target, target_id: id, public_ids: uploaded }, { token })
+      posted = true
+    }
+  }
+}
+
+async function addItemPhotos(
+  failures: Failure[], label: string, files: File[] | undefined, target: PhotoTarget,
+  itemId: () => number | null | undefined, spotId: number, token: string | undefined,
+) {
+  if (!files?.length) return
+  await attempt(failures, label, itemPhotosTask(files, target, itemId, spotId, token))
 }
 
 // Una foto del lugar: subirla a Cloudinary y registrarla. Si ya se subió y
@@ -136,9 +177,11 @@ interface ContributionHandlers {
 
 // Varias cosas independientes (rutas, vías): las que se guardaron cuentan;
 // si no se guardó ninguna, es un error común y se puede volver a enviar.
-async function submitEach<T>(
+async function submitEach<T extends { photos?: File[] }>(
   items: T[], label: (item: T) => string, post: (item: T) => Promise<Created>,
   noneMessage: string, failMessage: string, h: ContributionHandlers,
+  // Las fotos de cada una, después de crearla.
+  photos?: { target: PhotoTarget; spotId: number; token: string | undefined },
 ) {
   h.setSubmitting(true)
   h.setError(null)
@@ -146,7 +189,9 @@ async function submitEach<T>(
     const created: Created[] = []
     const failures: Failure[] = []
     for (const item of items) {
-      await attempt(failures, label(item), async () => { created.push(await post(item)) })
+      let id: number | null = null
+      await attempt(failures, label(item), async () => { const c = await post(item); created.push(c); id = c.id })
+      if (photos) await addItemPhotos(failures, `Fotos de ${label(item)}`, item.photos, photos.target, () => id, photos.spotId, photos.token)
     }
     if (items.length === 0) { h.setError(noneMessage); return }
     if (created.length === 0) { h.setError(failMessage); return }
@@ -172,6 +217,7 @@ export async function submitNewTrekkingRoute(params: SubmitNewTrekkingRouteParam
     "Agregá al menos una ruta.",
     "No se pudo guardar la ruta. Intentá de nuevo.",
     params,
+    { target: "trekking_route", spotId: trekkingSpotId as number, token },
   )
 }
 
@@ -187,12 +233,14 @@ export async function submitNewClimbingSector(params: SubmitNewClimbingSectorPar
   setSubmitting(true)
   setError(null)
   try {
-    const { task, created } = sectorTask(sectors[0], sectorRoutes.filter(r => r.name), climbingSpotId as number, token)
+    const vias = sectorRoutes.filter(r => r.name)
+    const t = sectorTask(sectors[0], vias, climbingSpotId as number, token)
     const failures: Failure[] = []
-    await attempt(failures, `Vías del sector «${sectors[0].name}»`, task)
-    const sector = created()
+    await attempt(failures, `Vías del sector «${sectors[0].name}»`, t.task)
+    const sector = t.created()
     // Sin sector no se guardó nada: se puede volver a enviar tal cual.
     if (!sector) { setError("No se pudo guardar el sector. Intentá de nuevo."); return }
+    await addSectorPhotos(failures, sectors[0], vias, t, climbingSpotId as number, token)
     setFailures(failures)
     // Las vías van con el sector: si el sector quedó en revisión, ellas también.
     setSuccess(contributionResult([sector]))
@@ -202,13 +250,15 @@ export async function submitNewClimbingSector(params: SubmitNewClimbingSectorPar
 }
 
 interface SubmitNewClimbingRouteParams extends ContributionHandlers {
+  // El lugar del sector: la carpeta de las fotos.
+  climbingSpotId: number | null
   climbingSectorId: number | null
   token: string | undefined
   climbingNewRoutes: ClimbingRouteItem[]
 }
 
 export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParams): Promise<void> {
-  const { climbingSectorId, token, climbingNewRoutes } = params
+  const { climbingSpotId, climbingSectorId, token, climbingNewRoutes } = params
   await submitEach(
     climbingNewRoutes.filter(r => r.name.trim()),
     r => `Vía «${r.name}»`,
@@ -216,6 +266,7 @@ export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParam
     "Agregá al menos una vía.",
     "No se pudieron guardar las vías. Intentá de nuevo.",
     params,
+    { target: "climbing_route", spotId: climbingSpotId as number, token },
   )
 }
 
@@ -533,7 +584,11 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (cat === "Trekking") {
       for (const r of routes) {
         if (!r.name) continue
-        await add(`Ruta «${r.name}»`, () => api.post("/routes/", { spot_id: spotId, ...routePayload(r) }, { token }))
+        let routeId: number | null = null
+        await add(`Ruta «${r.name}»`, async () => {
+          if (!routeId) routeId = (await api.post<Created>("/routes/", { spot_id: spotId, ...routePayload(r) }, { token })).data.id
+        })
+        await addItemPhotos(failures, `Fotos de la ruta «${r.name}»`, r.photos, "trekking_route", () => routeId, spotId, token)
       }
       if (Object.values(trekkingFeatures).some(v => v !== null)) {
         await add("Características del lugar", () => api.post(`/spots/${spotId}/trekking-detail`, trekkingFeatures, { token }))
@@ -543,8 +598,10 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
     if (cat === "Escalada") {
       for (const [i, sec] of sectors.entries()) {
         if (!sec.name) continue
-        const { task } = sectorTask(sec, sectorRoutes.filter(r => r.name && r.sectorIndex === i), spotId, token)
-        await add(`Sector «${sec.name}» y sus vías`, task)
+        const vias = sectorRoutes.filter(r => r.name && r.sectorIndex === i)
+        const t = sectorTask(sec, vias, spotId, token)
+        await add(`Sector «${sec.name}» y sus vías`, t.task)
+        await addSectorPhotos(failures, sec, vias, t, spotId, token)
       }
     }
 

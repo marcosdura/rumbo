@@ -11,12 +11,15 @@ export type RouteItem = {
   elevation_gain: string; elevation_loss: string; max_altitude: string; min_altitude: string
   difficulty: string; route_type: string; technical_level: string; physical_demand: string
   description: string
+  // Hasta 3, opcionales: se suben después de crear la ruta.
+  photos: File[]
 }
 
 export type SectorItem = {
   name: string; type: string; max_altitude: string; restrictions: string
   // "" = no sé.
   approach_minutes: string; sun_exposure: string; rock_type: string
+  photos: File[]
 }
 
 export type SurfItem = {
@@ -85,6 +88,7 @@ export type ClimbingRouteItem = {
   bolts: string
   description: string
   sectorIndex: number
+  photos: File[]
 }
 
 export type ExperienceScheduleType = "todos_los_dias" | "fines_de_semana" | "solo_sabados" | "solo_domingos" | "lunes_a_viernes" | "bajo_reserva" | "personalizado"

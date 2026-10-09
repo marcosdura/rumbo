@@ -1209,7 +1209,12 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     # ese formato al guardarlas).
     # Y en un lugar publicado con rutas o sectores, cualquier logueado sube
     # fotos de una ruta, sector o vía (item_photos.add_photos valida a cuál).
-    community_photos = spot.is_approved and bool(spot.routes or spot.climbing_sectors)
+    # (También con la primera ruta o sector todavía en revisión: agregar lugar
+    # sube sus fotos apenas los crea.)
+    community_photos = spot.is_approved and (
+        db.query(Route).execution_options(include_pending=True).filter(Route.spot_id == spot.id).first() is not None
+        or db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.spot_id == spot.id).first() is not None
+    )
     if not can_manage_spot(spot, user) and not is_public_venue(spot) and not community_photos:
         raise HTTPException(status_code=403, detail="No autorizado")
     #

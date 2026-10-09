@@ -3,6 +3,9 @@
 - Las sube cualquier usuario logueado, a una ruta, sector o vía publicada de
   un lugar publicado. Todas pasan por revisión del admin (salvo las del
   admin): cada foto es un aporte (contributions.py), con su aviso al autor.
+- Agregar lugar sube las fotos apenas crea la ruta, sector o vía, que puede
+  estar todavía en revisión: a esa la puede sumar fotos quien la propuso, y
+  el dueño a las de su lugar todavía sin aprobar.
 - Hasta 3 por ruta, sector o vía, contando las que están en revisión.
 - Se suben a Cloudinary con el formato de la carpeta del lugar
   ("{spot_id}/{16 hex}", el que firma can-upload) y se guarda el public_id,
@@ -15,7 +18,8 @@ from sqlalchemy.orm import Session
 
 from auth import is_admin
 import contributions
-from models import ClimbingRoute, ClimbingSector, ItemPhoto, Route, SpotImage
+from models import ClimbingRoute, ClimbingSector, Contribution, ItemPhoto, Route, SpotImage
+from ownership import can_manage_spot
 
 MAX_PHOTOS = 3
 
@@ -31,18 +35,39 @@ def target_spot(target: str, item):
     return item.sector.spot if target == "climbing_route" else item.spot
 
 
-def get_target(db: Session, target: str, target_id: int):
-    """La ruta, sector o vía publicada de un lugar publicado (404 si no)."""
+def _is_public(target: str, item, spot) -> bool:
+    if not spot.is_approved or spot.owner_deleted_at is not None or not item.is_approved:
+        return False
+    return target != "climbing_route" or item.sector.is_approved
+
+
+def _proposed_by(db: Session, target: str, item, email: str) -> bool:
+    """¿La propuso `email` y está en revisión? Una vía de un sector sugerido
+    no tiene aporte propio: va con el del sector."""
+    kind, item_id = target, item.id
+    if target == "climbing_route" and not item.sector.is_approved:
+        kind, item_id = "climbing_sector", item.sector_id
+    return db.query(Contribution).filter_by(kind=kind, item_id=item_id, status="pending", author_email=email).first() is not None
+
+
+def get_target(db: Session, target: str, target_id: int, user: dict):
+    """La ruta, sector o vía a la que se suben fotos (404 si no se puede):
+    publicada, o en revisión si la propuso este usuario, o de su lugar
+    todavía sin aprobar."""
     if target not in TARGETS:
         raise HTTPException(status_code=422, detail="Tipo desconocido")
     model, _ = TARGETS[target]
-    item = db.query(model).filter(model.id == target_id).first()
+    item = db.query(model).execution_options(include_pending=True).filter(model.id == target_id).first()
     spot = target_spot(target, item) if item else None
-    if not item or not spot or not spot.is_approved or spot.owner_deleted_at is not None:
+    if not item or not spot or spot.owner_deleted_at is not None:
         raise HTTPException(status_code=404, detail="No encontrado")
-    if target == "climbing_route" and not item.sector.is_approved:
-        raise HTTPException(status_code=404, detail="No encontrado")
-    return item, spot
+    if _is_public(target, item, spot) or is_admin(user):
+        return item, spot
+    if not spot.is_approved and can_manage_spot(spot, user):
+        return item, spot
+    if spot.is_approved and _proposed_by(db, target, item, user.get("email")):
+        return item, spot
+    raise HTTPException(status_code=404, detail="No encontrado")
 
 
 def count_photos(db: Session, target: str, target_id: int) -> int:
@@ -78,7 +103,7 @@ def is_public_id_used(db: Session, public_id: str) -> bool:
 
 def add_photos(db: Session, target: str, target_id: int, public_ids: list[str], user: dict):
     """Crea las fotos (en revisión salvo el admin). Devuelve las creadas."""
-    item, spot = get_target(db, target, target_id)
+    item, spot = get_target(db, target, target_id, user)
     if not public_ids:
         raise HTTPException(status_code=422, detail="Elegí al menos una foto.")
     if len(public_ids) > free_slots(db, target, target_id):

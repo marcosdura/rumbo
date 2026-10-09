@@ -161,12 +161,12 @@ export const defaultTrekkingFeatures = (): TrekkingFeatures => ({
 export const defaultRoute = (): RouteItem => ({
   name: "", distance_km: "", duration_hours: "", elevation_gain: "", elevation_loss: "",
   max_altitude: "", min_altitude: "", difficulty: "", route_type: "",
-  technical_level: "", physical_demand: "", description: "",
+  technical_level: "", physical_demand: "", description: "", photos: [],
 })
 
 export const defaultSector = (): SectorItem => ({
   name: "", type: "", max_altitude: "", restrictions: "",
-  approach_minutes: "", sun_exposure: "", rock_type: "",
+  approach_minutes: "", sun_exposure: "", rock_type: "", photos: [],
 })
 
 export const defaultSurf = (): SurfItem => ({
@@ -219,7 +219,7 @@ export const GLAMPING_AMENITY_MAP: Record<string, string> = {
 }
 
 export const defaultClimbingRouteItem = (sectorIndex: number = 0): ClimbingRouteItem => ({
-  name: "", grade: "", type: "", length_m: "", bolts: "", description: "", sectorIndex,
+  name: "", grade: "", type: "", length_m: "", bolts: "", description: "", sectorIndex, photos: [],
 })
 
 export const EXPERIENCE_SCHEDULE_OPTIONS: { value: ExperienceScheduleType; label: string }[] = [

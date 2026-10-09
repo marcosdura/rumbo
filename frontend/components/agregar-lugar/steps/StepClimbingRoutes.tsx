@@ -4,6 +4,7 @@ import { useState } from "react"
 import type React from "react"
 import { s, errorInputBorder, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
+import ItemPhotoPicker from "../ui/ItemPhotoPicker"
 import NavRow from "../ui/NavRow"
 import type { SectorItem, ClimbingRouteItem } from "../types"
 import { defaultClimbingRouteItem } from "../constants"
@@ -136,6 +137,11 @@ export default function StepClimbingRoutes({
             <Field label="Descripción" required={false}>
               <input style={s.input} value={r.description} onChange={e => upd(i, "description", e.target.value)} />
             </Field>
+            <ItemPhotoPicker
+              label={`Fotos de la vía ${i + 1}`}
+              files={r.photos ?? []}
+              onChange={photos => setRoutes(prev => prev.map((x, idx) => idx === i ? { ...x, photos } : x))}
+            />
           </div>
         </div>
       ))}

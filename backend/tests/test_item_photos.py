@@ -130,3 +130,46 @@ def test_borrar_el_lugar_borra_los_archivos(client, db, world, destroyed):
     upload(client, "trekking_route", world["route"].id, [pid(c.id, 1)])
     assert client.delete(f"/spots/{c.id}", headers=as_user(ADMIN)).status_code == 200
     assert pid(c.id, 1) in destroyed
+
+
+# -------- Agregar lugar: fotos apenas se crea la ruta, sector o vía --------
+
+def test_quien_propuso_un_sector_en_revision_le_suma_fotos_a_el_y_a_sus_vias(client, db, make_spot):
+    pena = make_spot(name="Peña", category="Escalada", slug="pena")
+    r = client.post("/sectors/", json={"spot_id": pena.id, "name": "Sur"}, headers=as_user(OTHER))
+    sector_id = r.json()["id"]
+    via_id = client.post("/climbingroutes/", json={"sector_id": sector_id, "name": "Diedro"}, headers=as_user(OTHER)).json()["id"]
+    assert upload(client, "climbing_sector", sector_id, [pid(pena.id, 1)]).status_code == 200
+    assert upload(client, "climbing_route", via_id, [pid(pena.id, 2)]).status_code == 200
+    # Otro usuario, no: todavía no está publicado.
+    assert upload(client, "climbing_sector", sector_id, [pid(pena.id, 3)], user=OWNER).status_code == 404
+
+
+def test_el_duenio_le_suma_fotos_a_las_rutas_de_su_lugar_sin_aprobar(client, db, make_spot):
+    nuevo = make_spot(name="Nuevo", category="Trekking", approved=False)
+    route = Route(spot_id=nuevo.id, name="R", slug="r")
+    db.add(route)
+    db.commit()
+    assert upload(client, "trekking_route", route.id, [pid(nuevo.id, 1)], user=OWNER).status_code == 200
+    assert upload(client, "trekking_route", route.id, [pid(nuevo.id, 2)], user=OTHER).status_code == 404
+
+
+def test_rechazar_el_sector_borra_sus_fotos_y_las_de_sus_vias(client, db, make_spot, destroyed):
+    pena = make_spot(name="Peña", category="Escalada", slug="pena")
+    sector_id = client.post("/sectors/", json={"spot_id": pena.id, "name": "Sur"}, headers=as_user(OTHER)).json()["id"]
+    via_id = client.post("/climbingroutes/", json={"sector_id": sector_id, "name": "Diedro"}, headers=as_user(OTHER)).json()["id"]
+    upload(client, "climbing_sector", sector_id, [pid(pena.id, 1)])
+    upload(client, "climbing_route", via_id, [pid(pena.id, 2)])
+    contribution = db.query(Contribution).filter_by(kind="climbing_sector").one()
+    r = client.post(f"/admin/contributions/{contribution.id}/reject", json={"reason": "No existe"}, headers=as_user(ADMIN))
+    assert r.status_code == 200, r.text
+    assert every(db, ItemPhoto).count() == 0
+    assert sorted(destroyed) == [pid(pena.id, 1), pid(pena.id, 2)]
+    assert {c.status for c in db.query(Contribution).filter_by(kind="photo")} == {"withdrawn"}
+
+
+def test_firma_para_subir_con_el_primer_sector_todavia_en_revision(client, make_spot):
+    pena = make_spot(name="Peña", category="Escalada", slug="pena")
+    client.post("/sectors/", json={"spot_id": pena.id, "name": "Sur"}, headers=as_user(OTHER))
+    r = client.get(f"/spots/{pena.id}/can-upload", params={"public_id": f"{pena.id}/{9:016x}"}, headers=as_user(OTHER))
+    assert r.status_code == 200, r.text

@@ -8,6 +8,7 @@ import { unnamedRows } from "../validation"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import SectorExtraFields from "../ui/SectorExtraFields"
+import ItemPhotoPicker from "../ui/ItemPhotoPicker"
 import type { SectorItem } from "../types"
 
 export default function StepEscalada({
@@ -73,6 +74,11 @@ export default function StepEscalada({
             <Field label="Restricciones" required={false}>
               <input style={s.input} value={sec.restrictions} onChange={e => updSector(i, "restrictions", e.target.value)} />
             </Field>
+            <ItemPhotoPicker
+              label={`Fotos del sector ${i + 1}`}
+              files={sec.photos ?? []}
+              onChange={photos => setSectors(prev => prev.map((x, idx) => idx === i ? { ...x, photos } : x))}
+            />
           </div>
         </div>
       ))}

@@ -26,3 +26,14 @@ describe("namedCount", () => {
     expect(namedCount([{ name: "A" }, { name: " " }, { name: "" }])).toBe(1)
   })
 })
+
+describe("unnamedRows con fotos", () => {
+  it("una fila con fotos pero sin nombre se marca (antes se descartaba)", () => {
+    const rows = [
+      { ...defaultRoute(), name: "Cumbre" },
+      { ...defaultRoute(), photos: [new File(["x"], "a.jpg")] },
+      defaultRoute(),
+    ]
+    expect(unnamedRows(rows)).toEqual([1])
+  })
+})

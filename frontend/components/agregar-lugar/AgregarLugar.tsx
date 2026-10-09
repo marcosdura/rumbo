@@ -352,7 +352,7 @@ export default function AgregarLugar() {
     }
 
     if (isEscalada && climbingMode === "new_route") {
-      return submitNewClimbingRoute({ climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess, setFailures })
+      return submitNewClimbingRoute({ climbingSpotId, climbingSectorId, token, climbingNewRoutes, setSubmitting, setError, setSuccess, setFailures })
     }
 
     await submitAgregarLugar({

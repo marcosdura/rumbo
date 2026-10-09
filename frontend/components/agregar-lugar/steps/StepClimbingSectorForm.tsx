@@ -5,6 +5,7 @@ import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import SectorExtraFields from "../ui/SectorExtraFields"
+import ItemPhotoPicker from "../ui/ItemPhotoPicker"
 import type { SectorItem } from "../types"
 
 export default function StepClimbingSectorForm({
@@ -46,6 +47,11 @@ export default function StepClimbingSectorForm({
           <Field label="Restricciones" required={false}>
             <input style={s.input} value={sec.restrictions} onChange={e => upd("restrictions", e.target.value)} />
           </Field>
+          <ItemPhotoPicker
+            label="Fotos del sector"
+            files={sec.photos ?? []}
+            onChange={photos => setSectors(prev => [{ ...prev[0], photos }, ...prev.slice(1)])}
+          />
         </div>
       </div>
       <NavRow onBack={onBack} onNext={onNext} error={error} />

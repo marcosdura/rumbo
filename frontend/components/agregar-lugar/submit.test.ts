@@ -15,8 +15,9 @@ vi.mock("@/lib/api", () => ({
     },
   },
 }))
+let uploads = 0
 vi.mock("@/lib/uploadImage", () => ({
-  uploadImageToCloudinary: () => Promise.resolve({ publicId: "rumbo/spots/1/abc", url: "https://res.cloudinary.com/x.jpg" }),
+  uploadImageToCloudinary: () => { uploads++; return Promise.resolve({ publicId: "rumbo/spots/1/abc", url: "https://res.cloudinary.com/x.jpg" }) },
 }))
 const ok = (is_approved: boolean, id = 1) => () => Promise.resolve({ data: { id, is_approved } })
 const fail = () => Promise.reject(new Error("500"))
@@ -76,7 +77,7 @@ describe("sumar a un lugar existente", () => {
   it("vía nueva en un sector existente", async () => {
     responses = [ok(false)]
     const h = handlers()
-    await submitNewClimbingRoute({ climbingSectorId: 9, token: "t", climbingNewRoutes: [climbingRoute], ...h })
+    await submitNewClimbingRoute({ climbingSpotId: 12, climbingSectorId: 9, token: "t", climbingNewRoutes: [climbingRoute], ...h })
     expect(h.setSuccess).toHaveBeenCalledWith("pending")
   })
 
@@ -188,5 +189,104 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
       surfPhotoFiles: [null, null, null], kayakPhotoFiles: cover,
     })
     expect(calls[0][1]).toMatchObject({ includes_guide: true, includes_life_jacket: null })
+  })
+})
+
+describe("fotos de rutas, sectores y vías al crearlas", () => {
+  const photo = new File(["x"], "a.jpg", { type: "image/jpeg" })
+
+  it("ruta nueva: se crea y después se registran sus fotos", async () => {
+    responses = [ok(false, 31), ok(false)]
+    const h = handlers()
+    await submitNewTrekkingRoute({ trekkingSpotId: 4, token: "t", routes: [{ name: "Cumbre", photos: [photo, photo] }] as never, ...h })
+    expect(urls()).toEqual(["/routes/", "/photos"])
+    expect(calls[1][1]).toEqual({ target: "trekking_route", target_id: 31, public_ids: ["rumbo/spots/1/abc", "rumbo/spots/1/abc"] })
+    expect(failures).toEqual([])
+  })
+
+  it("sin fotos no pide nada más", async () => {
+    responses = [ok(false, 31)]
+    await submitNewTrekkingRoute({ trekkingSpotId: 4, token: "t", routes: [{ name: "Cumbre", photos: [] }] as never, ...handlers() })
+    expect(urls()).toEqual(["/routes/"])
+  })
+
+  it("sector nuevo: fotos del sector y de cada vía con su id", async () => {
+    responses = [ok(false, 9), ok(false, 50), ok(false, 51), ok(false), ok(false)]
+    const vias = [{ name: "A", photos: [] }, { name: "B", photos: [photo] }]
+    await submitNewClimbingSector({ climbingSpotId: 3, token: "t", sectors: [{ name: "Norte", photos: [photo] }] as never, sectorRoutes: vias as never, ...handlers() })
+    expect(urls()).toEqual(["/sectors/", "/climbingroutes/", "/climbingroutes/", "/photos", "/photos"])
+    expect(calls[3][1]).toMatchObject({ target: "climbing_sector", target_id: 9 })
+    expect(calls[4][1]).toMatchObject({ target: "climbing_route", target_id: 51 })
+  })
+
+  it("vía nueva en un sector existente, con fotos", async () => {
+    responses = [ok(false, 70), ok(false)]
+    await submitNewClimbingRoute({ climbingSpotId: 12, climbingSectorId: 9, token: "t", climbingNewRoutes: [{ name: "Diedro", photos: [photo] }] as never, ...handlers() })
+    expect(calls[1][1]).toMatchObject({ target: "climbing_route", target_id: 70 })
+  })
+
+  it("si falla el registro de las fotos, se avisa y el reintento no las vuelve a subir ni crea otra ruta", async () => {
+    responses = [ok(false, 31), fail]
+    const h = handlers()
+    await submitNewTrekkingRoute({ trekkingSpotId: 4, token: "t", routes: [{ name: "Cumbre", photos: [photo] }] as never, ...h })
+    expect(h.setSuccess).toHaveBeenCalledWith("pending")
+    expect(failures.map(f => f.label)).toEqual(["Fotos de Ruta «Cumbre»"])
+    calls = []
+    uploads = 0
+    responses = [ok(false)]
+    expect(await retryFailures(failures)).toEqual([])
+    expect(urls()).toEqual(["/photos"])
+    // Ya estaban en Cloudinary: no se vuelven a subir.
+    expect(uploads).toBe(0)
+  })
+
+  it("si no se creó la ruta, sus fotos fallan también y se reintentan después de la ruta", async () => {
+    // La primera ruta falla; la segunda (sin fotos) se crea: es un éxito parcial.
+    const h = handlers()
+    responses = [fail, ok(false, 40)]
+    await submitNewTrekkingRoute({ trekkingSpotId: 4, token: "t", routes: [{ name: "A", photos: [photo] }, { name: "B", photos: [] }] as never, ...h })
+    expect(failures.map(f => f.label)).toEqual(["Ruta «A»", "Fotos de Ruta «A»"])
+    calls = []
+    responses = [ok(false, 31), ok(false)]
+    expect(await retryFailures(failures)).toEqual([])
+    expect(urls()).toEqual(["/routes/", "/photos"])
+    expect(calls[1][1]).toMatchObject({ target_id: 31 })
+  })
+})
+
+describe("lugar nuevo: fotos de sus rutas y sectores", () => {
+  const photo = new File(["x"], "a.jpg", { type: "image/jpeg" })
+  const params = (cat: string, extra: object) => ({
+    selectedCat: constants.CATEGORIES.find(c => c.name === cat)!,
+    isService: false, creatingNewSpot: false, token: "t",
+    basic: { ...constants.emptyBasic(), name: "Cerro", lat: "-34", lng: "-55" },
+    isPublic: null, publicTransport: null, isResponsible: true, selectedAmenities: [], additionalCategories: [],
+    motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
+    glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [],
+    selectedGlampingAmenities: [], selectedCampingAmenities: [],
+    trekkingFeatures: constants.defaultTrekkingFeatures(), routes: [], sectors: [], sectorRoutes: [],
+    surf: constants.defaultSurf(), kayaks: [], images: [new File(["x"], "a.jpg")],
+    surfPhotoFiles: [null, null, null], kayakPhotoFiles: [null, null, null],
+    selectedSpotId: null, ownerEmail: "a@b.com", experiences: [],
+    setUploadProgress: () => {}, ...extra,
+  })
+
+  it("trekking: la ruta y después sus fotos, en la carpeta del lugar", async () => {
+    responses = [ok(false, 30), ok(true), ok(false, 31), ok(false)]  // lugar, foto, ruta, fotos de la ruta
+    const h = handlers()
+    await submitAgregarLugar({ ...params("Trekking", { routes: [{ ...constants.defaultRoute(), name: "Cumbre", photos: [photo] }] }), ...h } as never)
+    expect(urls().slice(2)).toEqual(["/routes/", "/photos"])
+    expect(calls[3][1]).toMatchObject({ target: "trekking_route", target_id: 31 })
+    expect(failures).toEqual([])
+  })
+
+  it("escalada: el sector, sus vías y después las fotos de cada uno", async () => {
+    responses = [ok(false, 30), ok(true), ok(false, 9), ok(false, 50), ok(false), ok(false)]
+    const sectors = [{ ...constants.defaultSector(), name: "Norte", photos: [photo] }]
+    const sectorRoutes = [{ ...constants.defaultClimbingRouteItem(0), name: "A", photos: [photo] }]
+    await submitAgregarLugar({ ...params("Escalada", { sectors, sectorRoutes }), ...handlers() } as never)
+    expect(urls().slice(2)).toEqual(["/sectors/", "/climbingroutes/", "/photos", "/photos"])
+    expect(calls[4][1]).toMatchObject({ target: "climbing_sector", target_id: 9 })
+    expect(calls[5][1]).toMatchObject({ target: "climbing_route", target_id: 50 })
   })
 })

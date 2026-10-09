@@ -28,6 +28,12 @@ function sectorSummary(sec: SectorItem): string[] {
   ].filter((x): x is string => !!x)
 }
 
+// "📷 2 fotos" de una ruta, sector o vía (opcionales).
+function photosLabel(photos: File[] | undefined): string | null {
+  const n = photos?.length ?? 0
+  return n ? `📷 ${n} ${n === 1 ? "foto" : "fotos"}` : null
+}
+
 export default function StepResumen({
   selectedCat, isService, createsSpot, basic, trekkingFeatures, routes,
   surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
@@ -308,7 +314,7 @@ export default function StepResumen({
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
                 <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
-                  {[r.distance_km && `${r.distance_km} km`, r.difficulty].filter(Boolean).join(" · ")}
+                  {[r.distance_km && `${r.distance_km} km`, r.difficulty, photosLabel(r.photos)].filter(Boolean).join(" · ")}
                 </p>
               </div>
             ))}
@@ -323,7 +329,7 @@ export default function StepResumen({
               <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{sec.name}</p>
                 <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
-                  {sectorSummary(sec).join(" · ")}
+                  {[...sectorSummary(sec), photosLabel(sec.photos)].filter(Boolean).join(" · ")}
                 </p>
               </div>
             ))}
@@ -340,6 +346,7 @@ export default function StepResumen({
                 <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
                   {sectors?.[r.sectorIndex]?.name || "Sector sin nombre"}
                   {r.grade && ` · ${r.grade}`}
+                  {photosLabel(r.photos) && ` · ${photosLabel(r.photos)}`}
                 </p>
               </div>
             ))}
@@ -361,6 +368,7 @@ export default function StepResumen({
               <SummaryRow label="Sol o sombra" value={SUN_EXPOSURE[sectors[0].sun_exposure] ?? "No sé"} />
               <SummaryRow label="Tipo de roca" value={ROCK_TYPES[sectors[0].rock_type] ?? "No sé"} />
               {sectors[0].restrictions && <SummaryRow label="Restricciones" value={sectors[0].restrictions} />}
+              {photosLabel(sectors[0].photos) && <SummaryRow label="Fotos" value={photosLabel(sectors[0].photos)!} />}
             </>
           )}
           {climbingMode === "new_route" && (
@@ -372,7 +380,7 @@ export default function StepResumen({
                     <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                       <p style={{ fontSize: 14, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{r.name}</p>
                       <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, textAlign: "right", flexShrink: 0 }}>
-                        {[r.grade, r.type].filter(Boolean).join(" · ")}
+                        {[r.grade, r.type, photosLabel(r.photos)].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                   ))}

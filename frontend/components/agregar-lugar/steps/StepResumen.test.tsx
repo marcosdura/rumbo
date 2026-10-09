@@ -109,3 +109,16 @@ describe("Resumen: descripción y precio de escuelas y servicios", () => {
     expect(screen.getByText("Gratis")).toBeTruthy()
   })
 })
+
+describe("Resumen: fotos de rutas, sectores y vías", () => {
+  it("dice cuántas tiene cada una", () => {
+    const photo = new File(["x"], "a.jpg")
+    renderSummary({
+      selectedCat: cat("Escalada"), createsSpot: true,
+      sectors: [{ ...defaultSector(), name: "Norte", photos: [photo, photo] }],
+      sectorRoutes: [{ name: "Diedro", grade: "6a", type: "", length_m: "", bolts: "", description: "", sectorIndex: 0, photos: [photo] }],
+    })
+    expect(screen.getByText(/📷 2 fotos/)).toBeTruthy()
+    expect(screen.getByText(/📷 1 foto$/)).toBeTruthy()
+  })
+})

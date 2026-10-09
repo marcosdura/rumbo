@@ -7,6 +7,7 @@ import { s, errorInputBorder, sanitizeNum } from "../styles"
 import { namedCount, unnamedRows } from "../validation"
 import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
+import ItemPhotoPicker from "../ui/ItemPhotoPicker"
 import type { RouteItem } from "../types"
 
 export default function StepRutas({
@@ -71,6 +72,11 @@ export default function StepRutas({
                 value={r.description} onChange={e => updRoute(i, "description", e.target.value)}
               />
             </Field>
+            <ItemPhotoPicker
+              label={`Fotos de la ruta ${i + 1}`}
+              files={r.photos ?? []}
+              onChange={photos => setRoutes(prev => prev.map((x, idx) => idx === i ? { ...x, photos } : x))}
+            />
             <div className="form-two-col">
               <Field label="Distancia (km)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.distance_km} onChange={e => updRoute(i, "distance_km", sanitizeNum(e.target.value))} /></Field>
               <Field label="Duración (horas)" required={false}><input style={s.input} type="number" step="any" min={0} value={r.duration_hours} onChange={e => updRoute(i, "duration_hours", sanitizeNum(e.target.value))} /></Field>
