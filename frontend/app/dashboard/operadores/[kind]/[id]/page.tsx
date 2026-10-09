@@ -246,7 +246,7 @@ export default function OperatorDashboardPage() {
         <div style={{ ...s.card, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
           {op.is_approved && !lockSensitive && (
             <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
-              Los cambios de nombre y las fotos nuevas pasan por revisión antes de publicarse. El resto se actualiza al instante.
+              Los cambios de nombre, descripción y las fotos nuevas pasan por revisión antes de publicarse. El resto se actualiza al instante.
             </p>
           )}
           <div>
@@ -256,6 +256,25 @@ export default function OperatorDashboardPage() {
             {pendingChange?.changes.name && (
               <p style={{ fontSize: 12, color: "#78590a", margin: "6px 0 0" }}>⏳ En revisión: «{pendingChange.changes.name.to}»</p>
             )}
+          </div>
+          <div>
+            <label style={s.label}>Descripción</label>
+            <textarea value={form.description} onChange={e => upd("description", e.target.value)} disabled={lockSensitive} maxLength={2000}
+              placeholder="Qué ofrecen, para quién es, qué hace distinta la experiencia…"
+              style={{ ...s.input, height: 96, resize: "vertical", ...(lockSensitive ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} />
+            {pendingChange?.changes.description && (
+              <p style={{ fontSize: 12, color: "#78590a", margin: "6px 0 0" }}>⏳ Descripción nueva en revisión</p>
+            )}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={s.label}>Precio desde ($)</label>
+              <input value={form.price_from} onChange={e => upd("price_from", e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="0 si es gratis" style={s.input} />
+            </div>
+            <div>
+              <label style={s.label}>¿Por qué?</label>
+              <input value={form.price_note} onChange={e => upd("price_note", e.target.value)} maxLength={60} placeholder="por clase, por hora" style={s.input} />
+            </div>
           </div>
 
           <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>

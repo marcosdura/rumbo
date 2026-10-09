@@ -190,3 +190,33 @@ def test_descartar_fotos_subidas_si_el_guardado_fallo(client, db, school, destro
     # No toca la que usa la escuela, ni URLs ajenas o de otra playa.
     assert destroyed == [pid(sid, 9)]
     assert client.post(f"/operators/surf_school/{school.id}/discard-photos", json={"public_ids": []}, headers=as_user(OTHER)).status_code == 403
+
+
+# -------- Descripción y precio --------
+
+def test_precio_al_instante_y_descripcion_a_revision(client, db, school):
+    r = edit(client, school, {"price_from": 1200, "price_note": "por clase", "description": "Clases para toda la familia."})
+    assert r.status_code == 200, r.text
+    assert (sorted(r.json()["applied"]), r.json()["pending"]) == (["price_from", "price_note"], ["description"])
+    s = reload(db, school)
+    assert (s.price_from, s.price_note, s.description) == (1200, "por clase", None)
+
+
+def test_aprobar_aplica_la_descripcion(client, db, school):
+    edit(client, school, {"description": "  Clases para toda la familia.  "})
+    [pending] = client.get("/admin/operator-change-requests", headers=as_user(ADMIN)).json()
+    assert pending["changes"]["description"] == {"from": None, "to": "Clases para toda la familia."}
+    assert pending["operator"]["description"] is None
+    client.post(f"/admin/operator-change-requests/{pending['id']}/approve", headers=as_user(ADMIN))
+    assert reload(db, school).description == "Clases para toda la familia."
+
+
+def test_misma_descripcion_no_crea_pedido(client, db, school):
+    school.description = "Igual"
+    db.commit()
+    r = edit(client, school, {"description": " Igual "})
+    assert (r.json()["applied"], r.json()["pending"]) == ([], [])
+
+
+def test_precio_negativo_no(client, school):
+    assert edit(client, school, {"price_from": -1}).status_code == 422

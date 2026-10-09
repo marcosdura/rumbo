@@ -9,7 +9,7 @@ const change: AdminOperatorChange = {
     photos: { from: ["https://res.cloudinary.com/x/a.jpg"], to: ["https://res.cloudinary.com/x/a.jpg", "https://res.cloudinary.com/x/n.jpg"] },
   },
   spot: { id: 3, name: "Playa Brava", slug: "playa-brava" },
-  operator: { name: "Escuela Ola", photos: ["https://res.cloudinary.com/x/a.jpg"] },
+  operator: { name: "Escuela Ola", description: null, photos: ["https://res.cloudinary.com/x/a.jpg"] },
 }
 
 function renderList(overrides = {}) {
@@ -41,5 +41,13 @@ describe("OperatorChangesList", () => {
   it("sin pedidos", () => {
     renderList({ changes: [] })
     expect(screen.getByText("No hay cambios pendientes.")).toBeTruthy()
+  })
+})
+
+describe("OperatorChangesList: descripción", () => {
+  it("muestra la descripción nueva", () => {
+    renderList({ changes: [{ ...change, changes: { description: { from: null, to: "Clases para toda la familia." } } }] })
+    expect(screen.getByText("Descripción")).toBeTruthy()
+    expect(screen.getByText("Clases para toda la familia.")).toBeTruthy()
   })
 })

@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { durationLabel, kayakInfoRows, operatorSeason, operatorShareImage, surfInfoRows } from "./operatorPage"
+import { durationLabel, kayakInfoRows, operatorPrice, operatorSeason, operatorShareImage, surfInfoRows } from "./operatorPage"
 import type { PublicKayak, PublicSurfSchool } from "./types"
 
 const base = {
   id: 4, name: "X", duration: null, email: null, whatsapp: null, instagram: null,
   season_start: null, season_end: null, photo_1: null, photo_2: null, photo_3: null,
   spot_id: 3, spot_name: "Playa Brava", spot_department: "Rocha", spot_slug: null, spot_lat: null, spot_lng: null,
+  description: null, price_from: null, price_note: null,
 }
 const surf = (extra: Partial<PublicSurfSchool>): PublicSurfSchool =>
   ({ ...base, class_type: null, equipment_include: null, levels: null, languages: null, ...extra })
@@ -44,5 +45,21 @@ describe("Foto al compartir", () => {
     expect(operatorShareImage("https://res.cloudinary.com/r/image/upload/v1/x.jpg"))
       .toBe("https://res.cloudinary.com/r/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/v1/x.jpg")
     expect(operatorShareImage("https://otro.com/x.jpg")).toBe("https://otro.com/x.jpg")
+  })
+})
+
+describe("Precio de escuelas y servicios", () => {
+  it("desde, con la nota del dueño; 0 es gratis; sin precio, nada", () => {
+    expect(operatorPrice(1200, " por clase ")).toBe("Desde $1.200 por clase")
+    expect(operatorPrice(800, null)).toBe("Desde $800")
+    expect(operatorPrice(0, "por clase")).toBe("Gratis")
+    expect(operatorPrice(null, "por clase")).toBeNull()
+  })
+
+  it("es la primera fila de Información", () => {
+    expect(surfInfoRows(surf({ price_from: 1200, price_note: "por clase", class_type: "grupal" }))[0])
+      .toEqual({ label: "Precio", value: "Desde $1.200 por clase" })
+    expect(kayakInfoRows(kayak({ price_from: 900, price_note: "por hora" }))[0])
+      .toEqual({ label: "Precio", value: "Desde $900 por hora" })
   })
 })

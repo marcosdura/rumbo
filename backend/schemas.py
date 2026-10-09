@@ -96,6 +96,9 @@ class OperatorEditRequest(BaseModel):
     levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
     languages: Optional[list[Language]] = Field(default=None, max_length=4)
     duration: Optional[float] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
+    price_from: Optional[int] = Field(default=None, ge=0)
+    price_note: Optional[str] = Field(default=None, max_length=60)
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     instagram: Optional[str] = Field(default=None, max_length=100)
@@ -303,6 +306,9 @@ class KayakDetail(BaseModel):
     # None = "no sé".
     includes_guide: Optional[bool] = None
     includes_life_jacket: Optional[bool] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
+    price_from: Optional[int] = Field(default=None, ge=0)
+    price_note: Optional[str] = Field(default=None, max_length=60)
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     instagram: Optional[str] = Field(default=None, max_length=100)
@@ -339,6 +345,9 @@ class SurfSchool(BaseModel):
     # None = "no sé".
     levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
     languages: Optional[list[Language]] = Field(default=None, max_length=4)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    price_from: Optional[int] = Field(default=None, ge=0)
+    price_note: Optional[str] = Field(default=None, max_length=60)
     email: Optional[str] = Field(default=None, max_length=254)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     instagram: Optional[str] = Field(default=None, max_length=100)

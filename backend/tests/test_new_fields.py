@@ -69,6 +69,25 @@ def test_escuelas_y_kayaks_traen_slug_y_ubicacion_de_su_playa(client, make_spot)
     assert (k["spot_slug"], k["spot_lat"], k["spot_lng"]) == ("laguna", -34.6, -54.2)
 
 
+def test_escuelas_y_kayaks_guardan_descripcion_y_precio(client, make_spot):
+    beach = make_spot(name="Playa Brava", category="Surf")
+    lake = make_spot(name="Laguna", category="Kayak")
+    extra = {"description": "Clases todo el año.", "price_from": 1200, "price_note": "por clase"}
+    school = client.post("/surfschool/", json={"spot_id": beach.id, "name": "Escuela Ola", **extra}, headers=as_user(ADMIN)).json()
+    kayak = client.post("/kayak/", json={"spot_id": lake.id, "name": "Kayak Sur", **extra}, headers=as_user(ADMIN)).json()
+    for got in (client.get(f"/surfschool/{school['id']}").json(), client.get(f"/kayak/{kayak['id']}").json()):
+        assert (got["description"], got["price_from"], got["price_note"]) == ("Clases todo el año.", 1200, "por clase")
+
+
+def test_alquiler_de_kayak_sin_responder_queda_en_no_se(client, make_spot):
+    # Antes la columna tenía default=False: el "no sé" se guardaba como "no".
+    lake = make_spot(name="Laguna", category="Kayak")
+    sin = client.post("/kayak/", json={"spot_id": lake.id, "name": "K1"}, headers=as_user(ADMIN)).json()
+    no_se = client.post("/kayak/", json={"spot_id": lake.id, "name": "K2", "rental_available": None}, headers=as_user(ADMIN)).json()
+    no = client.post("/kayak/", json={"spot_id": lake.id, "name": "K3", "rental_available": False}, headers=as_user(ADMIN)).json()
+    assert (sin["rental_available"], no_se["rental_available"], no["rental_available"]) == (None, None, False)
+
+
 def test_un_kayak_guarda_guia_y_chaleco(client, make_spot):
     lake = make_spot(name="Laguna", category="Kayak")
     r = client.post("/kayak/", json={"spot_id": lake.id, "name": "Kayak Sur", "includes_guide": True, "includes_life_jacket": False}, headers=as_user(ADMIN))

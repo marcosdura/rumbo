@@ -95,3 +95,17 @@ describe("StepResumen", () => {
     expect(within(school).getByRole("button", { name: "Editar" })).toBeTruthy()
   })
 })
+
+describe("Resumen: descripción y precio de escuelas y servicios", () => {
+  it("surf y kayak los muestran", () => {
+    const about = { description: "Clases para chicos", price_from: "1200", price_note: "por clase" }
+    renderSummary({ selectedCat: cat("Surf"), isService: true, createsSpot: false, surf: { ...defaultSurf(), name: "Escuela Ola", ...about } })
+    expect(screen.getByText("Clases para chicos")).toBeTruthy()
+    expect(screen.getByText("Desde $1.200 por clase")).toBeTruthy()
+  })
+
+  it("kayak", () => {
+    renderSummary({ selectedCat: cat("Kayak"), isService: true, createsSpot: false, kayaks: [{ ...defaultKayak(), name: "Sur", price_from: "0" }] })
+    expect(screen.getByText("Gratis")).toBeTruthy()
+  })
+})

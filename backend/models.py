@@ -516,10 +516,16 @@ class KayakDetail(ReviewedContent, Base):
 
     kayak_type = Column(String)       # travesia | recreativo | rapido
 
-    rental_available = Column(Boolean, default=False)
-    # null = "no sé".
+    # null = "no sé" (antes default=False: el "no sé" quedaba como "no").
+    rental_available = Column(Boolean, nullable=True)
     includes_guide       = Column(Boolean, nullable=True)
     includes_life_jacket = Column(Boolean, nullable=True)
+
+    # Lo que el visitante más pregunta: qué ofrece y cuánto sale. El precio
+    # es "desde" (pesos) con una nota libre ("por clase", "alquiler por hora").
+    description = Column(Text, nullable=True)
+    price_from = Column(Integer, nullable=True)
+    price_note = Column(String(60), nullable=True)
 
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)
@@ -573,6 +579,12 @@ class SurfSchool(ReviewedContent, Base):
     # Listas; null = "no sé" (quien lo cargó no lo sabía).
     levels    = Column(JSON, nullable=True)     # principiante | intermedio | avanzado
     languages = Column(JSON, nullable=True)     # espanol | ingles | portugues | otro
+
+    # Lo que el visitante más pregunta: qué ofrece y cuánto sale. El precio
+    # es "desde" (pesos) con una nota libre ("por clase", "alquiler por hora").
+    description = Column(Text, nullable=True)
+    price_from = Column(Integer, nullable=True)
+    price_note = Column(String(60), nullable=True)
 
     email = Column(String, nullable=True)
     whatsapp = Column(String, nullable=True)

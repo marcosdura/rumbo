@@ -15,6 +15,9 @@ export type PublicOperatorBase = {
   spot_id: number | null; spot_name: string | null; spot_department: string | null
   // La playa o laguna: para llevar a su página y a "Cómo llegar".
   spot_slug: string | null; spot_lat: number | null; spot_lng: number | null
+  // Qué ofrece y cuánto sale: precio "desde" (pesos) con una nota libre.
+  description: string | null
+  price_from: number | null; price_note: string | null
 }
 
 export type PublicSurfSchool = PublicOperatorBase & {

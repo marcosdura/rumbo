@@ -1,5 +1,6 @@
 "use client"
 
+import { operatorPrice } from "@/lib/operatorPage"
 import {
   TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, KAYAK_DIFFICULTY_LABELS, KAYAK_TYPE_LABELS,
   KAYAK_WATER_LABELS, SURFACE_LABELS, SURF_CLASS_LABELS, monthLabel,
@@ -386,6 +387,8 @@ export default function StepResumen({
         <SummaryCard title="Datos de la escuela de surf" onEdit={editTo("servicio")}>
           <SummaryRow label="Nombre" value={surf.name} />
           {surf.class_type && <SummaryRow label="Tipo de clase" value={SURF_CLASS_LABELS[surf.class_type] ?? surf.class_type} />}
+          {surf.description.trim() && <SummaryRow label="Descripción" value={surf.description.trim()} />}
+          {surf.price_from !== "" && <SummaryRow label="Precio" value={operatorPrice(parseInt(surf.price_from), surf.price_note) ?? ""} />}
           {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
           <SummaryRow
             label="Temporada"
@@ -414,6 +417,8 @@ export default function StepResumen({
               <SummaryRow label="Nombre" value={k.name} />
               {k.water_type && <SummaryRow label="Tipo de agua" value={KAYAK_WATER_LABELS[k.water_type] ?? k.water_type} />}
               {k.difficulty && <SummaryRow label="Dificultad" value={KAYAK_DIFFICULTY_LABELS[k.difficulty] ?? k.difficulty} />}
+              {k.description.trim() && <SummaryRow label="Descripción" value={k.description.trim()} />}
+              {k.price_from !== "" && <SummaryRow label="Precio" value={operatorPrice(parseInt(k.price_from), k.price_note) ?? ""} />}
               {k.duration && <SummaryRow label="Duración" value={`${k.duration} hs`} />}
               {k.kayak_type && <SummaryRow label="Tipo de kayak" value={KAYAK_TYPE_LABELS[k.kayak_type] ?? k.kayak_type} />}
               <SummaryRow

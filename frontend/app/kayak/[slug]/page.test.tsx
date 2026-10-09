@@ -21,6 +21,7 @@ const base = {
   season_start: null, season_end: null, photo_1: null, photo_2: null, photo_3: null,
   spot_id: 3, spot_name: "Laguna", spot_department: "Rocha",
   water_type: null, difficulty: null, kayak_type: null, rental_available: null,
+  description: null, price_from: null, price_note: null,
 }
 
 describe("Página del servicio de kayak", () => {
@@ -35,5 +36,15 @@ describe("Página del servicio de kayak", () => {
     kayak = { ...base, includes_guide: null, includes_life_jacket: null }
     render(await KayakDetailPage({ params: Promise.resolve({ slug: "kayak-sur-4" }) }))
     expect(screen.queryByText("🧭 Guía")).toBeNull()
+  })
+})
+
+describe("Página del servicio de kayak: descripción y precio", () => {
+  it("muestra Sobre el servicio y el precio desde", async () => {
+    kayak = { ...base, description: "Salidas al atardecer.", price_from: 900, price_note: "por hora" }
+    render(await KayakDetailPage({ params: Promise.resolve({ slug: "kayak-sur-4" }) }))
+    expect(screen.getByText("Sobre el servicio")).toBeTruthy()
+    expect(screen.getByText("Salidas al atardecer.")).toBeTruthy()
+    expect(screen.getByText("Desde $900 por hora")).toBeTruthy()
   })
 })

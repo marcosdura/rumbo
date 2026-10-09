@@ -26,6 +26,14 @@ export function durationLabel(hours: number): string {
   return `⏱️ ${hours.toLocaleString("es-UY")} ${hours === 1 ? "hora" : "horas"}`
 }
 
+// "Desde $1.200 por clase" (la nota la escribe el dueño). 0 = gratis.
+export function operatorPrice(priceFrom: number | null, note: string | null): string | null {
+  if (priceFrom == null) return null
+  if (priceFrom === 0) return "Gratis"
+  const text = `Desde $${priceFrom.toLocaleString("es-UY")}`
+  return note?.trim() ? `${text} ${note.trim()}` : text
+}
+
 function rows(list: (InfoRow | null)[]): InfoRow[] {
   return list.filter((r): r is InfoRow => r !== null)
 }
@@ -41,6 +49,7 @@ const CLASS_TYPES: Record<string, string> = {
 
 export function surfInfoRows(s: PublicSurfSchool): InfoRow[] {
   return rows([
+    row("Precio", operatorPrice(s.price_from, s.price_note)),
     row("Tipo de clase", s.class_type ? CLASS_TYPES[s.class_type] ?? s.class_type : null),
     row("Duración", s.duration != null ? durationLabel(s.duration) : null),
     row("Equipo", s.equipment_include == null ? null : `🩳 ${s.equipment_include ? "Incluido" : "No incluido"}`),
@@ -61,6 +70,7 @@ const KAYAK_TYPES: Record<string, string> = { travesia: "Travesía", recreativo:
 export function kayakInfoRows(k: PublicKayak): InfoRow[] {
   const difficulty = k.difficulty ? DIFFICULTIES[k.difficulty] : undefined
   return rows([
+    row("Precio", operatorPrice(k.price_from, k.price_note)),
     row("Tipo de agua", k.water_type ? WATER_TYPES[k.water_type] ?? k.water_type : null),
     difficulty ? row("Dificultad", difficulty.label, difficulty.pill) : null,
     row("Duración", k.duration != null ? durationLabel(k.duration) : null),

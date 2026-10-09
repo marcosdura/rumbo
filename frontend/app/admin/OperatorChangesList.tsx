@@ -12,10 +12,14 @@ export type AdminOperatorChange = {
   operator_id: number
   requested_by: string
   created_at: string | null
-  changes: { name?: { from: string; to: string }; photos?: { from: string[]; to: string[] } }
+  changes: {
+    name?: { from: string; to: string }
+    description?: { from: string | null; to: string | null }
+    photos?: { from: string[]; to: string[] }
+  }
   spot: { id: number; name: string; slug: string | null }
   // Valor de hoy (para avisar si se editó mientras esperaba).
-  operator: { name: string; photos: string[] }
+  operator: { name: string; description: string | null; photos: string[] }
 }
 
 interface Props {
@@ -37,7 +41,7 @@ export default function OperatorChangesList({ changes, loadError, loading, actio
         Cambios de escuelas y kayaks
       </p>
       <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 16, lineHeight: 1.5 }}>
-        Nombre y fotos nuevas de escuelas de surf y servicios de kayak ya publicados. Al aprobar se borran las
+        Nombre, descripción y fotos nuevas de escuelas de surf y servicios de kayak ya publicados. Al aprobar se borran las
         fotos que se reemplazaron; al rechazar, las nuevas.
       </p>
 
@@ -85,6 +89,9 @@ export default function OperatorChangesList({ changes, loadError, loading, actio
                 <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 14, display: "flex", flexDirection: "column", gap: 14 }}>
                   {c.changes.name && (
                     <TextDiff title="Nombre" from={c.changes.name.from} to={c.changes.name.to} current={c.operator.name} />
+                  )}
+                  {c.changes.description && (
+                    <TextDiff title="Descripción" from={c.changes.description.from ?? ""} to={c.changes.description.to ?? ""} current={c.operator.description ?? ""} />
                   )}
                   {photos && (
                     <div>

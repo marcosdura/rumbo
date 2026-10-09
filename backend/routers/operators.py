@@ -162,7 +162,7 @@ def list_operator_changes(db: Session = Depends(get_db), admin: dict = Depends(g
             "requested_by": r.requested_by,
             "spot": {"id": r.spot.id, "name": r.spot.name, "slug": r.spot.slug},
             # Valor de hoy: si difiere del "from", se editó mientras esperaba.
-            "operator": {"name": operator.name, "photos": operators.current_photos(operator)},
+            "operator": {"name": operator.name, "description": operator.description, "photos": operators.current_photos(operator)},
         })
     return result
 

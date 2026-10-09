@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props) {
   } catch {
     return { title: "Kayak | Rumbo" }
   }
-  const description = operatorDescription("Servicio de kayak", kayak)
+  const description = kayak.description?.trim().slice(0, 160) || operatorDescription("Servicio de kayak", kayak)
   return {
     title: `${kayak.name} | Rumbo`,
     description,
@@ -67,6 +67,7 @@ export default async function KayakDetailPage({ params }: Props) {
         operator={kayak}
         summary={summary}
         activity={{ emoji: "🛶", label: "Kayak" }}
+        aboutTitle="Sobre el servicio"
         rows={kayakInfoRows(kayak)}
         reviewEntity="kayak"
         report={{ kind: "kayak", what: "este servicio", label: "⚑ Reportar este servicio" }}

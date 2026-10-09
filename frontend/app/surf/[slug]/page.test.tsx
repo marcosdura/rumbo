@@ -135,3 +135,19 @@ describe("Página de la escuela: compartir", () => {
     expect(og.width).toBe(1200)
   })
 })
+
+describe("Página de la escuela: descripción", () => {
+  it("muestra la descripción con sus párrafos, aunque no haya fotos", async () => {
+    school = { ...base, description: "Clases para toda la familia.\n\nTablas incluidas." }
+    const { container } = await page()
+    expect(screen.getByText("Sobre la escuela")).toBeTruthy()
+    expect(screen.getByText(/Clases para toda la familia/).textContent).toBe("Clases para toda la familia.\n\nTablas incluidas.")
+    expect(container.querySelector(".op-grid")!.className).not.toContain("is-panel-only")
+  })
+
+  it("la descripción es la de los metadatos", async () => {
+    school = { ...base, description: "Clases para toda la familia." }
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: "escuela-ola-4" }) })
+    expect(meta.description).toBe("Clases para toda la familia.")
+  })
+})

@@ -56,11 +56,11 @@ def assert_can_manage_operator(operator, spot, user: dict):
 
 OPERATOR_MODELS = {"surf_school": SurfSchool, "kayak": KayakDetail}
 
-# Se aplican al instante (como contacto y precio en un spot). Nombre y fotos
-# pasan por revisión.
+# Se aplican al instante (como contacto y precio en un spot). Nombre,
+# descripción y fotos pasan por revisión.
 INSTANT_FIELDS = {
-    "surf_school": ["class_type", "duration", "equipment_include", "levels", "languages", "email", "whatsapp", "instagram", "season_start", "season_end"],
-    "kayak": ["water_type", "difficulty", "duration", "kayak_type", "rental_available", "includes_guide", "includes_life_jacket", "email", "whatsapp", "instagram", "season_start", "season_end"],
+    "surf_school": ["class_type", "duration", "equipment_include", "levels", "languages", "price_from", "price_note", "email", "whatsapp", "instagram", "season_start", "season_end"],
+    "kayak": ["water_type", "difficulty", "duration", "kayak_type", "rental_available", "includes_guide", "includes_life_jacket", "price_from", "price_note", "email", "whatsapp", "instagram", "season_start", "season_end"],
 }
 
 
@@ -109,6 +109,15 @@ def plan_operator_edit(db: Session, kind: str, operator, data: dict, admin: bool
                 pending["name"] = {"from": operator.name, "to": name}
             else:
                 apply["name"] = name
+
+    if "description" in data:
+        # Texto libre: como en un spot, publicado cambia solo con revisión.
+        description = (data["description"] or "").strip() or None
+        if description != operator.description:
+            if goes_to_review:
+                pending["description"] = {"from": operator.description, "to": description}
+            else:
+                apply["description"] = description
 
     if data.get("photos") is not None:
         photos = [p for p in data["photos"] if p]
@@ -179,6 +188,8 @@ def approve_change(db: Session, request, by: str):
     removed = []
     if "name" in request.changes:
         operator.name = request.changes["name"]["to"]
+    if "description" in request.changes:
+        operator.description = request.changes["description"]["to"]
     if "photos" in request.changes:
         # Las de "from" que ya no están en "to" se reemplazaron: se destruyen.
         removed = [p for p in current_photos(operator) if p not in request.changes["photos"]["to"]]

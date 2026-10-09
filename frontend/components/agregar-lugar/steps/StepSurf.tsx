@@ -7,6 +7,7 @@ import Field from "../ui/Field"
 import TriStateToggle from "../ui/TriStateToggle"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
+import OperatorAboutFields from "../ui/OperatorAboutFields"
 import type { SurfItem } from "../types"
 import MultiChoiceUnknown from "@/components/ui/MultiChoiceUnknown"
 import { LANGUAGES, SURF_LEVELS } from "@/lib/operatorInfo"
@@ -65,6 +66,7 @@ export default function StepSurf({
               value={surf.name} onChange={e => setSurf(p => ({ ...p, name: e.target.value }))}
             />
           </Field>
+          <OperatorAboutFields what="la escuela" value={surf} onChange={(field, v) => setSurf(p => ({ ...p, [field]: v }))} />
           <div className="form-two-col">
             <Field label="Tipo de clase" required={false}>
               <select style={s.input} value={surf.class_type} onChange={e => setSurf(p => ({ ...p, class_type: e.target.value }))}>

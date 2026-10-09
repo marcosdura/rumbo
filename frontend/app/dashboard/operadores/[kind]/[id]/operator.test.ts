@@ -18,7 +18,8 @@ describe("operator", () => {
   it("formFromOperator + operatorPayload ida y vuelta (escuela de surf)", () => {
     const payload = operatorPayload("surf_school", formFromOperator(surf), ["https://a"])
     expect(payload).toEqual({
-      name: "Escuela Ola", duration: 1.5, email: null, whatsapp: "099", instagram: null,
+      name: "Escuela Ola", description: null, price_from: null, price_note: null,
+      duration: 1.5, email: null, whatsapp: "099", instagram: null,
       season_start: 11, season_end: 3, photos: ["https://a"],
       class_type: "grupal", equipment_include: true, levels: null, languages: null,
     })
@@ -51,5 +52,20 @@ describe("operator", () => {
       changes: { name: { from: "A", to: "B" }, photos: { from: ["https://a"], to: ["https://a", "https://n"] } },
     })
     expect(req.changes).toEqual({ name: { from: "A", to: "B" }, photos_added: ["https://n"] })
+  })
+})
+
+describe("Descripción y precio en el panel del dueño", () => {
+  it("van y vuelven; vacíos se mandan como null", () => {
+    const withAbout = { ...surf, description: "Clases todo el año.", price_from: 1200, price_note: "por clase" }
+    expect(operatorPayload("surf_school", formFromOperator(withAbout), [])).toMatchObject({
+      description: "Clases todo el año.", price_from: 1200, price_note: "por clase",
+    })
+    const form = { ...formFromOperator(withAbout), description: "  ", price_from: "", price_note: " " }
+    expect(operatorPayload("kayak", form, [])).toMatchObject({ description: null, price_from: null, price_note: null })
+  })
+
+  it("el aviso de cambios nombra la descripción y el precio", () => {
+    expect(describeOperatorFields(["description", "price_from", "price_note"])).toBe("descripción y precio")
   })
 })

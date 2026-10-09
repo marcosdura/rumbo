@@ -19,6 +19,8 @@ type Props = {
   operator: PublicOperatorBase
   summary: ReviewSummary
   activity: { emoji: string; label: string }
+  // "Sobre la escuela" / "Sobre el servicio"
+  aboutTitle: string
   rows: InfoRow[]
   reviewEntity: "surf" | "kayak"
   report: { kind: "surf_school" | "kayak"; what: string; label: string }
@@ -33,14 +35,15 @@ function SectionLabel({ children }: { children: string }) {
   )
 }
 
-export default function OperatorPage({ operator, summary, activity, rows, reviewEntity, report }: Props) {
+export default function OperatorPage({ operator, summary, activity, aboutTitle, rows, reviewEntity, report }: Props) {
   const instagramHandle = operator.instagram ? operator.instagram.replace(/^@/, "") : null
   const hasContact = operator.email || operator.whatsapp || operator.instagram
   const photos = [operator.photo_1, operator.photo_2, operator.photo_3].filter(Boolean) as string[]
   const offSeason = offSeasonNotice(operator)
   // Sin nada a la izquierda, el panel ocupa el ancho (antes la columna
   // quedaba vacía y la página se veía rota).
-  const hasMain = photos.length > 0
+  const description = operator.description?.trim()
+  const hasMain = photos.length > 0 || !!description
   const beachUrl = operator.spot_slug ? `/spots/${operator.spot_slug}` : null
   const canGetThere = operator.spot_lat != null && operator.spot_lng != null
 
@@ -126,6 +129,12 @@ export default function OperatorPage({ operator, summary, activity, rows, review
             {hasMain && (
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 <OperatorPhotos photos={photos} name={operator.name} />
+                {description && (
+                  <div className="op-card">
+                    <SectionLabel>{aboutTitle}</SectionLabel>
+                    <p style={{ fontSize: 15, lineHeight: 1.75, color: "#2c2c2a", margin: 0, whiteSpace: "pre-line" }}>{description}</p>
+                  </div>
+                )}
               </div>
             )}
 

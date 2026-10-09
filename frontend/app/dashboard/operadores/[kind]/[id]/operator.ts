@@ -14,7 +14,11 @@ export const OPERATOR_LABELS: Record<OperatorKind, string> = {
 export type OperatorChange = {
   id: number
   status: "pending" | "approved" | "rejected" | "cancelled"
-  changes: { name?: { from: string; to: string }; photos?: { from: string[]; to: string[] } }
+  changes: {
+    name?: { from: string; to: string }
+    description?: { from: string | null; to: string | null }
+    photos?: { from: string[]; to: string[] }
+  }
   reject_reason: string | null
   created_at: string | null
   resolved_at: string | null
@@ -30,6 +34,7 @@ export type Operator = {
   change_request: OperatorChange | null
   photo_1: string | null; photo_2: string | null; photo_3: string | null
   duration: number | null
+  description?: string | null; price_from?: number | null; price_note?: string | null
   email: string | null; whatsapp: string | null; instagram: string | null
   season_start: number | null; season_end: number | null
   // Escuela de surf
@@ -42,6 +47,7 @@ export type Operator = {
 
 export type OperatorForm = {
   name: string
+  description: string; price_from: string; price_note: string
   duration: string
   email: string; whatsapp: string; instagram: string
   seasonal: boolean; season_start: string; season_end: string
@@ -55,6 +61,9 @@ export type OperatorForm = {
 export function formFromOperator(op: Operator): OperatorForm {
   return {
     name: op.name ?? "",
+    description: op.description ?? "",
+    price_from: op.price_from != null ? String(op.price_from) : "",
+    price_note: op.price_note ?? "",
     duration: op.duration != null ? String(op.duration) : "",
     email: op.email ?? "", whatsapp: op.whatsapp ?? "", instagram: op.instagram ?? "",
     seasonal: !!op.season_start,
@@ -76,6 +85,9 @@ export function photosOf(op: Operator): string[] {
 export function operatorPayload(kind: OperatorKind, form: OperatorForm, photos: string[]) {
   const common = {
     name: form.name,
+    description: form.description.trim() || null,
+    price_from: form.price_from !== "" ? parseInt(form.price_from) : null,
+    price_note: form.price_note.trim() || null,
     duration: form.duration !== "" ? parseFloat(form.duration) : null,
     email: form.email || null,
     whatsapp: form.whatsapp || null,
@@ -98,7 +110,7 @@ export function operatorPayload(kind: OperatorKind, form: OperatorForm, photos: 
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  name: "nombre", photos: "fotos", class_type: "tipo de clase", duration: "duración",
+  name: "nombre", description: "descripción", price_from: "precio", price_note: "precio", photos: "fotos", class_type: "tipo de clase", duration: "duración",
   equipment_include: "equipo incluido", water_type: "tipo de agua", difficulty: "dificultad",
   kayak_type: "tipo de kayak", rental_available: "alquiler", email: "email", whatsapp: "WhatsApp",
   levels: "niveles", languages: "idiomas", includes_guide: "guía", includes_life_jacket: "chaleco",
@@ -128,6 +140,7 @@ export function asSpotChangeRequest(change: OperatorChange): ChangeRequest {
     resolved_at: change.resolved_at,
     changes: {
       ...(change.changes.name ? { name: change.changes.name } : {}),
+      ...(change.changes.description ? { description: { from: change.changes.description.from ?? "", to: change.changes.description.to ?? "" } } : {}),
       ...(added.length ? { photos_added: added } : {}),
     },
   }

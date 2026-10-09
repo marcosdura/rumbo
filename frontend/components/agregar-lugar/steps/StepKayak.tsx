@@ -6,6 +6,7 @@ import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
+import OperatorAboutFields from "../ui/OperatorAboutFields"
 import type { KayakItem } from "../types"
 import TriStateToggle from "../ui/TriStateToggle"
 
@@ -74,6 +75,7 @@ export default function StepKayak({
                 value={k.name} onChange={e => updKayak(i, "name", e.target.value)}
               />
             </Field>
+            <OperatorAboutFields what="el servicio" value={k} onChange={(field, v) => updKayak(i, field, v)} />
             <div className="form-two-col">
               <Field label="Tipo de agua" required={false}>
                 <select style={s.input} value={k.water_type} onChange={e => updKayak(i, "water_type", e.target.value)}>

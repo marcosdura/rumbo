@@ -1,6 +1,6 @@
 import { contributionResult, type SubmitResult } from "./result"
 import { experiencePayload, glampingUnitPayload } from "./payloads"
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, OperatorAbout, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { trackEvent } from "@/lib/analytics"
@@ -296,7 +296,16 @@ function operatorPhotos(files: (File | null)[], spotId: number, setUploadProgres
   }
 }
 
-function surfPayload(surf: SurfItem) {
+// Descripción y precio, igual para escuelas y servicios.
+export function aboutPayload(a: OperatorAbout) {
+  return {
+    description: a.description.trim() || null,
+    price_from: a.price_from !== "" ? parseInt(a.price_from) : null,
+    price_note: a.price_note.trim() || null,
+  }
+}
+
+export function surfPayload(surf: SurfItem) {
   return {
     name: surf.name,
     class_type: surf.class_type || null,
@@ -307,10 +316,11 @@ function surfPayload(surf: SurfItem) {
     email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
     // null = no sé.
     levels: surf.levels, languages: surf.languages,
+    ...aboutPayload(surf),
   }
 }
 
-function kayakPayload(k: KayakItem) {
+export function kayakPayload(k: KayakItem) {
   return {
     name: k.name,
     water_type: k.water_type || null, difficulty: k.difficulty || null,
@@ -320,6 +330,7 @@ function kayakPayload(k: KayakItem) {
     season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
     email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
     includes_guide: k.includes_guide, includes_life_jacket: k.includes_life_jacket,
+    ...aboutPayload(k),
   }
 }
 

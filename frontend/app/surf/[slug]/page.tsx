@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props) {
   } catch {
     return { title: "Escuela de Surf | Rumbo" }
   }
-  const description = operatorDescription("Escuela de surf", school)
+  const description = school.description?.trim().slice(0, 160) || operatorDescription("Escuela de surf", school)
   return {
     title: `${school.name} | Rumbo`,
     description,
@@ -67,6 +67,7 @@ export default async function SurfSchoolPage({ params }: Props) {
         operator={school}
         summary={summary}
         activity={{ emoji: "🏄", label: "Surf" }}
+        aboutTitle="Sobre la escuela"
         rows={surfInfoRows(school)}
         reviewEntity="surf"
         report={{ kind: "surf_school", what: "esta escuela", label: "⚑ Reportar esta escuela" }}

@@ -24,7 +24,7 @@ export type SurfItem = {
   email: string; whatsapp: string; instagram: string
   // null = no sé.
   levels: string[] | null; languages: string[] | null
-}
+} & OperatorAbout
 
 export type KayakItem = {
   name: string; water_type: string; difficulty: string; duration: string; kayak_type: string
@@ -33,7 +33,11 @@ export type KayakItem = {
   email: string; whatsapp: string; instagram: string
   // null = no sé.
   includes_guide: boolean | null; includes_life_jacket: boolean | null
-}
+} & OperatorAbout
+
+// Escuela de surf o servicio de kayak: qué ofrece y cuánto sale (precio
+// "desde", con una nota libre como "por clase"). Todo opcional.
+export type OperatorAbout = { description: string; price_from: string; price_note: string }
 
 export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null
 
