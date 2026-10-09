@@ -8,8 +8,8 @@ vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("@/components/ui/ReportButton", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
 vi.mock("@/components/seo/JsonLd", () => ({ default: () => null }))
-vi.mock("./BackButton", () => ({ default: () => null }))
-vi.mock("./KayakPhotos", () => ({ default: () => null }))
+vi.mock("@/components/operator-page/BackButton", () => ({ default: () => null }))
+vi.mock("@/components/operator-page/OperatorPhotos", () => ({ default: () => null }))
 vi.mock("@/lib/api", () => ({
   api: { get: (url: string) => Promise.resolve({ data: url.endsWith("/summary") ? { average: null, total: 0 } : kayak }) },
 }))

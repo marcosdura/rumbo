@@ -5,7 +5,7 @@
 export type ReviewSummary = { average: number | null; total: number }
 
 // Lo común de GET /surfschool/{id} y GET /kayak/{id} (backend/schemas.py).
-type PublicOperatorBase = {
+export type PublicOperatorBase = {
   id: number
   name: string
   duration: number | null

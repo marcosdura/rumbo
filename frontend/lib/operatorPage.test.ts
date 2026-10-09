@@ -1,0 +1,41 @@
+import { describe, expect, it } from "vitest"
+import { durationLabel, kayakInfoRows, operatorSeason, surfInfoRows } from "./operatorPage"
+import type { PublicKayak, PublicSurfSchool } from "./types"
+
+const base = {
+  id: 4, name: "X", duration: null, email: null, whatsapp: null, instagram: null,
+  season_start: null, season_end: null, photo_1: null, photo_2: null, photo_3: null,
+  spot_id: 3, spot_name: "Playa Brava", spot_department: "Rocha",
+}
+const surf = (extra: Partial<PublicSurfSchool>): PublicSurfSchool =>
+  ({ ...base, class_type: null, equipment_include: null, levels: null, languages: null, ...extra })
+const kayak = (extra: Partial<PublicKayak>): PublicKayak =>
+  ({ ...base, water_type: null, difficulty: null, kayak_type: null, rental_available: null, includes_guide: null, includes_life_jacket: null, ...extra })
+const text = (rows: { label: string; value: string }[]) => rows.map(r => `${r.label}: ${r.value}`)
+
+describe("Información de escuelas y servicios", () => {
+  it("duración con coma decimal", () => {
+    expect(durationLabel(1.5)).toBe("⏱️ 1,5 horas")
+    expect(durationLabel(1)).toBe("⏱️ 1 hora")
+  })
+
+  it("temporada solo si se sabe (antes decía Todo el año)", () => {
+    expect(operatorSeason(11, 3)).toBe("Noviembre – Marzo")
+    expect(operatorSeason(null, null)).toBeNull()
+    expect(surfInfoRows(surf({})).map(r => r.label)).not.toContain("Temporada")
+  })
+
+  it("surf, en orden y solo lo que se sabe", () => {
+    expect(text(surfInfoRows(surf({ class_type: "grupal", duration: 2, equipment_include: true, levels: ["principiante"], season_start: 12, season_end: 3 }))))
+      .toEqual(["Tipo de clase: 👥 Grupal", "Duración: ⏱️ 2 horas", "Equipo: 🩳 Incluido", "Niveles: Principiante", "Temporada: Diciembre – Marzo"])
+  })
+
+  it("kayak: dificultad como pill y guía/chaleco/alquiler solo si se saben", () => {
+    const rows = kayakInfoRows(kayak({ difficulty: "dificil", rental_available: false, includes_guide: true }))
+    expect(rows.find(r => r.label === "Dificultad")).toEqual({ label: "Dificultad", value: "Difícil", pill: "red" })
+    expect(text(rows)).toContain("Alquiler: 🏪 No disponible")
+    expect(text(rows)).toContain("🧭 Guía: Sí")
+    expect(rows.map(r => r.label)).not.toContain("🦺 Chaleco salvavidas")
+    expect(kayakInfoRows(kayak({})).map(r => r.label)).toEqual([])
+  })
+})
