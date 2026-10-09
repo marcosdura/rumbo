@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from auth import is_admin
 from models import (
     ClimbingRoute, ClimbingSector, Contribution, Experience, GlampingDetail,
-    KayakDetail, Route, SpotCategory, SpotDB, SurfSchool,
+    ItemPhoto, KayakDetail, Route, SpotCategory, SpotDB, SurfSchool,
 )
 from spot_changes import destroy_cloudinary_images
 from ownership import is_public_venue
@@ -39,6 +39,8 @@ KIND_MODELS = {
     "climbing_route": ClimbingRoute,
     "surf_school": SurfSchool,
     "kayak": KayakDetail,
+    # Una foto de una ruta, sector o vía (item_photos.py).
+    "photo": ItemPhoto,
 }
 
 # Los que cualquier usuario logueado puede sugerir en un spot ajeno.
@@ -53,6 +55,8 @@ def _title(kind, item) -> str:
         return item.title
     if kind == "glamping_unit":
         return item.accommodation_type or "Unidad de glamping"
+    if kind == "photo":
+        return f"Foto de «{item.target_name or 'sin nombre'}»"
     return item.name or "Sin nombre"
 
 
@@ -78,6 +82,8 @@ def is_own_new_photo_id_url(spot_id: int, url: str):
 
 
 def item_photos(kind, item):
+    if kind == "photo":
+        return [item.cloudinary_public_id]
     if kind not in ("surf_school", "kayak"):
         return []
     urls = [item.photo_1, item.photo_2, item.photo_3]
@@ -202,8 +208,18 @@ def delete_item(db: Session, kind: str, item, by: str):
     vías (y los aportes pendientes de esas vías). Devuelve las fotos a
     destruir después del commit. `item` tiene que venir cargado con
     include_pending, para que el sector traiga también sus vías pendientes."""
+    import item_photos as item_photos_domain  # importa este módulo
     photos = item_photos(kind, item)
     withdraw_for_deleted_item(db, kind, item.id, by)
+    # Las fotos de la ruta, sector o vía (y de las vías del sector) se van
+    # con ella por la cascada: se cierran sus aportes y se borran sus archivos.
+    if kind == "trekking_route":
+        photos += item_photos_domain.photos_for_deleted(db, "trekking_route_id", [item.id], by)
+    if kind == "climbing_sector":
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_sector_id", [item.id], by)
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [r.id for r in item.routes], by)
+    if kind == "climbing_route":
+        photos += item_photos_domain.photos_for_deleted(db, "climbing_route_id", [item.id], by)
     if kind == "climbing_sector":
         for route in item.routes:
             withdraw_for_deleted_item(db, "climbing_route", route.id, by)
@@ -245,6 +261,9 @@ def serialize(db: Session, contribution: Contribution, with_item: bool = False) 
             "kayak": KayakDetailResponse,
         }
         item = get_item(db, contribution)
+        if contribution.kind == "photo":
+            data["item"] = {"cloudinary_public_id": item.cloudinary_public_id, "target_name": item.target_name} if item else None
+            return data
         data["item"] = schemas_by_kind[contribution.kind].model_validate(item).model_dump(mode="json") if item else None
         if contribution.kind == "climbing_sector" and item:
             data["item"]["routes"] = [ClimbingRouteResponse.model_validate(r).model_dump(mode="json") for r in item.routes]

@@ -7,6 +7,8 @@ let requested: string[] = []
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
+vi.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }))
+vi.mock("next-cloudinary", () => ({ CldImage: ({ alt }: { alt: string }) => <img alt={alt} /> }))
 vi.mock("@/lib/api", () => ({
   api: { get: (url: string) => { requested.push(url); return page ? Promise.resolve({ data: page }) : Promise.reject(new Error("404")) } },
 }))
@@ -18,6 +20,7 @@ const route = {
   id: 1, name: "Cumbre", slug: "cumbre", distance_km: 4, duration_hours: 1.5, difficulty: "moderado",
   elevation_gain: null, elevation_loss: null, max_altitude: 300, min_altitude: null,
   route_type: "circular", technical_level: null, physical_demand: null, description: null,
+  photos: [] as { id: number; cloudinary_public_id: string }[], photo_slots: 3,
 }
 const spot = { id: 7, name: "Cerro Arequita", slug: "arequita", department: "Lavalleja", trekking_detail: { bathrooms: true } }
 
@@ -75,5 +78,28 @@ describe("página de la ruta", () => {
 
   it("si no existe, 404 (antes quedaba cargando para siempre)", async () => {
     await expect(TrekkingRoutePage({ params })).rejects.toThrow("404")
+  })
+})
+
+describe("fotos de la ruta", () => {
+  it("sin fotos invita a subir las primeras", async () => {
+    page = { route, spot }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.getByText("Esta ruta todavía no tiene fotos. ¿La hiciste? Sumá las tuyas.")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "＋ Subir fotos" })).toBeTruthy()
+  })
+
+  it("con fotos las muestra y ofrece sumar más si hay lugar", async () => {
+    page = { route: { ...route, photos: [{ id: 1, cloudinary_public_id: "rumbo/spots/7/a" }], photo_slots: 2 }, spot }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.getByAltText("Cumbre 1")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "＋ Sumar fotos" })).toBeTruthy()
+  })
+
+  it("sin lugar para más: no ofrece subir", async () => {
+    page = { route: { ...route, photo_slots: 0 }, spot }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.queryByRole("button", { name: /Subir fotos|Sumar fotos/ })).toBeNull()
+    expect(screen.getByText(/Hay fotos en revisión/)).toBeTruthy()
   })
 })

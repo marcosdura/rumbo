@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { cache } from "react"
 import { notFound } from "next/navigation"
 import TrailLayout, { SectionCard, StatGrid } from "@/components/trail-page/TrailLayout"
+import ItemPhotos from "@/components/trail-page/ItemPhotos"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { api } from "@/lib/api"
@@ -41,6 +42,13 @@ export default async function TrekkingRoutePage({ params }: Props) {
   return (
     <TrailLayout spot={spot} eyebrow="Ruta de trekking" title={route.name}>
       <StatGrid stats={routeStats(route)} />
+      <SectionCard title="Fotos">
+        <ItemPhotos
+          photos={route.photos} slots={route.photo_slots} target="trekking_route" targetId={route.id}
+          spotId={spot.id} name={route.name}
+          emptyText="Esta ruta todavía no tiene fotos. ¿La hiciste? Sumá las tuyas."
+        />
+      </SectionCard>
       <RouteCard route={route} />
       {description && (
         <SectionCard title="Descripción">

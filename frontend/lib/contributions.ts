@@ -4,7 +4,7 @@
 
 export type ContributionKind =
   | "experience" | "glamping_unit" | "trekking_route" | "climbing_sector"
-  | "climbing_route" | "surf_school" | "kayak"
+  | "climbing_route" | "surf_school" | "kayak" | "photo"
 
 export type ContributionStatus = "pending" | "approved" | "rejected" | "withdrawn"
 
@@ -41,6 +41,7 @@ export const KIND_LABELS: Record<ContributionKind, string> = {
   climbing_route: "Vía de escalada",
   surf_school: "Escuela de surf",
   kayak: "Kayak",
+  photo: "Foto",
 }
 
 // Campos del elemento que se muestran al admin para revisarlo, por tipo.
@@ -53,6 +54,8 @@ export const KIND_FIELDS: Record<ContributionKind, [string, string][]> = {
   climbing_route: [["name", "Nombre"], ["grade", "Grado"], ["type", "Tipo"], ["length", "Largo (m)"], ["bolts", "Chapas"], ["description", "Descripción"]],
   surf_school: [["name", "Nombre"], ["class_type", "Tipo de clase"], ["duration", "Duración (h)"], ["email", "Email"], ["whatsapp", "WhatsApp"], ["instagram", "Instagram"]],
   kayak: [["name", "Nombre"], ["water_type", "Tipo de agua"], ["difficulty", "Dificultad"], ["duration", "Duración (h)"], ["email", "Email"], ["whatsapp", "WhatsApp"]],
+  // Foto de una ruta, sector o vía: la foto se ve en itemPhotos.
+  photo: [["target_name", "De"]],
 }
 
 // Pares [etiqueta, valor] con lo que el elemento tiene cargado.
@@ -66,6 +69,10 @@ export function itemDetails(kind: ContributionKind, item: Record<string, unknown
 // Fotos de surf y kayak (URLs completas de Cloudinary).
 export function itemPhotos(item: Record<string, unknown> | null): string[] {
   if (!item) return []
+  // Fotos de rutas, sectores y vías: se guarda el public_id, no la URL.
+  if (typeof item.cloudinary_public_id === "string") {
+    return [`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${item.cloudinary_public_id}`]
+  }
   return ["photo_1", "photo_2", "photo_3"]
     .map(k => item[k])
     .filter((v): v is string => typeof v === "string" && v.length > 0)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, Date, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true, false
+from sqlalchemy import CheckConstraint, Column, Integer, String, ForeignKey, Float, Boolean, Date, DateTime, UniqueConstraint, Index, JSON, Text, Numeric, text, true, false
 from database import Base
 from sqlalchemy import event
 from sqlalchemy.orm import Session, relationship, with_loader_criteria
@@ -502,6 +502,46 @@ class ClimbingRoute(ReviewedContent, Base):
     description = Column(String)
 
     sector = relationship("ClimbingSector", back_populates="routes")
+
+
+class ItemPhoto(ReviewedContent, Base):
+    """Hasta 3 fotos de una ruta de trekking, un sector o una vía de
+    escalada (item_photos.py). Las sube cualquier usuario logueado y pasan
+    por revisión (salvo el admin): cada una es un aporte.
+
+    Una sola tabla para los tres: subir, revisar, borrar y el tope de 3 son
+    el mismo código; las FK mantienen el borrado en cascada. Exactamente una
+    de las tres FK va cargada."""
+    __tablename__ = "item_photos"
+    __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN trekking_route_id IS NULL THEN 0 ELSE 1 END)"
+            " + (CASE WHEN climbing_sector_id IS NULL THEN 0 ELSE 1 END)"
+            " + (CASE WHEN climbing_route_id IS NULL THEN 0 ELSE 1 END) = 1",
+            name="item_photos_one_target",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    # El lugar (carpeta de Cloudinary "{spot_id}/..."): para validar la foto
+    # y para borrar sus archivos si se borra el lugar.
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True, nullable=False)
+    trekking_route_id = Column(Integer, ForeignKey("routes.id", ondelete="CASCADE"), index=True, nullable=True)
+    climbing_sector_id = Column(Integer, ForeignKey("climbingsectors.id", ondelete="CASCADE"), index=True, nullable=True)
+    climbing_route_id = Column(Integer, ForeignKey("climbingroutes.id", ondelete="CASCADE"), index=True, nullable=True)
+    cloudinary_public_id = Column(String, nullable=False)
+    uploaded_by = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    trekking_route = relationship("Route")
+    climbing_sector = relationship("ClimbingSector")
+    climbing_route = relationship("ClimbingRoute")
+
+    @property
+    def target_name(self):
+        target = self.trekking_route or self.climbing_sector or self.climbing_route
+        return target.name if target else None
+
 
 class KayakDetail(ReviewedContent, Base):
     __tablename__ = "kayak_details"

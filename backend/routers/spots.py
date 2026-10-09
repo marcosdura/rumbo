@@ -17,6 +17,7 @@ import home as home_domain
 from typing import Optional, List
 from slugs import generate_slug
 import contributions
+import item_photos as item_photos_domain
 from notifications import notify, notify_admin, spot_link
 import operators as operators_domain
 from spot_changes import unpublish_spot, reject_spot as reject_spot_with_reason, plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, destroy_cloudinary_images, owner_visible_request
@@ -679,8 +680,14 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
     # Y las fotos nuevas de pedidos de cambio pendientes de esas escuelas.
     for change in db.query(models.OperatorChangeRequest).filter_by(spot_id=spot_id, status="pending"):
         operator_photos += operators_domain.discard_change(change, "cancelled", by=admin.get("email"))
+    # Fotos de rutas, sectores y vías (también las en revisión).
+    item_photo_ids = [
+        p.cloudinary_public_id
+        for p in db.query(models.ItemPhoto).execution_options(include_pending=True).filter(models.ItemPhoto.spot_id == spot_id)
+    ]
     destroy_cloudinary_images(
-        [img.cloudinary_public_id for img in images]
+        item_photo_ids
+        + [img.cloudinary_public_id for img in images]
         + (request_photos(pending) if pending else [])
         + [p for p in operator_photos if p]
     )
@@ -1200,7 +1207,10 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     # cualquier logueado sube las de su escuela de surf o servicio de kayak
     # (quedan en la carpeta de la playa; operators.assert_valid_photos exige
     # ese formato al guardarlas).
-    if not can_manage_spot(spot, user) and not is_public_venue(spot):
+    # Y en un lugar publicado con rutas o sectores, cualquier logueado sube
+    # fotos de una ruta, sector o vía (item_photos.add_photos valida a cuál).
+    community_photos = spot.is_approved and bool(spot.routes or spot.climbing_sectors)
+    if not can_manage_spot(spot, user) and not is_public_venue(spot) and not community_photos:
         raise HTTPException(status_code=403, detail="No autorizado")
     #
     # El formato es el que arma lib/uploadImage.ts: "{spot_id}/{16 hex}".
@@ -1217,7 +1227,7 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     existing = db.query(SpotImage).filter(
         SpotImage.cloudinary_public_id.in_([public_id, f"rumbo/spots/{public_id}"])
     ).first()
-    if existing:
+    if existing or item_photos_domain.is_public_id_used(db, f"rumbo/spots/{public_id}"):
         raise HTTPException(status_code=409, detail="Ese public_id ya está en uso")
     # Las fotos de un pedido pendiente todavía no tienen fila en spot_images.
     pending = get_pending_request(db, spot.id)

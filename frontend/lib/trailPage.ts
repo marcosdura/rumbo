@@ -4,6 +4,15 @@ import type { PillVariant } from "@/components/ui/Pill"
 import { ROCK_TYPES, SUN_EXPOSURE, approachLabel } from "./sectorInfo"
 import type { ClimbingRoute, PublicRoute, SectorDetail } from "./types"
 
+// Fotos de rutas, sectores y vías (backend/item_photos.py).
+export type ItemPhoto = { id: number; cloudinary_public_id: string }
+export type PhotoTarget = "trekking_route" | "climbing_sector" | "climbing_route"
+// Las publicadas, y cuántas más se pueden subir (3 menos las publicadas y
+// las que están en revisión).
+type WithPhotos = { photos: ItemPhoto[]; photo_slots: number }
+
+export type Via = ClimbingRoute & WithPhotos
+
 export type TrailSpot = { id: number; name: string; slug: string; department: string | null }
 
 export type TrekkingRoute = PublicRoute & {
@@ -13,7 +22,7 @@ export type TrekkingRoute = PublicRoute & {
   max_altitude: number | null; min_altitude: number | null
   route_type: string | null; technical_level: string | null; physical_demand: string | null
   description: string | null
-}
+} & WithPhotos
 
 export type RoutePage = {
   route: TrekkingRoute
@@ -21,9 +30,9 @@ export type RoutePage = {
 }
 
 export type SectorPage = {
-  sector: SectorDetail
+  sector: SectorDetail & WithPhotos
   spot: TrailSpot
-  routes: ClimbingRoute[]
+  routes: Via[]
 }
 
 export type Stat = { icon: string; value: string; label: string }

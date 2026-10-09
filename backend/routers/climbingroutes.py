@@ -58,6 +58,8 @@ def delete_climbing_route(request: Request, route_id: int, db: Session = Depends
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
     assert_owns_spot(db, sector.spot_id, user)
-    contributions.delete_item(db, "climbing_route", route, by=user.get("email"))
+    photos = contributions.delete_item(db, "climbing_route", route, by=user.get("email"))
     db.commit()
+    # Sus fotos (de la ruta, sector o vía): después del commit.
+    contributions.destroy_cloudinary_images(photos)
     return {"ok": True}

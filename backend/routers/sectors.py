@@ -10,6 +10,7 @@ from auth import get_current_user_required
 from models import SpotDB
 from ownership import assert_owns_spot
 import contributions
+import item_photos
 from limiter import limiter
 from slugs import generate_slug
 
@@ -70,8 +71,10 @@ def delete_sector(request: Request, sector_id: int, db: Session = Depends(get_db
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
     assert_owns_spot(db, sector.spot_id, user)
-    contributions.delete_item(db, "climbing_sector", sector, by=user.get("email"))
+    photos = contributions.delete_item(db, "climbing_sector", sector, by=user.get("email"))
     db.commit()
+    # Sus fotos (de la ruta, sector o vía): después del commit.
+    contributions.destroy_cloudinary_images(photos)
     return {"ok": True}
 
 
@@ -104,10 +107,21 @@ def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
     _attach_sector_stats(sector)
+    vias = sorted(sector.routes, key=lambda r: r.id)
+    via_ids = [v.id for v in vias]
+    via_photos = item_photos.photos_of(db, "climbing_route", via_ids)
+    via_slots = item_photos.slots_of(db, "climbing_route", via_ids)
     return {
-        "sector": ClimbingSectorResponse.model_validate(sector).model_dump(mode="json"),
+        "sector": {
+            **ClimbingSectorResponse.model_validate(sector).model_dump(mode="json"),
+            "photos": item_photos.photos_of(db, "climbing_sector", [sector.id])[sector.id],
+            "photo_slots": item_photos.slots_of(db, "climbing_sector", [sector.id])[sector.id],
+        },
         "spot": {"id": spot.id, "name": spot.name, "slug": spot.slug, "department": spot.department},
-        "routes": [ClimbingRouteResponse.model_validate(r).model_dump(mode="json") for r in sorted(sector.routes, key=lambda r: r.id)],
+        "routes": [
+            {**ClimbingRouteResponse.model_validate(v).model_dump(mode="json"), "photos": via_photos[v.id], "photo_slots": via_slots[v.id]}
+            for v in vias
+        ],
     }
 
 
