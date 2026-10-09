@@ -30,6 +30,28 @@ const afterBox = {
   background: "#e8f5ee", border: "1px solid #b7dfc8", color: "var(--primary-dark)",
 }
 
+// La ubicación que pidió el dueño: antes y después, cada una abre en Google Maps.
+const mapsUrl = (lat: number | null, lng: number | null) => `https://www.google.com/maps?q=${lat},${lng}`
+const fmt = (p: [number | null, number | null] | undefined) => (p && p[0] != null && p[1] != null ? `${p[0]}, ${p[1]}` : "Sin ubicación")
+
+export function LocationDiff({ from, to, current }: {
+  from: [number | null, number | null]; to: [number, number]; current?: [number | null, number | null]
+}) {
+  const stale = current !== undefined && fmt(current) !== fmt(from)
+  return (
+    <div>
+      <span style={labelStyle}>Ubicación</span>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
+        <span>Antes: {from[0] != null ? <a href={mapsUrl(from[0], from[1])} target="_blank" rel="noopener noreferrer">{fmt(from)}</a> : "Sin ubicación"}</span>
+        <span>Después: <a href={mapsUrl(to[0], to[1])} target="_blank" rel="noopener noreferrer">{fmt(to)}</a></span>
+      </div>
+      {stale && (
+        <p style={{ fontSize: 12, color: "#78590a", margin: "6px 0 0" }}>⚠️ Cambió desde que se hizo el pedido. Hoy: {fmt(current)}. Aprobar la reemplaza.</p>
+      )}
+    </div>
+  )
+}
+
 export function TextDiff({ title, from, to, current }: { title: string; from: string; to: string; current: string }) {
   // El "antes" se guardó al hacer el pedido; si el spot se editó después
   // (el admin, por ejemplo), aprobar pisaría ese valor nuevo.
@@ -128,6 +150,9 @@ export default function ChangesTab({ requests, loadError, loading, actionLoading
                   )}
                   {changes.description && (
                     <TextDiff title="Descripción" from={changes.description.from} to={changes.description.to} current={spot.current.description} />
+                  )}
+                  {changes.location && (
+                    <LocationDiff from={changes.location.from} to={changes.location.to} current={spot.current.location} />
                   )}
                   {photos.length > 0 && (
                     <div>

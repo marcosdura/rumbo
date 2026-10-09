@@ -15,6 +15,8 @@ export type ChangeRequest = {
     name?: { from: string; to: string }
     description?: { from: string; to: string }
     photos_added?: string[]
+    // [lat, lng]: el dueño pidió mover el lugar.
+    location?: { from: [number | null, number | null]; to: [number, number] }
   }
   reject_reason: string | null
   created_at: string | null
@@ -28,6 +30,7 @@ export type StagedPhoto = { file: File; url: string }
 export type Spot = {
   id: number; name: string; slug: string | null; description: string
   department: string; email: string | null; whatsapp: string | null
+  lat?: number | null; lng?: number | null
   instagram: string | null; price: number | null
   season_start: number | null; season_end: number | null
   is_public: boolean | null; public_transport: string | null

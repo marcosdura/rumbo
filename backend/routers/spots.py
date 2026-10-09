@@ -1121,6 +1121,9 @@ def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get
             "name": s.name,
             "description": s.description,
             "department": s.department,
+            # Para pedir el cambio de ubicación desde el panel.
+            "lat": s.lat,
+            "lng": s.lng,
             "is_approved": s.is_approved,
             "rejection_reason": s.rejection_reason,
             "rejected_at": s.rejected_at.isoformat() if s.rejected_at else None,

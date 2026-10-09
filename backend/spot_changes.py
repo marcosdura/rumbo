@@ -7,8 +7,9 @@ nombre, la descripción o las fotos (bait-and-switch). El criterio:
 - SENSITIVE_FIELDS + fotos agregadas → van a un pedido que revisa el admin.
   Mientras tanto el público sigue viendo la versión aprobada.
 - INSTANT_FIELDS (contacto, precio, temporada, acceso) → se aplican ya.
-- ADMIN_ONLY_FIELDS (ubicación) → solo el admin; si los manda el dueño se
-  ignoran.
+- La ubicación (lat y lng) → el dueño la pide y va a revisión como el
+  nombre ("location" en el pedido); el admin la cambia directo. El
+  departamento sigue siendo solo del admin (ADMIN_ONLY_FIELDS).
 - Borrar fotos y elegir la principal siguen siendo instantáneos (no meten
   contenido nuevo) y no pasan por acá.
 
@@ -29,6 +30,9 @@ from models import SpotDB, SpotImage, SpotChangeRequest
 from notifications import notify, notify_admin
 
 SENSITIVE_FIELDS = ["name", "description"]
+# La ubicación (lat y lng juntas): el dueño pide el cambio y pasa por
+# revisión como el nombre; el admin la cambia directo (ADMIN_ONLY_FIELDS).
+LOCATION = "location"
 INSTANT_FIELDS = ["email", "whatsapp", "instagram", "price", "season_start", "season_end", "is_public", "public_transport",
                   "pets_allowed", "reservation_required", "cell_signal"]
 ADMIN_ONLY_FIELDS = ["department", "lat", "lng"]
@@ -116,6 +120,19 @@ def _validate_new_photos(spot: SpotDB, photos):
             raise HTTPException(status_code=400, detail="public_id con formato inválido")
 
 
+def _plan_location(spot: SpotDB, data: dict):
+    """[lat, lng] nuevos, o None si no cambia. Las dos juntas y válidas."""
+    lat, lng = data.get("lat"), data.get("lng")
+    if lat is None or lng is None:
+        raise HTTPException(status_code=422, detail="La ubicación necesita latitud y longitud.")
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        raise HTTPException(status_code=422, detail="Ubicación inválida")
+    lat, lng = round(float(lat), 6), round(float(lng), 6)
+    if spot.lat is not None and spot.lng is not None and (round(spot.lat, 6), round(spot.lng, 6)) == (lat, lng):
+        return None
+    return [lat, lng]
+
+
 def plan_spot_edit(db: Session, spot: SpotDB, data: dict, admin: bool) -> dict:
     """Decide qué pasa con cada campo, sin escribir nada. Lo usa el PATCH
     real y también el dry_run del frontend, que arma con esto el aviso
@@ -153,6 +170,14 @@ def plan_spot_edit(db: Session, spot: SpotDB, data: dict, admin: bool) -> dict:
             # diría "se aplica ya: email, WhatsApp, ..." aunque no se tocaron.
             continue
         apply[field] = value
+
+    if not admin and ("lat" in data or "lng" in data):
+        location = _plan_location(spot, data)
+        if location is not None:
+            if goes_to_review:
+                pending[LOCATION] = {"from": [spot.lat, spot.lng], "to": location}
+            else:
+                apply["lat"], apply["lng"] = location
 
     if photos:
         assert_photo_limit(db, spot.id, len(photos))
@@ -203,6 +228,8 @@ def apply_request_to_spot(db: Session, request: SpotChangeRequest):
     for field in SENSITIVE_FIELDS:
         if field in request.changes:
             setattr(spot, field, request.changes[field]["to"])
+    if LOCATION in request.changes:
+        spot.lat, spot.lng = request.changes[LOCATION]["to"]
     _attach_photos(db, spot, request.changes.get("photos_added", []))
 
 

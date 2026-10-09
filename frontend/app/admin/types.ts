@@ -37,6 +37,7 @@ export type AdminChangeRequest = {
   requested_by: string
   created_at: string | null
   changes: {
+    location?: { from: [number | null, number | null]; to: [number, number] }
     name?: { from: string; to: string }
     description?: { from: string; to: string }
     photos_added?: string[]
@@ -48,7 +49,7 @@ export type AdminChangeRequest = {
     department: string
     category: { name: string } | null
     images: { cloudinary_public_id: string; is_main: boolean; order: number }[]
-    current: { name: string; description: string }
+    current: { name: string; description: string; location?: [number | null, number | null] }
   }
 }
 

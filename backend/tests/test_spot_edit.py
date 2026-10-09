@@ -56,12 +56,41 @@ def test_espacios_en_los_bordes_no_crean_pedido(client, db, make_spot):
     assert db.query(SpotChangeRequest).count() == 0
 
 
-def test_ubicacion_y_departamento_se_ignoran_si_vienen_del_duenio(client, db, make_spot):
+def test_el_duenio_pide_cambiar_la_ubicacion_y_va_a_revision(client, db, make_spot):
+    # El departamento sigue siendo solo del admin: se ignora.
     spot = make_spot(lat=1.0, lng=2.0)
-    r = patch(client, spot.id, {"department": "Salto", "lat": 9.0, "lng": 9.0})
+    r = patch(client, spot.id, {"department": "Salto", "lat": -34.5, "lng": -55.25})
     assert r.status_code == 200
+    assert (r.json()["applied"], r.json()["pending"]) == ([], ["location"])
+    assert r.json()["change_request"]["changes"]["location"] == {"from": [1.0, 2.0], "to": [-34.5, -55.25]}
     spot = reload(db, spot.id)
-    assert (spot.department, spot.lat, spot.lng) == ("Rocha", 1.0, 2.0)
+    assert (spot.department, spot.lat, spot.lng) == ("Rocha", 1.0, 2.0), "el público sigue viendo la ubicación aprobada"
+
+
+def test_aprobar_el_pedido_mueve_el_lugar(client, db, make_spot):
+    spot = make_spot(lat=1.0, lng=2.0)
+    patch(client, spot.id, {"lat": -34.5, "lng": -55.25})
+    [pending] = client.get("/admin/change-requests", headers=as_user(ADMIN)).json()
+    assert pending["spot"]["current"]["location"] == [1.0, 2.0]
+    assert client.post(f"/admin/change-requests/{pending['id']}/approve", headers=as_user(ADMIN)).status_code == 200
+    spot = reload(db, spot.id)
+    assert (spot.lat, spot.lng) == (-34.5, -55.25)
+
+
+def test_ubicacion_sin_cambios_o_invalida(client, db, make_spot):
+    spot = make_spot(lat=1.0, lng=2.0)
+    r = patch(client, spot.id, {"lat": 1.0, "lng": 2.0})
+    assert r.json()["pending"] == []
+    assert patch(client, spot.id, {"lat": 1.0}).status_code == 422
+    assert patch(client, spot.id, {"lat": 95.0, "lng": 2.0}).status_code == 422
+
+
+def test_un_lugar_sin_aprobar_cambia_la_ubicacion_directo(client, db, make_spot):
+    spot = make_spot(lat=1.0, lng=2.0, approved=False)
+    r = patch(client, spot.id, {"lat": -34.5, "lng": -55.25})
+    assert r.json()["applied"] == ["lat", "lng"]
+    spot = reload(db, spot.id)
+    assert (spot.lat, spot.lng) == (-34.5, -55.25)
 
 
 def test_admin_edita_directo_incluida_ubicacion(client, db, make_spot):

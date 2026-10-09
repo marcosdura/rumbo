@@ -103,7 +103,7 @@ def list_pending_change_requests(db: Session = Depends(get_db), admin: dict = De
                 "department": r.spot.department,
                 "category": r.spot.category,
                 "images": r.spot.images,
-                "current": {"name": r.spot.name, "description": r.spot.description},
+                "current": {"name": r.spot.name, "description": r.spot.description, "location": [r.spot.lat, r.spot.lng]},
             },
         }
         for r in pending

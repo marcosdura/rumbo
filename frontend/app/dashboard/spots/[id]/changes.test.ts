@@ -103,3 +103,10 @@ describe("priceMode", () => {
     expect(priceMode([])).toBe("none")
   })
 })
+
+describe("ubicación en los avisos", () => {
+  it("el pedido y el aviso previo la nombran", () => {
+    expect(describeRequest({ id: 1, status: "pending", reject_reason: null, created_at: null, resolved_at: null, changes: { location: { from: [1, 2], to: [3, 4] } } })).toBe("ubicación")
+    expect(describeFields(["location"], 0)).toBe("ubicación")
+  })
+})

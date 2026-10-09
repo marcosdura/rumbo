@@ -4,6 +4,11 @@ import { s, MONTHS } from "./styles"
 import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
 import { PRACTICAL_FIELDS, type PracticalKey } from "@/lib/practicalInfo"
 import type { PriceMode } from "./changes"
+import dynamic from "next/dynamic"
+
+// El mismo mapa (con "pegar link de Google Maps") que agregar lugar.
+const LocationPicker = dynamic(() => import("@/components/forms/LocationPicker"), { ssr: false }) as unknown as
+  (p: { lat: number | null; lng: number | null; onLocationSelect: (lat: number, lng: number) => void }) => React.ReactElement
 
 interface Props {
   editName: string; setEditName: (v: string) => void
@@ -28,6 +33,11 @@ interface Props {
   sensitiveReviewed: boolean
   // Dónde va el precio (changes.priceMode).
   priceMode: PriceMode
+  // Ubicación: la de hoy, la nueva elegida (o null) y la que está en revisión.
+  location: [number | null, number | null]
+  newLocation: [number, number] | null
+  setNewLocation: (v: [number, number] | null) => void
+  pendingLocation?: [number, number]
 }
 
 function PendingHint({ value }: { value: string }) {
@@ -44,7 +54,9 @@ export default function InfoTab({
   editPrice, setEditPrice, editSeasonType, setEditSeasonType, editSeasonStart, setEditSeasonStart,
   editSeasonEnd, setEditSeasonEnd, editIsPublic, setEditIsPublic, editPublicTransport, setEditPublicTransport,
   editPractical, setEditPractical, lockSensitive, pendingName, pendingDescription, sensitiveReviewed, priceMode,
+  location, newLocation, setNewLocation, pendingLocation,
 }: Props) {
+  const shown = newLocation ?? pendingLocation ?? location
   const lockedInput = lockSensitive ? { opacity: 0.6, cursor: "not-allowed" } : {}
   return (
     <div style={{ ...s.card, padding: 24 }}>
@@ -136,6 +148,31 @@ export default function InfoTab({
               )}
             </div>
           </div>
+        </div>
+
+        {/* Ubicación: antes solo la cambiaba el admin y el dueño no podía pedirlo. */}
+        <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 6px" }}>Ubicación</p>
+          <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: "0 0 10px", lineHeight: 1.5 }}>
+            {sensitiveReviewed
+              ? "Si el pin quedó mal, marcalo en el mapa (o pegá un link de Google Maps). El cambio pasa por revisión."
+              : "Marcá el lugar en el mapa o pegá un link de Google Maps."}
+          </p>
+          {pendingLocation ? (
+            <p style={{ fontSize: 12, color: "#78590a", margin: "0 0 8px" }}>⏳ Hay un cambio de ubicación en revisión.</p>
+          ) : (
+            <div style={{ height: 300 }}>
+              <LocationPicker lat={shown[0]} lng={shown[1]} onLocationSelect={(lat, lng) => setNewLocation([lat, lng])} />
+            </div>
+          )}
+          {newLocation && (
+            <p role="status" style={{ fontSize: 12, color: "var(--primary)", margin: "8px 0 0" }}>
+              📍 Nueva ubicación elegida. Se manda al guardar.{" "}
+              <button type="button" onClick={() => setNewLocation(null)} style={{ fontSize: 12, background: "none", border: "none", color: "var(--muted)", textDecoration: "underline", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                Deshacer
+              </button>
+            </p>
+          )}
         </div>
 
         {/* Acceso */}

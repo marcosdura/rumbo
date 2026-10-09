@@ -8,10 +8,16 @@ let reviewPages: { data: unknown[]; totalCount: number }[] = []
 let reviewParams: unknown[] = []
 let pushed: string[] = []
 let stats: { views_30d: number; favorites: number } | null = null
+let patches: { body: Record<string, unknown>; dryRun: boolean }[] = []
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: { id_token: "t" }, status: "authenticated" }) }))
 vi.mock("next/navigation", () => ({ useParams: () => ({ id: "5" }), useRouter: () => ({ push: (u: string) => pushed.push(u) }) }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("./ContentTab", () => ({ default: () => null }))
+// El mapa (Leaflet) no corre en jsdom: un botón que elige un punto.
+vi.mock("next/dynamic", () => ({
+  default: () => ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) =>
+    <button type="button" onClick={() => onLocationSelect(-34.5, -55.25)}>marcar en el mapa</button>,
+}))
 vi.mock("@/lib/api", () => ({
   ApiError: class extends Error {},
   api: {
@@ -20,6 +26,10 @@ vi.mock("@/lib/api", () => ({
       if (url.endsWith("/owner-stats")) return stats ? Promise.resolve({ data: stats }) : Promise.reject(new Error("500"))
       reviewParams.push(opts?.params)
       return Promise.resolve(reviewPages.shift() ?? { data: [], totalCount: 0 })
+    },
+    patch: (_url: string, body: Record<string, unknown>, opts?: { params?: { dry_run?: boolean } }) => {
+      patches.push({ body, dryRun: !!opts?.params?.dry_run })
+      return Promise.resolve({ data: { applied: ["price"], pending: [] } })
     },
   },
 }))
@@ -34,7 +44,7 @@ const spot = (extra: object = {}) => ({
 })
 const review = (id: number) => ({ id, rating: 5, comment: `Reseña ${id}`, created_at: "2026-09-01T00:00:00", user: { name: "Ana", image: null } })
 
-afterEach(() => { mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = []; stats = null })
+afterEach(() => { mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = []; stats = null; patches = [] })
 
 const load = async () => { render(<DashboardPage />); await act(() => Promise.resolve()) }
 
@@ -99,5 +109,22 @@ describe("Panel del dueño", () => {
     await load()
     expect(screen.queryByText("Visitas (30 días)")).toBeNull()
     expect(screen.getByText("Reseñas")).toBeTruthy()
+  })
+
+  it("sin tocar el mapa no manda la ubicación (sin coordenadas daba error)", async () => {
+    mine = [spot({ lat: null, lng: null })]
+    await load()
+    fireEvent.change(screen.getByDisplayValue("450"), { target: { value: "500" } })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" })) })
+    expect(patches.length).toBeGreaterThan(0)
+    expect(patches.every(p => !("lat" in p.body) && !("lng" in p.body))).toBe(true)
+  })
+
+  it("la ubicación marcada en el mapa se manda al guardar", async () => {
+    mine = [spot({ lat: -34, lng: -55 })]
+    await load()
+    fireEvent.click(screen.getByRole("button", { name: "marcar en el mapa" }))
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" })) })
+    expect(patches[0].body).toMatchObject({ lat: -34.5, lng: -55.25 })
   })
 })

@@ -102,6 +102,8 @@ export default function SpotDashboardPage() {
   const [editSeasonEnd, setEditSeasonEnd] = useState("")
   const [editIsPublic, setEditIsPublic] = useState<boolean | null>(null)
   const [editPublicTransport, setEditPublicTransport] = useState<string | null>(null)
+  // Ubicación nueva elegida en el mapa (null = no se toca).
+  const [newLocation, setNewLocation] = useState<[number, number] | null>(null)
   const [editPractical, setEditPractical] = useState<Record<PracticalKey, boolean | null>>({
     pets_allowed: null, reservation_required: null, cell_signal: null,
   })
@@ -152,7 +154,7 @@ export default function SpotDashboardPage() {
 
   // Cambios sin guardar: el navegador avisa antes de salir de la página.
   const baseline = useRef<string | null>(null)
-  const dirty = spot !== null && (stagedPhotos.length > 0 || (baseline.current !== null && JSON.stringify(buildPayload()) !== baseline.current))
+  const dirty = spot !== null && (stagedPhotos.length > 0 || newLocation !== null || (baseline.current !== null && JSON.stringify(formPayload()) !== baseline.current))
   useEffect(() => {
     if (!dirty) return
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = "" }
@@ -202,6 +204,10 @@ export default function SpotDashboardPage() {
   }
 
   function buildPayload() {
+    return { ...formPayload(), ...(newLocation ? { lat: newLocation[0], lng: newLocation[1] } : {}) }
+  }
+
+  function formPayload() {
     return payloadFrom({
       name: editName, description: editDescription, email: editEmail, whatsapp: editWhatsapp, instagram: editInstagram,
       price: editPrice, seasonType: editSeasonType, seasonStart: editSeasonStart, seasonEnd: editSeasonEnd,
@@ -262,6 +268,7 @@ export default function SpotDashboardPage() {
       }, { token })
       stagedPhotos.forEach(p => URL.revokeObjectURL(p.url))
       setStagedPhotos([])
+      setNewLocation(null)
       await refreshSpot()
       showSaveOk(data.pending.length > 0
         ? `✓ Guardado. En revisión: ${describeFields(data.pending, uploaded.length)}.`
@@ -517,6 +524,10 @@ export default function SpotDashboardPage() {
             pendingDescription={pendingRequest?.changes.description?.to}
             sensitiveReviewed={spot.is_approved}
             priceMode={priceMode(spot.activities ?? (spot.category ? [spot.category.name] : []))}
+            location={[spot.lat ?? null, spot.lng ?? null]}
+            newLocation={newLocation}
+            setNewLocation={setNewLocation}
+            pendingLocation={pendingRequest?.changes.location?.to}
           />
         )}
 

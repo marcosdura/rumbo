@@ -68,3 +68,22 @@ describe("ChangesTab", () => {
     expect(screen.getByText("No hay cambios pendientes.")).toBeTruthy()
   })
 })
+
+describe("ChangesTab: ubicación", () => {
+  it("antes y después, cada una abre en Google Maps", () => {
+    const req = changeRequest({ name: undefined, location: { from: [-34, -55], to: [-34.5, -55.25] } })
+    req.spot.current.location = [-34, -55]
+    renderTab({ requests: [req] })
+    expect(screen.getByText("Ubicación")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "-34.5, -55.25" }).getAttribute("href")).toBe("https://www.google.com/maps?q=-34.5,-55.25")
+    expect(screen.getByRole("link", { name: "-34, -55" })).toBeTruthy()
+    expect(screen.queryByText(/Cambió desde que se hizo el pedido/)).toBeNull()
+  })
+
+  it("avisa si la ubicación cambió mientras esperaba", () => {
+    const req = changeRequest({ name: undefined, location: { from: [-34, -55], to: [-34.5, -55.25] } })
+    req.spot.current.location = [-33, -56]
+    renderTab({ requests: [req] })
+    expect(screen.getByText(/Cambió desde que se hizo el pedido\. Hoy: -33, -56/)).toBeTruthy()
+  })
+})

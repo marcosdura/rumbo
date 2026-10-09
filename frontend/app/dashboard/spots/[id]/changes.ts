@@ -7,6 +7,9 @@ import { MAX_PHOTOS } from "./styles"
 // (PATCH /admin/spots/{id}). season_start/season_end se muestran juntos.
 const FIELD_LABELS: Record<string, string> = {
   name: "nombre",
+  location: "ubicación",
+  lat: "ubicación",
+  lng: "ubicación",
   description: "descripción",
   email: "email",
   whatsapp: "WhatsApp",
@@ -45,6 +48,7 @@ export function describeRequest(req: ChangeRequest) {
   const labels: string[] = []
   if (c.name) labels.push("nombre")
   if (c.description) labels.push("descripción")
+  if (c.location) labels.push("ubicación")
   if (c.photos_added?.length) labels.push(photosLabel(c.photos_added.length))
   return joinLabels(labels)
 }
