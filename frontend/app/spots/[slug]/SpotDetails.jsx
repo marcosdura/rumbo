@@ -131,6 +131,10 @@ function SpotDetail({ spot }) {
         .rating-badge .star { color: var(--primary); font-size: 20px; }
         .rating-badge strong { font-weight: 600; }
         .rating-badge .reviews-link {
+          background: none;
+          border: none;
+          padding: 0;
+          font: inherit;
           color: var(--muted);
           text-decoration: underline;
           text-underline-offset: 2px;
@@ -285,7 +289,8 @@ function SpotDetail({ spot }) {
                 <span className="rating-badge">
                   <span className="star">★</span>
                   <strong>{reviewCount > 0 ? spot.average_rating : "—"}</strong>
-                  <span
+                  <button
+                    type="button"
                     className="reviews-link"
                     onClick={() => {
                       const el = document.getElementById("reviews")
@@ -293,12 +298,11 @@ function SpotDetail({ spot }) {
                       const y = el.getBoundingClientRect().top + window.scrollY - 140
                       window.scrollTo({ top: y, behavior: "smooth" })
                     }}
-                    style={{ cursor: "pointer" }}
                   >
                     {reviewCount > 0
                       ? `${reviewCount} reseña${reviewCount !== 1 ? "s" : ""}`
                       : "¡Sé el primero en reseñar!"}
-                  </span>
+                  </button>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
                 {/* Las pills llevan a la búsqueda de esa actividad o departamento. */}

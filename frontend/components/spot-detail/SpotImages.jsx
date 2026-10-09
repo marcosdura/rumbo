@@ -9,12 +9,14 @@ const sharedProps = {
   fill: true,
   crop: "fill",
   gravity: "auto",
-  loading: "eager",
   className: "object-cover",
   quality: "auto",
   format: "auto",
-  priority: true,
 }
+
+// Solo la foto principal se carga con prioridad: es lo primero que se ve.
+// Antes las cinco competían con ella (y con el resto de la página).
+export const loadingFor = (index) => (index === 0 ? { priority: true } : { loading: "lazy" })
 
 const wrapStyle = (borderRadius = 14) => ({
   overflow: "hidden",
@@ -37,6 +39,7 @@ function Img({ img, index, sizes, borderRadius = 14, name, onOpen }) {
         sizes={sizes}
         alt={`${name} ${index + 1}`}
         {...sharedProps}
+        {...loadingFor(index)}
       />
     </div>
   )
@@ -77,7 +80,7 @@ function SpotImages({ images = [], name }) {
 
       {count === 1 && (
         <div className="spot-img-single img-reveal img-zoom" style={wrapStyle(18)} onClick={() => open(0)}>
-          <CldImage src={images[0].cloudinary_public_id} sizes="100vw" alt={name} {...sharedProps} />
+          <CldImage src={images[0].cloudinary_public_id} sizes="100vw" alt={name} {...sharedProps} {...loadingFor(0)} />
         </div>
       )}
 
@@ -123,6 +126,7 @@ function SpotImages({ images = [], name }) {
                     sizes="25vw"
                     alt={`${name} ${i + 2}`}
                     {...sharedProps}
+                    {...loadingFor(i + 1)}
                   />
                   {showOverlay && (
                     <div style={{

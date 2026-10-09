@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-vi.mock("next-cloudinary", () => ({ CldImage: (p: { alt: string; src: string }) => <img alt={p.alt} src={p.src} /> }))
+// El CldImage simulado deja ver cómo se pidió cada foto.
+vi.mock("next-cloudinary", () => ({
+  CldImage: (p: { alt: string; src: string; priority?: boolean; loading?: string }) =>
+    <img alt={p.alt} src={p.src} data-priority={String(!!p.priority)} data-loading={p.loading ?? ""} />,
+}))
 vi.mock("./ImageGallery", () => ({
   default: ({ startIndex }: { startIndex: number }) => <div role="dialog">galería desde {startIndex}</div>,
 }))
@@ -29,5 +33,13 @@ describe("SpotImages", () => {
   it("sin fotos no muestra nada", () => {
     const { container } = render(<SpotImages images={[]} name="Cascada" />)
     expect(container.innerHTML).toBe("")
+  })
+
+  it("solo la foto principal carga con prioridad; las demás, en diferido", () => {
+    const five = [1, 2, 3, 4, 5, 6].map(i => ({ cloudinary_public_id: `rumbo/spots/1/foto${i}` }))
+    render(<SpotImages images={five} name="Cascada" />)
+    const imgs = screen.getAllByRole("img")
+    expect(imgs.map(i => i.dataset.priority)).toEqual(["true", "false", "false", "false", "false"])
+    expect(imgs.slice(1).every(i => i.dataset.loading === "lazy")).toBe(true)
   })
 })

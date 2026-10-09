@@ -48,6 +48,12 @@ export function cameFromRumbo(referrer: string, origin: string): boolean {
   }
 }
 
+// La foto al compartir el link (WhatsApp, redes): 1200×630 recortada por
+// Cloudinary. La original puede pesar varios MB y a veces no aparece.
+export function shareImageUrl(cloudName: string | undefined, publicId: string): string {
+  return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/${publicId}`
+}
+
 // Cómo llegar: Google Maps directo a las coordenadas. Antes buscaba por el
 // nombre, y con otro lugar llamado igual abría el equivocado.
 export function directionsUrl(lat: number, lng: number): string {

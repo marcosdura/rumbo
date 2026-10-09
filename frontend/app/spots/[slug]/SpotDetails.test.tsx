@@ -192,3 +192,10 @@ describe("Página del lugar: para seguir navegando", () => {
     expect(navigation).toEqual(["/search"])
   })
 })
+
+describe("Página del lugar: accesibilidad", () => {
+  it("ir a las reseñas es un botón (se puede usar con teclado)", async () => {
+    render(<SpotDetail spot={spot("Camping", { average_rating: 4.6, review_count: 12 })} />)
+    expect((await screen.findByText("12 reseñas")).tagName).toBe("BUTTON")
+  })
+})

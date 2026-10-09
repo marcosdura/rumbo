@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { cameFromRumbo, detailRows, directionsUrl, offSeasonNotice, seasonLabel, whatsappUrl } from "./spotDetail"
+import { cameFromRumbo, detailRows, directionsUrl, offSeasonNotice, seasonLabel, shareImageUrl, whatsappUrl } from "./spotDetail"
 
 const labels = (rows: { label: string; value: string }[]) => rows.map(r => `${r.label}: ${r.value}`)
 
@@ -54,5 +54,12 @@ describe("← Volver", () => {
     expect(cameFromRumbo("https://rumbo.uy/search?activity=Surf", "https://rumbo.uy")).toBe(true)
     expect(cameFromRumbo("https://l.instagram.com/?u=x", "https://rumbo.uy")).toBe(false)
     expect(cameFromRumbo("", "https://rumbo.uy")).toBe(false)
+  })
+})
+
+describe("Al compartir", () => {
+  it("la foto va recortada a 1200×630, no la original", () => {
+    expect(shareImageUrl("rumbo", "rumbo/spots/1/foto"))
+      .toBe("https://res.cloudinary.com/rumbo/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/rumbo/spots/1/foto")
   })
 })

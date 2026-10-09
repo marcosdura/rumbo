@@ -5,6 +5,7 @@ import SpotDetails from "./SpotDetails"
 import JsonLd from "@/components/seo/JsonLd"
 import { api } from "@/lib/api"
 import type { PublicSpot } from "@/lib/types"
+import { shareImageUrl } from "@/lib/spotDetail"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage
-    ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${mainImage.cloudinary_public_id}`
+    ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, mainImage.cloudinary_public_id)
     : undefined
 
   return {
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${spot.name} | Rumbo`,
       description: spot.description?.slice(0, 160),
-      images: imageUrl ? [{ url: imageUrl }] : [],
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630 }] : [],
       type: "website",
     },
     twitter: {
