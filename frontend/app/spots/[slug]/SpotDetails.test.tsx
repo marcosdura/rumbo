@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 
 // Página pública de un lugar: qué accesos para sumar contenido ve cada uno.
 let session: { id_token: string } | null = null
 let viewer = { is_owner: false, is_admin: false, pending: [] as { id: number; kind: string; title: string }[] }
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: session }) }))
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, back: () => {} }), usePathname: () => "/spots/x" }))
+let navigation: string[] = []
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: (url: string) => navigation.push(url), back: () => navigation.push("back") }),
+  usePathname: () => "/spots/x",
+}))
 let views: { url: string; token: string | undefined }[] = []
 let gets: string[] = []
 vi.mock("@/lib/api", () => ({
@@ -23,6 +27,7 @@ vi.mock("../../../components/spot-detail/SpotImages", () => ({ default: () => nu
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: () => null }))
 vi.mock("../../../components/spot-detail/ExperienciasSection", () => ({ default: () => null }))
+vi.mock("@/components/spot-detail/NearbySpots", () => ({ default: ({ spotId }: { spotId: number }) => <p>cercanos de {spotId}</p> }))
 
 const { default: SpotDetail } = await import("./SpotDetails")
 
@@ -163,5 +168,27 @@ describe("Página del lugar: contacto y orden en el celular", () => {
     const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
     const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
     expect(mobile).toMatch(/\.spot-right-panel \{[^}]*order: -1;/)
+  })
+})
+
+describe("Página del lugar: para seguir navegando", () => {
+  it("las pills llevan a la búsqueda de la actividad y del departamento", async () => {
+    render(<SpotDetail spot={spot("Camping", { categories: [{ id: 1, name: "Camping" }, { id: 2, name: "Trekking" }] })} />)
+    await screen.findByText("Cerro Arequita")
+    expect(screen.getByRole("link", { name: /Trekking/ }).getAttribute("href")).toBe("/search?activity=Trekking")
+    expect(screen.getByRole("link", { name: "Lavalleja" }).getAttribute("href")).toBe("/search?department=Lavalleja")
+  })
+
+  it("muestra los cercanos del lugar", async () => {
+    render(<SpotDetail spot={spot("Camping")} />)
+    expect(await screen.findByText("cercanos de 12")).toBeTruthy()
+  })
+
+  it("← Volver: entrando por un link de afuera va a la búsqueda", async () => {
+    navigation = []
+    render(<SpotDetail spot={spot("Camping")} />)
+    // Solo se ve en el celular (display: none en escritorio).
+    fireEvent.click(await screen.findByText("← Volver"))
+    expect(navigation).toEqual(["/search"])
   })
 })

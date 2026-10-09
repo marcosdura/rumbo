@@ -38,7 +38,9 @@ import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/s
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
 import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
-import { offSeasonNotice } from "@/lib/spotDetail"
+import { cameFromRumbo, offSeasonNotice } from "@/lib/spotDetail"
+import NearbySpots from "@/components/spot-detail/NearbySpots"
+import Link from "next/link"
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -259,7 +261,10 @@ function SpotDetail({ spot }) {
         <div className="flex-1 overflow-y-auto">
           <div className="spot-page-inner">
 
-            <button onClick={() => router.back()} className="mobile-back-btn">
+            <button
+              onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}
+              className="mobile-back-btn"
+            >
               ← Volver
             </button>
 
@@ -296,20 +301,20 @@ function SpotDetail({ spot }) {
                   </span>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
-                {spot.categories && spot.categories.length > 0 ? (
-                  spot.categories.map((cat) => (
-                    <Pill key={cat.id} variant="beige" hover>
+                {/* Las pills llevan a la búsqueda de esa actividad o departamento. */}
+                {(spot.categories?.length > 0 ? spot.categories : spot.category ? [spot.category] : []).map((cat) => (
+                  <Link key={cat.name} href={`/search?activity=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                    <Pill variant="beige" hover>
                       {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}
                       {cat.name}
                     </Pill>
-                  ))
-                ) : (
-                  <Pill variant="beige" hover>
-                    {CATEGORY_EMOJIS[spot.category?.name] && `${CATEGORY_EMOJIS[spot.category.name]} `}
-                    {spot.category?.name || "Sin categoría"}
-                  </Pill>
+                  </Link>
+                ))}
+                {spot.department && (
+                  <Link href={`/search?department=${encodeURIComponent(spot.department)}`} style={{ textDecoration: "none" }}>
+                    <Pill variant="dark-green" hover>{spot.department}</Pill>
+                  </Link>
                 )}
-                <Pill variant="dark-green" hover>{spot.department || "Sin departamento"}</Pill>
                 {offSeason && (
                   <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
                     ⚠️ {offSeason}
@@ -455,6 +460,8 @@ function SpotDetail({ spot }) {
               <div id="reviews">
                 <ReviewsSection spotId={spot.id} />
               </div>
+
+              <NearbySpots spotId={spot.id} />
 
               {/* El dueño no reporta su propio lugar (el backend tampoco lo deja). */}
               {!viewer.is_owner && (

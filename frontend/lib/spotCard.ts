@@ -14,6 +14,8 @@ export type CardSpot = {
   glamping_detail?: { price_per_night?: number | null }[] | null
   category?: { name: string } | null
   categories?: { name: string }[] | null
+  // Solo en "Cerca de acá" (GET /spots/{id}/nearby).
+  distance_km?: number | null
 }
 
 const NEW_DAYS = 30
@@ -69,8 +71,18 @@ export function seasonNotice(spot: CardSpot, now = new Date()): string | null {
   return open ? null : `Abre en ${MONTHS[start - 1]}`
 }
 
-// La línea de datos de la card, en orden: precio, temporada, mascotas.
+// "a 2,5 km" (con decimal solo por debajo de 10 km).
+export function distanceLabel(km: number): string {
+  const n = km < 10 ? Math.round(km * 10) / 10 : Math.round(km)
+  return `📍 a ${n.toLocaleString("es-UY")} km`
+}
+
+// La línea de datos de la card, en orden: distancia (en "Cerca de acá"),
+// precio, temporada, mascotas.
 export function factsLine(spot: CardSpot, now = new Date()): string[] {
-  return [priceLabel(spot), seasonNotice(spot, now), spot.pets_allowed ? "🐶 Acepta mascotas" : null]
+  return [
+    spot.distance_km != null ? distanceLabel(spot.distance_km) : null,
+    priceLabel(spot), seasonNotice(spot, now), spot.pets_allowed ? "🐶 Acepta mascotas" : null,
+  ]
     .filter((f): f is string => !!f)
 }

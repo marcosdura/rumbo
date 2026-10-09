@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { detailRows, directionsUrl, offSeasonNotice, seasonLabel, whatsappUrl } from "./spotDetail"
+import { cameFromRumbo, detailRows, directionsUrl, offSeasonNotice, seasonLabel, whatsappUrl } from "./spotDetail"
 
 const labels = (rows: { label: string; value: string }[]) => rows.map(r => `${r.label}: ${r.value}`)
 
@@ -46,5 +46,13 @@ describe("Llegar y contactar", () => {
     const url = new URL(whatsappUrl("+598 99 123 456", "Camping La Aguada"))
     expect(url.origin + url.pathname).toBe("https://wa.me/59899123456")
     expect(url.searchParams.get("text")).toBe("Hola, te escribo por Camping La Aguada, que vi en Rumbo.")
+  })
+})
+
+describe("← Volver", () => {
+  it("vuelve atrás solo si se llegó desde otra página de Rumbo", () => {
+    expect(cameFromRumbo("https://rumbo.uy/search?activity=Surf", "https://rumbo.uy")).toBe(true)
+    expect(cameFromRumbo("https://l.instagram.com/?u=x", "https://rumbo.uy")).toBe(false)
+    expect(cameFromRumbo("", "https://rumbo.uy")).toBe(false)
   })
 })

@@ -148,3 +148,39 @@ def test_los_bots_no_cuentan(client, db, make_spot):
 def test_un_lugar_sin_publicar_no_registra_visitas(client, make_spot):
     spot = make_spot(approved=False)
     assert client.post(f"/spots/{spot.id}/view", headers=BROWSER).status_code == 404
+
+
+# -------- Cerca de acá (página del lugar) --------
+
+# Cerca de La Paloma: 0.01° de latitud son ~1.1 km.
+LAT, LNG = -34.66, -54.16
+
+
+def test_cercanos_del_mas_cercano_al_mas_lejano_con_la_distancia(client, make_spot):
+    base = make_spot(name="Base", lat=LAT, lng=LNG)
+    make_spot(name="A 11 km", lat=LAT + 0.1, lng=LNG)
+    make_spot(name="A 2 km", lat=LAT + 0.02, lng=LNG)
+    make_spot(name="A 33 km", lat=LAT + 0.3, lng=LNG)        # fuera del radio
+    # En la esquina del recuadro de búsqueda pero a ~31 km: fuera del radio.
+    make_spot(name="Esquina", lat=LAT + 0.2, lng=LNG + 0.25)
+    make_spot(name="Sin publicar", lat=LAT + 0.01, lng=LNG, approved=False)
+    make_spot(name="Sin ubicación")
+    r = client.get(f"/spots/{base.id}/nearby")
+    assert r.status_code == 200, r.text
+    assert [(s["name"], s["distance_km"]) for s in r.json()] == [("A 2 km", 2.2), ("A 11 km", 11.1)]
+    # Como los muestra la card.
+    assert {"slug", "images", "categories", "review_count"} <= set(r.json()[0])
+
+
+def test_cercanos_hasta_cuatro(client, make_spot):
+    base = make_spot(name="Base", lat=LAT, lng=LNG)
+    for i in range(1, 7):
+        make_spot(name=f"Cerca {i}", lat=LAT + 0.01 * i, lng=LNG)
+    assert [s["name"] for s in client.get(f"/spots/{base.id}/nearby").json()] == ["Cerca 1", "Cerca 2", "Cerca 3", "Cerca 4"]
+
+
+def test_cercanos_sin_ubicacion_o_sin_publicar(client, make_spot):
+    sin_ubicacion = make_spot(name="Sin ubicación")
+    assert client.get(f"/spots/{sin_ubicacion.id}/nearby").json() == []
+    oculto = make_spot(name="Oculto", lat=LAT, lng=LNG, approved=False)
+    assert client.get(f"/spots/{oculto.id}/nearby").status_code == 404

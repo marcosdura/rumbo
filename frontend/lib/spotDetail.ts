@@ -37,6 +37,17 @@ export function offSeasonNotice(spot: CardSpot, now = new Date()): string | null
   return notice ? `Fuera de temporada · ${notice.charAt(0).toLowerCase()}${notice.slice(1)}` : null
 }
 
+// "← Volver": si se llegó desde otra página de Rumbo, vuelve a esa; si se
+// entró por un link compartido (otro sitio o pestaña nueva), router.back()
+// sacaba de Rumbo: va a la búsqueda.
+export function cameFromRumbo(referrer: string, origin: string): boolean {
+  try {
+    return !!referrer && new URL(referrer).origin === origin
+  } catch {
+    return false
+  }
+}
+
 // Cómo llegar: Google Maps directo a las coordenadas. Antes buscaba por el
 // nombre, y con otro lugar llamado igual abría el equivocado.
 export function directionsUrl(lat: number, lng: number): string {

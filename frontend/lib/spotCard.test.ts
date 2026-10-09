@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { factsLine, priceLabel, ratingLabel, seasonNotice } from "./spotCard"
+import { distanceLabel, factsLine, priceLabel, ratingLabel, seasonNotice } from "./spotCard"
 
 const NOW = new Date("2026-10-08T12:00:00Z")
 const camping = { category: { name: "Camping" } }
@@ -64,5 +64,13 @@ describe("factsLine", () => {
     expect(factsLine({ ...camping, price: 0, season_start: 12, season_end: 3, pets_allowed: true }, NOW))
       .toEqual(["Gratis", "Abre en diciembre", "🐶 Acepta mascotas"])
     expect(factsLine({ category: { name: "Escalada" }, pets_allowed: false }, NOW)).toEqual([])
+  })
+})
+
+describe("distancia (Cerca de acá)", () => {
+  it("con un decimal por debajo de 10 km, y primera en la línea", () => {
+    expect(distanceLabel(2.24)).toBe("📍 a 2,2 km")
+    expect(distanceLabel(14.6)).toBe("📍 a 15 km")
+    expect(factsLine({ distance_km: 3, category: { name: "Camping" }, price: 0 })).toEqual(["📍 a 3 km", "Gratis"])
   })
 })
