@@ -78,11 +78,12 @@ export function distanceLabel(km: number): string {
 }
 
 // La línea de datos de la card, en orden: distancia (en "Cerca de acá"),
-// precio, temporada, mascotas.
+// precio, temporada, mascotas (solo el emoji: el texto no entraba).
+export const PETS_EMOJI = "🐶"
 export function factsLine(spot: CardSpot, now = new Date()): string[] {
   return [
     spot.distance_km != null ? distanceLabel(spot.distance_km) : null,
-    priceLabel(spot), seasonNotice(spot, now), spot.pets_allowed ? "🐶 Acepta mascotas" : null,
+    priceLabel(spot), seasonNotice(spot, now), spot.pets_allowed ? PETS_EMOJI : null,
   ]
     .filter((f): f is string => !!f)
 }

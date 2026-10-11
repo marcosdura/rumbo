@@ -4,10 +4,9 @@ import { useState } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
-import CircleArrow from "@/components/ui/CircleArrow"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
-import { factsLine, ratingLabel } from "@/lib/spotCard"
+import { PETS_EMOJI, factsLine, ratingLabel } from "@/lib/spotCard"
 
 const CATEGORY_EMOJI = {
   Camping: "🏕️", Glamping: "🛖", Trekking: "🥾",
@@ -15,7 +14,6 @@ const CATEGORY_EMOJI = {
 }
 
 function SpotCard({ spot, isHighlighted = false, activeCategory }) {
-  const [hovered, setHovered] = useState(false)
   const [showExtraCategories, setShowExtraCategories] = useState(false)
   const [extraCategoriesPos, setExtraCategoriesPos] = useState(null)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
@@ -85,9 +83,10 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
         .spot-card-body { padding: 10px 12px 12px; }
 
         .spot-card-name {
-          font-family: var(--font-playfair-display), serif;
-          font-size: 15px;
-          font-weight: 600;
+          font-family: var(--font-dm-sans), sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.3;
           color: #1b1b19;
           margin: 0 0 3px;
         }
@@ -99,7 +98,15 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           display: flex;
           align-items: center;
           gap: 4px;
+          min-width: 0;
+          white-space: nowrap;
         }
+        .spot-card-dept {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
+        .spot-card-rating .sep { color: var(--muted); }
         .spot-card-rating .star { color: var(--primary); }
         .spot-card-rating.is-new { color: var(--primary); font-weight: 600; }
         .spot-card-rating.is-none { color: var(--muted); }
@@ -128,25 +135,14 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           gap: 4px;
         }
 
-        .spot-card-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
         .spot-card-badges {
           display: flex;
+          align-items: center;
           gap: 6px;
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
           min-width: 0;
         }
-
-        .dept-pill {
-          min-width: 0;
-          overflow: hidden;
-          flex-shrink: 1;
-        }
-        .dept-pill-text {
+        .spot-card-pill-text {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -155,23 +151,14 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
 
         @media (max-width: 480px) {
           .spot-card-img-wrap { height: 120px; }
-          .spot-card-name     { font-size: 13px; }
+          .spot-card-name     { font-size: 12.5px; }
+          .spot-card-rating   { font-size: 12px; }
           .spot-card-body     { padding: 8px 10px 10px; }
-          .spot-card-badges   {
-            flex-wrap: wrap;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-            overflow: hidden;
-          }
+          .spot-card-badges   { gap: 4px; }
         }
       `}</style>
 
-      <div
-        className={`spot-card${isHighlighted ? " highlighted" : ""}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
+      <div className={`spot-card${isHighlighted ? " highlighted" : ""}`}>
       {/* Misma pestaña, como los títulos de las colecciones. */}
       <Link href={`/spots/${spot.slug}`} className="spot-card-link">
         <div className="spot-card-img-wrap">
@@ -200,11 +187,19 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
 
         <div className="spot-card-body">
           <p className="spot-card-name">{spot.name}</p>
+          {/* Departamento · reseñas (antes el departamento era una pill). */}
           <p className={`spot-card-rating${rating.kind === "rating" ? "" : ` is-${rating.kind}`}`}>
+            {spot.department && (
+              <>
+                <span className="spot-card-dept">{spot.department}</span>
+                <span className="sep" aria-hidden="true">·</span>
+              </>
+            )}
             {rating.kind === "rating" && <span className="star">★</span>}
             <span>{rating.text}</span>
           </p>
-          <p className="spot-card-facts" title={facts.join(" · ") || undefined}>
+          {/* La 🐶 va sola; al pasar por encima (y para lectores de pantalla) dice qué es. */}
+          <p className="spot-card-facts" title={facts.map(f => (f === PETS_EMOJI ? "Acepta mascotas" : f)).join(" · ") || undefined}>
             {facts.join(" · ")}
           </p>
           {showsSecondaryMatch && (
@@ -213,14 +208,17 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
               <span>Este lugar también ofrece {activeCategory}</span>
             </p>
           )}
-          <div className="spot-card-footer">
-            <div className="spot-card-badges">
-              <Pill variant="beige">
-                {CATEGORY_EMOJI[primaryCategory?.name] ? `${CATEGORY_EMOJI[primaryCategory.name]} ${primaryCategory.name}` : (primaryCategory?.name || "Sin categoría")}
+          {/* La categoría abajo y el +n en la misma línea: si no entra, se
+              achica el texto de la categoría. */}
+          <div className="spot-card-badges">
+              <Pill variant="beige" style={{ minWidth: 0, overflow: "hidden", flexShrink: 1 }}>
+                <span className="spot-card-pill-text">
+                  {CATEGORY_EMOJI[primaryCategory?.name] ? `${CATEGORY_EMOJI[primaryCategory.name]} ${primaryCategory.name}` : (primaryCategory?.name || "Sin categoría")}
+                </span>
               </Pill>
               {extraCategories.length > 0 && (
                 <div
-                  style={{ position: "relative" }}
+                  style={{ position: "relative", flexShrink: 0 }}
                   onMouseEnter={(e) => {
                     if (!canHover()) return
                     const rect = e.currentTarget.getBoundingClientRect()
@@ -261,11 +259,6 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
                   )}
                 </div>
               )}
-              <Pill variant="dark-green" style={{ minWidth: 0, overflow: "hidden", flexShrink: 1 }}>
-                <span className="dept-pill-text">{spot.department || "Sin departamento"}</span>
-              </Pill>
-            </div>
-            <CircleArrow active={hovered} />
           </div>
         </div>
       </Link>

@@ -31,16 +31,39 @@ describe("SpotCard", () => {
     expect(imageProps).toMatchObject({ width: 480, height: 480, crop: "fill", gravity: "auto" })
   })
 
-  it("siempre hay línea de calificación: estrellas, Nuevo o Sin reseñas", () => {
+  it("debajo del nombre: Departamento · reseñas (estrellas, Nuevo o Sin reseñas)", () => {
     const { unmount } = render(<SpotCard spot={{ ...base, review_count: 12, average_rating: 4.6 }} />)
-    expect(screen.getByText("4.6 (12)")).toBeTruthy()
+    expect(screen.getByText("4.6 (12)").parentElement!.textContent).toBe("Rocha·★4.6 (12)")
     unmount()
     render(<SpotCard spot={base} />)
-    expect(screen.getByText("Sin reseñas")).toBeTruthy()
+    expect(screen.getByText("Sin reseñas").parentElement!.textContent).toBe("Rocha·Sin reseñas")
   })
 
-  it("muestra el precio y si acepta mascotas", () => {
+  it("el departamento ya no es una pill", () => {
+    const { container } = render(<SpotCard spot={base} />)
+    const badges = container.querySelector(".spot-card-badges")!
+    expect(badges.textContent).not.toContain("Rocha")
+  })
+
+  it("mascotas: solo el emoji, y al pasar por encima dice qué es", () => {
     render(<SpotCard spot={{ ...base, price: 400, pets_allowed: true }} />)
-    expect(screen.getByText("$400 / noche · 🐶 Acepta mascotas")).toBeTruthy()
+    const facts = screen.getByText("$400 / noche · 🐶")
+    expect(facts.getAttribute("title")).toBe("$400 / noche · Acepta mascotas")
+  })
+
+  it("la categoría abajo, con el +n en la misma línea; el texto se achica si no entra", () => {
+    const { container } = render(<SpotCard spot={{ ...base, categories: [{ name: "Camping" }, { name: "Glamping" }, { name: "Trekking" }] }} />)
+    const badges = container.querySelector(".spot-card-badges")!
+    expect(badges.textContent).toBe("🏕️ Camping+2")
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    expect(css).toMatch(/\.spot-card-badges \{[^}]*flex-wrap: nowrap;/)
+    expect(badges.querySelector(".spot-card-pill-text")).toBeTruthy()
+  })
+
+  it("el nombre: la letra del texto de la portada, en negrita y sin la flecha", () => {
+    const { container } = render(<SpotCard spot={base} />)
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    expect(css).toMatch(/\.spot-card-name \{[^}]*font-family: var\(--font-dm-sans\)[^}]*font-weight: 700;/)
+    expect(container.querySelector("svg")).toBeNull()
   })
 })

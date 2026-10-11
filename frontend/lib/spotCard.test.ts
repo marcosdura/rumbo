@@ -62,7 +62,7 @@ describe("seasonNotice", () => {
 describe("factsLine", () => {
   it("precio, temporada y mascotas, solo lo que hay", () => {
     expect(factsLine({ ...camping, price: 0, season_start: 12, season_end: 3, pets_allowed: true }, NOW))
-      .toEqual(["Gratis", "Abre en diciembre", "🐶 Acepta mascotas"])
+      .toEqual(["Gratis", "Abre en diciembre", "🐶"])
     expect(factsLine({ category: { name: "Escalada" }, pets_allowed: false }, NOW)).toEqual([])
   })
 })
