@@ -80,4 +80,12 @@ describe("SpotCard", () => {
     expect(css).toMatch(/\.spot-card-name \{[^}]*-webkit-line-clamp: 2;[^}]*overflow: hidden;/)
     expect(screen.getByText("Camping del Arroyo").getAttribute("title")).toBe("Camping del Arroyo")
   })
+
+  it("compacta: poco espacio entre el nombre, las reseñas, los datos y la categoría", () => {
+    const { container } = render(<SpotCard spot={base} />)
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    const margin = (cls: string) => css.match(new RegExp(`\\.${cls} \\{[^}]*margin: 0 0 (\\d+)px`))?.[1]
+    expect([margin("spot-card-name"), margin("spot-card-rating"), margin("spot-card-facts")]).toEqual(["1", "4", "5"])
+    expect(css).toContain(".spot-card-body { padding: 8px 12px 10px; }")
+  })
 })

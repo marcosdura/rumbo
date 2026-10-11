@@ -80,15 +80,15 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           background: linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 55%);
         }
 
-        .spot-card-body { padding: 10px 12px 12px; }
+        .spot-card-body { padding: 8px 12px 10px; }
 
         .spot-card-name {
           font-family: var(--font-dm-sans), sans-serif;
           font-size: 14px;
           font-weight: 700;
-          line-height: 1.3;
+          line-height: 1.25;
           color: #1b1b19;
-          margin: 0 0 3px;
+          margin: 0 0 1px;
           /* Hasta dos renglones; si no entra, termina en "…". */
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -99,7 +99,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
         .spot-card-rating {
           font-size: 13px;
           color: var(--muted-strong);
-          margin: 0 0 6px;
+          margin: 0 0 4px;
           display: flex;
           align-items: center;
           gap: 4px;
@@ -119,7 +119,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
         .spot-card-facts {
           font-size: 12px;
           color: var(--muted-strong);
-          margin: 0 0 8px;
+          margin: 0 0 5px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -133,7 +133,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           font-size: 11px;
           font-weight: 500;
           color: var(--primary);
-          margin: 0 0 6px;
+          margin: 0 0 4px;
           display: flex;
           align-items: center;
           gap: 4px;
@@ -157,7 +157,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           .spot-card-img-wrap { height: 120px; }
           .spot-card-name     { font-size: 12.5px; }
           .spot-card-rating   { font-size: 12px; }
-          .spot-card-body     { padding: 8px 10px 10px; }
+          .spot-card-body     { padding: 7px 10px 9px; }
           .spot-card-badges   { gap: 4px; }
         }
       `}</style>
