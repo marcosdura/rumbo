@@ -89,6 +89,11 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           line-height: 1.3;
           color: #1b1b19;
           margin: 0 0 3px;
+          /* Hasta dos renglones; si no entra, termina en "…". */
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .spot-card-rating {
@@ -185,7 +190,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
         </div>
 
         <div className="spot-card-body">
-          <p className="spot-card-name">{spot.name}</p>
+          <p className="spot-card-name" title={spot.name}>{spot.name}</p>
           {/* Departamento · reseñas (antes el departamento era una pill). */}
           <p className={`spot-card-rating${rating.kind === "rating" ? "" : ` is-${rating.kind}`}`}>
             {spot.department && (

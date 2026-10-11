@@ -73,4 +73,11 @@ describe("SpotCard", () => {
     const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
     expect(css).not.toMatch(/\.spot-card-facts \{[^}]*min-height/)
   })
+
+  it("el nombre ocupa hasta dos renglones y termina en …; entero al pasar por encima", () => {
+    const { container } = render(<SpotCard spot={base} />)
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    expect(css).toMatch(/\.spot-card-name \{[^}]*-webkit-line-clamp: 2;[^}]*overflow: hidden;/)
+    expect(screen.getByText("Camping del Arroyo").getAttribute("title")).toBe("Camping del Arroyo")
+  })
 })
