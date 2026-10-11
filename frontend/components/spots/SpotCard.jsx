@@ -115,7 +115,6 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
           font-size: 12px;
           color: var(--muted-strong);
           margin: 0 0 8px;
-          min-height: 16px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -199,9 +198,12 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
             <span>{rating.text}</span>
           </p>
           {/* La 🐶 va sola; al pasar por encima (y para lectores de pantalla) dice qué es. */}
-          <p className="spot-card-facts" title={facts.map(f => (f === PETS_EMOJI ? "Acepta mascotas" : f)).join(" · ") || undefined}>
-            {facts.join(" · ")}
-          </p>
+          {/* Solo si hay algo que decir: vacía ocupaba lugar en blanco. */}
+          {facts.length > 0 && (
+            <p className="spot-card-facts" title={facts.map(f => (f === PETS_EMOJI ? "Acepta mascotas" : f)).join(" · ")}>
+              {facts.join(" · ")}
+            </p>
+          )}
           {showsSecondaryMatch && (
             <p className="spot-card-secondary-match">
               <span>{CATEGORY_EMOJI[activeCategory] ?? ""}</span>

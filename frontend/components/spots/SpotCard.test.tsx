@@ -66,4 +66,11 @@ describe("SpotCard", () => {
     expect(css).toMatch(/\.spot-card-name \{[^}]*font-family: var\(--font-dm-sans\)[^}]*font-weight: 700;/)
     expect(container.querySelector("svg")).toBeNull()
   })
+
+  it("sin precio, temporada ni mascotas no deja un renglón en blanco", () => {
+    const { container } = render(<SpotCard spot={base} />)
+    expect(container.querySelector(".spot-card-facts")).toBeNull()
+    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    expect(css).not.toMatch(/\.spot-card-facts \{[^}]*min-height/)
+  })
 })
