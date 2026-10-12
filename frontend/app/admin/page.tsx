@@ -11,6 +11,7 @@ import { api, ApiError } from "@/lib/api"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 import { spotStatus, ADMIN_MODES, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
 import SummaryTab, { type AdminSummary } from "./SummaryTab"
+import OperatorsTab from "./OperatorsTab"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
@@ -432,6 +433,7 @@ export default function AdminPage() {
     ] },
     { title: "Gestión", tabs: [
       { id: "lugares", label: "🗺️ Lugares" },
+      { id: "escuelas", label: "🏄 Escuelas y servicios" },
       { id: "fotos", label: "📷 Fotos" },
       { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
     ] },
@@ -611,6 +613,8 @@ export default function AdminPage() {
             }}
           />
         )}
+
+        {mode === "escuelas" && <OperatorsTab token={token} />}
 
         {mode === "fotos" && (
           <PhotosTab

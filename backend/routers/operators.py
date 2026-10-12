@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 import operators
@@ -9,7 +10,7 @@ from auth import get_current_admin_user, get_current_user_required, is_admin
 from contributions import pending_contribution_for
 from database import get_db
 from limiter import limiter
-from models import KayakDetail, OperatorChangeRequest, SpotDB, SurfSchool
+from models import KayakDetail, KayakReview, OperatorChangeRequest, SpotDB, SurfReview, SurfSchool
 from schemas import ChangeRequestReject, DiscardPhotosRequest, KayakDetailResponse, OperatorEditRequest, SurfSchoolResponse
 from contributions import is_own_new_photo_id_url
 
@@ -144,6 +145,40 @@ def discard_operator_photos(request: Request, kind: str, operator_id: int, body:
 
 
 # -------- Admin --------
+
+# Reseñas de cada tipo y su columna hacia el operador.
+_REVIEWS = {"surf_school": (SurfReview, SurfReview.surf_beach_id), "kayak": (KayakReview, KayakReview.kayak_details_id)}
+
+
+@router.get("/admin/operators")
+def list_operators_admin(db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+    """"Escuelas y servicios" en el panel de admin: todas las escuelas de surf
+    y servicios de kayak, publicados y en revisión. Antes no había dónde
+    verlos: solo aparecían si alguien los reportaba o pedía un cambio."""
+    result = []
+    for kind, model in operators.OPERATOR_MODELS.items():
+        review_model, fk = _REVIEWS[kind]
+        stats = {
+            row[0]: (row[1], row[2])
+            for row in db.query(fk, func.count(review_model.id), func.avg(review_model.rating)).group_by(fk)
+        }
+        rows = db.query(model).execution_options(include_pending=True).options(joinedload(model.spot)).all()
+        for op in rows:
+            count, avg = stats.get(op.id, (0, None))
+            result.append({
+                "kind": kind,
+                "id": op.id,
+                "name": op.name,
+                "spot": {"id": op.spot.id, "name": op.spot.name, "department": op.spot.department},
+                "owner_email": op.owner_email,
+                "is_approved": op.is_approved,
+                "photos": sum(1 for p in (op.photo_1, op.photo_2, op.photo_3) if p),
+                "has_description": bool((op.description or "").strip()),
+                "review_count": count,
+                "average_rating": round(float(avg), 1) if avg is not None else None,
+            })
+    return sorted(result, key=lambda o: (o["name"] or "").lower())
+
 
 @router.get("/admin/operator-change-requests")
 def list_operator_changes(db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):

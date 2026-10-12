@@ -200,3 +200,13 @@ describe("Avisos de admin", () => {
     for (const t of tabs) expect(ADMIN_MODES).toContain(t)
   })
 })
+
+describe("Escuelas y servicios", () => {
+  it("es una pestaña de Gestión y pide la lista al abrirla", async () => {
+    await load()
+    expect(calls).not.toContain("get /admin/operators")
+    await open(/^🏄 Escuelas y servicios/)
+    expect(calls).toContain("get /admin/operators")
+    expect(window.location.search).toBe("?tab=escuelas")
+  })
+})
