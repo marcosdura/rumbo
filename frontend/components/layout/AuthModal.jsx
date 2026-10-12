@@ -242,7 +242,7 @@ export default function AuthModal({ onClose }) {
           }}>
             Al continuar aceptás nuestros{" "}
             <a
-              href="/legal"
+              href="/legal#terminos"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "var(--primary)", fontWeight: 600 }}

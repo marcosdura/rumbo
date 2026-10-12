@@ -469,7 +469,7 @@ export default function AgregarLugar() {
             </button>
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 20 }}>
               Al continuar aceptás nuestros{" "}
-              <a href="/legal" style={{ color: "var(--primary)" }}>Términos y condiciones</a>
+              <a href="/legal#terminos" style={{ color: "var(--primary)" }}>Términos y condiciones</a>
             </p>
           </div>
         </div>
