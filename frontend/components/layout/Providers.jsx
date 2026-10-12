@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
+import { takePendingAction } from "@/lib/pendingAction"
 
 const FATAL_AUTH_ERRORS = ["RefreshTokenError", "NoRefreshToken", "UserNotFound", "SignupError"]
 
@@ -18,19 +19,6 @@ function AuthErrorHandler() {
       console.warn(`Cerrando sesión por error de auth: ${session.error}`)
       signOut({ redirect: false })
     }
-  }, [session])
-  return null
-}
-
-function RememberMeHandler() {
-  const { data: session } = useSession()
-  useEffect(() => {
-    if (!session) return
-    if (localStorage.getItem("rumbo_remember_me") !== "false") return
-
-    const handler = () => signOut({ redirect: false })
-    window.addEventListener("beforeunload", handler)
-    return () => window.removeEventListener("beforeunload", handler)
   }, [session])
   return null
 }
@@ -74,9 +62,17 @@ function FavoritesLoader() {
   const { loadFavorites } = useFavoritesStore()
 
   useEffect(() => {
-    if (session?.id_token) {
-      loadFavorites(session.id_token)
+    if (!session?.id_token) return
+    const token = session.id_token
+    // Tocó ❤️ sin sesión: se guarda apenas vuelve del login.
+    const pending = takePendingAction()
+    if (pending?.kind === "favorite") {
+      api.post(`/favorites/${pending.spotId}`, undefined, { token })
+        .catch(() => {}) // 409 = ya estaba; otro error: queda como antes
+        .finally(() => loadFavorites(token))
+      return
     }
+    loadFavorites(token)
   }, [session?.id_token])
 
   return null
@@ -86,7 +82,6 @@ export default function Providers({ children }) {
   return (
     <SessionProvider refetchInterval={5 * 60}>
       <AuthErrorHandler />
-      <RememberMeHandler />
       <TermsAcceptHandler />
       <LoginTracker />
       <FavoritesLoader />

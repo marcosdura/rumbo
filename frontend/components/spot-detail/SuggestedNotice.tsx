@@ -106,7 +106,7 @@ export default function SuggestedNotice({ spotId }: { spotId: number }) {
         />
       </ConfirmModal>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="reclamar este lugar" />}
     </div>
   )
 }

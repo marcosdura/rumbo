@@ -12,12 +12,11 @@ describe("proxy", () => {
     expect(redirectFor("/admin", "otra@x.com", undefined)).toBe("/")
   })
 
-  it("perfil: con sesión", () => {
-    expect(redirectFor("/profile/aportes", null, "admin@x.com")).toBe("/")
-    expect(redirectFor("/profile/aportes", "ana@x.com", "admin@x.com")).toBeNull()
+  it("el perfil no redirige: sin sesión la página pide iniciarla y vuelve ahí", () => {
+    expect(redirectFor("/profile/aportes", null, "admin@x.com")).toBeNull()
   })
 
   it("solo corre en las rutas que protege, no en cada request", () => {
-    expect(config.matcher).toEqual(["/admin/:path*", "/profile/:path*"])
+    expect(config.matcher).toEqual(["/admin/:path*"])
   })
 })

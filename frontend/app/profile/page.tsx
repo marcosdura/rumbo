@@ -1,6 +1,7 @@
 "use client"
 
 import { useSession, signOut, getSession } from "next-auth/react"
+import LoginRequired from "@/components/layout/LoginRequired"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import { useState, useEffect, useRef } from "react"
 import Navbar from "@/components/layout/Navbar"
@@ -55,7 +56,7 @@ export default function ProfilePage() {
   const showLoading = status === "loading" || (!!session?.id_token && dataLoading)
   if (showLoading) return <LoadingScreen />
 
-  if (!session) return null
+  if (!session) return <LoginRequired page="Mi perfil" />
 
   const { user } = session
 

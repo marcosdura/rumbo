@@ -9,7 +9,9 @@ let reviewParams: unknown[] = []
 let pushed: string[] = []
 let stats: { views_30d: number; favorites: number } | null = null
 let patches: { body: Record<string, unknown>; dryRun: boolean }[] = []
-vi.mock("next-auth/react", () => ({ useSession: () => ({ data: { id_token: "t" }, status: "authenticated" }) }))
+let loggedIn = true
+vi.mock("next-auth/react", () => ({ useSession: () => (loggedIn ? { data: { id_token: "t" }, status: "authenticated" } : { data: null, status: "unauthenticated" }) }))
+vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("next/navigation", () => ({ useParams: () => ({ id: "5" }), useRouter: () => ({ push: (u: string) => pushed.push(u) }) }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("./ContentTab", () => ({ default: () => null }))
@@ -44,7 +46,7 @@ const spot = (extra: object = {}) => ({
 })
 const review = (id: number) => ({ id, rating: 5, comment: `Reseña ${id}`, created_at: "2026-09-01T00:00:00", user: { name: "Ana", image: null } })
 
-afterEach(() => { mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = []; stats = null; patches = [] })
+afterEach(() => { loggedIn = true; mine = []; failMine = false; reviewPages = []; reviewParams = []; pushed = []; stats = null; patches = [] })
 
 const load = async () => { render(<DashboardPage />); await act(() => Promise.resolve()) }
 
@@ -126,5 +128,12 @@ describe("Panel del dueño", () => {
     fireEvent.click(screen.getByRole("button", { name: "marcar en el mapa" }))
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" })) })
     expect(patches[0].body).toMatchObject({ lat: -34.5, lng: -55.25 })
+  })
+
+  it("sin sesión pide iniciarla ahí mismo (antes mandaba a la home): el link de una notificación no se pierde", async () => {
+    loggedIn = false
+    await load()
+    expect(pushed).toEqual([])
+    expect(screen.getByText(/«Panel de tu lugar» es parte de tu cuenta/)).toBeTruthy()
   })
 })

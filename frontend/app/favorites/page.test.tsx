@@ -39,9 +39,11 @@ describe("Favoritos", () => {
     expect(screen.getByRole("link", { name: "Explorar lugares →" }).getAttribute("href")).toBe("/search")
   })
 
-  it("sin sesión vuelve al inicio, como las otras páginas del perfil", () => {
+  it("sin sesión pide iniciarla ahí mismo (antes mandaba a la home sin explicar)", () => {
     session = { data: null, status: "unauthenticated" }
     render(<FavoritesPage />)
-    expect(pushed).toEqual(["/"])
+    expect(pushed).toEqual([])
+    expect(screen.getByRole("heading", { name: "Iniciá sesión para ver esta página" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Continuar con Google" })).toBeTruthy()
   })
 })

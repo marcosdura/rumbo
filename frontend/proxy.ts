@@ -4,12 +4,12 @@ import { getToken } from "next-auth/jwt"
 
 // Antes era middleware.tsx (Next 16 lo renombró a proxy) y corría en todas
 // las requests, decodificando la sesión hasta para las imágenes. Ahora solo
-// en las rutas que protege.
+// en /admin. Las páginas de tu cuenta (perfil, favoritos...) no redirigen:
+// sin sesión muestran LoginRequired, que vuelve a la misma página.
 
 // A dónde mandar a quien no puede entrar (null = pasa).
 export function redirectFor(pathname: string, email: string | null | undefined, adminEmail: string | undefined): string | null {
   if (pathname.startsWith("/admin") && (!email || email !== adminEmail)) return "/"
-  if (pathname.startsWith("/profile") && !email) return "/"
   return null
 }
 
@@ -20,5 +20,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/profile/:path*"],
+  matcher: ["/admin/:path*"],
 }

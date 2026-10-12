@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { createPortal } from "react-dom"
 import { signInWithGoogle } from "@/lib/auth"
 import { useModalA11y } from "@/lib/useModalA11y"
+import { savePendingAction } from "@/lib/pendingAction"
 
 const PERKS = [
   { emoji: "⭐", text: "Guardar spots favoritos" },
@@ -11,11 +11,18 @@ const PERKS = [
   { emoji: "📍", text: "Sugerir nuevos spots" },
 ]
 
-export default function AuthModal({ onClose }) {
-  const [rememberMe, setRememberMe] = useState(true)
+// reason: para qué hace falta la sesión ("guardar este lugar en favoritos").
+// pending: lo que se hace solo al volver del login (lib/pendingAction).
+// La sesión dura 7 días: ya no se ofrece "mantener sesión iniciada" (cerraba
+// la sesión hasta al recargar la página).
+/** @param {{ onClose: () => void, reason?: string, pending?: import("@/lib/pendingAction").PendingAction }} props */
+export default function AuthModal({ onClose, reason, pending }) {
   const panelRef = useModalA11y(true, onClose)
 
-  const handleGoogleSignIn = () => signInWithGoogle({ rememberMe })
+  const handleGoogleSignIn = () => {
+    if (pending) savePendingAction(pending)
+    signInWithGoogle()
+  }
 
   return createPortal(
     <>
@@ -89,52 +96,6 @@ export default function AuthModal({ onClose }) {
           color: #4a443b;
         }
 
-        .auth-checkbox-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          cursor: pointer;
-          margin-bottom: 12px;
-          padding: 16px;
-          background: #fff;
-          border: 1.5px solid var(--border);
-          border-radius: 14px;
-          transition: border-color 0.2s, background 0.2s;
-        }
-        .auth-checkbox-row:hover { border-color: var(--primary); background: #f0f7f3; }
-        .auth-checkbox-row:has(.auth-checkbox-input:checked) { border-color: var(--primary); background: #f0f7f3; }
-        .auth-checkbox-row:has(.auth-checkbox-input:focus-visible) {
-          outline: 2px solid var(--primary);
-          outline-offset: 2px;
-        }
-
-        /* Oculto pero enfocable: display:none lo sacaría del orden de foco. */
-        .auth-checkbox-input {
-          position: absolute;
-          width: 1px; height: 1px;
-          padding: 0; margin: -1px;
-          overflow: hidden;
-          clip: rect(0 0 0 0);
-          clip-path: inset(50%);
-          white-space: nowrap;
-          border: 0;
-        }
-
-        .auth-checkbox {
-          width: 20px;
-          height: 20px;
-          border: 2px solid #c8c4bc;
-          border-radius: 6px;
-          flex-shrink: 0;
-          margin-top: 1px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: border-color 0.2s, background 0.2s;
-          background: #fff;
-        }
-        .auth-checkbox-input:checked + .auth-checkbox { border-color: var(--primary); background: var(--primary); }
-
         .auth-google-btn {
           width: 100%;
           display: flex;
@@ -196,7 +157,7 @@ export default function AuthModal({ onClose }) {
             fontSize: 24, fontWeight: 600,
             color: "#1b1b19", textAlign: "center", margin: "0 0 16px",
           }}>
-            Iniciá sesión
+            {reason ? `Iniciá sesión para ${reason}` : "Iniciá sesión"}
           </h2>
 
           {/* Perks */}
@@ -212,28 +173,6 @@ export default function AuthModal({ onClose }) {
           {/* Divider */}
           <div style={{ height: 1, background: "#ede9e1", marginBottom: 20 }} />
 
-          {/* Checkbox: recordar sesión */}
-          {/* El <label> envuelve al input, así que el click ya lo togglea
-              solo: un onClick acá además haría doble toggle y no cambiaría
-              nunca. */}
-          <label className="auth-checkbox-row">
-            <input
-              type="checkbox"
-              className="auth-checkbox-input"
-              checked={rememberMe}
-              onChange={e => setRememberMe(e.target.checked)}
-            />
-            <div className="auth-checkbox" aria-hidden="true">
-              {rememberMe && (
-                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                  <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-            <span style={{ fontSize: 13, color: "#3a3730", lineHeight: 1.5 }}>
-              Mantener sesión iniciada en este dispositivo
-            </span>
-          </label>
 
           {/* Aviso de términos */}
           <p style={{

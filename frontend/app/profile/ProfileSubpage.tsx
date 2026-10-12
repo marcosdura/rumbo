@@ -2,13 +2,13 @@
 
 // Armazón de las páginas a las que lleva el menú del perfil (Lugares que
 // administrás, Mis aportes, Mis pedidos): el mismo encabezado que Mis
-// reviews y Favoritos, con "← Volver al perfil". Sin sesión vuelve al
-// inicio, como /notificaciones.
-import { useEffect, type ReactNode } from "react"
+// reviews y Favoritos, con "← Volver al perfil". Sin sesión pide iniciarla
+// (LoginRequired) y vuelve acá.
+import type { ReactNode } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
+import LoginRequired from "@/components/layout/LoginRequired"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import Pill from "@/components/ui/Pill"
 
@@ -19,12 +19,8 @@ export default function ProfileSubpage({ title, count, children }: {
   children: (token: string) => ReactNode
 }) {
   const { data: session, status } = useSession()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/")
-  }, [status, router])
-
+  if (status === "unauthenticated") return <LoginRequired page={title} />
   if (status === "loading" || !session?.id_token) return <LoadingScreen />
 
   return (

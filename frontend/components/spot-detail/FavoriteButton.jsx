@@ -25,7 +25,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   if (variant === "detail") {
     return (
       <>
-        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="guardar este lugar en favoritos" pending={{ kind: "favorite", spotId: spot.id }} />}
         <style>{`
           .fav-btn-detail {
             display: flex;
@@ -77,7 +77,7 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
   // variante sobre la card
   return (
     <>
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="guardar este lugar en favoritos" pending={{ kind: "favorite", spotId: spot.id }} />}
       <style>{`
         .fav-btn-card {
           width: 30px;

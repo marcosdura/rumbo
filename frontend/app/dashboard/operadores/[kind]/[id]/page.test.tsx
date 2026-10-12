@@ -19,7 +19,9 @@ vi.mock("@/lib/api", () => ({
     post: (url: string) => { posts.push(url); return Promise.resolve({ data: {} }) },
   },
 }))
-vi.mock("next-auth/react", () => ({ useSession: () => ({ data: { id_token: "t" }, status: "authenticated" }) }))
+let loggedIn = true
+vi.mock("next-auth/react", () => ({ useSession: () => (loggedIn ? { data: { id_token: "t" }, status: "authenticated" } : { data: null, status: "unauthenticated" }) }))
+vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("next/navigation", () => ({
   useParams: () => ({ kind: "surf_school", id: "1" }),
   useRouter: () => ({ push: () => {} }),
@@ -41,6 +43,7 @@ function school(overrides: Partial<Operator> = {}): Operator {
 }
 
 afterEach(() => {
+  loggedIn = true
   patches = []
   posts = []
   patchResponse = { applied: [], pending: [] }
@@ -97,5 +100,11 @@ describe("Dashboard de escuela", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancelar cambio" }))
     fireEvent.click(screen.getAllByRole("button", { name: "Cancelar cambio" }).at(-1)!)
     await waitFor(() => expect(posts).toEqual(["/operators/surf_school/1/change-request/cancel"]))
+  })
+
+  it("sin sesión pide iniciarla ahí mismo (antes mandaba a la home)", () => {
+    loggedIn = false
+    render(<OperatorDashboardPage />)
+    expect(screen.getByText(/«Panel de tu servicio» es parte de tu cuenta/)).toBeTruthy()
   })
 })

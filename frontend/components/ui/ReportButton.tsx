@@ -121,7 +121,7 @@ export default function ReportButton({ targetKind, targetId, what, label = "Repo
         />
       </ConfirmModal>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="reportar" />}
     </>
   )
 }

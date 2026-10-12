@@ -136,7 +136,7 @@ export default function RouteTrack({ routeId, routeName, routeSlug, track, pendi
         )}
       </ConfirmModal>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="subir el recorrido" />}
     </div>
   )
 }

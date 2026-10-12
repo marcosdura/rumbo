@@ -141,7 +141,7 @@ export default function ItemPhotos({ photos, slots, target, targetId, spotId, na
       </ConfirmModal>
 
       {galleryIndex !== null && <Gallery images={photos} name={name} startIndex={galleryIndex} onClose={() => setGalleryIndex(null)} />}
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="subir fotos" />}
     </div>
   )
 }

@@ -486,7 +486,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         )}
       </div>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="dejar tu reseña" />}
 
       <ConfirmModal
         open={deleteTargetId !== null}

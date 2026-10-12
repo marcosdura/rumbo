@@ -17,15 +17,11 @@ import { signIn } from "next-auth/react"
 
 type Options = {
   callbackUrl?: string
-  // Solo AuthModal ofrece la opción; el resto de las pantallas mantiene la
-  // sesión, que es el default.
-  rememberMe?: boolean
 }
 
-export function signInWithGoogle({ callbackUrl, rememberMe }: Options = {}) {
-  if (rememberMe !== undefined) {
-    localStorage.setItem("rumbo_remember_me", rememberMe ? "true" : "false")
-  }
+export function signInWithGoogle({ callbackUrl }: Options = {}) {
+  // Restos de "mantener sesión iniciada", que ya no existe (la sesión dura 7 días).
+  localStorage.removeItem("rumbo_remember_me")
 
   // Aceptación implícita de los términos: es el único mecanismo del sitio.
   localStorage.setItem("rumbo_terms_accepted", "true")

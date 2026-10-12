@@ -45,9 +45,11 @@ describe("Lugares que administrás", () => {
     expect(screen.getByRole("link", { name: "← Volver al perfil" }).getAttribute("href")).toBe("/profile")
   })
 
-  it("sin sesión vuelve al inicio", () => {
+  it("sin sesión pide iniciarla ahí mismo (antes mandaba a la home sin explicar)", () => {
     status = "unauthenticated"
     render(<ManagedPlacesPage />)
-    expect(pushed).toEqual(["/"])
+    expect(pushed).toEqual([])
+    expect(screen.getByRole("heading", { name: "Iniciá sesión para ver esta página" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Continuar con Google" })).toBeTruthy()
   })
 })

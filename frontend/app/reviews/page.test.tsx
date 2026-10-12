@@ -32,10 +32,12 @@ afterEach(() => {
 const load = async () => { render(<MyReviewsPage />); await act(() => Promise.resolve()) }
 
 describe("Mis reseñas", () => {
-  it("sin sesión vuelve al inicio, como las otras páginas del perfil", () => {
+  it("sin sesión pide iniciarla ahí mismo (antes mandaba a la home sin explicar)", () => {
     sessionState = { data: null, status: "unauthenticated" }
     render(<MyReviewsPage />)
-    expect(pushed).toEqual(["/"])
+    expect(pushed).toEqual([])
+    expect(screen.getByRole("heading", { name: "Iniciá sesión para ver esta página" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Continuar con Google" })).toBeTruthy()
     expect(calls).toEqual([])
   })
 

@@ -6,9 +6,10 @@
 // un solo Guardar, con aviso previo y la pantalla de carga mientras sube.
 import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
+import LoginRequired from "@/components/layout/LoginRequired"
 import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
@@ -32,7 +33,6 @@ type Staged = { file: File; url: string }
 export default function OperatorDashboardPage() {
   const { data: session, status } = useSession()
   const params = useParams()
-  const router = useRouter()
   const kind = params.kind as OperatorKind
   const operatorId = params.id as string
   const token = session?.id_token
@@ -60,10 +60,6 @@ export default function OperatorDashboardPage() {
 
   const base = `/operators/${kind}/${operatorId}`
 
-  useEffect(() => {
-    if (status === "loading") return
-    if (!session) router.push("/")
-  }, [session, status])
 
   async function load() {
     try {
@@ -175,6 +171,9 @@ export default function OperatorDashboardPage() {
   }
 
   const page = { minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }
+
+  // Sin sesión: pedirla y volver acá (antes mandaba a la home).
+  if (status === "unauthenticated") return <LoginRequired page="Panel de tu servicio" />
 
   if (loadError) {
     return (

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
+import LoginRequired from "@/components/layout/LoginRequired"
 import Link from "next/link"
 import { uploadImageToCloudinary, buildPublicId } from "@/lib/uploadImage"
 import Pill from "@/components/ui/Pill"
@@ -108,10 +109,6 @@ export default function SpotDashboardPage() {
     pets_allowed: null, reservation_required: null, cell_signal: null,
   })
 
-  useEffect(() => {
-    if (status === "loading") return
-    if (!session) { router.push("/"); return }
-  }, [session, status])
 
   useEffect(() => {
     if (!token) return
@@ -377,6 +374,9 @@ export default function SpotDashboardPage() {
       setPhotoLoading(false)
     }
   }
+
+  // Sin sesión: pedirla y volver acá (antes mandaba a la home).
+  if (status === "unauthenticated") return <LoginRequired page="Panel de tu lugar" />
 
   if (loadError) {
     return (
