@@ -17,7 +17,7 @@ function renderTab(displayed: AdminSpot[]) {
     displayed, pending: 1, rejected: 1, filter: "all", setFilter: vi.fn(),
     searchSpots: "", setSearchSpots: vi.fn(), sortBy: "date_desc", setSortBy: vi.fn(),
     loadError: null, loading: false, actionLoading: null,
-    onApprove: vi.fn(), onRejectRequest: vi.fn(), onEdit: vi.fn(), onDeleteRequest: vi.fn(),
+    onApprove: vi.fn(), onRejectRequest: vi.fn(), onEdit: vi.fn(), onDeleteRequest: vi.fn(), onApproveAllRequest: vi.fn(),
   }
   render(<SpotsTab {...props} />)
   return props

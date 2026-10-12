@@ -74,6 +74,13 @@ export default function AdminPage() {
   const [rejecting, setRejecting] = useState<{ type: RejectType; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
+  // Error de una acción (aprobar, reactivar, foto principal). Antes se
+  // ignoraban: la pantalla mostraba el cambio aunque el backend fallara.
+  const [notice, setNotice] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  // "Aprobar todos": pide confirmación antes.
+  const [approveAll, setApproveAll] = useState<AdminSpot[] | null>(null)
+  const [approvingAll, setApprovingAll] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -223,9 +230,23 @@ export default function AdminPage() {
     setRejectError(null)
   }
 
-  async function handleApprove(id: number, approved: boolean) {
+  // El motivo del backend sirve si es un 4xx (ej. 409 "ya se resolvió"); un
+  // 500 o un error de red dicen "Error 500": ahí va el texto propio.
+  const errorText = (e: unknown, fallback: string) =>
+    (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 422 ? e.message : fallback)
+  const spotName = (id: number) => spots.find(s => s.id === id)?.name ?? "el lugar"
+
+  // true si se pudo.
+  async function handleApprove(id: number, approved: boolean): Promise<boolean> {
     setActionLoading(id)
-    await api.patch(`/admin/spots/${id}/approve`, undefined, { token, params: { approved } }).catch(() => {})
+    setNotice(null)
+    try {
+      await api.patch(`/admin/spots/${id}/approve`, undefined, { token, params: { approved } })
+    } catch (e) {
+      setNotice(errorText(e, `No se pudo ${approved ? "aprobar" : "desaprobar"} «${spotName(id)}». Intentá de nuevo.`))
+      setActionLoading(null)
+      return false
+    }
     setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: approved } : s))
     // Desaprobar un spot vuelca su pedido pendiente sobre el spot (backend,
     // approve_spot): ya no queda nada que revisar en "Cambios pendientes".
@@ -234,11 +255,31 @@ export default function AdminPage() {
       await refreshSpots().catch(() => {})
     }
     setActionLoading(null)
+    return true
   }
 
+  // Aprueba uno por uno; si uno falla, se frena ahí (con el aviso de cuál).
+  async function handleApproveAll() {
+    if (!approveAll) return
+    setApprovingAll(true)
+    for (const s of approveAll) {
+      if (!(await handleApprove(s.id, true))) break
+    }
+    setApprovingAll(false)
+    setApproveAll(null)
+  }
+
+  // Si falla, el modal queda abierto con el error.
   async function handleDelete(id: number) {
     setActionLoading(id)
-    await api.del(`/spots/${id}`, { token }).catch(() => {})
+    setDeleteError(null)
+    try {
+      await api.del(`/spots/${id}`, { token })
+    } catch (e) {
+      setDeleteError(errorText(e, "No se pudo eliminar. Intentá de nuevo."))
+      setActionLoading(null)
+      return
+    }
     setSpots(prev => prev.filter(s => s.id !== id))
     setActionLoading(null)
     setDeleteConfirmId(null)
@@ -246,14 +287,26 @@ export default function AdminPage() {
 
   async function handleReactivate(id: number) {
     setActionLoading(id)
-    await api.patch(`/admin/spots/${id}/reactivate`, undefined, { token }).catch(() => {})
-    setSpots(prev => prev.map(s => s.id === id ? { ...s, owner_deleted_at: null } : s))
+    setNotice(null)
+    try {
+      await api.patch(`/admin/spots/${id}/reactivate`, undefined, { token })
+      setSpots(prev => prev.map(s => s.id === id ? { ...s, owner_deleted_at: null } : s))
+    } catch (e) {
+      setNotice(errorText(e, `No se pudo reactivar «${spotName(id)}». Intentá de nuevo.`))
+    }
     setActionLoading(null)
   }
 
   async function handleSetMainPhoto(spotId: number, publicId: string) {
     setPhotoLoading(true)
-    await api.patch(`/admin/spots/${spotId}/main-image`, { cloudinary_public_id: publicId }, { token }).catch(() => {})
+    setNotice(null)
+    try {
+      await api.patch(`/admin/spots/${spotId}/main-image`, { cloudinary_public_id: publicId }, { token })
+    } catch (e) {
+      setNotice(errorText(e, "No se pudo cambiar la foto principal. Intentá de nuevo."))
+      setPhotoLoading(false)
+      return
+    }
     setSpots(prev => prev.map(s => {
       if (s.id !== spotId) return s
       return {
@@ -373,6 +426,13 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {notice && (
+          <div role="alert" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "#fdf0f0", border: "1px solid #fecaca", color: "#7c1d1d", borderRadius: 12, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>
+            <span>{notice}</span>
+            <button type="button" onClick={() => setNotice(null)} aria-label="Cerrar aviso" style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", fontSize: 14 }}>✕</button>
+          </div>
+        )}
+
         {mode === "spots" && (
           <SpotsTab
             displayed={displayed}
@@ -390,7 +450,8 @@ export default function AdminPage() {
             onApprove={handleApprove}
             onRejectRequest={spot => openReject("spot", spot.id)}
             onEdit={setEditingSpot}
-            onDeleteRequest={setDeleteConfirmId}
+            onDeleteRequest={id => { setDeleteError(null); setDeleteConfirmId(id) }}
+            onApproveAllRequest={setApproveAll}
           />
         )}
 
@@ -480,7 +541,7 @@ export default function AdminPage() {
             loading={loading}
             actionLoading={actionLoading}
             onReactivate={handleReactivate}
-            onDeleteRequest={setDeleteConfirmId}
+            onDeleteRequest={id => { setDeleteError(null); setDeleteConfirmId(id) }}
           />
         )}
       </div>
@@ -491,8 +552,20 @@ export default function AdminPage() {
         message="Esta acción no se puede deshacer."
         confirmPhrase="CONFIRMAR"
         loading={actionLoading === deleteConfirmId}
+        error={deleteError}
         onCancel={() => setDeleteConfirmId(null)}
         onConfirm={() => deleteConfirmId !== null && handleDelete(deleteConfirmId)}
+      />
+
+      <ConfirmModal
+        open={approveAll !== null}
+        title={`¿Aprobar ${approveAll?.length ?? 0} lugares?`}
+        message="Se publican todos los que estás viendo en la lista. Si alguno falla, se frena ahí."
+        confirmLabel="Aprobar todos"
+        loading={approvingAll}
+        loadingLabel="Aprobando..."
+        onCancel={() => setApproveAll(null)}
+        onConfirm={handleApproveAll}
       />
 
       <ConfirmModal

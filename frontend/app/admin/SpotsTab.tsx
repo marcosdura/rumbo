@@ -17,7 +17,9 @@ interface Props {
   loadError: string | null
   loading: boolean
   actionLoading: number | null
-  onApprove: (id: number, approved: boolean) => Promise<void>
+  onApprove: (id: number, approved: boolean) => Promise<boolean>
+  // "Aprobar todos" (los que se ven): la página pide confirmación.
+  onApproveAllRequest: (spots: AdminSpot[]) => void
   // Rechazar (nuevo) o despublicar (aprobado): pide motivo.
   onRejectRequest: (spot: AdminSpot) => void
   onEdit: (spot: { id: number; name: string; description: string }) => void
@@ -34,6 +36,7 @@ const STATUS_PILL = {
 export default function SpotsTab({
   displayed, pending, rejected, filter, setFilter, searchSpots, setSearchSpots,
   sortBy, setSortBy, loadError, loading, actionLoading, onApprove, onRejectRequest, onEdit, onDeleteRequest,
+  onApproveAllRequest,
 }: Props) {
   return (
     <div>
@@ -71,11 +74,7 @@ export default function SpotsTab({
       {filter === "pending" && displayed.length > 1 && (
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
           <button
-            onClick={async () => {
-              for (const s of displayed) {
-                await onApprove(s.id, true)
-              }
-            }}
+            onClick={() => onApproveAllRequest(displayed)}
             style={{ padding: "7px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "var(--primary)", color: "#fff", border: "none" }}
           >
             Aprobar todos ({displayed.length})
@@ -161,7 +160,9 @@ export default function SpotsTab({
                     Ver
                   </a>
                   <button
-                    onClick={() => navigator.clipboard.writeText(`https://rumboapp.uy/spots/${spot.slug ?? spot.id}`)}
+                    // El dominio del sitio (antes decía rumboapp.uy, que no es el nuestro).
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/spots/${spot.slug ?? spot.id}`)}
+                    aria-label="Copiar link"
                     className="action-btn-sm"
                     style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)" }}
                   >
