@@ -40,8 +40,11 @@ export default async function Home() {
       <Navbar />
 
       {/* Hero — scrollea con la página */}
-      <div id="hero-section" style={{ background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "24px 24px 52px", textAlign: "center" }}>
+      <div id="hero-section" style={{ background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "0 0 52px", textAlign: "center" }}>
+        {/* La misma barra que el Navbar (con su propio margen): no salta al
+            venir de otra página ni cuando aparece el Navbar fijo. */}
         <HeroHeader />
+        <div style={{ padding: "16px 24px 0" }}>
 
         <p className="fade-up fade-up-1" style={{
           fontFamily: "var(--font-dm-sans), sans-serif",
@@ -73,6 +76,7 @@ export default async function Home() {
 
         <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center" }}>
           <SearchBar hero />
+        </div>
         </div>
       </div>
 

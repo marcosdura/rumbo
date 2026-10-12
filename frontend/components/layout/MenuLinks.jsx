@@ -7,14 +7,16 @@ import Link from "next/link"
 import { signOut } from "next-auth/react"
 
 export const MENU_LINKS = [
-  { href: "/", icon: "🏠", label: "Home" },
+  { href: "/", icon: "🏠", label: "Inicio" },
   { href: "/agregar-lugar", icon: "➕", label: "Agregar lugar" },
 ]
 
 export const USER_LINKS = [
   { href: "/profile", icon: "👤", label: "Mi perfil" },
   { href: "/favorites", icon: "❤️", label: "Favoritos" },
-  { href: "/reviews", icon: "💬", label: "Mis reviews" },
+  { href: "/reviews", icon: "💬", label: "Mis reseñas" },
+  // Antes solo se llegaba con la campanita.
+  { href: "/notificaciones", icon: "🔔", label: "Notificaciones" },
 ]
 
 export default function MenuLinks({ session, isLoggedIn, Avatar, pathname, onClose, onSignIn }) {

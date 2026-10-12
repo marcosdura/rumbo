@@ -1,0 +1,340 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { useSession } from "next-auth/react"
+import AuthModal from "@/components/layout/AuthModal"
+import NotificationBell from "@/components/layout/NotificationBell"
+import MenuLinks from "@/components/layout/MenuLinks"
+
+// La barra de arriba: logo, Agregar lugar, campana, sesión y menú. La usan el
+// Navbar (fija, en todas las páginas) y el hero de la home. Antes el hero
+// tenía su propia copia, con otros márgenes: al pasar de una página a la home
+// la barra se corría. Al ser el mismo componente con los mismos estilos, no
+// puede volver a pasar.
+//
+// menuOpen lo maneja quien la usa (el Navbar cierra el menú al abrir el
+// buscador). center: lo del medio (el buscador chico del Navbar).
+// beforeActions: antes de los botones (la lupa del Navbar en mobile).
+
+export function Avatar({ user, size = 32 }) {
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?"
+
+  if (user?.image) {
+    return (
+      <img
+        src={user.image}
+        alt={user.name ?? "Usuario"}
+        width={size}
+        height={size}
+        referrerPolicy="no-referrer"
+        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", border: "2px solid #b7dfc8" }}
+      />
+    )
+  }
+
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.38, fontWeight: 600, color: "#fff",
+      border: "2px solid #b7dfc8", flexShrink: 0,
+    }}>
+      {initials}
+    </div>
+  )
+}
+
+export default function NavBarContent({ menuOpen, setMenuOpen, pathname, center = null, beforeActions = null }) {
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const menuRef = useRef(null)
+  const menuButtonRef = useRef(null)
+  const { data: session, status } = useSession()
+  const isLoggedIn = status === "authenticated"
+
+  useEffect(() => {
+    if (!menuOpen) return
+    // Click afuera del menú (y de su botón) lo cierra.
+    const onClick = (e) => {
+      if (menuRef.current?.contains(e.target) || menuButtonRef.current?.contains(e.target)) return
+      setMenuOpen(false)
+    }
+    // Escape lo cierra y devuelve el foco al botón.
+    const onKey = (e) => {
+      if (e.key !== "Escape") return
+      setMenuOpen(false)
+      menuButtonRef.current?.focus()
+    }
+    document.addEventListener("mousedown", onClick)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onClick)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [menuOpen, setMenuOpen])
+
+  return (
+    <div className="nav-bar">
+      <style>{`
+        /* La barra: igual en el Navbar y en el hero de la home (misma
+           altura y posición, para que no salte al pasar de una a otra). */
+        .nav-bar {
+          font-family: var(--font-dm-sans), sans-serif;
+          position: relative;
+          padding: 20px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+
+        .navbar-logo {
+          font-family: var(--font-playfair-display), serif;
+          font-weight: 600;
+          font-size: 22px;
+          color: #fff;
+          text-decoration: none;
+          letter-spacing: -0.01em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          transition: opacity 0.2s;
+          flex-shrink: 0;
+          position: relative;
+          z-index: 1;
+        }
+        .navbar-logo:hover { opacity: 0.7; }
+
+        /* ── Botones icon compartidos ── */
+        .icon-btn {
+          width: 36px; height: 36px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.18);
+          background: rgba(255,255,255,0.12);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; flex-shrink: 0;
+          position: relative; z-index: 1;
+          transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                      border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
+        .icon-btn.is-active, .icon-btn.is-open {
+          background: rgba(255,255,255,0.25);
+          border-color: rgba(255,255,255,0.35);
+        }
+        .icon-btn.is-active:hover, .icon-btn.is-open:hover {
+          background: rgba(255,255,255,0.3);
+          transform: translateY(-1px);
+        }
+
+        /* Líneas — position absolute para X perfectamente centrada */
+        .icon-line {
+          position: absolute;
+          width: 14px; height: 1.5px;
+          border-radius: 2px;
+          background: #fff;
+          transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+                      opacity  0.25s cubic-bezier(0.22, 1, 0.36, 1),
+                      background 0.2s;
+        }
+        .icon-btn.is-active .icon-line,
+        .icon-btn.is-open   .icon-line { background: #fff; }
+
+        /* Posición por defecto (hamburguesa) */
+        .icon-line:nth-child(1) { transform: translateY(-5px); }
+        .icon-line:nth-child(2) { }
+        .icon-line:nth-child(3) { transform: translateY(5px); }
+
+        /* X — sin translateY, ambas líneas al centro */
+        .icon-btn.is-active .icon-line:nth-child(1),
+        .icon-btn.is-open   .icon-line:nth-child(1) { transform: rotate(45deg); }
+        .icon-btn.is-active .icon-line:nth-child(2),
+        .icon-btn.is-open   .icon-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .icon-btn.is-active .icon-line:nth-child(3),
+        .icon-btn.is-open   .icon-line:nth-child(3) { transform: rotate(-45deg); }
+        /* Con fondo claro al abrir, las líneas se oscurecen para contrastar */
+        .icon-btn.is-active .icon-line,
+        .icon-btn.is-open   .icon-line { background: var(--primary-dark); }
+
+        /* Dropdown menu */
+        .dropdown-menu {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 24px;
+          width: 230px;
+          background: #fff;
+          border: 1px solid var(--border);
+          border-radius: 18px;
+          padding: 6px;
+          z-index: 200;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.09);
+          transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                      visibility 0.2s;
+        }
+        .dropdown-menu.is-open   { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .dropdown-menu.is-closed { opacity: 0; transform: translateY(-6px); pointer-events: none; visibility: hidden; }
+
+        .menu-link {
+          display: flex; align-items: center; gap: 10px;
+          padding: 9px 12px; border-radius: 10px;
+          text-decoration: none; font-size: 14px; font-weight: 400;
+          color: #3d3d3a;
+          transition: background 0.15s, color 0.15s;
+          cursor: pointer; border: none; background: none;
+          width: 100%; text-align: left;
+          font-family: var(--font-dm-sans), sans-serif;
+        }
+        .menu-link:hover  { background: #f7f5f0; color: #1b1b19; }
+        .menu-link.active { background: #e8f5ee; color: var(--primary-dark); font-weight: 600; }
+        .menu-link.danger { color: var(--danger); }
+        .menu-link.danger:hover { background: #fdf0f0; color: #b91c1c; }
+
+        .menu-link-icon { font-size: 15px; width: 20px; text-align: center; }
+        .menu-divider   { height: 1px; background: #ede9e1; margin: 4px 6px; }
+
+        .menu-user-info  { padding: 10px 12px 8px; display: flex; align-items: center; gap: 10px; }
+        .menu-user-name  { font-size: 13px; font-weight: 600; color: #1b1b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .menu-user-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+        .signin-btn {
+          display: flex; align-items: center; gap: 10px;
+          padding: 9px 12px; border-radius: 10px;
+          font-size: 14px; font-weight: 600;
+          color: var(--primary-dark); background: #e8f5ee; border: 1px solid #b7dfc8;
+          width: 100%; text-align: left; cursor: pointer;
+          font-family: var(--font-dm-sans), sans-serif;
+          transition: background 0.15s;
+        }
+        .signin-btn:hover { background: #d8f3dc; }
+
+        .avatar-btn {
+          background: none; border: none; padding: 0;
+          cursor: pointer; display: flex; align-items: center;
+          border-radius: 50%;
+          transition: transform 0.2s, opacity 0.2s;
+          position: relative; z-index: 1;
+        }
+        .avatar-btn:hover { transform: translateY(-1px); opacity: 0.85; }
+
+        /* Botón iniciar sesión — desktop */
+        .signin-nav-btn {
+          font-family: var(--font-dm-sans), sans-serif;
+          font-size: 13px; font-weight: 600;
+          color: #fff;
+          background: rgba(255,255,255,0.15);
+          border: 1px solid rgba(255,255,255,0.3);
+          padding: 7px 16px;
+          border-radius: 10px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.2s;
+          position: relative; z-index: 1;
+        }
+        .signin-nav-btn:hover { background: rgba(255,255,255,0.25); }
+        /* Mismo estilo que "Iniciar sesión": es la otra acción principal. */
+        .addplace-nav-btn { text-decoration: none; display: inline-flex; align-items: center; }
+
+        /* Mientras se sabe si hay sesión: el lugar del avatar, vacío. */
+        .nav-session-slot { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.12); flex-shrink: 0; }
+
+        /* Avatar genérico — solo mobile */
+        .signin-avatar-mobile { display: none; }
+
+        @media (max-width: 768px) {
+          .signin-nav-btn        { display: none; }
+          .addplace-nav-btn      { display: none; }
+          .signin-avatar-mobile  { display: flex; }
+        }
+
+        .overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.12);
+          z-index: 150;
+          animation: overlayIn 0.2s ease forwards;
+        }
+        @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+        @media (max-width: 768px) {
+          .nav-bar        { padding: 14px 16px; }
+          .navbar-logo    { font-size: 19px; gap: 8px; }
+          .dropdown-menu  { right: 16px; }
+        }
+`}</style>
+
+      <Link
+        href="/"
+        className="navbar-logo"
+        onClick={(e) => {
+          if (pathname === "/") {
+            e.preventDefault()
+            window.scrollTo({ top: 0, behavior: "smooth" })
+          }
+        }}
+      >
+        <Image src="/RumboLogo.png" alt="Rumbo logo" width={36} height={36} className="object-contain" style={{ borderRadius: 8 }} />
+        <span style={{ fontFamily: "var(--font-nunito)", fontWeight: 600 }}>rumbo</span>
+      </Link>
+
+      {center}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {beforeActions}
+
+        {/* Agregar lugar — desktop (en mobile va en el menú). */}
+        <Link href="/agregar-lugar" className="signin-nav-btn addplace-nav-btn">
+          ＋ Agregar lugar
+        </Link>
+
+        {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
+
+        {status === "loading" ? (
+          <span className="nav-session-slot" aria-hidden="true" />
+        ) : isLoggedIn ? (
+          <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">
+            <Avatar user={session.user} />
+          </Link>
+        ) : (
+          <>
+            <button className="signin-nav-btn" onClick={() => setAuthModalOpen(true)}>
+              Iniciar sesión
+            </button>
+            <button className="avatar-btn signin-avatar-mobile" onClick={() => setAuthModalOpen(true)} aria-label="Iniciar sesión">
+              <Avatar user={null} />
+            </button>
+          </>
+        )}
+
+        <button
+          ref={menuButtonRef}
+          onClick={() => setMenuOpen(!menuOpen)}
+          className={`icon-btn ${menuOpen ? "is-open" : ""}`}
+          aria-label="Menú"
+          aria-expanded={menuOpen}
+          aria-controls="nav-menu"
+        >
+          <span className="icon-line" />
+          <span className="icon-line" />
+          <span className="icon-line" />
+        </button>
+      </div>
+
+      {menuOpen && <div className="overlay" onClick={() => setMenuOpen(false)} />}
+
+      <div ref={menuRef} id="nav-menu" className={`dropdown-menu ${menuOpen ? "is-open" : "is-closed"}`}>
+        <MenuLinks
+          session={session} isLoggedIn={isLoggedIn} Avatar={Avatar} pathname={pathname}
+          onClose={() => setMenuOpen(false)} onSignIn={() => setAuthModalOpen(true)}
+        />
+      </div>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
+    </div>
+  )
+}

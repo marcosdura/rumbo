@@ -21,6 +21,7 @@ describe("Navbar", () => {
   it("ofrece Agregar lugar sin sesión (en el botón y en el menú)", () => {
     session = null
     render(<Navbar />)
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }))
     const links = screen.getAllByRole("link", { name: /Agregar lugar/ })
     expect(links).toHaveLength(2)
     links.forEach(link => expect(link.getAttribute("href")).toBe("/agregar-lugar"))
@@ -29,6 +30,7 @@ describe("Navbar", () => {
   it("y también con sesión", () => {
     session = { user: { name: "Ana", email: "ana@test.com", image: null } }
     render(<Navbar />)
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }))
     expect(screen.getAllByRole("link", { name: /Agregar lugar/ })).toHaveLength(2)
   })
 
@@ -63,5 +65,35 @@ describe("Navbar", () => {
     expect(screen.queryByRole("link", { name: "Mi perfil" })).toBeNull()
     expect(container.querySelector(".nav-session-slot")).toBeTruthy()
     loading = false
+  })
+
+  it("menú cerrado: fuera del teclado y de los lectores de pantalla; el botón dice si está abierto", () => {
+    session = null
+    render(<Navbar />)
+    const button = screen.getByRole("button", { name: "Menú" })
+    expect(button.getAttribute("aria-expanded")).toBe("false")
+    expect(screen.queryByRole("link", { name: /Inicio/ })).toBeNull()
+    fireEvent.click(button)
+    expect(button.getAttribute("aria-expanded")).toBe("true")
+    expect(screen.getByRole("link", { name: /Inicio/ })).toBeTruthy()
+  })
+
+  it("Escape cierra el menú y devuelve el foco al botón", () => {
+    session = null
+    render(<Navbar />)
+    const button = screen.getByRole("button", { name: "Menú" })
+    fireEvent.click(button)
+    fireEvent.keyDown(document, { key: "Escape" })
+    expect(button.getAttribute("aria-expanded")).toBe("false")
+    expect(document.activeElement).toBe(button)
+  })
+
+  it("el menú: Inicio, Mis reseñas y Notificaciones (antes solo con la campanita)", () => {
+    session = { user: { name: "Ana", email: "ana@test.com", image: null } }
+    render(<Navbar />)
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }))
+    expect(screen.getByRole("link", { name: /Inicio/ }).getAttribute("href")).toBe("/")
+    expect(screen.getByRole("link", { name: /Mis reseñas/ }).getAttribute("href")).toBe("/reviews")
+    expect(screen.getByRole("link", { name: /Notificaciones/ }).getAttribute("href")).toBe("/notificaciones")
   })
 })

@@ -1,59 +1,18 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
-import { useSession } from "next-auth/react"
 import SearchBar from "@/components/spots/SearchBar"
-import Image from "next/image"
-import AuthModal from "@/components/layout/AuthModal"
-import NotificationBell from "@/components/layout/NotificationBell"
-import MenuLinks from "@/components/layout/MenuLinks"
+import NavBarContent from "@/components/layout/NavBarContent"
 
-function Avatar({ user, size = 28 }) {
-  const initials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
-    : "?"
-
-  if (user?.image) {
-    return (
-      <img
-        src={user.image}
-        alt={user.name ?? "Usuario"}
-        width={size}
-        height={size}
-        referrerPolicy="no-referrer"
-        style={{
-          width: size, height: size,
-          borderRadius: "50%", objectFit: "cover",
-          border: "2px solid #b7dfc8",
-        }}
-      />
-    )
-  }
-
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.38, fontWeight: 600, color: "#fff",
-      border: "2px solid #b7dfc8", flexShrink: 0,
-    }}>
-      {initials}
-    </div>
-  )
-}
-
+// La barra fija de todas las páginas: NavBarContent (la misma que el hero de
+// la home) más el buscador. En la home arranca oculta y aparece cuando el
+// hero sale de pantalla, en el mismo lugar donde estaba la del hero.
 function Navbar() {
-  const [menuOpen,      setMenuOpen]      = useState(false)
-  const [searchOpen,    setSearchOpen]    = useState(false)
-  const [heroGone,      setHeroGone]      = useState(false)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [menuOpen,   setMenuOpen]   = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [heroGone,   setHeroGone]   = useState(false)
   const pathname = usePathname()
-  const menuRef  = useRef()
-  const { data: session, status } = useSession()
-  const isLoggedIn = status === "authenticated"
   const isHome = pathname === "/"
 
   // Al cambiar de página: se cierran el menú y la búsqueda, y en la home el
@@ -80,20 +39,17 @@ function Navbar() {
     return () => observer.disconnect()
   }, [isHome, pathname])
 
+  // Escape cierra el buscador (el menú lo cierra NavBarContent).
   useEffect(() => {
-    const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
-
-  const anyOpen = menuOpen || searchOpen
+    if (!searchOpen) return
+    const onKey = (e) => { if (e.key === "Escape") setSearchOpen(false) }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [searchOpen])
 
   return (
-    <>
+    <nav className={`navbar-root${isHome ? ` navbar-home-fixed${heroGone ? " navbar-visible" : ""}` : ""}`}>
       <style>{`
-
         .navbar-root {
           font-family: var(--font-dm-sans), sans-serif;
           background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%);
@@ -101,86 +57,13 @@ function Navbar() {
           position: sticky;
           top: 0;
           z-index: 100;
-          padding: 20px 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
         }
-
-        .navbar-logo {
-          font-family: var(--font-playfair-display), serif;
-          font-weight: 600;
-          font-size: 22px;
-          color: #fff;
-          text-decoration: none;
-          letter-spacing: -0.01em;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: opacity 0.2s;
-          flex-shrink: 0;
-          position: relative;
-          z-index: 1;
-        }
-        .navbar-logo:hover { opacity: 0.7; }
 
         .navbar-center {
           position: absolute;
           left: 50%;
           transform: translateX(-50%);
         }
-
-        /* ── Botones icon compartidos ── */
-        .icon-btn {
-          width: 36px; height: 36px;
-          border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.18);
-          background: rgba(255,255,255,0.12);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; flex-shrink: 0;
-          position: relative; z-index: 1;
-          transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                      border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .icon-btn:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
-        .icon-btn.is-active, .icon-btn.is-open {
-          background: rgba(255,255,255,0.25);
-          border-color: rgba(255,255,255,0.35);
-        }
-        .icon-btn.is-active:hover, .icon-btn.is-open:hover {
-          background: rgba(255,255,255,0.3);
-          transform: translateY(-1px);
-        }
-
-        /* Líneas — position absolute para X perfectamente centrada */
-        .icon-line {
-          position: absolute;
-          width: 14px; height: 1.5px;
-          border-radius: 2px;
-          background: #fff;
-          transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-                      opacity  0.25s cubic-bezier(0.22, 1, 0.36, 1),
-                      background 0.2s;
-        }
-        .icon-btn.is-active .icon-line,
-        .icon-btn.is-open   .icon-line { background: #fff; }
-
-        /* Posición por defecto (hamburguesa) */
-        .icon-line:nth-child(1) { transform: translateY(-5px); }
-        .icon-line:nth-child(2) { }
-        .icon-line:nth-child(3) { transform: translateY(5px); }
-
-        /* X — sin translateY, ambas líneas al centro */
-        .icon-btn.is-active .icon-line:nth-child(1),
-        .icon-btn.is-open   .icon-line:nth-child(1) { transform: rotate(45deg); }
-        .icon-btn.is-active .icon-line:nth-child(2),
-        .icon-btn.is-open   .icon-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
-        .icon-btn.is-active .icon-line:nth-child(3),
-        .icon-btn.is-open   .icon-line:nth-child(3) { transform: rotate(-45deg); }
-        /* Con fondo claro al abrir, las líneas se oscurecen para contrastar */
-        .icon-btn.is-active .icon-line,
-        .icon-btn.is-open   .icon-line { background: var(--primary-dark); }
 
         /* Ícono SVG del botón de búsqueda */
         .search-svg {
@@ -218,104 +101,6 @@ function Navbar() {
         .navbar-search-dropdown.is-open   { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .navbar-search-dropdown.is-closed { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 
-        /* Dropdown menu */
-        .dropdown-menu {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 24px;
-          width: 230px;
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 18px;
-          padding: 6px;
-          z-index: 200;
-          box-shadow: 0 8px 28px rgba(0,0,0,0.09);
-          transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .dropdown-menu.is-open   { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .dropdown-menu.is-closed { opacity: 0; transform: translateY(-6px); pointer-events: none; }
-
-        .menu-link {
-          display: flex; align-items: center; gap: 10px;
-          padding: 9px 12px; border-radius: 10px;
-          text-decoration: none; font-size: 14px; font-weight: 400;
-          color: #3d3d3a;
-          transition: background 0.15s, color 0.15s;
-          cursor: pointer; border: none; background: none;
-          width: 100%; text-align: left;
-          font-family: var(--font-dm-sans), sans-serif;
-        }
-        .menu-link:hover  { background: #f7f5f0; color: #1b1b19; }
-        .menu-link.active { background: #e8f5ee; color: var(--primary-dark); font-weight: 600; }
-        .menu-link.danger { color: var(--danger); }
-        .menu-link.danger:hover { background: #fdf0f0; color: #b91c1c; }
-
-        .menu-link-icon { font-size: 15px; width: 20px; text-align: center; }
-        .menu-divider   { height: 1px; background: #ede9e1; margin: 4px 6px; }
-
-        .menu-user-info  { padding: 10px 12px 8px; display: flex; align-items: center; gap: 10px; }
-        .menu-user-name  { font-size: 13px; font-weight: 600; color: #1b1b19; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .menu-user-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-
-        .signin-btn {
-          display: flex; align-items: center; gap: 10px;
-          padding: 9px 12px; border-radius: 10px;
-          font-size: 14px; font-weight: 600;
-          color: var(--primary-dark); background: #e8f5ee; border: 1px solid #b7dfc8;
-          width: 100%; text-align: left; cursor: pointer;
-          font-family: var(--font-dm-sans), sans-serif;
-          transition: background 0.15s;
-        }
-        .signin-btn:hover { background: #d8f3dc; }
-
-        .avatar-btn {
-          background: none; border: none; padding: 0;
-          cursor: pointer; display: flex; align-items: center;
-          border-radius: 50%;
-          transition: transform 0.2s, opacity 0.2s;
-          position: relative; z-index: 1;
-        }
-        .avatar-btn:hover { transform: translateY(-1px); opacity: 0.85; }
-
-        /* Botón iniciar sesión — desktop */
-        .signin-nav-btn {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 13px; font-weight: 600;
-          color: #fff;
-          background: rgba(255,255,255,0.15);
-          border: 1px solid rgba(255,255,255,0.3);
-          padding: 7px 16px;
-          border-radius: 10px;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.2s;
-          position: relative; z-index: 1;
-        }
-        .signin-nav-btn:hover { background: rgba(255,255,255,0.25); }
-        /* Mismo estilo que "Iniciar sesión": es la otra acción principal. */
-        .addplace-nav-btn { text-decoration: none; display: inline-flex; align-items: center; }
-
-        /* Mientras se sabe si hay sesión: el lugar del avatar, vacío. */
-        .nav-session-slot { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.12); flex-shrink: 0; }
-
-        /* Avatar genérico — solo mobile */
-        .signin-avatar-mobile { display: none; }
-
-        @media (max-width: 768px) {
-          .signin-nav-btn        { display: none; }
-          .addplace-nav-btn      { display: none; }
-          .signin-avatar-mobile  { display: flex; }
-        }
-
-        .overlay {
-          position: fixed; inset: 0;
-          background: rgba(0,0,0,0.12);
-          z-index: 150;
-          animation: overlayIn 0.2s ease forwards;
-        }
-        @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
-
         /* ── Home: fixed, oculto sobre el hero, visible cuando el hero sale ── */
         .navbar-home-fixed {
           position: fixed;
@@ -331,54 +116,30 @@ function Navbar() {
           transform: translateY(0);
         }
 
-        /* ── Responsive ── */
+
         @media (max-width: 768px) {
-          .navbar-root            { padding: 14px 16px; }
           .navbar-center          { display: none; }
           .navbar-search-btn      { display: flex; }
           .navbar-search-dropdown { display: block; }
-          .navbar-logo            { font-size: 19px; gap: 8px; }
-          .dropdown-menu          { right: 16px; }
         }
       `}</style>
 
-      <nav className={`navbar-root${isHome ? ` navbar-home-fixed${heroGone ? " navbar-visible" : ""}` : ""}`}>
-
-        {/* Logo */}
-        <Link
-          href="/"
-          className="navbar-logo"
-          onClick={(e) => {
-            if (pathname === "/") {
-              e.preventDefault()
-              window.scrollTo({ top: 0, behavior: "smooth" })
-            }
-          }}
-        >
-        <Image 
-          src="/RumboLogo.png" 
-          alt="Rumbo logo" 
-          width={36} 
-          height={36} 
-          className="object-contain" 
-          style={{ borderRadius: 8 }} 
-        />
-          <span style={{ fontFamily: "var(--font-nunito)", fontWeight: 600 }}>rumbo</span>
-        </Link>
-
-        {/* Centro: SearchBar (desktop only) */}
-        <div className="navbar-center">
-          <SearchBar compact />
-        </div>
-
-        {/* Derecha */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-
-          {/* Lupa — solo mobile */}
+      <NavBarContent
+        menuOpen={menuOpen}
+        setMenuOpen={(open) => { setMenuOpen(open); if (open) setSearchOpen(false) }}
+        pathname={pathname}
+        center={
+          <div className="navbar-center">
+            <SearchBar compact />
+          </div>
+        }
+        beforeActions={
+          /* Lupa — solo mobile */
           <button
             className={`icon-btn navbar-search-btn ${searchOpen ? "is-active" : ""}`}
             onClick={() => { setSearchOpen(!searchOpen); setMenuOpen(false) }}
             aria-label="Buscar"
+            aria-expanded={searchOpen}
           >
             <span className="icon-line" />
             <span className="icon-line" />
@@ -387,73 +148,16 @@ function Navbar() {
               <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </button>
+        }
+      />
 
-          {/* Agregar lugar — desktop (en mobile va en el menú). Antes el único
-              link a /agregar-lugar estaba en el panel admin. */}
-          <Link href="/agregar-lugar" className="signin-nav-btn addplace-nav-btn">
-            ＋ Agregar lugar
-          </Link>
+      {searchOpen && <div className="overlay" onClick={() => setSearchOpen(false)} />}
 
-          {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
-
-          {status === "loading" ? (
-            <span className="nav-session-slot" aria-hidden="true" />
-          ) : isLoggedIn ? (
-            <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">
-              <Avatar user={session.user} size={32} />
-            </Link>
-          ) : (
-            <>
-              <button
-                className="signin-nav-btn"
-                onClick={() => setAuthModalOpen(true)}
-              >
-                Iniciar sesión
-              </button>
-              <button
-                className="avatar-btn signin-avatar-mobile"
-                onClick={() => setAuthModalOpen(true)}
-                aria-label="Iniciar sesión"
-              >
-                <Avatar user={null} size={32} />
-              </button>
-            </>
-          )}
-
-          {/* Hamburguesa */}
-          <button
-            onClick={() => { setMenuOpen(!menuOpen); setSearchOpen(false) }}
-            className={`icon-btn ${menuOpen ? "is-open" : ""}`}
-            aria-label="Menú"
-          >
-            <span className="icon-line" />
-            <span className="icon-line" />
-            <span className="icon-line" />
-          </button>
-        </div>
-
-        {/* Overlay compartido */}
-        {anyOpen && (
-          <div className="overlay" onClick={() => { setMenuOpen(false); setSearchOpen(false) }} />
-        )}
-
-        {/* Search dropdown (mobile) */}
-        <div className={`navbar-search-dropdown ${searchOpen ? "is-open" : "is-closed"}`}>
-          <SearchBar onSearch={() => setSearchOpen(false)} />
-        </div>
-
-        {/* Menu dropdown */}
-        <div ref={menuRef} className={`dropdown-menu ${menuOpen ? "is-open" : "is-closed"}`}>
-          <MenuLinks
-            session={session} isLoggedIn={isLoggedIn} Avatar={Avatar} pathname={pathname}
-            onClose={() => setMenuOpen(false)} onSignIn={() => setAuthModalOpen(true)}
-          />
-        </div>
-
-      </nav>
-
-      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
-    </>
+      {/* Search dropdown (mobile) */}
+      <div className={`navbar-search-dropdown ${searchOpen ? "is-open" : "is-closed"}`}>
+        <SearchBar onSearch={() => setSearchOpen(false)} />
+      </div>
+    </nav>
   )
 }
 

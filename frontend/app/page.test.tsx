@@ -7,7 +7,7 @@ import type { HomeData } from "@/lib/home"
 let home: HomeData | null = null
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
-vi.mock("@/components/layout/HeroHeader", () => ({ default: () => null }))
+vi.mock("@/components/layout/HeroHeader", () => ({ default: () => <div data-testid="hero-bar" /> }))
 vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 vi.mock("@/components/spots/SpotSection", () => ({
   default: ({ title, spots }: { title: string; spots: unknown[] }) => <h2 data-spots={spots.length}>{title}</h2>,
@@ -64,5 +64,13 @@ describe("Home", () => {
     const { readFileSync } = await import("node:fs")
     const layout = readFileSync("app/layout.tsx", "utf-8")
     expect(layout).not.toMatch(/getServerSession|cookies\(|headers\(/)
+  })
+
+  it("la barra va pegada arriba del hero, sin padding extra (si no, se corre respecto del Navbar)", async () => {
+    home = { stats: { spots: 1, departments: 1 }, sections: [] }
+    render(await Home())
+    const hero = document.getElementById("hero-section")!
+    expect(hero.firstElementChild).toBe(screen.getByTestId("hero-bar"))
+    expect(hero.style.padding).toBe("0px 0px 52px")
   })
 })
