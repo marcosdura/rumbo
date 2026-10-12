@@ -3,6 +3,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
+import { isNotFound } from "@/lib/notFound"
 import { operatorDescription, operatorShareImage, kayakInfoRows } from "@/lib/operatorPage"
 import type { PublicKayak, ReviewSummary } from "@/lib/types"
 
@@ -42,7 +43,11 @@ export default async function KayakDetailPage({ params }: Props) {
     api.get<PublicKayak>(`/kayak/${id}`, { cache: "no-store" }),
     api.get<ReviewSummary>(`/kayak-reviews/${id}/summary`, { cache: "no-store" }),
   ])
-  if (kayakResult.status !== "fulfilled") notFound()
+  // Si falló la API (no es que no exista), el error sigue hasta app/error.tsx.
+  if (kayakResult.status === "rejected") {
+    if (isNotFound(kayakResult.reason)) notFound()
+    throw kayakResult.reason
+  }
 
   const kayak = kayakResult.value.data
   const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 } satisfies ReviewSummary

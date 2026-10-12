@@ -4,13 +4,23 @@ import { fireEvent, render, screen } from "@testing-library/react"
 // API simulada con valores comunes, no vi.fn: devuelve la página o un 404.
 let page: unknown = null
 let requested: string[] = []
+let down = false
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }))
 vi.mock("next-cloudinary", () => ({ CldImage: ({ alt }: { alt: string }) => <img alt={alt} /> }))
 vi.mock("@/lib/api", () => ({
-  api: { get: (url: string) => { requested.push(url); return page ? Promise.resolve({ data: page }) : Promise.reject(new Error("404")) } },
+  ApiError: class extends Error { constructor(public status: number, m: string) { super(m) } },
+  api: {
+    get: async (url: string) => {
+      requested.push(url)
+      const { ApiError } = await import("@/lib/api")
+      if (down) throw new ApiError(503, "caído")
+      if (!page) throw new ApiError(404, "No encontrado")
+      return { data: page }
+    },
+  },
 }))
 
 const { default: SectorPage, generateMetadata } = await import("./page")
@@ -27,7 +37,7 @@ const routes = [
   { id: 2, name: "Techo", grade: "6c", bolts: null, length: null, description: "Sale por el techo.\n\nOjo con el último seguro.", photos: [{ id: 9, cloudinary_public_id: "rumbo/spots/12/b" }], photo_slots: 2 },
 ]
 
-afterEach(() => { page = null; requested = [] })
+afterEach(() => { page = null; requested = []; down = false })
 
 describe("metadata del sector", () => {
   it("cuenta las vías con routes_count", async () => {
@@ -83,6 +93,11 @@ describe("página del sector", () => {
 
   it("si no existe, 404", async () => {
     await expect(SectorPage({ params })).rejects.toThrow("404")
+  })
+
+  it("si la API falla no dice que no existe: el error sigue hasta la pantalla de error", async () => {
+    down = true
+    await expect(SectorPage({ params })).rejects.toThrow("caído")
   })
 })
 

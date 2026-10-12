@@ -10,8 +10,16 @@ vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null 
 vi.mock("@/components/seo/JsonLd", () => ({ default: () => null }))
 vi.mock("@/components/operator-page/BackButton", () => ({ default: () => null }))
 vi.mock("@/components/operator-page/OperatorPhotos", () => ({ default: () => null }))
+let fail: number | null = null
 vi.mock("@/lib/api", () => ({
-  api: { get: (url: string) => Promise.resolve({ data: url.endsWith("/summary") ? { average: null, total: 0 } : kayak }) },
+  ApiError: class extends Error { constructor(public status: number, m: string) { super(m) } },
+  api: {
+    get: async (url: string) => {
+      const { ApiError } = await import("@/lib/api")
+      if (fail && !url.endsWith("/summary")) throw new ApiError(fail, fail === 404 ? "No encontrado" : "caído")
+      return Promise.resolve({ data: url.endsWith("/summary") ? { average: null, total: 0 } : kayak })
+    },
+  },
 }))
 
 const { default: KayakDetailPage } = await import("./page")
@@ -46,5 +54,20 @@ describe("Página del servicio de kayak: descripción y precio", () => {
     expect(screen.getByText("Sobre el servicio")).toBeTruthy()
     expect(screen.getByText("Salidas al atardecer.")).toBeTruthy()
     expect(screen.getByText("Desde $900 por hora")).toBeTruthy()
+  })
+})
+
+describe("Si no existe o si falló la API", () => {
+  const params = Promise.resolve({ slug: "kayak-sur-4" })
+  it("si no existe, 404", async () => {
+    fail = 404
+    await expect(KayakDetailPage({ params })).rejects.toThrow("404")
+    fail = null
+  })
+
+  it("si la API falla no dice que no existe: el error sigue hasta la pantalla de error", async () => {
+    fail = 503
+    await expect(KayakDetailPage({ params })).rejects.toThrow("caído")
+    fail = null
   })
 })

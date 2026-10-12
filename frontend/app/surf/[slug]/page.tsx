@@ -3,6 +3,7 @@ import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
 import { idFromSlug } from "@/lib/slugify"
 import { api } from "@/lib/api"
+import { isNotFound } from "@/lib/notFound"
 import { operatorDescription, operatorShareImage, surfInfoRows } from "@/lib/operatorPage"
 import type { PublicSurfSchool, ReviewSummary } from "@/lib/types"
 
@@ -42,7 +43,11 @@ export default async function SurfSchoolPage({ params }: Props) {
     api.get<PublicSurfSchool>(`/surfschool/${id}`, { cache: "no-store" }),
     api.get<ReviewSummary>(`/surf-reviews/${id}/summary`, { cache: "no-store" }),
   ])
-  if (schoolResult.status !== "fulfilled") notFound()
+  // Si falló la API (no es que no exista), el error sigue hasta app/error.tsx.
+  if (schoolResult.status === "rejected") {
+    if (isNotFound(schoolResult.reason)) notFound()
+    throw schoolResult.reason
+  }
 
   const school = schoolResult.value.data
   const summary = summaryResult.status === "fulfilled" ? summaryResult.value.data : { average: null, total: 0 } satisfies ReviewSummary

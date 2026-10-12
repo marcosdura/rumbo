@@ -7,6 +7,7 @@ import RouteTrack from "@/components/trail-page/RouteTrack"
 import TrekkingRouteCard from "@/components/spot-detail/TrekkingRouteCard"
 import TrekkingAmenitiesCard from "@/components/spot-detail/TrekkingAmenitiesCard"
 import { api } from "@/lib/api"
+import { nullIfNotFound } from "@/lib/notFound"
 import { routeDescription } from "@/lib/metadata"
 import { otherRouteFacts, routeStats, sharePhoto, type RoutePage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
@@ -18,7 +19,7 @@ type Props = {
 // La ruta se busca dentro de su lugar: el slug de una ruta no es único
 // entre lugares. cache(): metadata y página piden lo mismo una sola vez.
 const getRoutePage = cache(async (spotSlug: string, routeSlug: string) =>
-  api.get<RoutePage>(`/routes/page/${spotSlug}/${routeSlug}`, { cache: "no-store" }).then(r => r.data).catch(() => null),
+  nullIfNotFound(api.get<RoutePage>(`/routes/page/${spotSlug}/${routeSlug}`, { cache: "no-store" }).then(r => r.data)),
 )
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

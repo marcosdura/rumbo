@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import SpotDetails from "./SpotDetails"
 import JsonLd from "@/components/seo/JsonLd"
 import { api } from "@/lib/api"
+import { nullIfNotFound } from "@/lib/notFound"
 import type { PublicSpot } from "@/lib/types"
 import { shareImageUrl } from "@/lib/spotDetail"
 
@@ -14,19 +15,20 @@ type Props = {
 // generateMetadata y el componente de página piden el mismo spot por
 // separado — cache() de React dedupea ambas llamadas dentro del mismo
 // render en vez de pegarle dos veces al backend por cada carga.
-const getSpotBySlug = cache(async (slug: string) => {
-  const { data } = await api.get<PublicSpot>(`/spots/by-slug/${slug}`)
-  return data
-})
+// null = no existe; si falla la API, el error sigue (app/error.tsx).
+const getSpotBySlug = cache((slug: string) =>
+  nullIfNotFound(api.get<PublicSpot>(`/spots/by-slug/${slug}`).then(r => r.data)),
+)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  let spot: PublicSpot
+  let spot: PublicSpot | null
   try {
     spot = await getSpotBySlug(slug)
   } catch {
     return { title: "Rumbo" }
   }
+  if (!spot) return { title: "Rumbo" }
 
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage
@@ -53,12 +55,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SpotPage({ params }: Props) {
   const { slug } = await params
-  let spot: PublicSpot
-  try {
-    spot = await getSpotBySlug(slug)
-  } catch {
-    notFound()
-  }
+  const spot = await getSpotBySlug(slug)
+  if (!spot) notFound()
 
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
   const imageUrl = mainImage

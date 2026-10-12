@@ -8,6 +8,7 @@ import Pill from "@/components/ui/Pill"
 import { AddButton } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import { api } from "@/lib/api"
+import { nullIfNotFound } from "@/lib/notFound"
 import { sectorDescription } from "@/lib/metadata"
 import { otherSectorFacts, sectorStats, sharePhoto, type SectorPage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
@@ -18,7 +19,7 @@ type Props = {
 
 // El sector se busca dentro de su lugar: "Sector Norte" hay en muchos.
 const getSectorPage = cache(async (spotSlug: string, sectorSlug: string) =>
-  api.get<SectorPage>(`/sectors/page/${spotSlug}/${sectorSlug}`, { cache: "no-store" }).then(r => r.data).catch(() => null),
+  nullIfNotFound(api.get<SectorPage>(`/sectors/page/${spotSlug}/${sectorSlug}`, { cache: "no-store" }).then(r => r.data)),
 )
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
