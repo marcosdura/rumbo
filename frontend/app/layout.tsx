@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Nunito, Playfair_Display, DM_Sans } from "next/font/google";
+import { Nunito, Playfair_Display, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
 import Providers from "@/components/layout/Providers"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+// Sin Geist ni Geist Mono (las que trae Next): solo las usaba el formulario
+// de agregar lugar, que ahora usa DM Sans como el resto. Dos fuentes menos
+// por página.
 const nunito = Nunito({
   variable: "--font-nunito",
   subsets: ["latin"],
@@ -77,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${nunito.variable} ${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Providers>

@@ -18,7 +18,8 @@ export const s: Record<string, CSSProperties> = {
     display: "flex",
     justifyContent: "center",
     padding: "32px 16px 80px",
-    fontFamily: "var(--font-geist-sans), sans-serif",
+    // La del resto del sitio (antes Geist, la que trae Next por defecto).
+    fontFamily: "var(--font-dm-sans), sans-serif",
   },
   container: { width: "100%", maxWidth: 680 },
   title: { fontSize: 22, fontWeight: 600, color: "#1b1b19", marginBottom: 20 },
