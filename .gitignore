@@ -45,3 +45,6 @@ next-env.d.ts
 # --- IDEs ---
 .vscode/
 .idea/
+# Pruebas en el navegador (frontend/e2e/run.mjs)
+frontend/.next-e2e/
+frontend/e2e/shots/
