@@ -20,8 +20,26 @@ def notify(db: Session, email: str | None, kind: str, title: str, body: str | No
     db.add(Notification(user_email=email, kind=kind, title=title, body=body, link=link))
 
 
-def notify_admin(db: Session, kind: str, title: str, body: str | None = None, link: str = "/admin"):
-    notify(db, ADMIN_EMAIL, kind, title, body, link)
+# A qué pestaña del panel lleva cada aviso de admin (/admin?tab=...). Antes
+# todos llevaban a /admin y había que buscar dónde estaba.
+ADMIN_TABS = {
+    "admin_new_spot": "nuevos",
+    "admin_spot_resubmitted": "nuevos",
+    "admin_change_request": "cambios",
+    "admin_contribution": "cambios",
+    "admin_operator_change": "cambios",
+    "admin_report": "reportes",
+    "admin_claim": "reclamos",
+}
+
+
+def admin_link(kind: str) -> str:
+    tab = ADMIN_TABS.get(kind)
+    return f"/admin?tab={tab}" if tab else "/admin"
+
+
+def notify_admin(db: Session, kind: str, title: str, body: str | None = None):
+    notify(db, ADMIN_EMAIL, kind, title, body, admin_link(kind))
 
 
 def spot_link(spot) -> str:

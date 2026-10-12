@@ -9,7 +9,8 @@ import ConfirmModal from "@/components/ui/ConfirmModal"
 import { tab } from "@/lib/theme"
 import { api, ApiError } from "@/lib/api"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
-import { spotStatus, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
+import { spotStatus, ADMIN_MODES, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
+import SummaryTab, { type AdminSummary } from "./SummaryTab"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
@@ -24,11 +25,28 @@ import EditSpotModal from "./EditSpotModal"
 export default function AdminPage() {
   const { data: session } = useSession()
   const token = session?.id_token
-  const [mode, setMode] = useState<AdminMode>("spots")
+  const [mode, setMode] = useState<AdminMode>("resumen")
+  // La portada (GET /admin/summary): también da los contadores de las
+  // pestañas hasta que se abre cada una.
+  const [summary, setSummary] = useState<AdminSummary | null>(null)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  // Qué datos ya se pidieron: cada lista se carga recién al abrir su pestaña
+  // (antes eran 6 pedidos al entrar, incluidos todos los lugares con fotos).
+  const [opened, setOpened] = useState({ spots: false, cambios: false, reportes: false, reclamos: false })
+  const wants = {
+    spots: mode === "nuevos" || mode === "lugares" || mode === "fotos" || mode === "cuentas-eliminadas",
+    cambios: mode === "cambios", reportes: mode === "reportes", reclamos: mode === "reclamos",
+  }
+  if ((Object.keys(wants) as (keyof typeof wants)[]).some(k => wants[k] && !opened[k])) {
+    setOpened(prev => ({
+      spots: prev.spots || wants.spots, cambios: prev.cambios || wants.cambios,
+      reportes: prev.reportes || wants.reportes, reclamos: prev.reclamos || wants.reclamos,
+    }))
+  }
   const [spots, setSpots] = useState<AdminSpot[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<SpotFilter>("pending")
+  const [filter, setFilter] = useState<SpotFilter>("all")
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
   const [photoLoading, setPhotoLoading] = useState(false)
@@ -82,8 +100,33 @@ export default function AdminPage() {
   const [approveAll, setApproveAll] = useState<AdminSpot[] | null>(null)
   const [approvingAll, setApprovingAll] = useState(false)
 
+  // La pestaña de la URL (/admin?tab=reportes), al entrar.
   useEffect(() => {
-    if (!token) return
+    const tab = new URLSearchParams(window.location.search).get("tab") as AdminMode | null
+    if (tab && ADMIN_MODES.includes(tab)) setMode(tab)
+  }, [])
+
+  function go(next: AdminMode) {
+    setMode(next)
+    setNotice(null)
+    window.history.replaceState(null, "", next === "resumen" ? "/admin" : `/admin?tab=${next}`)
+  }
+
+  // El resumen se vuelve a pedir cada vez que se abre (los números cambian
+  // al aprobar o rechazar en las otras pestañas).
+  const onSummary = mode === "resumen"
+  useEffect(() => {
+    if (!token || !onSummary) return
+    setSummaryError(null)
+    api.get<AdminSummary>("/admin/summary", { token })
+      .then(({ data }) => setSummary(data))
+      .catch(e => setSummaryError(e instanceof ApiError && e.status === 403
+        ? "No tenés permisos de administrador con esta cuenta."
+        : "No se pudo cargar el resumen."))
+  }, [token, onSummary])
+
+  useEffect(() => {
+    if (!token || !opened.spots) return
     setLoadError(null)
     api.get<AdminSpot[]>("/admin/spots", { token })
       .then(({ data }) => { setSpots(Array.isArray(data) ? data : []); setLoading(false) })
@@ -93,10 +136,10 @@ export default function AdminPage() {
           : "Error al cargar los spots.")
         setLoading(false)
       })
-  }, [token])
+  }, [token, opened.spots])
 
   useEffect(() => {
-    if (!token) return
+    if (!token || !opened.cambios) return
     setChangesError(null)
     api.get<AdminChangeRequest[]>("/admin/change-requests", { token })
       .then(({ data }) => setChangeRequests(Array.isArray(data) ? data : []))
@@ -110,15 +153,23 @@ export default function AdminPage() {
       .then(({ data }) => setOperatorChanges(Array.isArray(data) ? data : []))
       .catch(() => setOperatorChangesError("Error al cargar los cambios de escuelas."))
       .finally(() => setOperatorChangesLoading(false))
+  }, [token, opened.cambios])
+
+  useEffect(() => {
+    if (!token || !opened.reportes) return
     api.get<ReportGroup[]>("/admin/reports", { token })
       .then(({ data }) => setReportGroups(Array.isArray(data) ? data : []))
       .catch(() => setReportsError("Error al cargar los reportes."))
       .finally(() => setReportsLoading(false))
+  }, [token, opened.reportes])
+
+  useEffect(() => {
+    if (!token || !opened.reclamos) return
     api.get<AdminClaim[]>("/admin/claims", { token })
       .then(({ data }) => setClaims(Array.isArray(data) ? data : []))
       .catch(() => setClaimsError("Error al cargar los pedidos de responsables."))
       .finally(() => setClaimsLoading(false))
-  }, [token])
+  }, [token, opened.reclamos])
 
   // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
   // spots para que Gestión de spots y Gestión de fotos lo muestren ya.
@@ -355,9 +406,36 @@ export default function AdminPage() {
   const rejected = activeSpots.filter(s => spotStatus(s) === "rejected").length
   const pendingReviews = changeRequests.length + contributions.length + operatorChanges.length
   const rejectingSpot = rejecting?.type === "spot" ? spots.find(s => s.id === rejecting.id) ?? null : null
+  // "Lugares nuevos" es la lista fija en pendientes.
+  const shownFilter: SpotFilter = mode === "nuevos" ? "pending" : filter
   const filtered = activeSpots.filter(s =>
-    filter === "all" ? true : spotStatus(s) === filter
+    shownFilter === "all" ? true : spotStatus(s) === shownFilter
   )
+
+  // Contadores de las pestañas: el de la lista si ya se cargó; si no, el del resumen.
+  const q = summary?.queues
+  const known = (key: keyof typeof opened, isLoading: boolean) => opened[key] && !isLoading
+  const counts: Partial<Record<AdminMode, number | undefined>> = {
+    nuevos: known("spots", loading) ? pending : q?.new_spots.count,
+    cambios: known("cambios", changesLoading || contributionsLoading || operatorChangesLoading)
+      ? pendingReviews : q && q.changes.count + q.contributions.count + q.operator_changes.count,
+    reportes: known("reportes", reportsLoading) ? reportGroups.length : q?.reports.count,
+    reclamos: known("reclamos", claimsLoading) ? claims.length : q?.claims.count,
+    "cuentas-eliminadas": known("spots", loading) ? deactivatedSpots.length : undefined,
+  }
+  const TAB_GROUPS: { title: string; tabs: { id: AdminMode; label: string }[] }[] = [
+    { title: "Por revisar", tabs: [
+      { id: "nuevos", label: "🆕 Lugares nuevos" },
+      { id: "cambios", label: "📝 Cambios y aportes" },
+      { id: "reportes", label: "⚑ Reportes" },
+      { id: "reclamos", label: "🙋 Responsables" },
+    ] },
+    { title: "Gestión", tabs: [
+      { id: "lugares", label: "🗺️ Lugares" },
+      { id: "fotos", label: "📷 Fotos" },
+      { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
+    ] },
+  ]
   const displayed = filtered
     .filter(s =>
       s.name.toLowerCase().includes(searchSpots.toLowerCase()) ||
@@ -397,10 +475,7 @@ export default function AdminPage() {
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <Pill variant="dark-green" size="sm">modo admin</Pill>
-                <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                  {activeSpots.length} spot{activeSpots.length !== 1 ? "s" : ""}
-                  {pending > 0 ? ` · ${pending} pendiente${pending !== 1 ? "s" : ""}` : ""}
-                </span>
+
               </div>
             </div>
             <a href="/agregar-lugar"
@@ -410,21 +485,34 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-          {([
-            { id: "spots", label: `🗺️ Gestión de spots${pending > 0 ? ` (${pending})` : ""}` },
-            { id: "cambios", label: `📝 Cambios pendientes${pendingReviews > 0 ? ` (${pendingReviews})` : ""}` },
-            { id: "reportes", label: `⚑ Reportes${reportGroups.length > 0 ? ` (${reportGroups.length})` : ""}` },
-            { id: "reclamos", label: `🙋 Responsables${claims.length > 0 ? ` (${claims.length})` : ""}` },
-            { id: "fotos", label: "📷 Gestión de fotos" },
-            { id: "cuentas-eliminadas", label: `👤 Cuentas eliminadas${deactivatedSpots.length > 0 ? ` (${deactivatedSpots.length})` : ""}` },
-          ] as { id: AdminMode; label: string }[]).map(m => (
-            <button key={m.id} onClick={() => setMode(m.id)} style={tab(mode === m.id)}>
-              {m.label}
-            </button>
+        {/* Pestañas: la portada y dos grupos (trabajo pendiente y gestión). En
+            el celular cada grupo es una fila que se desliza. */}
+        <nav aria-label="Secciones del panel" style={{ marginBottom: 20 }}>
+          <style>{`
+            .admin-tabs-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+            .admin-tabs-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); min-width: 86px; }
+            @media (max-width: 640px) {
+              .admin-tabs-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+              .admin-tabs-row > * { flex-shrink: 0; }
+            }
+          `}</style>
+          <div className="admin-tabs-row">
+            <button onClick={() => go("resumen")} style={tab(mode === "resumen")} aria-current={mode === "resumen" ? "page" : undefined}>📊 Resumen</button>
+          </div>
+          {TAB_GROUPS.map(g => (
+            <div key={g.title} className="admin-tabs-row">
+              <span className="admin-tabs-title">{g.title}</span>
+              {g.tabs.map(t => {
+                const n = counts[t.id]
+                return (
+                  <button key={t.id} onClick={() => go(t.id)} style={tab(mode === t.id)} aria-current={mode === t.id ? "page" : undefined}>
+                    {t.label}{n ? ` (${n})` : ""}
+                  </button>
+                )
+              })}
+            </div>
           ))}
-        </div>
+        </nav>
 
         {notice && (
           <div role="alert" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "#fdf0f0", border: "1px solid #fecaca", color: "#7c1d1d", borderRadius: 12, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>
@@ -433,12 +521,17 @@ export default function AdminPage() {
           </div>
         )}
 
-        {mode === "spots" && (
+        {mode === "resumen" && (
+          <SummaryTab summary={summary} loading={!summary && !summaryError} error={summaryError} onGo={go} />
+        )}
+
+        {(mode === "nuevos" || mode === "lugares") && (
           <SpotsTab
             displayed={displayed}
             pending={pending}
             rejected={rejected}
-            filter={filter}
+            showFilters={mode === "lugares"}
+            filter={shownFilter}
             setFilter={setFilter}
             searchSpots={searchSpots}
             setSearchSpots={setSearchSpots}

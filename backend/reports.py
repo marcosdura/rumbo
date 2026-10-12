@@ -108,7 +108,7 @@ def create_report(db: Session, user: dict, kind: str, target_id: int, reason: st
         reporter_email=email, reason=reason, comment=comment, status="open",
     )
     db.add(report)
-    notify_admin(db, "admin_report", f"Reporte nuevo: {REASONS[reason]}", body=f"en {spot.name}", link="/admin")
+    notify_admin(db, "admin_report", f"Reporte nuevo: {REASONS[reason]}", body=f"en {spot.name}")
     db.commit()
     return report
 

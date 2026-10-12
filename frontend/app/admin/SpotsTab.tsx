@@ -20,6 +20,8 @@ interface Props {
   onApprove: (id: number, approved: boolean) => Promise<boolean>
   // "Aprobar todos" (los que se ven): la página pide confirmación.
   onApproveAllRequest: (spots: AdminSpot[]) => void
+  // "Lugares nuevos" es esta misma lista, fija en pendientes y sin los filtros.
+  showFilters?: boolean
   // Rechazar (nuevo) o despublicar (aprobado): pide motivo.
   onRejectRequest: (spot: AdminSpot) => void
   onEdit: (spot: { id: number; name: string; description: string }) => void
@@ -36,11 +38,11 @@ const STATUS_PILL = {
 export default function SpotsTab({
   displayed, pending, rejected, filter, setFilter, searchSpots, setSearchSpots,
   sortBy, setSortBy, loadError, loading, actionLoading, onApprove, onRejectRequest, onEdit, onDeleteRequest,
-  onApproveAllRequest,
+  onApproveAllRequest, showFilters = true,
 }: Props) {
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      {showFilters && <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {(["pending", "rejected", "approved", "all"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
             {f === "pending" ? `Pendientes (${pending})`
@@ -48,7 +50,7 @@ export default function SpotsTab({
               : f === "approved" ? "Aprobados" : "Todos"}
           </button>
         ))}
-      </div>
+      </div>}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <input

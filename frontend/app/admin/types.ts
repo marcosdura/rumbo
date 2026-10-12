@@ -53,6 +53,13 @@ export type AdminChangeRequest = {
   }
 }
 
-export type AdminMode = "spots" | "cambios" | "reportes" | "reclamos" | "fotos" | "cuentas-eliminadas"
+// Las pestañas del panel. Van en la URL (/admin?tab=reportes): al recargar
+// se sigue ahí y los avisos de admin llevan directo a la suya.
+export type AdminMode =
+  | "resumen"
+  | "nuevos" | "cambios" | "reportes" | "reclamos"
+  | "lugares" | "fotos" | "cuentas-eliminadas"
+
+export const ADMIN_MODES: AdminMode[] = ["resumen", "nuevos", "cambios", "reportes", "reclamos", "lugares", "fotos", "cuentas-eliminadas"]
 
 export type SortBy = "name" | "category" | "department" | "date_desc" | "date_asc"

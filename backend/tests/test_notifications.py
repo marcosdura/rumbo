@@ -214,3 +214,30 @@ def test_reporte_avisa_al_admin_y_borrar_la_resenia_a_su_autor(client, db, make_
     client.post("/admin/reports/resolve", json={"target_kind": "review", "target_id": review.id, "action": "delete"}, headers=as_user(ADMIN))
     assert kinds(db, OTHER) == ["review_deleted"]
     assert inbox(db, THIRD) == [], "quien reportó no recibe nada"
+
+
+def links(db, email):
+    db.expire_all()
+    return [n.link for n in db.query(Notification).filter_by(user_email=email).order_by(Notification.id)]
+
+
+def test_los_avisos_de_admin_llevan_a_su_pestania(client, db, make_spot, make_user):
+    """Antes todos llevaban a /admin y había que buscar dónde estaba."""
+    cat = Category(name="Camping")
+    db.add(cat)
+    db.commit()
+    client.post("/spots", json={"name": "Nuevo", "description": "d", "department": "Rocha", "category_id": cat.id}, headers=as_user(OWNER))
+    spot = make_spot(name="Publicado")
+    client.patch(f"/admin/spots/{spot.id}", json={"name": "Otro nombre"}, headers=as_user(OWNER))
+    author = make_user(OTHER)
+    review = Review(spot_id=spot.id, user_id=author.id, rating=1, comment="x")
+    db.add(review)
+    db.commit()
+    client.post("/reports", json={"target_kind": "review", "target_id": review.id, "reason": "offensive"}, headers=as_user(THIRD))
+    assert links(db, ADMIN) == ["/admin?tab=nuevos", "/admin?tab=cambios", "/admin?tab=reportes"]
+
+
+def test_un_aviso_de_admin_sin_pestania_va_al_resumen():
+    from notifications import admin_link
+    assert admin_link("admin_content_removed") == "/admin"
+    assert admin_link("admin_claim") == "/admin?tab=reclamos"
