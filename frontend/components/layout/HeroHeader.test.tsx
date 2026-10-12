@@ -68,4 +68,10 @@ describe("HeroHeader", () => {
     const { container } = render(<HeroHeader />)
     expect(container.firstElementChild?.className).toBe("nav-bar")
   })
+
+  it("ningún CSS global le cambia el padding a la barra (en el celular la corría 12px en las páginas que no son la home)", async () => {
+    const { readFileSync } = await import("node:fs")
+    const css = readFileSync("app/globals.css", "utf-8")
+    expect(css).not.toMatch(/\.(navbar-root|nav-bar)\s*\{[^}]*padding/)
+  })
 })

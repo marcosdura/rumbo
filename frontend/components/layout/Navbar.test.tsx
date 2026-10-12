@@ -96,4 +96,11 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: /Mis reseñas/ }).getAttribute("href")).toBe("/reviews")
     expect(screen.getByRole("link", { name: /Notificaciones/ }).getAttribute("href")).toBe("/notificaciones")
   })
+
+  it("en la PC no aparece la lupa del buscador de celular (el CSS de los botones la mostraba)", () => {
+    session = null
+    render(<Navbar />)
+    // jsdom no aplica las media queries: esto es la vista de PC.
+    expect(screen.queryByRole("button", { name: "Buscar" })).toBeNull()
+  })
 })

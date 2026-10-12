@@ -187,17 +187,6 @@ input[type="number"] {
   }
 }
 
-/* ─── Responsive: Navbar ──────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  .navbar-searchbar {
-    display: none !important;
-  }
-  .navbar-root {
-    padding: 12px 16px !important;
-  }
-}
-
 /* ─── Responsive: Sector stats grid ──────────────────────────────────────── */
 
 @media (max-width: 640px) {

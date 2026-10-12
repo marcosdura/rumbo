@@ -80,8 +80,9 @@ function Navbar() {
         /* La línea del medio sigue siendo 0 en X */
         .navbar-search-btn.is-active .icon-line:nth-child(2) { opacity: 0; }
 
-        /* Solo visible en mobile */
-        .navbar-search-btn { display: none; }
+        /* Solo visible en mobile. Con .navbar-root delante: .icon-btn (display:
+           flex) viene en el CSS de NavBarContent, que carga después. */
+        .navbar-root .navbar-search-btn { display: none; }
 
         /* Search dropdown */
         .navbar-search-dropdown {
@@ -119,7 +120,7 @@ function Navbar() {
 
         @media (max-width: 768px) {
           .navbar-center          { display: none; }
-          .navbar-search-btn      { display: flex; }
+          .navbar-root .navbar-search-btn { display: flex; }
           .navbar-search-dropdown { display: block; }
         }
       `}</style>
