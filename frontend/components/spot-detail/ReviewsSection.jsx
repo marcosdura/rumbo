@@ -97,7 +97,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         setLoadError(false)
       })
       .catch(() => {
-        // Sin esto la lista queda vacía y la UI dice "todavía no hay reviews",
+        // Sin esto la lista queda vacía y la UI dice "todavía no hay reseñas",
         // que es mentira: no se pudieron cargar.
         setLoadError(true)
       })
@@ -167,7 +167,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
       setDeleteTargetId(null)
     } catch {
       // El modal se queda abierto mostrando el error, para poder reintentar.
-      setDeleteError("No se pudo eliminar la review. Intentá de nuevo.")
+      setDeleteError("No se pudo eliminar la reseña. Intentá de nuevo.")
     }
     setDeleting(false)
   }
@@ -288,11 +288,11 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
               <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>
-                Reseñas
+                Opiniones
               </span>
             </div>
             <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-              Reviews
+              Reseñas
             </p>
             {summary?.total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
@@ -302,7 +302,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 <div>
                   <StarDisplay rating={Math.round(summary.average)} />
                   <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
-                    {summary.total} review{summary.total !== 1 ? "s" : ""}
+                    {summary.total} reseña{summary.total !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
@@ -320,7 +320,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                 setShowForm(true)
               }}
             >
-              {summary?.my_review ? "✏️ Editar mi review" : "✏️ Escribir review"}
+              {summary?.my_review ? "✏️ Editar mi reseña" : "✏️ Escribir una reseña"}
             </button>
           )}
         </div>
@@ -329,7 +329,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         {showForm && (
           <div style={{ background: "#f7f5f0", border: "1px solid var(--border)", borderRadius: 16, padding: 20, marginBottom: 20 }}>
             <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", marginBottom: 10 }}>
-              {editingId ? "Editar tu review" : "Tu rating"}
+              {editingId ? "Editar tu reseña" : "Tu calificación"}
             </p>
             <StarPicker value={rating} onChange={setRating} />
             <textarea
@@ -350,7 +350,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>
                 {editingId
                   ? "No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo."
-                  : "No se pudo publicar la review. Revisá tu conexión y probá de nuevo."}
+                  : "No se pudo publicar la reseña. Revisá tu conexión y probá de nuevo."}
               </p>
             )}
             <div className="reviews-form-actions">
@@ -378,7 +378,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
               >
                 {submitting
                   ? "Enviando..."
-                  : editingId ? "Guardar cambios" : "Publicar review"}
+                  : editingId ? "Guardar cambios" : "Publicar reseña"}
               </button>
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         ) : loadError ? (
           <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
             <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>⚠️</p>
-            <p style={{ margin: "0 0 14px" }}>No se pudieron cargar las reviews.</p>
+            <p style={{ margin: "0 0 14px" }}>No se pudieron cargar las reseñas.</p>
             <button
               onClick={() => { setLoading(true); loadReviews() }}
               style={{
@@ -407,7 +407,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         ) : reviews.length === 0 ? (
           <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
             <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>💬</p>
-            Todavía no hay reviews. ¡Sé el primero!
+            Todavía no hay reseñas. ¡Escribí la primera!
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -490,7 +490,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
       <ConfirmModal
         open={deleteTargetId !== null}
-        title="¿Eliminar tu review?"
+        title="¿Eliminar tu reseña?"
         message="Esta acción no se puede deshacer."
         error={deleteError}
         loading={deleting}

@@ -14,7 +14,7 @@ import Pill from "@/components/ui/Pill"
 
 export default function ProfileSubpage({ title, count, children }: {
   title: string
-  // Cantidad junto al título (como "Mis reviews"); 0 o undefined no se muestra.
+  // Cantidad junto al título (como "Mis reseñas"); 0 o undefined no se muestra.
   count?: number
   children: (token: string) => ReactNode
 }) {

@@ -29,14 +29,14 @@ describe("ReviewsSection", () => {
     fail = true
     render(<ReviewsSection spotId={12} />)
     await flush()
-    expect(screen.getByText("No se pudieron cargar las reviews.")).toBeTruthy()
+    expect(screen.getByText("No se pudieron cargar las reseñas.")).toBeTruthy()
 
     fail = false
     fireEvent.click(screen.getByRole("button", { name: "Reintentar" }))
     expect(screen.getByText("Cargando...")).toBeTruthy()
     await flush()
-    expect(screen.queryByText("No se pudieron cargar las reviews.")).toBeNull()
-    expect(screen.getByText("Todavía no hay reviews. ¡Sé el primero!")).toBeTruthy()
+    expect(screen.queryByText("No se pudieron cargar las reseñas.")).toBeNull()
+    expect(screen.getByText("Todavía no hay reseñas. ¡Escribí la primera!")).toBeTruthy()
   })
 
   it("si el reintento también falla, el aviso sigue", async () => {
@@ -45,6 +45,16 @@ describe("ReviewsSection", () => {
     await flush()
     fireEvent.click(screen.getByRole("button", { name: "Reintentar" }))
     await flush()
-    expect(screen.getByText("No se pudieron cargar las reviews.")).toBeTruthy()
+    expect(screen.getByText("No se pudieron cargar las reseñas.")).toBeTruthy()
+  })
+
+  it("dice reseña, como el resto del sitio (antes mezclaba 'review')", async () => {
+    const { container } = render(<ReviewsSection spotId={12} />)
+    await flush()
+    expect(screen.getByText("Reseñas")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "✏️ Escribir una reseña" })).toBeTruthy()
+    // Lo que se lee (sin el <style>, que tiene clases como .reviews-wrap).
+    const visible = [...container.querySelectorAll("*:not(style)")].flatMap(el => [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent)).join(" ")
+    expect(visible.match(/.{0,40}review.{0,40}/i)?.[0] ?? null).toBeNull()
   })
 })
