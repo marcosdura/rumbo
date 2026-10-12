@@ -149,13 +149,6 @@ export default function Footer() {
           border: 1px solid #d0c9bc;
           color: #4a443b;
         }
-        .sf-badge-green {
-          font-size: 11px; font-weight: 600;
-          padding: 3px 10px; border-radius: 999px;
-          background: var(--primary-dark);
-          color: #d8f3dc;
-          border: 1px solid var(--primary);
-        }
 
         @media (max-width: 640px) {
           .sf-footer { padding: 24px 20px 20px; margin-top: 48px; }
@@ -226,7 +219,6 @@ export default function Footer() {
           </div>
           <div className="sf-badges">
             <span className="sf-badge-warm">Hecho en Uruguay 🇺🇾</span>
-            <span className="sf-badge-green">Código abierto</span>
           </div>
         </div>
 

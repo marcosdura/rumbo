@@ -36,4 +36,9 @@ describe("Footer", () => {
   it("es un componente de servidor: no manda JavaScript a cada página", () => {
     expect(readFileSync("components/layout/Footer.jsx", "utf-8")).not.toMatch(/^\s*["']use client["']/)
   })
+
+  it("no dice 'Código abierto' (el repo no tiene licencia)", () => {
+    render(<Footer />)
+    expect(document.body.textContent).not.toMatch(/Código abierto/)
+  })
 })
