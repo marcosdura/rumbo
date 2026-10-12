@@ -436,7 +436,7 @@ export default function SpotDashboardPage() {
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <Pill variant={spot.is_approved ? "green" : spot.rejected_at ? "red" : "yellow"} size="sm">
-                  {spot.is_approved ? "✓ Aprobado" : spot.rejected_at ? "✕ Rechazado" : "⏳ Pendiente de aprobación"}
+                  {spot.is_approved ? "✓ Aprobado" : spot.rejected_at ? "✕ Rechazado" : "⏳ En revisión"}
                 </Pill>
                 {spot.category && (
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>{spot.category.name} · {spot.department}</span>

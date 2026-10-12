@@ -136,4 +136,10 @@ describe("Panel del dueño", () => {
     expect(pushed).toEqual([])
     expect(screen.getByText(/«Panel de tu lugar» es parte de tu cuenta/)).toBeTruthy()
   })
+
+  it("sin aprobar dice 'En revisión', como en el resto del perfil", async () => {
+    mine = [spot({ is_approved: false })]
+    await load()
+    expect(screen.getByText("⏳ En revisión")).toBeTruthy()
+  })
 })

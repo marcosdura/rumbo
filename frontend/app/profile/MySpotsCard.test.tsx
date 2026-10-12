@@ -19,6 +19,11 @@ describe("MySpotsCard", () => {
   it("un lugar rechazado se marca como tal", () => {
     render(<MySpotsCard mySpots={[{ id: 5, name: "Mi lugar", is_approved: false, rejected_at: "2026-10-02", review_count: 0, images: [] }]} />)
     expect(screen.getByText("Rechazado")).toBeTruthy()
-    expect(screen.queryByText("Pendiente")).toBeNull()
+    expect(screen.queryByText("En revisión")).toBeNull()
+  })
+
+  it("uno sin aprobar dice 'En revisión', como los aportes (antes 'Pendiente')", () => {
+    render(<MySpotsCard mySpots={[{ id: 6, name: "Nuevo", is_approved: false, rejected_at: null, review_count: 0, images: [] }]} />)
+    expect(screen.getByText("En revisión")).toBeTruthy()
   })
 })

@@ -55,7 +55,7 @@ export default function MySpotsCard({ mySpots }: Props) {
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Pill variant={spot.is_approved ? "green" : spot.rejected_at ? "red" : "yellow"} size="sm">
-                    {spot.is_approved ? "Aprobado" : spot.rejected_at ? "Rechazado" : "Pendiente"}
+                    {spot.is_approved ? "Aprobado" : spot.rejected_at ? "Rechazado" : "En revisión"}
                   </Pill>
                   {spot.change_request?.status === "pending" && (
                     <Pill variant="orange" size="sm">Cambio en revisión</Pill>
