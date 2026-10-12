@@ -148,11 +148,6 @@ export const TREKKING_FEATURES: { key: TrekkingFeatureKey; label: string; emoji:
   { key: "accessible",    label: "Accesible",        emoji: "♿" },
 ]
 
-export const REQUIRED_FEATURE_KEYS: TrekkingFeatureKey[] = [
-  "bathrooms", "potable_water", "kids_friendly",
-  "camping", "parking", "fire_pits", "shelter", "accessible",
-]
-
 export const defaultTrekkingFeatures = (): TrekkingFeatures => ({
   bathrooms: null, potable_water: null, kids_friendly: null,
   camping: null, parking: null, fire_pits: null, shelter: null, accessible: null,

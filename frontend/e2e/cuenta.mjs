@@ -151,8 +151,7 @@ const FLOWS = [
       await click(page, /Nuevo lugar de trekking/)
       await basicInfo(page, named("Trekking E2E"), { department: "Lavalleja" })
       await next(page) // → características
-      // Las obligatorias no aceptan "No sé": se responde Sí a todas.
-      for (const yes of await page.getByRole("button", { name: "Sí", exact: true }).all()) await yes.click()
+      // Se deja todo en "No sé": tiene que poder seguir (antes no dejaba).
       await next(page) // → rutas
       await field(page, "Nombre").fill(named("Ruta E2E"))
       await next(page) // → imágenes
@@ -347,10 +346,10 @@ async function profile(page, r) {
   // Favorito y reseña en un lugar publicado: aparecen en el perfil.
   await open(page, "/spots/cerro-de-prueba")
   await page.getByRole("button", { name: /Guardar/ }).first().click()
-  await page.getByRole("button", { name: /Escribir review/ }).click()
+  await page.getByRole("button", { name: /Escribir una reseña/ }).click()
   await page.getByLabel("5 estrellas").check({ force: true })
   await page.getByPlaceholder("Contá tu experiencia (opcional)...").fill("Muy lindo, prueba e2e.")
-  await page.getByRole("button", { name: "Publicar review" }).click()
+  await page.getByRole("button", { name: "Publicar reseña" }).click()
   await page.waitForTimeout(1000)
   await open(page, "/favorites")
   r.ok("Perfil — el favorito aparece en Favoritos", (await text(page)).includes("Cerro de Prueba"))

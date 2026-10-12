@@ -7,7 +7,7 @@ import { signInWithGoogle } from "@/lib/auth"
 import { s, mediaQuery } from "./styles"
 import {
   defaultTrekkingFeatures, defaultRoute, defaultSector, defaultSurf, defaultKayak, emptyBasic,
-  REQUIRED_FEATURE_KEYS, defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
+  defaultMotorhomeDetail, defaultCampingDetail, defaultGlampingDetail,
   defaultClimbingRouteItem, CATEGORIES,
 } from "./constants"
 import { submitAgregarLugar, submitNewTrekkingRoute, submitNewClimbingSector, submitNewClimbingRoute, type Failure } from "./submit"
@@ -46,7 +46,7 @@ import StepGlampingUnidades from "./steps/StepGlampingUnidades"
 import StepClimbingRoutes from "./steps/StepClimbingRoutes"
 import StepExperiencias from "./steps/StepExperiencias"
 import type {
-  Category, TrekkingFeatures, TrekkingFeatureKey, RouteItem, SectorItem,
+  Category, TrekkingFeatures, RouteItem, SectorItem,
   SurfItem, KayakItem, BasicInfo, ClimbingMode, TrekkingMode,
   MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem,
 } from "./types"
@@ -89,7 +89,6 @@ export default function AgregarLugar() {
   // ¿Quien lo carga es el responsable o dueño, o un visitante?
   const [isResponsible, setIsResponsible]         = useState<boolean | null>(null)
   const [publicTransport, setPublicTransport]     = useState<string | null>(null)
-  const [featureErrors, setFeatureErrors]         = useState<Set<TrekkingFeatureKey>>(new Set())
   const [submitting, setSubmitting]               = useState(false)
   const [uploadProgress, setUploadProgress]       = useState<string | null>(null)
   const [error, setError]                         = useState<string | null>(null)
@@ -296,17 +295,6 @@ export default function AgregarLugar() {
     goNext()
   }
 
-  function nextFromTrekkingFeatures() {
-    const missing = REQUIRED_FEATURE_KEYS.filter(k => trekkingFeatures[k] === null)
-    if (missing.length > 0) {
-      setFeatureErrors(new Set(missing))
-      setError("Completá todas las características obligatorias antes de continuar.")
-      return
-    }
-    setFeatureErrors(new Set())
-    goNext()
-  }
-
   function nextFromNewSector() {
     if (!sectors[0]?.name?.trim()) {
       setError("El nombre del sector es obligatorio.")
@@ -404,7 +392,7 @@ export default function AgregarLugar() {
     setImages([]); setPreviews([])
     setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
     setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
-    setFeatureErrors(new Set()); setError(null); setSuccess(null); setFailures([])
+    setError(null); setSuccess(null); setFailures([])
     setSelectedSpotId(null); setAvailableSpots([])
     setIsPublic(null); setPublicTransport(null); setIsResponsible(null)
     setCreatingNewSpot(false); setClimbingMode(null)
@@ -642,11 +630,9 @@ export default function AgregarLugar() {
           <StepTrekkingCaracteristicas
             trekkingFeatures={trekkingFeatures}
             setTrekkingFeatures={setTrekkingFeatures}
-            featureErrors={featureErrors}
-            setFeatureErrors={setFeatureErrors}
             error={error}
             onBack={goBack}
-            onNext={nextFromTrekkingFeatures}
+            onNext={goNext}
           />
         )}
 
