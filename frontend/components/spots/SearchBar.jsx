@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf", "Motorhome"]
@@ -14,8 +14,25 @@ function normalize(str) {
   return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
-export default function SearchBar({ onSearch, hero = false } = {}) {
-  const searchParams = useSearchParams()
+// useSearchParams obliga a un <Suspense> para que las páginas se puedan
+// armar estáticas (el buscador está en el navbar de todas). Mientras tanto
+// se muestra la misma barra vacía: no salta nada.
+const NO_PARAMS = new URLSearchParams()
+
+/** @param {{ onSearch?: () => void, hero?: boolean, compact?: boolean }} props */
+export default function SearchBar(props) {
+  return (
+    <Suspense fallback={<SearchBarFields {...props} searchParams={NO_PARAMS} />}>
+      <SearchBarFromUrl {...props} />
+    </Suspense>
+  )
+}
+
+function SearchBarFromUrl(props) {
+  return <SearchBarFields {...props} searchParams={useSearchParams()} />
+}
+
+function SearchBarFields({ onSearch, hero = false, searchParams }) {
   // Arranca con lo que diga la URL (por ejemplo, en /search?activity=Surf).
   const [activity, setActivity] = useState(() => searchParams.get("activity") ?? "")
   const [activityInput, setActivityInput] = useState(activity)

@@ -88,7 +88,9 @@ export default function HeroHeader() {
 
         {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
 
-        {isLoggedIn ? (
+        {status === "loading" ? (
+          <span className="nav-session-slot" aria-hidden="true" />
+        ) : isLoggedIn ? (
           <Link href="/profile" style={{ display: "flex", borderRadius: "50%", transition: "opacity 0.2s" }}>
             <Avatar user={session.user} />
           </Link>

@@ -296,6 +296,9 @@ function Navbar() {
         /* Mismo estilo que "Iniciar sesión": es la otra acción principal. */
         .addplace-nav-btn { text-decoration: none; display: inline-flex; align-items: center; }
 
+        /* Mientras se sabe si hay sesión: el lugar del avatar, vacío. */
+        .nav-session-slot { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.12); flex-shrink: 0; }
+
         /* Avatar genérico — solo mobile */
         .signin-avatar-mobile { display: none; }
 
@@ -393,7 +396,9 @@ function Navbar() {
 
           {isLoggedIn && session?.id_token && <NotificationBell token={session.id_token} />}
 
-          {isLoggedIn ? (
+          {status === "loading" ? (
+            <span className="nav-session-slot" aria-hidden="true" />
+          ) : isLoggedIn ? (
             <Link href="/profile" className="avatar-btn" aria-label="Mi perfil">
               <Avatar user={session.user} size={32} />
             </Link>

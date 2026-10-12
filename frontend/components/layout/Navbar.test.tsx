@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
 let session: { user: { name: string; email: string; image: null } } | null = null
+let loading = false
 vi.mock("next-auth/react", () => ({
-  useSession: () => ({ data: session, status: session ? "authenticated" : "unauthenticated" }),
+  useSession: () => ({ data: session, status: loading ? "loading" : session ? "authenticated" : "unauthenticated" }),
   signOut: () => {},
 }))
 let pathname = "/spots"
@@ -52,5 +53,15 @@ describe("Navbar", () => {
     expect(container.querySelector(".dropdown-menu.is-open")).toBeNull()
     expect(container.querySelector(".dropdown-menu.is-closed")).toBeTruthy()
     pathname = "/spots"
+  })
+
+  it("mientras carga la sesión no muestra 'Iniciar sesión' (para no parpadear): reserva el lugar del avatar", () => {
+    session = null
+    loading = true
+    const { container } = render(<Navbar />)
+    expect(screen.queryByRole("button", { name: "Iniciar sesión" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Mi perfil" })).toBeNull()
+    expect(container.querySelector(".nav-session-slot")).toBeTruthy()
+    loading = false
   })
 })

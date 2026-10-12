@@ -82,9 +82,9 @@ function FavoritesLoader() {
   return null
 }
 
-export default function Providers({ children, session }) {
+export default function Providers({ children }) {
   return (
-    <SessionProvider session={session} refetchInterval={5 * 60}>
+    <SessionProvider refetchInterval={5 * 60}>
       <AuthErrorHandler />
       <RememberMeHandler />
       <TermsAcceptHandler />

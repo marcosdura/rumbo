@@ -3,8 +3,6 @@ import { Geist, Geist_Mono, Nunito, Playfair_Display, DM_Sans } from "next/font/
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
 import Providers from "@/components/layout/Providers"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,19 +65,22 @@ export const viewport: Viewport = {
   themeColor: "#1b4332",
 };
 
-export default async function RootLayout({
+// La sesión no se lee acá: leer la cookie en el servidor volvía dinámicas todas
+// las páginas (la home ignoraba su revalidate y cada visita le pegaba al
+// backend). La sesión la pide SessionProvider en el navegador; mientras
+// carga, el navbar reserva el lugar del avatar.
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions)
   return (
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers session={session}>
+        <Providers>
           {children}
         </Providers>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (

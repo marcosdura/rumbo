@@ -17,12 +17,16 @@ const REVALIDATE_SECONDS = 600
 // La invitación a sumar lugares va después de esta cantidad de secciones.
 const INVITE_AFTER = 2
 
+// Si el backend falla al regenerarla, se tira el error: Next sigue sirviendo
+// la última home buena (con un null quedaba guardado el error 10 minutos).
+// En el build no: un backend caído no tiene que frenar el deploy.
 async function loadHome(): Promise<HomeData | null> {
   try {
     const { data } = await api.get<HomeData>("/home", { next: { revalidate: REVALIDATE_SECONDS } })
     return data
-  } catch {
-    return null
+  } catch (e) {
+    if (process.env.NEXT_PHASE === "phase-production-build") return null
+    throw e
   }
 }
 

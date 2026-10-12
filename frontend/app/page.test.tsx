@@ -48,9 +48,21 @@ describe("Home", () => {
     expect(screen.getByText("¿Conocés un lugar que no está?")).toBeTruthy()
   })
 
-  it("si el backend no responde, ofrece reintentar", async () => {
+  it("si el backend no responde al regenerarla, tira el error: Next sigue mostrando la última home buena", async () => {
+    await expect(Home()).rejects.toThrow("caído")
+  })
+
+  it("en el build, con el backend caído, igual se arma (ofrece reintentar) y no frena el deploy", async () => {
+    vi.stubEnv("NEXT_PHASE", "phase-production-build")
     render(await Home())
+    vi.unstubAllEnvs()
     expect(screen.getByText("No pudimos cargar los lugares.")).toBeTruthy()
     expect(screen.getByRole("button", { name: "Reintentar" })).toBeTruthy()
+  })
+
+  it("el layout no lee la sesión en el servidor (volvía dinámica la home y su caché no andaba)", async () => {
+    const { readFileSync } = await import("node:fs")
+    const layout = readFileSync("app/layout.tsx", "utf-8")
+    expect(layout).not.toMatch(/getServerSession|cookies\(|headers\(/)
   })
 })
