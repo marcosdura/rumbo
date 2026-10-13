@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { readFileSync } from "node:fs"
 
 let imageProps: Record<string, unknown> = {}
+const allImages: Record<string, unknown>[] = []
 vi.mock("next-cloudinary", () => ({
-  CldImage: (p: Record<string, unknown>) => { imageProps = p; return <img alt={String(p.alt)} /> },
+  CldImage: (p: Record<string, unknown>) => { imageProps = p; allImages.push(p); return <img alt={String(p.alt)} /> },
 }))
+
+// Los estilos de la card están en SpotCard.css (antes, un <style> en cada card).
+const css = readFileSync("components/spots/SpotCard.css", "utf-8")
 vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: () => <button>favorito</button> }))
 
 // SpotCard es .jsx: TypeScript infiere sus props como obligatorias.
-const SpotCard = (await import("./SpotCard")).default as unknown as (props: { spot: Record<string, unknown> }) => React.ReactElement
+const SpotCard = (await import("./SpotCard")).default as unknown as (props: { spot: Record<string, unknown>; priority?: boolean }) => React.ReactElement
+const SpotList = (await import("./SpotList")).default as unknown as (props: { spots: Record<string, unknown>[]; eager?: boolean }) => React.ReactElement
 
 const base = {
   id: 1, name: "Camping del Arroyo", slug: "camping-del-arroyo", department: "Rocha",
@@ -29,6 +35,31 @@ describe("SpotCard", () => {
   it("pide la foto del tamaño de la card, recortada donde está lo interesante", () => {
     render(<SpotCard spot={base} />)
     expect(imageProps).toMatchObject({ width: 480, height: 480, crop: "fill", gravity: "auto" })
+  })
+
+  it("no trae su propio <style>: con muchas cards, el CSS se repetía en el HTML una vez por card", () => {
+    const { container } = render(<><SpotCard spot={base} /><SpotCard spot={{ ...base, id: 2 }} /></>)
+    expect(container.querySelectorAll("style")).toHaveLength(0)
+    expect(css).toMatch(/\.spot-card \{[^}]*border-radius: 20px;/)
+  })
+
+  it("la foto carga cuando hace falta, salvo en las cards de arriba", () => {
+    render(<SpotCard spot={base} />)
+    expect(imageProps.loading).toBe("lazy")
+    expect(imageProps.priority).toBeUndefined()
+    render(<SpotCard spot={base} priority />)
+    expect(imageProps.priority).toBe(true)
+    expect(imageProps.loading).toBeUndefined()
+  })
+
+  it("en la primera fila, solo las primeras 4 cards cargan la foto de entrada", () => {
+    const spots = Array.from({ length: 6 }, (_, i) => ({ ...base, id: i + 1, slug: `l${i}` }))
+    allImages.length = 0
+    render(<SpotList spots={spots} eager />)
+    expect(allImages.map(p => p.priority === true)).toEqual([true, true, true, true, false, false])
+    allImages.length = 0
+    render(<SpotList spots={spots} />)
+    expect(allImages.some(p => p.priority)).toBe(false)
   })
 
   it("debajo del nombre: Departamento · reseñas (estrellas, Nuevo o Sin reseñas)", () => {
@@ -55,14 +86,12 @@ describe("SpotCard", () => {
     const { container } = render(<SpotCard spot={{ ...base, categories: [{ name: "Camping" }, { name: "Glamping" }, { name: "Trekking" }] }} />)
     const badges = container.querySelector(".spot-card-badges")!
     expect(badges.textContent).toBe("🏕️ Camping+2")
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
     expect(css).toMatch(/\.spot-card-badges \{[^}]*flex-wrap: nowrap;/)
     expect(badges.querySelector(".spot-card-pill-text")).toBeTruthy()
   })
 
   it("el nombre: la letra del texto de la portada, en negrita y sin la flecha", () => {
     const { container } = render(<SpotCard spot={base} />)
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
     expect(css).toMatch(/\.spot-card-name \{[^}]*font-family: var\(--font-dm-sans\)[^}]*font-weight: 700;/)
     expect(container.querySelector("svg")).toBeNull()
   })
@@ -70,20 +99,17 @@ describe("SpotCard", () => {
   it("sin precio, temporada ni mascotas no deja un renglón en blanco", () => {
     const { container } = render(<SpotCard spot={base} />)
     expect(container.querySelector(".spot-card-facts")).toBeNull()
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
     expect(css).not.toMatch(/\.spot-card-facts \{[^}]*min-height/)
   })
 
   it("el nombre ocupa hasta dos renglones y termina en …; entero al pasar por encima", () => {
-    const { container } = render(<SpotCard spot={base} />)
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    render(<SpotCard spot={base} />)
     expect(css).toMatch(/\.spot-card-name \{[^}]*-webkit-line-clamp: 2;[^}]*overflow: hidden;/)
     expect(screen.getByText("Camping del Arroyo").getAttribute("title")).toBe("Camping del Arroyo")
   })
 
   it("compacta: poco espacio entre el nombre, las reseñas, los datos y la categoría", () => {
-    const { container } = render(<SpotCard spot={base} />)
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    render(<SpotCard spot={base} />)
     const margin = (cls: string) => css.match(new RegExp(`\\.${cls} \\{[^}]*margin: 0 0 (\\d+)px`))?.[1]
     expect([margin("spot-card-name"), margin("spot-card-rating"), margin("spot-card-facts")]).toEqual(["1", "4", "5"])
     expect(css).toContain(".spot-card-body { padding: 8px 12px 10px; }")

@@ -7,13 +7,19 @@ import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
 import { PETS_EMOJI, factsLine, ratingLabel } from "@/lib/spotCard"
+import "./SpotCard.css"
 
 const CATEGORY_EMOJI = {
   Camping: "🏕️", Glamping: "🛖", Trekking: "🥾",
   Escalada: "🧗", Surf: "🏄", Kayak: "🛶", Motorhome: "🚐",
 }
 
-function SpotCard({ spot, isHighlighted = false, activeCategory }) {
+// Cuántas cards de arriba cargan la foto de entrada (las que se ven sin
+// scrollear en PC; en el celular, las primeras dos). Con "lazy" el navegador
+// esperaba ~3,7 s para pedir la foto más grande de la pantalla.
+export const EAGER_CARDS = 4
+
+function SpotCard({ spot, isHighlighted = false, activeCategory, priority = false }) {
   const [showExtraCategories, setShowExtraCategories] = useState(false)
   const [extraCategoriesPos, setExtraCategoriesPos] = useState(null)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
@@ -34,134 +40,6 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
 
   return (
     <>
-      <style>{`
-
-        .spot-card {
-          font-family: var(--font-dm-sans), sans-serif;
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          overflow: hidden;
-          cursor: pointer;
-          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                      box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                      border-color 0.2s;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-          will-change: transform, box-shadow;
-        }
-        .spot-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .spot-card.highlighted {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-
-        .spot-card-img-wrap {
-          height: 160px;
-          overflow: hidden;
-          position: relative;
-        }
-        .spot-card-img-wrap img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-          will-change: transform;
-        }
-        .spot-card:hover .spot-card-img-wrap img {
-          transform: scale(1.07);
-        }
-
-        .spot-card-img-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 55%);
-        }
-
-        .spot-card-body { padding: 8px 12px 10px; }
-
-        .spot-card-name {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 14px;
-          font-weight: 700;
-          line-height: 1.25;
-          color: #1b1b19;
-          margin: 0 0 1px;
-          /* Hasta dos renglones; si no entra, termina en "…". */
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        .spot-card-rating {
-          font-size: 13px;
-          color: var(--muted-strong);
-          margin: 0 0 4px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          min-width: 0;
-          white-space: nowrap;
-        }
-        .spot-card-dept {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-width: 0;
-        }
-        .spot-card-rating .sep { color: var(--muted); }
-        .spot-card-rating .star { color: var(--primary); }
-        .spot-card-rating.is-new { color: var(--primary); font-weight: 600; }
-        .spot-card-rating.is-none { color: var(--muted); }
-
-        .spot-card-facts {
-          font-size: 12px;
-          color: var(--muted-strong);
-          margin: 0 0 5px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .spot-card { position: relative; }
-        .spot-card-link { text-decoration: none; display: block; color: inherit; }
-        .spot-card-fav { position: absolute; top: 10px; right: 10px; z-index: 10; }
-
-        .spot-card-secondary-match {
-          font-size: 11px;
-          font-weight: 500;
-          color: var(--primary);
-          margin: 0 0 4px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .spot-card-badges {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          flex-wrap: nowrap;
-          min-width: 0;
-        }
-        .spot-card-pill-text {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          display: block;
-        }
-
-        @media (max-width: 480px) {
-          .spot-card-img-wrap { height: 120px; }
-          .spot-card-name     { font-size: 12.5px; }
-          .spot-card-rating   { font-size: 12px; }
-          .spot-card-body     { padding: 7px 10px 9px; }
-          .spot-card-badges   { gap: 4px; }
-        }
-      `}</style>
-
       <div className={`spot-card${isHighlighted ? " highlighted" : ""}`}>
       {/* Misma pestaña, como los títulos de las colecciones. */}
       <Link href={`/spots/${spot.slug}`} className="spot-card-link">
@@ -177,7 +55,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory }) {
               crop="fill"
               gravity="auto"
               alt={spot.name}
-              loading="lazy"
+              {...(priority ? { priority: true } : { loading: "lazy" })}
               quality="auto"
               format="auto"
               sizes="(max-width: 480px) 50vw, 300px"

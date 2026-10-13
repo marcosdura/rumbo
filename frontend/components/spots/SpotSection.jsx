@@ -49,7 +49,7 @@ function NavArrow({ dir, enabled, onClick }) {
   )
 }
 
-export default function SpotSection({ label, title, count, spots, loading, href }) {
+export default function SpotSection({ label, title, count, spots, loading, href, eager = false }) {
   const [hovered, setHovered] = useState(false)
   const [canLeft, setCanLeft]   = useState(false)
   const [canRight, setCanRight] = useState(false)
@@ -253,7 +253,7 @@ export default function SpotSection({ label, title, count, spots, loading, href 
           {loading
             ? [...Array(6)].map((_, i) => <div key={i} className="spot-skeleton" />)
             : <>
-                <SpotList spots={spots} />
+                <SpotList spots={spots} eager={eager} />
                 {href && spots.length >= 5 && (
                   <Link href={href} style={{ textDecoration: "none", flexShrink: 0 }}>
                     <VerTodoCard />

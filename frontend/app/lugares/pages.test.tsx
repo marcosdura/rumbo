@@ -15,7 +15,10 @@ const calls: { url: string; params?: Record<string, unknown> }[] = []
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
-vi.mock("@/components/spots/SpotCard", () => ({ default: ({ spot }: { spot: Spot }) => <a href={`/spots/${spot.slug}`}>{spot.name}</a> }))
+vi.mock("@/components/spots/SpotCard", () => ({
+  EAGER_CARDS: 4,
+  default: ({ spot, priority }: { spot: Spot; priority?: boolean }) => <a href={`/spots/${spot.slug}`} data-priority={String(!!priority)}>{spot.name}</a>,
+}))
 vi.mock("@/components/seo/JsonLd", () => ({ default: ({ data }: { data: unknown }) => <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} /> }))
 vi.mock("@/lib/api", () => ({
   api: {
@@ -50,6 +53,13 @@ describe("/lugares/[actividad]", () => {
     expect(hrefOf(/^Lavalleja/)).toBe("/lugares/camping/lavalleja")
     expect(hrefOf("Filtrar y ver en el mapa →")).toBe("/search?activity=Camping")
     expect(calls.find(c => c.url === "/spots")?.params).toMatchObject({ activity: "Camping", department: undefined, limit: 100 })
+  })
+
+  it("las fotos de las primeras 4 cards cargan de entrada (son las que se ven)", async () => {
+    spots = Array.from({ length: 6 }, (_, i) => ({ id: i + 1, name: `Lugar ${i + 1}`, slug: `l${i + 1}` }))
+    render(await one("camping"))
+    const flags = spots.map(s => screen.getByRole("link", { name: s.name }).getAttribute("data-priority"))
+    expect(flags).toEqual(["true", "true", "true", "true", "false", "false"])
   })
 
   it("si hay más de los que entran, manda al buscador con el total", async () => {

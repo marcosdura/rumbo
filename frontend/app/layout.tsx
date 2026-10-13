@@ -3,7 +3,7 @@ import { Nunito, Playfair_Display, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
 import Providers from "@/components/layout/Providers"
-import { SITE_URL } from "@/lib/site"
+import { SITE_URL, preconnectOrigins } from "@/lib/site"
 import { DEFAULT_SHARE_IMAGE } from "@/lib/seo"
 
 // Sin Geist ni Geist Mono (las que trae Next): solo las usaba el formulario
@@ -80,6 +80,11 @@ export default function RootLayout({
       lang="es"
       className={`${nunito.variable} ${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
     >
+      <head>
+        {preconnectOrigins(process.env.NEXT_PUBLIC_API_URL).map(o => (
+          <link key={o.href} rel="preconnect" href={o.href} crossOrigin={o.crossOrigin} />
+        ))}
+      </head>
       <body className="min-h-full flex flex-col">
         <Providers>
           {children}

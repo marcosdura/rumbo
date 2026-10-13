@@ -4,7 +4,7 @@ import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import JsonLd from "@/components/seo/JsonLd"
-import SpotCard from "@/components/spots/SpotCard"
+import SpotCard, { EAGER_CARDS } from "@/components/spots/SpotCard"
 import type { SpotListItem } from "@/lib/types"
 import {
   activitiesIn, departmentsWith, placesHeading, placesJsonLd, placesPath, searchPath,
@@ -12,7 +12,7 @@ import {
 } from "@/lib/places"
 
 // SpotCard es .jsx.
-const Card = SpotCard as unknown as (p: { spot: SpotListItem; activeCategory?: string }) => React.ReactElement
+const Card = SpotCard as unknown as (p: { spot: SpotListItem; activeCategory?: string; priority?: boolean }) => React.ReactElement
 
 type Chip = { href: string; label: string; count?: number }
 
@@ -123,7 +123,7 @@ export default function PlacesPage({ activity, department, counts, spots, total 
 
           {spots.length > 0 ? (
             <div className="places-grid">
-              {spots.map(spot => <Card key={spot.id} spot={spot} activeCategory={activity?.name} />)}
+              {spots.map((spot, i) => <Card key={spot.id} spot={spot} activeCategory={activity?.name} priority={i < EAGER_CARDS} />)}
             </div>
           ) : (
             <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 20, padding: "48px 32px", textAlign: "center", marginTop: 28 }}>

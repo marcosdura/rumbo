@@ -113,6 +113,7 @@ export default async function Home() {
                     spots={section.spots}
                     href={section.href}
                     loading={false}
+                    eager={i === 0}
                   />
                   {i === INVITE_AFTER - 1 && <AddPlaceInvite />}
                 </Fragment>

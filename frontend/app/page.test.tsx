@@ -10,7 +10,7 @@ vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/HeroHeader", () => ({ default: () => <div data-testid="hero-bar" /> }))
 vi.mock("@/components/spots/SearchBar", () => ({ default: () => null }))
 vi.mock("@/components/spots/SpotSection", () => ({
-  default: ({ title, spots }: { title: string; spots: unknown[] }) => <h2 data-spots={spots.length}>{title}</h2>,
+  default: ({ title, spots, eager }: { title: string; spots: unknown[]; eager?: boolean }) => <h2 data-spots={spots.length} data-eager={String(!!eager)}>{title}</h2>,
 }))
 vi.mock("@/lib/api", () => ({
   api: { get: () => (home ? Promise.resolve({ data: home }) : Promise.reject(new Error("caído"))) },
@@ -33,6 +33,8 @@ describe("Home", () => {
     const order = Array.from(container.querySelectorAll("h2, p")).map(e => e.textContent)
       .filter(t => ["Populares", "Recién agregados", "¿Conocés un lugar que no está?", "Lugares en Rocha"].includes(t ?? ""))
     expect(order).toEqual(["Populares", "Recién agregados", "¿Conocés un lugar que no está?", "Lugares en Rocha"])
+    // Solo la primera fila carga sus fotos de entrada: es la que se ve sin scrollear.
+    expect(Array.from(container.querySelectorAll("h2[data-eager]")).map(h => h.getAttribute("data-eager"))).toEqual(["true", "false", "false"])
     expect(screen.getByRole("link", { name: "＋ Agregar lugar" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 
