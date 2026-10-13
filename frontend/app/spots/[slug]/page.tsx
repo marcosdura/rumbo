@@ -7,6 +7,8 @@ import { api } from "@/lib/api"
 import { nullIfNotFound } from "@/lib/notFound"
 import type { PublicSpot } from "@/lib/types"
 import { shareImageUrl } from "@/lib/spotDetail"
+import { SITE_URL } from "@/lib/site"
+import { breadcrumb, metaDescription, pageTitle, socialMetadata, spotFallbackDescription } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -35,21 +37,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, mainImage.cloudinary_public_id)
     : undefined
 
+  const title = pageTitle(spot.name)
+  const description = metaDescription(spot.description) || spotFallbackDescription(spot)
   return {
-    title: `${spot.name} | Rumbo`,
-    description: spot.description?.slice(0, 160),
-    openGraph: {
-      title: `${spot.name} | Rumbo`,
-      description: spot.description?.slice(0, 160),
-      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630 }] : [],
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${spot.name} | Rumbo`,
-      description: spot.description?.slice(0, 160),
-      images: imageUrl ? [imageUrl] : [],
-    },
+    title,
+    description,
+    ...socialMetadata({ title, description, path: `/spots/${slug}`, image: imageUrl }),
   }
 }
 
@@ -66,8 +59,9 @@ export default async function SpotPage({ params }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Place",
-    name: spot.name,
-    description: spot.description,
+    name: spot.name.trim(),
+    description: spot.description?.trim() || spotFallbackDescription(spot),
+    url: `${SITE_URL}/spots/${slug}`,
     ...(imageUrl ? { image: imageUrl } : {}),
     ...(spot.department ? { address: { "@type": "PostalAddress", addressRegion: spot.department } } : {}),
     ...(spot.lat && spot.lng ? { geo: { "@type": "GeoCoordinates", latitude: spot.lat, longitude: spot.lng } } : {}),
@@ -78,7 +72,7 @@ export default async function SpotPage({ params }: Props) {
 
   return (
     <>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={[jsonLd, breadcrumb([{ name: spot.name, path: `/spots/${slug}` }])]} />
       <SpotDetails spot={spot} />
     </>
   )

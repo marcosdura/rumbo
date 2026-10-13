@@ -73,4 +73,14 @@ describe("Home", () => {
     expect(hero.firstElementChild).toBe(screen.getByTestId("hero-bar"))
     expect(hero.style.padding).toBe("0px 0px 52px")
   })
+
+  it("SEO: canónica '/' y datos del sitio para Google (WebSite y Organization con el logo)", async () => {
+    home = { stats: { spots: 1, departments: 1 }, sections: [] }
+    const { metadata } = await import("./page")
+    expect(metadata.alternates?.canonical).toBe("/")
+    const { container } = render(await Home())
+    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!)
+    expect(ld.map((x: { "@type": string }) => x["@type"])).toEqual(["WebSite", "Organization"])
+    expect(ld[1].logo).toBe("https://rumboapp.uy/RumboLogo.png")
+  })
 })

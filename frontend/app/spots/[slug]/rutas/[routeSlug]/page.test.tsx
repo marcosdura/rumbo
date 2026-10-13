@@ -161,3 +161,23 @@ describe("para seguir navegando y compartir", () => {
     vi.unstubAllEnvs()
   })
 })
+
+describe("SEO", () => {
+  it("canónica, og:url y título sin espacios de más", async () => {
+    page = { route: { ...route, name: "Cumbre " }, spot, others: [] }
+    const meta = await generateMetadata({ params })
+    expect(meta.title).toBe("Cumbre | Rumbo")
+    expect(meta.alternates?.canonical).toBe("/spots/arequita/rutas/cumbre")
+    expect(meta.openGraph?.url).toBe("/spots/arequita/rutas/cumbre")
+  })
+
+  it("datos estructurados: el atractivo dentro de su lugar y las migas de pan", async () => {
+    page = { route: { ...route, name: "Cumbre " }, spot, others: [] }
+    const { container } = render(await TrekkingRoutePage({ params }))
+    const [attraction, crumbs] = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!)
+    expect(attraction["@type"]).toBe("TouristAttraction")
+    expect(attraction.name).toBe("Cumbre")
+    expect(attraction.containedInPlace.url).toBe("https://rumboapp.uy/spots/arequita")
+    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(["Inicio", "Cerro Arequita", "Cumbre"])
+  })
+})

@@ -8,7 +8,7 @@ vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("@/components/ui/ReportButton", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
-vi.mock("@/components/seo/JsonLd", () => ({ default: () => null }))
+vi.mock("@/components/seo/JsonLd", () => ({ default: ({ data }: { data: unknown }) => <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} /> }))
 vi.mock("@/components/operator-page/BackButton", () => ({ default: () => null }))
 vi.mock("@/components/operator-page/OperatorPhotos", () => ({ default: () => null }))
 let fail: number | null = null
@@ -172,5 +172,19 @@ describe("Si no existe o si falló la API", () => {
     fail = 503
     await expect(SurfSchoolPage({ params })).rejects.toThrow("caído")
     fail = null
+  })
+})
+
+describe("SEO", () => {
+  it("canónica con el nombre de hoy y migas de pan con la playa", async () => {
+    school = { ...base, name: "Escuela Ola ", spot_slug: "playa", spot_name: "Playa Brava" }
+    const { generateMetadata, default: Page } = await import("./page")
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: "nombre-viejo-4" }) })
+    expect(meta.title).toBe("Escuela Ola | Rumbo")
+    expect(meta.alternates?.canonical).toBe("/surf/escuela-ola-4")
+    const { container } = render(await Page({ params: Promise.resolve({ slug: "escuela-ola-4" }) }))
+    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')?.textContent ?? "[]")
+    const crumbs = ld.find((x: { "@type": string }) => x["@type"] === "BreadcrumbList")
+    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(["Inicio", "Playa Brava", "Escuela Ola"])
   })
 })

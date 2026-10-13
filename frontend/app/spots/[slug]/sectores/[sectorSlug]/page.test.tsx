@@ -140,3 +140,23 @@ describe("otros sectores", () => {
     expect(link.textContent).toContain("1 vía")
   })
 })
+
+describe("SEO", () => {
+  it("canónica, og:url y título sin espacios de más", async () => {
+    page = { sector: { ...sector, name: "Norte " }, spot, routes, others: [] }
+    const meta = await generateMetadata({ params })
+    expect(meta.title).toBe("Norte | Rumbo")
+    expect(meta.alternates?.canonical).toBe("/spots/arequita/sectores/norte")
+    expect(meta.openGraph?.url).toBe("/spots/arequita/sectores/norte")
+  })
+
+  it("datos estructurados: el atractivo dentro de su lugar y las migas de pan", async () => {
+    page = { sector: { ...sector, name: "Norte " }, spot, routes, others: [] }
+    const { container } = render(await SectorPage({ params }))
+    const [attraction, crumbs] = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!)
+    expect(attraction["@type"]).toBe("TouristAttraction")
+    expect(attraction.name).toBe("Norte")
+    expect(attraction.containedInPlace.url).toBe("https://rumboapp.uy/spots/arequita")
+    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(["Inicio", "Cerro Arequita", "Norte"])
+  })
+})

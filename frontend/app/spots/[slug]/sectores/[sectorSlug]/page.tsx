@@ -12,6 +12,8 @@ import { nullIfNotFound } from "@/lib/notFound"
 import { sectorDescription } from "@/lib/metadata"
 import { otherSectorFacts, sectorStats, sharePhoto, type SectorPage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
+import JsonLd from "@/components/seo/JsonLd"
+import { breadcrumb, pageTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>
@@ -26,11 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, sectorSlug } = await params
   const page = await getSectorPage(slug, sectorSlug)
   const photo = page ? sharePhoto(page.sector.photos, page.spot) : null
-  return {
-    title: `${page?.sector.name ?? sectorSlug} | Rumbo`,
-    description: sectorDescription(page?.sector ?? null),
-    ...(photo ? { openGraph: { images: [{ url: shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo), width: 1200, height: 630 }] } } : {}),
-  }
+  const title = pageTitle(page?.sector.name ?? sectorSlug)
+  const description = sectorDescription(page?.sector ?? null)
+  const image = photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null
+  return { title, description, ...socialMetadata({ title, description, path: `/spots/${slug}/sectores/${sectorSlug}`, image }) }
 }
 
 export default async function SectorPage({ params }: Props) {
@@ -40,7 +41,19 @@ export default async function SectorPage({ params }: Props) {
   const { sector, spot, routes, others } = page
   const restrictions = sector.restrictions?.trim()
 
+  const path = `/spots/${slug}/sectores/${sectorSlug}`
+  const photo = sharePhoto(sector.photos, spot)
+  const ld = [
+    trailJsonLd({
+      name: sector.name, path, spot, description: sectorDescription(sector),
+      image: photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null,
+    }),
+    breadcrumb([{ name: spot.name, path: `/spots/${spot.slug}` }, { name: sector.name, path }]),
+  ]
+
   return (
+    <>
+    <JsonLd data={ld} />
     <TrailLayout spot={spot} eyebrow="Sector de escalada" title={sector.name}>
       {sector.type && (
         <div><Pill variant="green" size="lg">🧗 {sector.type}</Pill></div>
@@ -71,5 +84,6 @@ export default async function SectorPage({ params }: Props) {
         items={others.map(o => ({ href: `/spots/${spot.slug}/sectores/${o.slug}`, name: o.name, facts: otherSectorFacts(o) }))}
       />
     </TrailLayout>
+    </>
   )
 }

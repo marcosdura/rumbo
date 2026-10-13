@@ -10,6 +10,8 @@ import { LAST_UPDATED, SECTIONS } from "./content"
 export const metadata: Metadata = {
   title: "Legal e información | Rumbo",
   description: "Qué es Rumbo, cómo tratamos tus datos, los términos de uso y cómo contactarnos.",
+  alternates: { canonical: "/legal" },
+  openGraph: { url: "/legal" },
 }
 
 export default function LegalPage() {

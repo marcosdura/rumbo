@@ -1,7 +1,9 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
-import { idFromSlug } from "@/lib/slugify"
+import { idFromSlug, slugWithId } from "@/lib/slugify"
+import { breadcrumb, metaDescription, pageTitle, socialMetadata } from "@/lib/seo"
 import { api } from "@/lib/api"
 import { isNotFound } from "@/lib/notFound"
 import { operatorDescription, operatorShareImage, kayakInfoRows } from "@/lib/operatorPage"
@@ -11,7 +13,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Kayak | Rumbo" }
@@ -21,17 +23,11 @@ export async function generateMetadata({ params }: Props) {
   } catch {
     return { title: "Kayak | Rumbo" }
   }
-  const description = kayak.description?.trim().slice(0, 160) || operatorDescription("Servicio de kayak", kayak)
-  return {
-    title: `${kayak.name} | Rumbo`,
-    description,
-    openGraph: {
-      title: `${kayak.name} | Rumbo`,
-      description,
-      images: kayak.photo_1 ? [{ url: operatorShareImage(kayak.photo_1), width: 1200, height: 630 }] : [],
-      type: "website",
-    },
-  }
+  const description = metaDescription(kayak.description) || operatorDescription("Servicio de kayak", kayak)
+  const title = pageTitle(kayak.name)
+  // La dirección con el nombre de hoy: un link con otro nombre apunta a esta.
+  const path = `/kayak/${slugWithId(kayak.name, kayak.id)}`
+  return { title, description, ...socialMetadata({ title, description, path, image: kayak.photo_1 ? operatorShareImage(kayak.photo_1) : null }) }
 }
 
 export default async function KayakDetailPage({ params }: Props) {
@@ -67,7 +63,10 @@ export default async function KayakDetailPage({ params }: Props) {
 
   return (
     <>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={[jsonLd, breadcrumb([
+        ...(kayak.spot_slug ? [{ name: kayak.spot_name ?? "", path: `/spots/${kayak.spot_slug}` }] : []),
+        { name: kayak.name, path: `/kayak/${slugWithId(kayak.name, kayak.id)}` },
+      ])]} />
       <OperatorPage
         operator={kayak}
         summary={summary}

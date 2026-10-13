@@ -1,4 +1,7 @@
 import { Fragment } from "react"
+import type { Metadata } from "next"
+import JsonLd from "@/components/seo/JsonLd"
+import { SITE_JSON_LD } from "@/lib/seo"
 import Footer from "@/components/layout/Footer"
 import Navbar from "@/components/layout/Navbar"
 import HeroHeader from "@/components/layout/HeroHeader"
@@ -30,12 +33,18 @@ async function loadHome(): Promise<HomeData | null> {
   }
 }
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+}
+
 export default async function Home() {
   const data = await loadHome()
   const sections = data?.sections ?? []
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
+      <JsonLd data={SITE_JSON_LD} />
       {/* Navbar: fixed en home, oculto hasta que el hero salga del viewport */}
       <Navbar />
 

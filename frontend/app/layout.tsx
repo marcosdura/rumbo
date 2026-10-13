@@ -3,6 +3,8 @@ import { Nunito, Playfair_Display, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
 import Providers from "@/components/layout/Providers"
+import { SITE_URL } from "@/lib/site"
+import { DEFAULT_SHARE_IMAGE } from "@/lib/seo"
 
 // Sin Geist ni Geist Mono (las que trae Next): solo las usaba el formulario
 // de agregar lugar, que ahora usa DM Sans como el resto. Dos fuentes menos
@@ -24,6 +26,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  // Las direcciones relativas (canónicas, imágenes al compartir) se completan
+  // con el dominio. Sin esto, Google y las redes recibían rutas sueltas.
+  metadataBase: new URL(SITE_URL),
   title: "Rumbo | Encontrá tu próxima aventura en Uruguay",
   description: "Descubrí los mejores lugares para camping, trekking, escalada, surf y kayak en Uruguay.",
   icons: {
@@ -42,7 +47,10 @@ export const metadata: Metadata = {
     description: "Descubrí los mejores lugares para camping, trekking, escalada, surf y kayak en Uruguay.",
     type: "website",
     locale: "es_UY",
+    siteName: "Rumbo",
+    images: [DEFAULT_SHARE_IMAGE],
   },
+  twitter: { card: "summary_large_image", images: [DEFAULT_SHARE_IMAGE.url] },
   // Para que iOS abra en modo standalone al agregar a pantalla de inicio.
   appleWebApp: {
     capable: true,

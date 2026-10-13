@@ -11,6 +11,8 @@ import { nullIfNotFound } from "@/lib/notFound"
 import { routeDescription } from "@/lib/metadata"
 import { otherRouteFacts, routeStats, sharePhoto, type RoutePage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
+import JsonLd from "@/components/seo/JsonLd"
+import { breadcrumb, metaDescription, pageTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string; routeSlug: string }>
@@ -26,11 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, routeSlug } = await params
   const page = await getRoutePage(slug, routeSlug)
   const photo = page ? sharePhoto(page.route.photos, page.spot) : null
-  return {
-    title: `${page?.route.name ?? routeSlug} | Rumbo`,
-    description: page?.route.description?.trim().slice(0, 160) || routeDescription(page?.route ?? null),
-    ...(photo ? { openGraph: { images: [{ url: shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo), width: 1200, height: 630 }] } } : {}),
-  }
+  const title = pageTitle(page?.route.name ?? routeSlug)
+  const description = metaDescription(page?.route.description) || routeDescription(page?.route ?? null)
+  const image = photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null
+  return { title, description, ...socialMetadata({ title, description, path: `/spots/${slug}/rutas/${routeSlug}`, image }) }
 }
 
 // Las características de la ruta y del lugar son componentes .jsx.
@@ -44,7 +45,20 @@ export default async function TrekkingRoutePage({ params }: Props) {
   const { route, spot, others } = page
   const description = route.description?.trim()
 
+  const path = `/spots/${slug}/rutas/${routeSlug}`
+  const photo = sharePhoto(route.photos, spot)
+  const ld = [
+    trailJsonLd({
+      name: route.name, path, spot,
+      description: metaDescription(description) || routeDescription(route),
+      image: photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null,
+    }),
+    breadcrumb([{ name: spot.name, path: `/spots/${spot.slug}` }, { name: route.name, path }]),
+  ]
+
   return (
+    <>
+    <JsonLd data={ld} />
     <TrailLayout spot={spot} eyebrow="Ruta de trekking" title={route.name}>
       <SectionCard title="Recorrido">
         <RouteTrack routeId={route.id} routeName={route.name} routeSlug={route.slug} track={route.track} pending={route.track_pending} />
@@ -69,5 +83,6 @@ export default async function TrekkingRoutePage({ params }: Props) {
         items={others.map(o => ({ href: `/spots/${spot.slug}/rutas/${o.slug}`, name: o.name, facts: otherRouteFacts(o) }))}
       />
     </TrailLayout>
+    </>
   )
 }

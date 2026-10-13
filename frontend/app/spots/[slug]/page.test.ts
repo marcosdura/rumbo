@@ -2,6 +2,11 @@ import { describe, expect, it, vi } from "vitest"
 
 // La página pide el lugar al backend: simulado con un valor común.
 let fail: number | null = null
+const cabo = {
+  name: "Cabo Polonio", description: "Faro y lobos marinos", department: "Rocha", categories: [{ name: "Camping" }],
+  images: [{ cloudinary_public_id: "rumbo/spots/9/otra", is_main: false }, { cloudinary_public_id: "rumbo/spots/9/principal", is_main: true }],
+}
+let spotData: Record<string, unknown> = cabo
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }))
 vi.mock("@/lib/api", () => ({
   ApiError: class extends Error { constructor(public status: number, m: string) { super(m) } },
@@ -9,10 +14,7 @@ vi.mock("@/lib/api", () => ({
     get: async () => {
       const { ApiError } = await import("@/lib/api")
       if (fail) throw new ApiError(fail, fail === 404 ? "No encontrado" : "caído")
-      return { data: {
-      name: "Cabo Polonio", description: "Faro y lobos marinos",
-      images: [{ cloudinary_public_id: "rumbo/spots/9/otra", is_main: false }, { cloudinary_public_id: "rumbo/spots/9/principal", is_main: true }],
-    } }
+      return { data: spotData }
     },
   },
 }))
@@ -41,5 +43,39 @@ describe("Si no existe o si falló la API", () => {
     fail = 503
     await expect(SpotPage({ params: Promise.resolve({ slug: "caido" }) })).rejects.toThrow("caído")
     fail = null
+  })
+})
+
+// cache() de React guarda el pedido por slug: cada test, su slug.
+const meta = (slug: string, data: Record<string, unknown>) => { spotData = data; return generateMetadata({ params: Promise.resolve({ slug }) }) }
+
+describe("SEO del lugar", () => {
+  it("canónica y og:url con su dirección", async () => {
+    const m = await meta("cabo-1", cabo)
+    expect(m.alternates?.canonical).toBe("/spots/cabo-1")
+    expect(m.openGraph?.url).toBe("/spots/cabo-1")
+  })
+
+  it("título sin espacios de más y descripción cortada en una palabra", async () => {
+    const long = "Spot de surf urbano a pocos metros de la Península de Punta del Este. Las rocas cercanas generan rompientes interesantes que lo hacen uno de los puntos más frecuentados."
+    const m = await meta("emir", { ...cabo, name: "Playa El Emir ", description: long })
+    expect(m.title).toBe("Playa El Emir | Rumbo")
+    expect(String(m.description).endsWith("…")).toBe(true)
+    expect(String(m.description).length).toBeLessThanOrEqual(160)
+  })
+
+  it("sin descripción, una armada; sin fotos, la imagen de Rumbo", async () => {
+    const m = await meta("playa-sur", { ...cabo, name: "Playa Sur", description: null, categories: [{ name: "Surf" }], images: [] })
+    expect(m.description).toBe("Playa Sur: Surf en Rocha. Información práctica, fotos y reseñas en Rumbo.")
+    expect((m.openGraph?.images as { url: string }[])[0].url).toBe("/opengraph-image")
+  })
+
+  it("los datos estructurados incluyen las migas de pan", async () => {
+    spotData = cabo
+    const { renderToStaticMarkup } = await import("react-dom/server")
+    const html = renderToStaticMarkup(await SpotPage({ params: Promise.resolve({ slug: "cabo-2" }) }))
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1])
+    expect(ld.map((x: { "@type": string }) => x["@type"])).toEqual(["Place", "BreadcrumbList"])
+    expect(ld[1].itemListElement[1].item).toBe("https://rumboapp.uy/spots/cabo-2")
   })
 })

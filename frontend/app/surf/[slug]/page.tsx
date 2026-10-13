@@ -1,7 +1,9 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import JsonLd from "@/components/seo/JsonLd"
 import OperatorPage from "@/components/operator-page/OperatorPage"
-import { idFromSlug } from "@/lib/slugify"
+import { idFromSlug, slugWithId } from "@/lib/slugify"
+import { breadcrumb, metaDescription, pageTitle, socialMetadata } from "@/lib/seo"
 import { api } from "@/lib/api"
 import { isNotFound } from "@/lib/notFound"
 import { operatorDescription, operatorShareImage, surfInfoRows } from "@/lib/operatorPage"
@@ -11,7 +13,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const id = idFromSlug(slug)
   if (id === null) return { title: "Escuela de Surf | Rumbo" }
@@ -21,17 +23,11 @@ export async function generateMetadata({ params }: Props) {
   } catch {
     return { title: "Escuela de Surf | Rumbo" }
   }
-  const description = school.description?.trim().slice(0, 160) || operatorDescription("Escuela de surf", school)
-  return {
-    title: `${school.name} | Rumbo`,
-    description,
-    openGraph: {
-      title: `${school.name} | Rumbo`,
-      description,
-      images: school.photo_1 ? [{ url: operatorShareImage(school.photo_1), width: 1200, height: 630 }] : [],
-      type: "website",
-    },
-  }
+  const description = metaDescription(school.description) || operatorDescription("Escuela de surf", school)
+  const title = pageTitle(school.name)
+  // La dirección con el nombre de hoy: un link con otro nombre apunta a esta.
+  const path = `/surf/${slugWithId(school.name, school.id)}`
+  return { title, description, ...socialMetadata({ title, description, path, image: school.photo_1 ? operatorShareImage(school.photo_1) : null }) }
 }
 
 export default async function SurfSchoolPage({ params }: Props) {
@@ -67,7 +63,10 @@ export default async function SurfSchoolPage({ params }: Props) {
 
   return (
     <>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={[jsonLd, breadcrumb([
+        ...(school.spot_slug ? [{ name: school.spot_name ?? "", path: `/spots/${school.spot_slug}` }] : []),
+        { name: school.name, path: `/surf/${slugWithId(school.name, school.id)}` },
+      ])]} />
       <OperatorPage
         operator={school}
         summary={summary}
