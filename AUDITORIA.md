@@ -96,7 +96,7 @@ como registro de qué se decidió atacar y qué no.
       → `896c57c`, `7d60795`
 - [x] **17 archivos con `<img>` crudo en vez de `CldImage`/`next/image`** — el alcance real eran 5: `RumboLogo.png` (2 archivos) a `next/image`, y las fotos de kayak/surf (3 archivos, guardadas como URL completa de Cloudinary en vez de `cloudinary_public_id`) a `CldImage` extrayendo el public_id de la URL. Los otros 12 quedaron afuera a propósito: 5 son avatares de Google (requieren `remotePatterns` + `referrerPolicy` sin confirmar en `next/image`) y 4 son previews `blob:` durante la subida (URLs locales, no remotas — imposibles de migrar).
       → `3d7fa9b`
-- [ ] **Cero cache para `/categories` y `/amenities`** — investigado y descartado sin tocar código: `/categories` no la llama nadie del frontend (la UI usa constantes hardcodeadas), `/amenities` solo se llama al publicar un lugar con amenities, no en cada carga de página. No hay tráfico real que cachear hoy.
+- [x] **Cero cache para `/categories` y `/amenities`** — cerrado sin cambios (se retoma si hace falta). Investigado y descartado sin tocar código: `/categories` no la llama nadie del frontend (la UI usa constantes hardcodeadas), `/amenities` solo se llama al publicar un lugar con amenities, no en cada carga de página. No hay tráfico real que cachear hoy.
 - [x] **Fetch de filtros de búsqueda sin `AbortController`** — `AbortController` compartido entre el efecto principal y "Cargar más" en `SearchPageContent.tsx`: cambiar de filtro rápido cancela el fetch anterior en vez de dejar que una respuesta vieja pise el estado nuevo. El "debounce" del ítem original no aplicaba: no hay ningún input de texto en este componente que dispare fetch por tecla (los filtros aplican solo al tocar "Aplicar filtros"), así que no había dónde engancharlo sin inventar un caso de uso que no existe.
       → `7300caa`
 - [x] **Doble fetch sin `cache()` en `/spots/[slug]`** — `generateMetadata` y la página comparten un solo `getSpotBySlug` envuelto en `cache()` de React (patrón documentado por Next para este caso exacto), en vez de pedir el mismo spot dos veces.
@@ -135,7 +135,7 @@ como registro de qué se decidió atacar y qué no.
       → `ac47866`
 - [x] **SEO: cero JSON-LD + URLs numéricas en surf/kayak** — `Place`/`LocalBusiness` + `AggregateRating`, slugs amigables (`/surf/nombre-id`, sin migración de base de datos)
       → `eac584e`, `a2d24a1`
-- [ ] **Sin ningún camino de monetización** — el modelo de datos ya tiene los ganchos (email/whatsapp/instagram en spots, surf, kayak), falta la capa de pago y destacados
+- [x] **Sin ningún camino de monetización** — cerrado por ahora: es una decisión de producto, se retoma más adelante si hace falta. El modelo de datos ya tiene los ganchos (email/whatsapp/instagram en los lugares), falta la capa de pago y destacados
 - [x] **Cero retención activa** — sin email, sin notificaciones, sin newsletter
       **Resuelto así:** por ahora solo notificaciones dentro de la app. Sin email ni push: no depender de servicios con tope gratuito que después obliguen a pagar. Tabla `notifications` + `notify()` en cada evento; campanita en el Navbar con no leídas y página con la lista. Avisa al dueño/autor (spot aprobado/rechazado/despublicado con motivo, pedidos de cambio de spots y escuelas, aportes, reseñas nuevas en lo suyo, contenido que otro sumó a su lugar, reseña suya borrada por el admin) y al admin (spots nuevos o reenviados, pedidos de cambio, aportes, reportes).
       *Para más adelante (evaluado):* push de la PWA es viable sin Serwist (service worker a mano en `public/sw.js`, según la guía de Next 16.2.3; Serwist solo hace falta para offline), y no depende de un servicio pago (VAPID es estándar). Email y resumen semanal quedan descartados por ahora.
@@ -148,5 +148,11 @@ como registro de qué se decidió atacar y qué no.
       - *3) Botón "Reportar"* en la página del spot, en cada reseña y en cada escuela/kayak; quien reporta solo ve "Gracias, lo vamos a revisar".
       - *4) Pestaña "Reportes" en el admin* con contador, agrupada por cosa reportada: Descartar, Despublicar el spot (con motivo), Eliminar la reseña, Eliminar la escuela. Nada se oculta solo por cantidad de reportes: siempre decide el admin.
       → `57dcc3f`, `1157c2d` (rechazo con motivo, migración 0006), `2d28775` (reportes backend, migración 0007), `6e983a4` (botón Reportar), `c8548dc` (pestaña Reportes del admin)
-- [ ] **Surf y Kayak rompen el patrón genérico de categoría** (estructural) — contacto y fotos duplicados en vez de reusar `SpotDB`/`SpotImage`, reviews propias en vez del sistema genérico
+- [x] **Surf y Kayak rompen el patrón genérico de categoría** (estructural) — contacto y fotos duplicados en vez de reusar `SpotDB`/`SpotImage`, reviews propias en vez del sistema genérico
       **Avance:** se resolvió el problema de producto que esto causaba (la playa y sus escuelas tenían un solo dueño): las playas/lagunas son lugares públicos del admin y cada escuela o servicio tiene dueño propio, dashboard propio y la misma revisión de cambios que un spot. Sigue pendiente la parte estructural (fotos en 3 columnas de URL en vez de una tabla, reseñas propias).
+      **Resuelto así:** cada escuela de surf y cada servicio de kayak es un lugar (categoría Surf / Kayak) con sus datos propios en `surf_details` / `kayak_service_details` (migración 0021, que pasó los datos, fotos, reseñas y reportes). Usan las fotos, reseñas, favoritos, panel, búsqueda y SEO de cualquier lugar; "Dónde opera" es texto libre. Las playas y lagunas quedan como lugares del admin y muestran las escuelas cercanas. Las direcciones viejas (`/surf/…`, `/kayak/…`) redirigen al lugar. La migración 0022 borra las tablas viejas.
+      → `57d6e09`, `fc8e215`, `43bae43`, `082d2ba`, `60a6d53`, `2a88922`
+
+## 06 — Pendientes fuera del código
+
+- [ ] **Google Search Console** — registrar rumboapp.uy (verificación por DNS o por archivo), mandar `https://rumboapp.uy/sitemap.xml` y revisar la cobertura de indexación. Lo hace Marcos desde su cuenta.
