@@ -16,6 +16,17 @@ const barBoxes = page => page.evaluate(() => {
 
 export async function run(browser, r) {
   const [{ slug }] = await apiGet("/spots/ids")
+
+  // SEO: lo que recibe Google en el HTML (sin navegador).
+  const html = async path => (await fetch(`${FRONT}${path}`)).text()
+  const spotHtml = await html(`/spots/${slug}`)
+  r.ok("SEO — un lugar tiene canónica", spotHtml.includes(`<link rel="canonical" href="https://rumboapp.uy/spots/${slug}"`))
+  r.ok("SEO — og:image con la dirección completa", /<meta property="og:image" content="https:\/\//.test(spotHtml))
+  r.ok("SEO — /favorites fuera de Google", /<meta name="robots" content="noindex, nofollow"/.test(await html("/favorites")))
+  const sitemapXml = await html("/sitemap.xml")
+  r.ok("SEO — el sitemap incluye rutas y sectores", sitemapXml.includes("/rutas/") && sitemapXml.includes("/sectores/"))
+  const og = await fetch(`${FRONT}/opengraph-image`)
+  r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport })
     const page = await ctx.newPage()

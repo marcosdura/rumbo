@@ -9,7 +9,7 @@ import views
 from auth import get_current_user
 from database import get_db
 from limiter import get_client_ip, limiter
-from models import SpotDB
+from models import ClimbingSector, Route, SpotDB
 from ownership import get_owned_spot_or_admin
 from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
 
@@ -108,3 +108,24 @@ def spots_near_spot(spot_id: int, db: Session = Depends(get_db)):
 def spot_owner_stats(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """Visitas de los últimos 30 días y favoritos, para el panel del dueño."""
     return views.owner_stats(db, spot.id)
+
+
+@router.get("/sitemap/trails")
+def sitemap_trails(db: Session = Depends(get_db)):
+    """Rutas de trekking y sectores de escalada publicados, para el sitemap
+    (antes no estaban: Google no encontraba esas páginas). Solo de lugares
+    publicados y con slug; los aportes en revisión los oculta el filtro global."""
+    def rows(model, kind):
+        return [
+            {"kind": kind, "spot_slug": spot_slug, "slug": slug}
+            for slug, spot_slug in (
+                db.query(model.slug, SpotDB.slug)
+                .join(SpotDB, SpotDB.id == model.spot_id)
+                .filter(
+                    model.slug.isnot(None), SpotDB.slug.isnot(None),
+                    SpotDB.is_approved.is_(True), SpotDB.owner_deleted_at.is_(None),
+                )
+                .order_by(SpotDB.slug, model.slug)
+            )
+        ]
+    return rows(Route, "rutas") + rows(ClimbingSector, "sectores")
