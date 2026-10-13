@@ -82,7 +82,7 @@ export default function ChangesTab({ requests, loadError, loading, actionLoading
   return (
     <div>
       <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 16, lineHeight: 1.5 }}>
-        Cambios de nombre, descripción o fotos nuevas sobre spots ya aprobados.
+        Cambios de nombre, descripción o fotos nuevas sobre lugares ya publicados.
         Mientras esperan, el público sigue viendo la versión aprobada. Se aprueba
         o rechaza el pedido entero; al rechazar, las fotos nuevas se borran.
       </p>

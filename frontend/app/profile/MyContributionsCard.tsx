@@ -15,7 +15,7 @@ interface Props {
 
 const STATUS_PILL = {
   pending: { variant: "yellow", label: "En revisión" },
-  approved: { variant: "green", label: "Aprobado" },
+  approved: { variant: "green", label: "Publicado" },
   rejected: { variant: "red", label: "Rechazado" },
 } as const
 

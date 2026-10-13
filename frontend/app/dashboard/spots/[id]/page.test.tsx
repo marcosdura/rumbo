@@ -79,9 +79,10 @@ describe("Panel del dueño", () => {
     expect(screen.queryByRole("link", { name: "Ver lugar →" })).toBeNull()
   })
 
-  it("publicado: Ver lugar lleva a su página", async () => {
+  it("publicado: lo dice y Ver lugar lleva a su página", async () => {
     mine = [spot()]
     await load()
+    expect(screen.getByText("✓ Publicado")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Ver lugar →" }).getAttribute("href")).toBe("/spots/la-aguada")
   })
 

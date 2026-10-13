@@ -30,7 +30,7 @@ interface Props {
 
 // Mismas paletas que en el resto del panel.
 const STATUS_PILL = {
-  approved: { variant: "green", label: "Aprobado" },
+  approved: { variant: "green", label: "Publicado" },
   pending: { variant: "yellow", label: "Pendiente" },
   rejected: { variant: "red", label: "Rechazado" },
 } as const
@@ -47,7 +47,7 @@ export default function SpotsTab({
           <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
             {f === "pending" ? `Pendientes (${pending})`
               : f === "rejected" ? `Rechazados (${rejected})`
-              : f === "approved" ? "Aprobados" : "Todos"}
+              : f === "approved" ? "Publicados" : "Todos"}
           </button>
         ))}
       </div>}
@@ -148,7 +148,7 @@ export default function SpotsTab({
                   ) : (
                     <button onClick={() => onRejectRequest(spot)} disabled={actionLoading === spot.id}
                       className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)", opacity: actionLoading === spot.id ? 0.6 : 1 }}>
-                      Desaprobar
+                      Despublicar
                     </button>
                   )}
                   {spotStatus(spot) === "pending" && (

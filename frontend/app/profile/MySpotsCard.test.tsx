@@ -12,6 +12,7 @@ describe("MySpotsCard", () => {
   it("con lugares, cada uno con su acceso a administrar", () => {
     render(<MySpotsCard mySpots={[{ id: 4, name: "Cascada", is_approved: true, review_count: 2, images: [] }]} />)
     expect(screen.getByText("Cascada")).toBeTruthy()
+    expect(screen.getByText("Publicado")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Administrar →" }).getAttribute("href")).toBe("/dashboard/spots/4")
     expect(screen.queryByText("＋ Agregar un lugar")).toBeNull()
   })

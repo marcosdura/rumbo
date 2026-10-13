@@ -37,7 +37,7 @@ describe("MyContributionsCard", () => {
     render(<MyContributionsCard token="t" />)
     expect(await screen.findByText("Tus aportes")).toBeTruthy()
     expect(screen.getByText("En revisión")).toBeTruthy()
-    expect(screen.getByText("Aprobado")).toBeTruthy()
+    expect(screen.getByText("Publicado")).toBeTruthy()
     expect(screen.getByText("Rechazado")).toBeTruthy()
     expect(screen.getByText("Motivo: No es del lugar")).toBeTruthy()
     expect(screen.getAllByRole("link", { name: "Cerro Arequita" })[0].getAttribute("href")).toBe("/spots/cerro-arequita")

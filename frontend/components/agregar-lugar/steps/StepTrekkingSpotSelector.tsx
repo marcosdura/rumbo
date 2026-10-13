@@ -18,7 +18,7 @@ export default function StepTrekkingSpotSelector({
     <div>
       <h2 style={s.title}>¿A qué lugar querés agregar la ruta?</h2>
       <p style={{ fontSize: 14, color: "var(--muted-strong)", marginBottom: 20 }}>
-        Las rutas se suman a lugares que cargaste vos. Si el lugar ya está aprobado, la ruta pasa por revisión antes de publicarse.
+        Las rutas se suman a lugares que cargaste vos. Si el lugar ya está publicado, la ruta pasa por revisión antes de publicarse.
       </p>
       <div style={s.form}>
         {loadingSpots ? (

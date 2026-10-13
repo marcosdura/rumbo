@@ -272,7 +272,7 @@ export default function AdminPage() {
       return false
     }
     setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: approved } : s))
-    // Desaprobar un spot vuelca su pedido pendiente sobre el spot (backend,
+    // Despublicar un spot vuelca su pedido pendiente sobre el spot (backend,
     // approve_spot): ya no queda nada que revisar en "Cambios pendientes".
     if (!approved) {
       setChangeRequests(prev => prev.filter(r => r.spot_id !== id))

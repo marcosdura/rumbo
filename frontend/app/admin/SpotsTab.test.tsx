@@ -41,10 +41,11 @@ describe("SpotsTab", () => {
     expect(props.onApprove).toHaveBeenCalledWith(1, true)
   })
 
-  it("desaprobar un aprobado pide motivo", () => {
+  it("uno publicado dice Publicado, y despublicarlo pide motivo", () => {
     const s = spot({ is_approved: true })
     const props = renderTab([s])
-    fireEvent.click(screen.getByRole("button", { name: "Desaprobar" }))
+    expect(screen.getByText("Publicado")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Despublicar" }))
     expect(props.onRejectRequest).toHaveBeenCalledWith(s)
     expect(props.onApprove).not.toHaveBeenCalled()
   })
