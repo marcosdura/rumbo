@@ -6,8 +6,7 @@ import { CATEGORIES, defaultKayak, defaultSurf, defaultTrekkingFeatures, emptyBa
 const cat = (name: string) => CATEGORIES.find(c => c.name === name)!
 
 const common = {
-  isService: true, createsSpot: false, basic: emptyBasic(), trekkingFeatures: defaultTrekkingFeatures(), routes: [],
-  availableSpots: [{ id: 3, name: "Laguna" }], selectedSpotId: 3,
+  createsSpot: true, basic: emptyBasic(), trekkingFeatures: defaultTrekkingFeatures(), routes: [],
   submitting: false, uploadProgress: null, error: null, onSubmit: () => {}, onBack: () => {}, editTo: () => undefined,
 }
 
@@ -16,10 +15,9 @@ const row = (label: string) => screen.getByText(label).parentElement!.textConten
 describe("Resumen: muestra lo que eligió la persona, no los códigos", () => {
   it("kayak: tipo de agua, dificultad, tipo, temporada con meses, y No sé", () => {
     render(
-      <StepResumen {...common} selectedCat={cat("Kayak")} surf={defaultSurf()} kayaks={[{
-        ...defaultKayak(), name: "Kayak Sur", water_type: "rio", difficulty: "facil", kayak_type: "travesia",
-        season_type: "seasonal", season_start: "11", season_end: "3",
-      }]} />,
+      <StepResumen {...common} selectedCat={cat("Kayak")} surf={defaultSurf()} kayak={{
+        ...defaultKayak(), water_type: "rio", difficulty: "facil", kayak_type: "travesia",
+      }} basic={{ ...emptyBasic(), season_type: "seasonal", season_start: "11", season_end: "3" }} />,
     )
     expect(row("Tipo de agua")).toContain("Río")
     expect(row("Dificultad")).toContain("Fácil")
@@ -30,13 +28,13 @@ describe("Resumen: muestra lo que eligió la persona, no los códigos", () => {
   })
 
   it("surf: tipo de clase y equipo sin contestar", () => {
-    render(<StepResumen {...common} selectedCat={cat("Surf")} kayaks={[]} surf={{ ...defaultSurf(), name: "Ola", class_type: "grupal" }} />)
+    render(<StepResumen {...common} selectedCat={cat("Surf")} kayak={defaultKayak()} surf={{ ...defaultSurf(), class_type: "grupal" }} />)
     expect(row("Tipo de clase")).toContain("Grupal")
     expect(row("Equipo incluido")).toContain("No sé")
   })
 
   it("el botón para volver dice Atrás, como en los demás pasos", () => {
-    render(<StepResumen {...common} selectedCat={cat("Surf")} kayaks={[]} surf={{ ...defaultSurf(), name: "Ola" }} />)
+    render(<StepResumen {...common} selectedCat={cat("Surf")} kayak={defaultKayak()} surf={defaultSurf()} />)
     expect(screen.getByRole("button", { name: "Atrás" })).toBeTruthy()
   })
 })

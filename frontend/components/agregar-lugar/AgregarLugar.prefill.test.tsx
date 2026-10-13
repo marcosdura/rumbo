@@ -170,14 +170,25 @@ describe("AgregarLugar sin link directo", () => {
   })
 })
 
-describe("AgregarLugar: escuelas de surf", () => {
-  it("ofrece todas las playas publicadas, no solo las propias", async () => {
-    responses = { "/spots/pins": [{ id: 3, name: "Playa Brava" }, { id: 4, name: "La Paloma" }] }
+describe("AgregarLugar: escuelas de surf y servicios de kayak (son lugares)", () => {
+  it("surf: los datos de la escuela con Dónde opera, sin elegir una playa ni preguntar si es pública", async () => {
     openWith("")
     fireEvent.click(await screen.findByText("Surf"))
-    fireEvent.focus(await screen.findByRole("combobox", { name: "Buscar lugar" }))
-    expect(await screen.findByRole("option", { name: /Playa Brava/ })).toBeTruthy()
-    expect(screen.getByRole("option", { name: /La Paloma/ })).toBeTruthy()
+    expect(await screen.findByRole("heading", { name: "Datos de la escuela" })).toBeTruthy()
+    expect(screen.getByText("Dónde opera")).toBeTruthy()
+    expect(screen.getByText("Precio desde ($)")).toBeTruthy()
+    expect(screen.queryByText(/¿El lugar es público o privado\?/)).toBeNull()
+    expect(screen.queryByRole("combobox", { name: "Buscar lugar" })).toBeNull()
+    const steps = screen.getByRole("list", { name: "Pasos" })
+    expect(steps.textContent).toBe("✓ CategoríaDatosEscuelaFotosRevisar")
+  })
+
+  it("Dónde opera es obligatorio", async () => {
+    openWith("")
+    fireEvent.click(await screen.findByText("Kayak"))
+    await screen.findByRole("heading", { name: "Datos del servicio" })
+    click("Siguiente")
+    expect(screen.getByText("Contá dónde operan")).toBeTruthy()
   })
 })
 

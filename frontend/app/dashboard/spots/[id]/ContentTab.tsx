@@ -183,7 +183,6 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
   if (loadError) return <div style={{ ...s.card, padding: 24 }}><p style={{ fontSize: 13, color: "var(--danger)", margin: 0 }}>{loadError}</p></div>
   if (!content) return <div style={{ ...s.card, padding: 24 }}><p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>Cargando...</p></div>
 
-  const operators = category === "Surf" ? content.surf_schools : content.kayaks
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -400,34 +399,6 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
           ))}
           <div style={{ marginTop: 16 }}>
             <Link href={addToSpotUrl("sector", spotId)} style={addLink}>＋ Agregar un sector</Link>
-          </div>
-        </div>
-      )}
-
-      {/* Surf y kayak */}
-      {(category === "Surf" || category === "Kayak") && (
-        <div style={{ ...s.card, padding: 24 }}>
-          <p style={sectionTitle}>{category === "Surf" ? "Escuelas de surf" : "Servicios de kayak"}</p>
-          {operators.length === 0 && (
-            <p style={emptyText}>Todavía no hay {category === "Surf" ? "escuelas" : "servicios"}.</p>
-          )}
-          {operators.map(op => (
-            <ItemRow
-              key={op.id}
-              title={op.name}
-              detail=""
-              pending={!op.is_approved}
-              onDelete={() => askDelete({
-                url: category === "Surf" ? `/surfschool/${op.id}` : `/kayak/${op.id}`,
-                title: op.name, pending: !op.is_approved,
-                note: "Se borra con sus fotos. No se puede deshacer.",
-              })}
-            />
-          ))}
-          <div style={{ marginTop: 16 }}>
-            <Link href={addToSpotUrl(category === "Surf" ? "surf" : "kayak", spotId)} style={addLink}>
-              {category === "Surf" ? "＋ Agregar una escuela" : "＋ Agregar un servicio de kayak"}
-            </Link>
           </div>
         </div>
       )}

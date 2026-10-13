@@ -4,7 +4,7 @@ import {
   type FlowInput,
 } from "./flow"
 
-const base: FlowInput = { category: null, climbingMode: null, trekkingMode: null, creatingNewSpot: false }
+const base: FlowInput = { category: null, climbingMode: null, trekkingMode: null }
 const flow = (over: Partial<FlowInput>) => flowSteps({ ...base, ...over })
 
 describe("flowSteps", () => {
@@ -14,7 +14,7 @@ describe("flowSteps", () => {
       flow({ category: "Trekking", trekkingMode: "new_spot" }), flow({ category: "Trekking", trekkingMode: "new_route" }),
       flow({ category: "Escalada", climbingMode: "new_spot" }), flow({ category: "Escalada", climbingMode: "new_sector" }),
       flow({ category: "Escalada", climbingMode: "new_route" }),
-      flow({ category: "Surf" }), flow({ category: "Kayak", creatingNewSpot: true }),
+      flow({ category: "Surf" }), flow({ category: "Kayak" }),
     ]
     for (const steps of flows) {
       expect(steps[0]).toBe("categoria")
@@ -27,7 +27,6 @@ describe("flowSteps", () => {
     expect(flow({ category: "Trekking", trekkingMode: "new_route" })).not.toContain("imagenes")
     expect(flow({ category: "Escalada", climbingMode: "new_sector" })).not.toContain("imagenes")
     expect(flow({ category: "Escalada", climbingMode: "new_route" })).not.toContain("imagenes")
-    expect(flow({ category: "Surf" })).not.toContain("imagenes")
   })
 
   it("sin modo elegido el flujo todavía no está definido", () => {
@@ -37,8 +36,9 @@ describe("flowSteps", () => {
 
   it("solo crea un lugar el flujo que pide sus datos", () => {
     expect(createsSpot(flow({ category: "Camping" }))).toBe(true)
-    expect(createsSpot(flow({ category: "Surf", creatingNewSpot: true }))).toBe(true)
-    expect(createsSpot(flow({ category: "Surf" }))).toBe(false)
+    // La escuela o el servicio es el lugar (antes se colgaba de una playa).
+    expect(createsSpot(flow({ category: "Surf" }))).toBe(true)
+    expect(createsSpot(flow({ category: "Kayak" }))).toBe(true)
     expect(createsSpot(flow({ category: "Escalada", climbingMode: "new_sector" }))).toBe(false)
   })
 })
@@ -84,8 +84,6 @@ describe("link directo", () => {
   it("cada link entra a un paso de su flujo", () => {
     expect(flow({ category: "Trekking", trekkingMode: "new_route" })).toContain(ENTRY_STEP.ruta)
     expect(flow({ category: "Escalada", climbingMode: "new_route" })).toContain(ENTRY_STEP.via)
-    expect(flow({ category: "Surf" })).toContain(ENTRY_STEP.surf)
-    expect(flow({ category: "Kayak" })).toContain(ENTRY_STEP.kayak)
   })
 })
 
@@ -94,14 +92,23 @@ describe("stepProgress", () => {
     const steps = flow({ category: "Kayak" })
     expect(stepProgress(steps, "servicio", null, "Kayak")).toEqual([
       { key: "categoria", label: "Categoría", state: "done" },
-      { key: "lugar", label: "Lugar", state: "done" },
+      { key: "info", label: "Datos", state: "done" },
       { key: "servicio", label: "Servicio", state: "current" },
+      { key: "imagenes", label: "Fotos", state: "todo" },
       { key: "resumen", label: "Revisar", state: "todo" },
     ])
   })
 
   it("con link directo empieza en el paso de entrada", () => {
-    const steps = flow({ category: "Surf" })
-    expect(stepProgress(steps, "servicio", ENTRY_STEP.surf, "Surf").map(i => i.label)).toEqual(["Escuela", "Revisar"])
+    const steps = flow({ category: "Escalada", climbingMode: "new_route" })
+    expect(stepProgress(steps, "vias_nuevas", ENTRY_STEP.via, "Escalada").map(i => i.label)).toEqual(["Vías", "Revisar"])
+  })
+})
+
+describe("surf y kayak", () => {
+  it("la escuela o el servicio es un lugar: datos, lo propio, fotos (sin elegir una playa)", () => {
+    for (const category of ["Surf", "Kayak"]) {
+      expect(flow({ category })).toEqual(["categoria", "info", "servicio", "imagenes", "resumen"])
+    }
   })
 })

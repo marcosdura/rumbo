@@ -13,6 +13,10 @@ vi.mock("@/lib/api", () => ({
       calls.push(args)
       return responses.shift()!()
     },
+    put: (...args: unknown[]) => {
+      calls.push(args)
+      return responses.shift()!()
+    },
   },
 }))
 let uploads = 0
@@ -133,7 +137,7 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
     const h = handlers()
     await submitAgregarLugar({
       selectedCat: constants.CATEGORIES.find(c => c.name === "Escalada")!,
-      isService: false, creatingNewSpot: false, token: "t",
+      token: "t",
       basic: { ...constants.emptyBasic(), name: "Arequita", lat: "-34", lng: "-55", pets_allowed: true, cell_signal: false },
       isPublic: null, publicTransport: null, isResponsible: false, selectedAmenities: [], additionalCategories: [],
       motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
@@ -141,9 +145,8 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
       selectedGlampingAmenities: [], selectedCampingAmenities: [],
       trekkingFeatures: constants.defaultTrekkingFeatures(), routes: [],
       sectors: [{ ...constants.defaultSector(), name: "Norte" }], sectorRoutes: [],
-      surf: constants.defaultSurf(), kayaks: [], images: [new File(["x"], "a.jpg")],
-      surfPhotoFiles: [null, null, null], kayakPhotoFiles: [null, null, null],
-      selectedSpotId: null, ownerEmail: "a@b.com", experiences: [],
+      surf: constants.defaultSurf(), kayak: constants.defaultKayak(), images: [new File(["x"], "a.jpg")],
+      ownerEmail: "a@b.com", experiences: [],
       setUploadProgress: () => {}, ...h,
     })
     expect(h.setSuccess).toHaveBeenCalledWith("spot")
@@ -161,34 +164,58 @@ describe("si falla una parte, se avisa y se reintenta sin duplicar", () => {
     expect(calls[0][1]).toMatchObject({ spot_id: 30, name: "Norte" })
   })
 
-  it("la escuela manda niveles e idiomas, y el kayak guía y chaleco (null = no sé)", async () => {
+  it("una escuela o un servicio es un lugar: se crea y después se guardan sus datos (null = no sé)", async () => {
     const base = {
-      isService: true, creatingNewSpot: false, token: "t", basic: constants.emptyBasic(),
-      isPublic: null, publicTransport: null, isResponsible: true, selectedAmenities: [], additionalCategories: [],
+      token: "t", isPublic: null, publicTransport: null, isResponsible: true, selectedAmenities: [], additionalCategories: [],
       motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
       glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [],
       selectedGlampingAmenities: [], selectedCampingAmenities: [],
       trekkingFeatures: constants.defaultTrekkingFeatures(), routes: [], sectors: [], sectorRoutes: [],
-      images: [], selectedSpotId: 3, ownerEmail: "a@b.com", experiences: [],
+      images: [new File(["x"], "a.jpg")], ownerEmail: "a@b.com", experiences: [],
       setUploadProgress: () => {},
     }
-    const cover = [new File(["x"], "a.jpg"), null, null]
-    responses = [ok(false)]
+    const basic = { ...constants.emptyBasic(), name: "Escuela Ola", price: "1200", lat: "-34.9", lng: "-54.9", operates_at: " Playa El Emir " }
+    responses = [ok(false, 50), ok(true), ok(true)]  // lugar, foto, datos de la escuela
+    const h = handlers()
     await submitAgregarLugar({
-      ...base, ...handlers(), selectedCat: constants.CATEGORIES.find(c => c.name === "Surf")!,
-      surf: { ...constants.defaultSurf(), name: "Ola", levels: ["principiante"] }, kayaks: [],
-      surfPhotoFiles: cover, kayakPhotoFiles: [null, null, null],
+      ...base, ...h, basic, selectedCat: constants.CATEGORIES.find(c => c.name === "Surf")!,
+      surf: { ...constants.defaultSurf(), levels: ["principiante"], duration: "1.5", price_note: "por clase" }, kayak: constants.defaultKayak(),
     })
-    expect(calls[0][1]).toMatchObject({ levels: ["principiante"], languages: null })
+    expect(h.setSuccess).toHaveBeenCalledWith("spot")
+    expect(calls[0]).toEqual(expect.arrayContaining(["/spots"]))
+    expect(calls[0][1]).toMatchObject({ name: "Escuela Ola", price: 1200 })
+    const detail = calls.find(c => c[0] === "/spots/50/surf-detail")!
+    expect(detail[1]).toEqual({
+      class_type: null, duration: 1.5, equipment_include: null, levels: ["principiante"], languages: null,
+      price_note: "por clase", operates_at: "Playa El Emir",
+    })
 
     calls = []
-    responses = [ok(false)]
+    responses = [ok(false, 60), ok(true), ok(true)]
     await submitAgregarLugar({
-      ...base, ...handlers(), selectedCat: constants.CATEGORIES.find(c => c.name === "Kayak")!,
-      surf: constants.defaultSurf(), kayaks: [{ ...constants.defaultKayak(), name: "Sur", includes_guide: true }],
-      surfPhotoFiles: [null, null, null], kayakPhotoFiles: cover,
+      ...base, ...handlers(), basic, selectedCat: constants.CATEGORIES.find(c => c.name === "Kayak")!,
+      surf: constants.defaultSurf(), kayak: { ...constants.defaultKayak(), water_type: "lago", includes_guide: true },
     })
-    expect(calls[0][1]).toMatchObject({ includes_guide: true, includes_life_jacket: null })
+    const kayak = calls.find(c => c[0] === "/spots/60/kayak-detail")!
+    expect(kayak[1]).toMatchObject({ water_type: "lago", includes_guide: true, includes_life_jacket: null, operates_at: "Playa El Emir" })
+  })
+
+  it("si fallan los datos de la escuela, el lugar ya está: se avisa y se reintenta", async () => {
+    responses = [ok(false, 50), ok(true), fail]
+    await submitAgregarLugar({
+      token: "t", isPublic: null, publicTransport: null, isResponsible: true, selectedAmenities: [], additionalCategories: [],
+      motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
+      glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [], selectedGlampingAmenities: [], selectedCampingAmenities: [],
+      trekkingFeatures: constants.defaultTrekkingFeatures(), routes: [], sectors: [], sectorRoutes: [],
+      images: [new File(["x"], "a.jpg")], ownerEmail: "a@b.com", experiences: [], setUploadProgress: () => {}, ...handlers(),
+      basic: { ...constants.emptyBasic(), name: "Escuela", lat: "-34", lng: "-55", operates_at: "La Brava" },
+      selectedCat: constants.CATEGORIES.find(c => c.name === "Surf")!, surf: constants.defaultSurf(), kayak: constants.defaultKayak(),
+    })
+    expect(failures.map(f => f.label)).toEqual(["Datos de la escuela"])
+    calls = []
+    responses = [ok(true)]
+    await retryFailures(failures)
+    expect(urls()).toEqual(["/spots/50/surf-detail"])
   })
 })
 
@@ -258,16 +285,15 @@ describe("lugar nuevo: fotos de sus rutas y sectores", () => {
   const photo = new File(["x"], "a.jpg", { type: "image/jpeg" })
   const params = (cat: string, extra: object) => ({
     selectedCat: constants.CATEGORIES.find(c => c.name === cat)!,
-    isService: false, creatingNewSpot: false, token: "t",
+    token: "t",
     basic: { ...constants.emptyBasic(), name: "Cerro", lat: "-34", lng: "-55" },
     isPublic: null, publicTransport: null, isResponsible: true, selectedAmenities: [], additionalCategories: [],
     motorhomeDetail: constants.defaultMotorhomeDetail(), campingDetail: constants.defaultCampingDetail(),
     glampingDetail: constants.defaultGlampingDetail(), glampingUnits: [],
     selectedGlampingAmenities: [], selectedCampingAmenities: [],
     trekkingFeatures: constants.defaultTrekkingFeatures(), routes: [], sectors: [], sectorRoutes: [],
-    surf: constants.defaultSurf(), kayaks: [], images: [new File(["x"], "a.jpg")],
-    surfPhotoFiles: [null, null, null], kayakPhotoFiles: [null, null, null],
-    selectedSpotId: null, ownerEmail: "a@b.com", experiences: [],
+    surf: constants.defaultSurf(), kayak: constants.defaultKayak(), images: [new File(["x"], "a.jpg")],
+    ownerEmail: "a@b.com", experiences: [],
     setUploadProgress: () => {}, ...extra,
   })
 

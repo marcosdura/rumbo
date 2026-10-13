@@ -25,7 +25,6 @@ import AgregarLugarHeader from "./AgregarLugarHeader"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import StepCategoria from "./steps/StepCategoria"
 import StepInfoBasica from "./steps/StepInfoBasica"
-import StepServicioSpot from "./steps/StepServicioSpot"
 import StepAmenities from "./steps/StepAmenities"
 import StepTrekkingCaracteristicas from "./steps/StepTrekkingCaracteristicas"
 import StepEscalada from "./steps/StepEscalada"
@@ -78,13 +77,9 @@ export default function AgregarLugar() {
   const [routes, setRoutes]                       = useState<RouteItem[]>([defaultRoute()])
   const [sectors, setSectors]                     = useState<SectorItem[]>([defaultSector()])
   const [surf, setSurf]                           = useState<SurfItem>(defaultSurf())
-  const [kayaks, setKayaks]                       = useState<KayakItem[]>([defaultKayak()])
+  const [kayak, setKayak]                         = useState<KayakItem>(defaultKayak())
   const [images, setImages]                       = useState<File[]>([])
   const [previews, setPreviews]                   = useState<string[]>([])
-  const [surfPhotoFiles, setSurfPhotoFiles]       = useState<(File | null)[]>([null, null, null])
-  const [surfPhotoPreviews, setSurfPhotoPreviews] = useState<(string | null)[]>([null, null, null])
-  const [kayakPhotoFiles, setKayakPhotoFiles]     = useState<(File | null)[]>([null, null, null])
-  const [kayakPhotoPreviews, setKayakPhotoPreviews] = useState<(string | null)[]>([null, null, null])
   const [isPublic, setIsPublic]                   = useState<boolean | null>(null)
   // ¿Quien lo carga es el responsable o dueño, o un visitante?
   const [isResponsible, setIsResponsible]         = useState<boolean | null>(null)
@@ -95,13 +90,11 @@ export default function AgregarLugar() {
   const [success, setSuccess]                     = useState<SubmitResult | null>(null)
   // Partes que no se pudieron guardar después de crear el lugar o el sector.
   const [failures, setFailures]                   = useState<Failure[]>([])
-  const [selectedSpotId, setSelectedSpotId]       = useState<number | null>(null)
   const [availableSpots, setAvailableSpots]       = useState<PickableSpot[]>([])
   const [loadingSpots, setLoadingSpots]           = useState(false)
 
   // Climbing & service-spot creation states
   const [climbingMode, setClimbingMode]           = useState<ClimbingMode>(null)
-  const [creatingNewSpot, setCreatingNewSpot]     = useState(false)
   const [climbingSpotId, setClimbingSpotId]       = useState<number | null>(null)
   const [climbingSectorId, setClimbingSectorId]   = useState<number | null>(null)
   const [availableSectors, setAvailableSectors]   = useState<Option[]>([])
@@ -158,8 +151,6 @@ export default function AgregarLugar() {
     } else if (kind === "sector" || kind === "via") {
       setClimbingMode(kind === "sector" ? "new_sector" : "new_route"); setClimbingSpotId(spot.id); setAvailableSpots(option)
       if (sector) { setClimbingSectorId(sector.id); setAvailableSectors([sector]) }
-    } else {
-      setCreatingNewSpot(false); setSelectedSpotId(spot.id); setAvailableSpots(option)
     }
     setLocked(lock)
     setStep(ENTRY_STEP[kind])
@@ -187,11 +178,10 @@ export default function AgregarLugar() {
       .then(() => update({ termsAcceptedAt: new Date().toISOString() }))
   }, [session?.id_token])
 
-  const isService  = selectedCat?.name === "Surf" || selectedCat?.name === "Kayak"
   const isTrekking = selectedCat?.name === "Trekking"
   const isEscalada = selectedCat?.name === "Escalada"
 
-  const steps = flowSteps({ category: selectedCat?.name ?? null, climbingMode, trekkingMode, creatingNewSpot })
+  const steps = flowSteps({ category: selectedCat?.name ?? null, climbingMode, trekkingMode })
   const entry = locked ? ENTRY_STEP[locked.kind] : null
   const spotUrl = locked ? (locked.spot.slug ? `/spots/${locked.spot.slug}` : "/") : null
 
@@ -208,8 +198,6 @@ export default function AgregarLugar() {
   function goBack() {
     const prev = previousStep(steps, step, entry)
     if (prev) {
-      // Volver a elegir la playa: ya no se está sugiriendo una nueva.
-      if (prev === "lugar" && isService) setCreatingNewSpot(false)
       goTo(prev)
     } else if (spotUrl) {
       // Link directo: el primer paso vuelve al lugar, no a elegir otra cosa.
@@ -234,23 +222,7 @@ export default function AgregarLugar() {
 
   function handleCategorySelect(cat: Category) {
     setSelectedCat(cat)
-    const isServ = cat.name === "Surf" || cat.name === "Kayak"
-    goTo(flowSteps({ category: cat.name, climbingMode, trekkingMode, creatingNewSpot })[1])
-    if (isServ) {
-      setLoadingSpots(true)
-      // Las playas y lagunas son lugares públicos: cualquiera suma su
-      // escuela o servicio a cualquiera de ellas (queda en revisión y pasa a
-      // ser su dueño). /spots/pins no pagina y trae solo id+name.
-      // Con departamento y coordenadas: el selector busca y muestra el mapa.
-      api.get<PickableSpot[]>("/spots/pins", { params: { activity: cat.name } })
-        .then(({ data }) => setAvailableSpots(data))
-        .catch(() => {
-          // proceed with empty list if fetch fails
-        })
-        .finally(() => {
-          setLoadingSpots(false)
-        })
-    }
+    goTo(flowSteps({ category: cat.name, climbingMode, trekkingMode })[1])
   }
 
   async function handleTrekkingModeSelect(mode: "new_spot" | "new_route") {
@@ -285,14 +257,6 @@ export default function AgregarLugar() {
         setLoadingSpots(false)
       }
     }
-  }
-
-  function nextFromServiceSpot() {
-    if (!selectedSpotId) {
-      setError("Seleccioná un lugar para continuar.")
-      return
-    }
-    goNext()
   }
 
   function nextFromNewSector() {
@@ -345,13 +309,11 @@ export default function AgregarLugar() {
 
     await submitAgregarLugar({
       selectedCat: selectedCat!,
-      isService: isService ?? false,
-      creatingNewSpot,
       token,
       basic,
       isPublic,
       publicTransport,
-      isResponsible: isService ? true : isResponsible !== false,
+      isResponsible: isResponsible !== false,
       selectedAmenities,
       additionalCategories,
       motorhomeDetail,
@@ -365,11 +327,8 @@ export default function AgregarLugar() {
       routes,
       sectors,
       surf,
-      kayaks,
+      kayak,
       images,
-      surfPhotoFiles,
-      kayakPhotoFiles,
-      selectedSpotId,
       ownerEmail: session?.user?.email ?? null,
       experiences,
       setSubmitting,
@@ -388,14 +347,12 @@ export default function AgregarLugar() {
     setGlampingUnits([defaultGlampingDetail()])
     setSelectedGlampingAmenities([]); setSelectedCampingAmenities([])
     setTrekkingFeatures(defaultTrekkingFeatures())
-    setSurf(defaultSurf()); setKayaks([defaultKayak()])
+    setSurf(defaultSurf()); setKayak(defaultKayak())
     setImages([]); setPreviews([])
-    setSurfPhotoFiles([null, null, null]); setSurfPhotoPreviews([null, null, null])
-    setKayakPhotoFiles([null, null, null]); setKayakPhotoPreviews([null, null, null])
     setError(null); setSuccess(null); setFailures([])
-    setSelectedSpotId(null); setAvailableSpots([])
+    setAvailableSpots([])
     setIsPublic(null); setPublicTransport(null); setIsResponsible(null)
-    setCreatingNewSpot(false); setClimbingMode(null)
+    setClimbingMode(null)
     setClimbingSpotId(null); setClimbingSectorId(null)
     setAvailableSectors([]); setLoadingSectors(false)
     setClimbingNewRoutes([defaultClimbingRouteItem(0)])
@@ -516,19 +473,6 @@ export default function AgregarLugar() {
         )}
 
         {/* ── Elegir un lugar existente ── */}
-        {step === "lugar" && isService && (
-          <StepServicioSpot
-            selectedCat={selectedCat!}
-            availableSpots={availableSpots}
-            loadingSpots={loadingSpots}
-            selectedSpotId={selectedSpotId}
-            setSelectedSpotId={setSelectedSpotId}
-            onCreateNew={() => { setCreatingNewSpot(true); goTo("info") }}
-            error={error}
-            onBack={goBack}
-            onNext={nextFromServiceSpot}
-          />
-        )}
         {step === "lugar" && isTrekking && (
           <StepTrekkingSpotSelector
             availableSpots={availableTrekkingSpots}
@@ -569,7 +513,8 @@ export default function AgregarLugar() {
         {/* ── Datos del lugar nuevo ── */}
         {step === "info" && (
           <StepInfoBasica
-            title={selectedCat?.name === "Surf" ? "Datos de la playa" : selectedCat?.name === "Kayak" ? "Datos del río o laguna" : undefined}
+            title={selectedCat?.name === "Surf" ? "Datos de la escuela" : selectedCat?.name === "Kayak" ? "Datos del servicio" : undefined}
+            service={selectedCat?.name === "Surf" ? "surf" : selectedCat?.name === "Kayak" ? "kayak" : undefined}
             basic={basic}
             setBasic={setBasic}
             upd={upd}
@@ -577,8 +522,8 @@ export default function AgregarLugar() {
             setIsPublic={setIsPublic}
             publicTransport={publicTransport}
             setPublicTransport={setPublicTransport}
-            // Una playa o laguna nueva siempre pasa al admin: no se pregunta.
-            {...(isService ? {} : { isResponsible, setIsResponsible })}
+            isResponsible={isResponsible}
+            setIsResponsible={setIsResponsible}
             error={error}
             onBack={goBack}
             onNext={goNext}
@@ -694,36 +639,10 @@ export default function AgregarLugar() {
         )}
 
         {step === "servicio" && selectedCat?.name === "Surf" && (
-          <StepSurf
-            surf={surf}
-            setSurf={setSurf}
-            surfPhotoFiles={surfPhotoFiles}
-            setSurfPhotoFiles={setSurfPhotoFiles}
-            surfPhotoPreviews={surfPhotoPreviews}
-            setSurfPhotoPreviews={setSurfPhotoPreviews}
-            error={error}
-            // Con una playa nueva, la escuela es opcional.
-            optional={creatingNewSpot}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={creatingNewSpot ? goNext : undefined}
-          />
+          <StepSurf surf={surf} setSurf={setSurf} error={error} onBack={goBack} onNext={goNext} />
         )}
-
         {step === "servicio" && selectedCat?.name === "Kayak" && (
-          <StepKayak
-            kayaks={kayaks}
-            setKayaks={setKayaks}
-            kayakPhotoFiles={kayakPhotoFiles}
-            setKayakPhotoFiles={setKayakPhotoFiles}
-            kayakPhotoPreviews={kayakPhotoPreviews}
-            setKayakPhotoPreviews={setKayakPhotoPreviews}
-            error={error}
-            optional={creatingNewSpot}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={creatingNewSpot ? goNext : undefined}
-          />
+          <StepKayak kayak={kayak} setKayak={setKayak} error={error} onBack={goBack} onNext={goNext} />
         )}
 
         {step === "imagenes" && (
@@ -765,15 +684,12 @@ export default function AgregarLugar() {
         {step === "resumen" && (
           <StepResumen
             selectedCat={selectedCat!}
-            isService={isService ?? false}
             createsSpot={createsSpot(steps)}
             basic={basic}
             trekkingFeatures={trekkingFeatures}
             routes={routes}
             surf={surf}
-            kayaks={kayaks}
-            availableSpots={availableSpots}
-            selectedSpotId={selectedSpotId}
+            kayak={kayak}
             submitting={submitting}
             uploadProgress={uploadProgress}
             error={error}
@@ -788,12 +704,9 @@ export default function AgregarLugar() {
             climbingNewRoutes={climbingNewRoutes}
             isPublic={isPublic}
             publicTransport={publicTransport}
-            isResponsible={isService ? null : isResponsible}
-            creatingNewSpot={creatingNewSpot}
+            isResponsible={isResponsible}
             images={images}
             previews={previews}
-            surfPhotoPreviews={surfPhotoPreviews}
-            kayakPhotoPreviews={kayakPhotoPreviews}
             selectedAmenities={selectedAmenities}
             selectedGlampingAmenities={selectedGlampingAmenities}
             selectedCampingAmenities={selectedCampingAmenities}

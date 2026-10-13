@@ -22,26 +22,21 @@ export type SectorItem = {
   photos: File[]
 }
 
+// Escuela de surf / servicio de kayak: es un lugar más (nombre, descripción,
+// precio, temporada, contacto, mapa y fotos van en los pasos de siempre);
+// esto es lo propio de cada uno. Todo opcional; null = no sé.
 export type SurfItem = {
-  name: string; class_type: string; duration: string; equipment_include: boolean | null
-  season_type: "all_year" | "seasonal"; season_start: string; season_end: string
-  email: string; whatsapp: string; instagram: string
-  // null = no sé.
+  class_type: string; duration: string; equipment_include: boolean | null
   levels: string[] | null; languages: string[] | null
-} & OperatorAbout
+  // A qué corresponde el precio "desde" del lugar: "por clase", "por hora".
+  price_note: string
+}
 
 export type KayakItem = {
-  name: string; water_type: string; difficulty: string; duration: string; kayak_type: string
-  rental_available: boolean | null
-  season_type: "all_year" | "seasonal"; season_start: string; season_end: string
-  email: string; whatsapp: string; instagram: string
-  // null = no sé.
-  includes_guide: boolean | null; includes_life_jacket: boolean | null
-} & OperatorAbout
-
-// Escuela de surf o servicio de kayak: qué ofrece y cuánto sale (precio
-// "desde", con una nota libre como "por clase"). Todo opcional.
-export type OperatorAbout = { description: string; price_from: string; price_note: string }
+  water_type: string; difficulty: string; duration: string; kayak_type: string
+  rental_available: boolean | null; includes_guide: boolean | null; includes_life_jacket: boolean | null
+  price_note: string
+}
 
 export type ClimbingMode = "new_spot" | "new_sector" | "new_route" | null
 
@@ -56,6 +51,8 @@ export type BasicInfo = {
   lat: string; lng: string
   // Información práctica; null = no sé.
   pets_allowed: boolean | null; reservation_required: boolean | null; cell_signal: boolean | null
+  // Escuelas de surf y servicios de kayak: dónde opera, en texto libre.
+  operates_at: string
 }
 
 export type PhoneCountry = { code: string; name: string; dial: string; digits: number; trunkPrefix?: string; example?: string }

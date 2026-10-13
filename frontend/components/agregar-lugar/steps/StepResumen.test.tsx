@@ -14,15 +14,12 @@ function renderSummary(over: Partial<Parameters<typeof StepResumen>[0]>) {
   render(
     <StepResumen
       selectedCat={cat("Glamping")}
-      isService={false}
       createsSpot={true}
       basic={{ ...emptyBasic(), name: "Domos del Este", department: "Rocha" }}
       trekkingFeatures={defaultTrekkingFeatures()}
       routes={[]}
       surf={defaultSurf()}
-      kayaks={[defaultKayak()]}
-      availableSpots={[]}
-      selectedSpotId={null}
+      kayak={defaultKayak()}
       submitting={false}
       uploadProgress={null}
       error={null}
@@ -79,16 +76,7 @@ describe("StepResumen", () => {
   })
 
   it("sin editTo para un paso, esa tarjeta no ofrece Editar", () => {
-    render(
-      <StepResumen
-        selectedCat={cat("Surf")} isService={true} createsSpot={false}
-        basic={emptyBasic()} trekkingFeatures={defaultTrekkingFeatures()} routes={[]}
-        surf={{ ...defaultSurf(), name: "Escuela Ola" }} kayaks={[]}
-        availableSpots={[{ id: 3, name: "Playa Brava" }]} selectedSpotId={3}
-        submitting={false} uploadProgress={null} error={null} onSubmit={() => {}} onBack={() => {}}
-        editTo={key => (key === "lugar" ? undefined : () => {})}
-      />,
-    )
+    renderSummary({ selectedCat: cat("Surf"), editTo: (key: StepKey) => (key === "info" ? undefined : () => {}) })
     const general = screen.getByText("Información general").closest("div[style]")!.parentElement!
     expect(within(general).queryByRole("button", { name: "Editar" })).toBeNull()
     const school = screen.getByText("Datos de la escuela de surf").closest("div[style]")!.parentElement!
@@ -96,17 +84,32 @@ describe("StepResumen", () => {
   })
 })
 
-describe("Resumen: descripción y precio de escuelas y servicios", () => {
-  it("surf y kayak los muestran", () => {
-    const about = { description: "Clases para chicos", price_from: "1200", price_note: "por clase" }
-    renderSummary({ selectedCat: cat("Surf"), isService: true, createsSpot: false, surf: { ...defaultSurf(), name: "Escuela Ola", ...about } })
-    expect(screen.getByText("Clases para chicos")).toBeTruthy()
+describe("Resumen de una escuela o un servicio (son lugares)", () => {
+  const basic = { ...emptyBasic(), name: "Escuela Ola", department: "Maldonado", price: "1200", operates_at: " Playa El Emir " }
+
+  it("dónde opera, el precio desde con su aclaración y lo propio de la escuela", () => {
+    renderSummary({
+      selectedCat: cat("Surf"), basic,
+      surf: { ...defaultSurf(), class_type: "grupal", levels: ["principiante"], price_note: "por clase" },
+      selectedAmenities: [], glampingUnits: [], additionalCategories: [], experiences: [],
+    })
+    expect(screen.getByText("Playa El Emir")).toBeTruthy()
     expect(screen.getByText("Desde $1.200 por clase")).toBeTruthy()
+    expect(screen.getByText("Grupal")).toBeTruthy()
+    expect(screen.getByText("Principiante")).toBeTruthy()
+    expect(screen.queryByText("Tipo de acceso")).toBeNull()
   })
 
-  it("kayak", () => {
-    renderSummary({ selectedCat: cat("Kayak"), isService: true, createsSpot: false, kayaks: [{ ...defaultKayak(), name: "Sur", price_from: "0" }] })
+  it("kayak: gratis, y No sé en lo que no se contestó", () => {
+    renderSummary({ selectedCat: cat("Kayak"), basic: { ...basic, price: "0" }, kayak: { ...defaultKayak(), rental_available: true }, selectedAmenities: [], glampingUnits: [], additionalCategories: [], experiences: [] })
     expect(screen.getByText("Gratis")).toBeTruthy()
+    expect(screen.getByText("Alquiler disponible").parentElement!.textContent).toContain("Sí")
+    expect(screen.getByText("Tipo de agua").parentElement!.textContent).toContain("No sé")
+  })
+
+  it("sin precio cargado dice Sin dato (para una escuela es opcional)", () => {
+    renderSummary({ selectedCat: cat("Surf"), basic: { ...basic, price: "" }, selectedAmenities: [], glampingUnits: [], additionalCategories: [], experiences: [] })
+    expect(screen.getByText("Sin dato")).toBeTruthy()
   })
 })
 

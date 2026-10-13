@@ -25,7 +25,7 @@ const LocationPicker = dynamic(
 export default function StepInfoBasica({
   basic, setBasic, upd, isPublic, setIsPublic, publicTransport, setPublicTransport,
   error, onBack, onNext, title = "Información básica",
-  isResponsible, setIsResponsible,
+  isResponsible, setIsResponsible, service,
 }: {
   basic: BasicInfo
   setBasic: React.Dispatch<React.SetStateAction<BasicInfo>>
@@ -42,6 +42,9 @@ export default function StepInfoBasica({
   // pregunta (una playa o laguna nueva siempre pasa al admin).
   isResponsible?: boolean | null
   setIsResponsible?: (v: boolean) => void
+  // Escuela de surf / servicio de kayak: pide "Dónde opera", el precio es
+  // "desde" (opcional) y no pregunta si es público o privado (es un negocio).
+  service?: "surf" | "kayak"
 }) {
   const asksResponsible = setIsResponsible !== undefined
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -86,7 +89,8 @@ export default function StepInfoBasica({
     if (nameTaken) missing.add("name")
     if (!basic.description.trim()) missing.add("description")
     if (!basic.department) missing.add("department")
-    if (!basic.price.trim()) missing.add("price")
+    if (!service && !basic.price.trim()) missing.add("price")
+    if (service && !basic.operates_at.trim()) missing.add("operates_at")
     if (basic.season_type === "seasonal") {
       if (!basic.season_start) missing.add("season_start")
       if (!basic.season_end) missing.add("season_end")
@@ -98,7 +102,7 @@ export default function StepInfoBasica({
     const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
     const normalizedWhatsapp = normalizePhoneDigits(basic.whatsapp.trim(), phoneCountry)
     if (!basic.noContact && basic.whatsapp.trim() && normalizedWhatsapp.length !== phoneCountry.digits) missing.add("whatsapp")
-    if (isPublic === null) missing.add("isPublic")
+    if (!service && isPublic === null) missing.add("isPublic")
     if (asksResponsible && (isResponsible === null || isResponsible === undefined)) missing.add("responsible")
     if (!basic.lat || !basic.lng) missing.add("location")
     setFieldErrors(missing)
@@ -179,8 +183,24 @@ export default function StepInfoBasica({
             {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </Field>
+        {service && (
+          <Field
+            label="Dónde opera" required={true}
+            sublabel="Las playas, lagunas o zonas donde trabajan. Por ejemplo: Playa El Emir y La Brava, Punta del Este"
+            hasError={fieldErrors.has("operates_at")} errorText="Contá dónde operan"
+          >
+            <input
+              style={{ ...s.input, ...(fieldErrors.has("operates_at") ? errorInputBorder : {}) }}
+              maxLength={200} value={basic.operates_at} onChange={e => upd("operates_at", e.target.value)}
+            />
+          </Field>
+        )}
         <div className="form-two-col">
-          <Field label="Precio" required={true} sublabel="Si el acceso es gratuito, poné 0" hasError={fieldErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)">
+          <Field
+            label={service ? "Precio desde ($)" : "Precio"} required={!service}
+            sublabel={service ? "Lo más barato que ofrecen. 0 si es gratis" : "Si el acceso es gratuito, poné 0"}
+            hasError={fieldErrors.has("price")} errorText="Completá el precio (poné 0 si es gratis)"
+          >
             <input
               style={{ ...s.input, ...(fieldErrors.has("price") ? errorInputBorder : {}) }}
               type="number" min={0} value={basic.price} onChange={e => upd("price", sanitizeNum(e.target.value))}
@@ -274,7 +294,8 @@ export default function StepInfoBasica({
           )}
         </div>
 
-        {/* ¿Público o privado? */}
+        {/* ¿Público o privado? (no en escuelas y servicios: son un negocio) */}
+        {!service && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("isPublic") ? "#e53e3e" : "#1b1b19" }}>
             ¿El lugar es público o privado?{" "}
@@ -302,6 +323,7 @@ export default function StepInfoBasica({
             ))}
           </div>
         </div>
+        )}
 
         {/* ¿Accesible en transporte público? */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

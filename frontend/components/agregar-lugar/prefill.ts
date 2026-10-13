@@ -3,15 +3,16 @@
 // por elegir categoría, modo y lugar. Los arman los botones de la página del
 // spot y del dashboard (addToSpotUrl); los lee AgregarLugar (parsePrefill).
 
-export type PrefillKind = "ruta" | "sector" | "via" | "surf" | "kayak"
+// (Escuelas de surf y servicios de kayak ya no: son lugares, no se suman a una playa.)
+export type PrefillKind = "ruta" | "sector" | "via"
 
 export type Prefill = { kind: PrefillKind; spotId: number; sectorId: number | null }
 
-const KINDS: PrefillKind[] = ["ruta", "sector", "via", "surf", "kayak"]
+const KINDS: PrefillKind[] = ["ruta", "sector", "via"]
 
 // Categoría de agregar-lugar que corresponde a cada cosa.
 export const PREFILL_CATEGORY: Record<PrefillKind, string> = {
-  ruta: "Trekking", sector: "Escalada", via: "Escalada", surf: "Surf", kayak: "Kayak",
+  ruta: "Trekking", sector: "Escalada", via: "Escalada",
 }
 
 // El paso al que se salta está en flow.ts (ENTRY_STEP).
@@ -22,8 +23,6 @@ export function prefillIntro(kind: PrefillKind, spotName: string, sectorName?: s
     ruta: `Agregá una ruta a ${spotName}.`,
     sector: `Sugerí un sector de escalada en ${spotName}.`,
     via: `Sugerí vías para el sector ${sectorName ?? ""} de ${spotName}.`,
-    surf: `Sumá tu escuela de surf en ${spotName}.`,
-    kayak: `Sumá tu servicio de kayak en ${spotName}.`,
   }[kind]
   return `${what} Lo revisamos antes de publicarlo.`
 }
@@ -33,8 +32,6 @@ export const PREFILL_AGAIN: Record<PrefillKind, string> = {
   ruta: "Agregar otra ruta",
   sector: "Sugerir otro sector",
   via: "Sugerir más vías",
-  surf: "Sumar otra escuela",
-  kayak: "Sumar otro servicio",
 }
 
 function positiveInt(value: string | null): number | null {

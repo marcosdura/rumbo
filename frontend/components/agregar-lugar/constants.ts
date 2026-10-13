@@ -165,19 +165,12 @@ export const defaultSector = (): SectorItem => ({
 })
 
 export const defaultSurf = (): SurfItem => ({
-  name: "", class_type: "", duration: "", equipment_include: null,
-  season_type: "all_year", season_start: "", season_end: "",
-  email: "", whatsapp: "", instagram: "",
-  levels: null, languages: null,
-  description: "", price_from: "", price_note: "",
+  class_type: "", duration: "", equipment_include: null, levels: null, languages: null, price_note: "",
 })
 
 export const defaultKayak = (): KayakItem => ({
-  name: "", water_type: "", difficulty: "", duration: "", kayak_type: "",
-  rental_available: null, season_type: "all_year", season_start: "", season_end: "",
-  email: "", whatsapp: "", instagram: "",
-  includes_guide: null, includes_life_jacket: null,
-  description: "", price_from: "", price_note: "",
+  water_type: "", difficulty: "", duration: "", kayak_type: "",
+  rental_available: null, includes_guide: null, includes_life_jacket: null, price_note: "",
 })
 
 export const emptyBasic = (): BasicInfo => ({
@@ -186,6 +179,7 @@ export const emptyBasic = (): BasicInfo => ({
   season_start: "", season_end: "",
   email: "", whatsapp: "", whatsappCountry: "UY", instagram: "", noContact: false, lat: "", lng: "",
   pets_allowed: null, reservation_required: null, cell_signal: null,
+  operates_at: "",
 })
 
 export const defaultMotorhomeDetail = (): MotorhomeDetailItem => ({

@@ -37,7 +37,10 @@ async function basicInfo(page, name, { department = "Rocha", responsible = true 
   await field(page, "Departamento").selectOption(department)
   await field(page, "Precio").fill("0")
   await field(page, "Email del lugar").fill("contacto@e2e.test")
-  await click(page, /Público/)
+  // Escuelas y servicios no preguntan si es público (son un negocio).
+  if (await page.getByRole("button", { name: /Público/ }).count()) await click(page, /Público/)
+  const operatesAt = field(page, "Dónde opera")
+  if (await operatesAt.count()) await operatesAt.fill("Playa de Prueba y La Brava")
   await page.getByPlaceholder("Pegar link de Google Maps...").fill("https://www.google.com/maps/@-34.65,-54.17,15z")
   // El chequeo de nombre repetido es con un retraso de medio segundo.
   await page.waitForTimeout(800)
@@ -221,46 +224,33 @@ const FLOWS = [
     expect: { title: "¡Gracias por tu aporte!", contribution: named("Via E2E") },
   },
   {
-    name: "Surf: escuela en una playa existente",
+    name: "Surf: escuela nueva (es un lugar)",
     async fill(page) {
       await startFlow(page, "Surf")
-      await pickSpot(page, "Playa de Prueba")
+      await basicInfo(page, named("Escuela E2E"), { department: "Maldonado" })
       await next(page) // → datos de la escuela
-      await field(page, "Nombre de la escuela").fill(named("Escuela E2E"))
+      await field(page, "Tipo de clase").selectOption("grupal")
+      await field(page, "¿El precio es por…?").fill("por clase")
+      await next(page) // → fotos
       await addPhoto(page)
       await next(page) // → resumen
       return submit(page)
     },
-    expect: { title: "¡Gracias por tu aporte!", contribution: named("Escuela E2E") },
+    expect: { title: "¡Gracias!", spot: named("Escuela E2E"), detail: ["surf_detail", { class_type: "grupal", price_note: "por clase", operates_at: "Playa de Prueba y La Brava" }] },
   },
   {
-    name: "Surf: playa nueva con su escuela",
-    async fill(page) {
-      await startFlow(page, "Surf")
-      await click(page, /Mi playa no está en la lista/)
-      await basicInfo(page, named("Playa E2E"))
-      await next(page) // → imágenes
-      await addPhoto(page)
-      await next(page) // → escuela
-      await field(page, "Nombre de la escuela").fill(named("Escuela Playa E2E"))
-      await addPhoto(page)
-      await next(page) // → resumen
-      return submit(page)
-    },
-    expect: { title: "¡Gracias!", spot: named("Playa E2E") },
-  },
-  {
-    name: "Kayak: servicio en una laguna existente",
+    name: "Kayak: servicio nuevo (es un lugar)",
     async fill(page) {
       await startFlow(page, "Kayak")
-      await pickSpot(page, "Laguna de Prueba")
+      await basicInfo(page, named("Kayak E2E"))
       await next(page) // → datos del servicio
-      await field(page, "Nombre").fill(named("Kayak E2E"))
+      await field(page, "Tipo de agua").selectOption("lago")
+      await next(page) // → fotos
       await addPhoto(page)
       await next(page) // → resumen
       return submit(page)
     },
-    expect: { title: "¡Gracias por tu aporte!", contribution: named("Kayak E2E") },
+    expect: { title: "¡Gracias!", spot: named("Kayak E2E"), detail: ["kayak_service_detail", { water_type: "lago", operates_at: "Playa de Prueba y La Brava" }] },
   },
 ]
 
@@ -270,6 +260,13 @@ async function saved(flow) {
     const spot = (await apiGet("/admin/spots", ADMIN)).find(s => s.name === flow.expect.spot)
     if (!spot) return [false, "pero el lugar no está en el backend"]
     if (spot.owner_email !== USER) return [false, `pero quedó a nombre de ${spot.owner_email}`]
+    if (flow.expect.detail) {
+      // Escuela / servicio: sus datos propios quedaron guardados.
+      const [key, want] = flow.expect.detail
+      const got = (await apiGet(`/spots/${spot.id}/owner-content`, USER))[key] ?? {}
+      const wrong = Object.entries(want).filter(([k, v]) => got[k] !== v)
+      if (wrong.length) return [false, `datos propios distintos: ${wrong.map(([k]) => `${k}=${got[k]}`).join(", ")}`]
+    }
     return [true, `lugar guardado, ${spot.images.length} foto${spot.images.length !== 1 ? "s" : ""}`]
   }
   if (flow.expect.contribution) {
@@ -395,10 +392,8 @@ async function admin(browser, r) {
   const spot = (await apiGet("/admin/spots", ADMIN)).find(sp => sp.name === name)
   r.ok("Admin — aprobar un lugar lo publica", spot?.is_approved === true)
 
-  await page.getByRole("button", { name: /^🏄 Escuelas y servicios/ }).click()
-  await page.waitForTimeout(800)
-  r.ok("Admin — «Escuelas y servicios» lista la escuela cargada", (await text(page)).includes(named("Escuela E2E")))
-  await shot(page, "admin-escuelas")
+  // Una escuela es un lugar más: está entre los lugares nuevos.
+  r.ok("Admin — la escuela cargada está entre los lugares nuevos", await page.locator(".spot-row").filter({ hasText: named("Escuela E2E") }).count() === 1)
 
   r.ok("Admin — sin errores de JavaScript", errors.length === 0, errors.slice(0, 2).join(" | "))
   await ctx.close()

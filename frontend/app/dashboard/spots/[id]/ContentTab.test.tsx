@@ -161,10 +161,11 @@ describe("ContentTab según el tipo de lugar", () => {
     await waitFor(() => expect(deletes).toEqual(["/climbingroutes/41"]))
   })
 
-  it("surf: escuelas", async () => {
+  it("surf: ya no lista escuelas colgadas del lugar (cada escuela es un lugar con su propio panel)", async () => {
     renderTab(false, "Surf")
-    expect(await screen.findByText("Escuela Ola")).toBeTruthy()
-    expect(screen.getByRole("link", { name: "＋ Agregar una escuela" }).getAttribute("href")).toBe("/agregar-lugar?sumar=surf&spot=5")
+    await screen.findByText(/./)
+    expect(screen.queryByText("Escuela Ola")).toBeNull()
+    expect(screen.queryByRole("link", { name: "＋ Agregar una escuela" })).toBeNull()
   })
 })
 

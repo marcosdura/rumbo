@@ -22,7 +22,7 @@ export type StepKey =
   | "sector_nuevo"              // escalada: un sector para un lugar existente
   | "vias"                      // vías de los sectores nuevos (opcional)
   | "vias_nuevas"               // vías para un sector existente
-  | "servicio"                  // escuela de surf / servicio de kayak
+  | "servicio"                  // lo propio de una escuela de surf / servicio de kayak
   | "imagenes"
   | "adicionales"               // categorías adicionales
   | "resumen"
@@ -31,10 +31,9 @@ export type FlowInput = {
   category: string | null
   climbingMode: ClimbingMode
   trekkingMode: TrekkingMode
-  creatingNewSpot: boolean
 }
 
-export function flowSteps({ category, climbingMode, trekkingMode, creatingNewSpot }: FlowInput): StepKey[] {
+export function flowSteps({ category, climbingMode, trekkingMode }: FlowInput): StepKey[] {
   switch (category) {
     case "Camping":
       return ["categoria", "info", "amenities", "experiencias", "imagenes", "adicionales", "resumen"]
@@ -53,10 +52,9 @@ export function flowSteps({ category, climbingMode, trekkingMode, creatingNewSpo
       return ["categoria", "modo"]
     case "Surf":
     case "Kayak":
-      // Playa o laguna nueva: se sugiere junto con la escuela o el servicio.
-      return creatingNewSpot
-        ? ["categoria", "lugar", "info", "imagenes", "servicio", "resumen"]
-        : ["categoria", "lugar", "servicio", "resumen"]
+      // La escuela o el servicio es el lugar (antes se elegía una playa y se
+      // le colgaba la escuela).
+      return ["categoria", "info", "servicio", "imagenes", "resumen"]
     default:
       return ["categoria"]
   }
@@ -70,7 +68,7 @@ export function isComplete(steps: StepKey[]): boolean {
 // Por link directo (?sumar=...) se entra a este paso, y de ahí no se puede
 // volver atrás a elegir otra cosa.
 export const ENTRY_STEP: Record<PrefillKind, StepKey> = {
-  ruta: "rutas", sector: "sector_nuevo", via: "vias_nuevas", surf: "servicio", kayak: "servicio",
+  ruta: "rutas", sector: "sector_nuevo", via: "vias_nuevas",
 }
 
 // Lo que se muestra del flujo: con link directo, desde el paso de entrada.

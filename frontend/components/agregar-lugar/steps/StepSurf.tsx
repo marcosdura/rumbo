@@ -1,72 +1,29 @@
 "use client"
 
-import { useRef, useState } from "react"
+// Lo propio de una escuela de surf. El nombre, la descripción, el precio, la
+// temporada, el contacto, dónde opera y el mapa van en "Información básica",
+// y las fotos en su paso, como cualquier lugar. Todo opcional.
 import type React from "react"
-import { s, errorInputBorder, errorHintText, sanitizeNum } from "../styles"
+import { s, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
 import TriStateToggle from "../ui/TriStateToggle"
-import SeasonToggle from "../ui/SeasonToggle"
 import NavRow from "../ui/NavRow"
-import OperatorAboutFields from "../ui/OperatorAboutFields"
 import type { SurfItem } from "../types"
 import MultiChoiceUnknown from "@/components/ui/MultiChoiceUnknown"
 import { LANGUAGES, SURF_LEVELS } from "@/lib/operatorInfo"
 
-
-export default function StepSurf({
-  surf, setSurf, surfPhotoFiles, setSurfPhotoFiles, surfPhotoPreviews, setSurfPhotoPreviews,
-  error, onBack, onNext, optional, onSkip,
-}: {
+export default function StepSurf({ surf, setSurf, error, onBack, onNext }: {
   surf: SurfItem
   setSurf: React.Dispatch<React.SetStateAction<SurfItem>>
-  surfPhotoFiles: (File | null)[]
-  setSurfPhotoFiles: React.Dispatch<React.SetStateAction<(File | null)[]>>
-  surfPhotoPreviews: (string | null)[]
-  setSurfPhotoPreviews: React.Dispatch<React.SetStateAction<(string | null)[]>>
   error: string | null
   onBack: () => void
   onNext: () => void
-  optional?: boolean
-  onSkip?: () => void
 }) {
-  const ref1 = useRef<HTMLInputElement>(null)
-  const ref2 = useRef<HTMLInputElement>(null)
-  const ref3 = useRef<HTMLInputElement>(null)
-  const refs = [ref1, ref2, ref3]
-  const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
-
-  function handleSurfPhoto(index: number, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setSurfPhotoFiles(prev => { const n = [...prev]; n[index] = file; return n })
-    setSurfPhotoPreviews(prev => { const n = [...prev]; n[index] = file ? URL.createObjectURL(file) : null; return n })
-    if (index === 0 && file) setFieldErrors(prev => { const n = new Set(prev); n.delete("photo"); return n })
-  }
-
-  function validate(): boolean {
-    const missing = new Set<string>()
-    if (!surf.name.trim()) missing.add("name")
-    if (!surfPhotoFiles[0]) missing.add("photo")
-    setFieldErrors(missing)
-    return missing.size === 0
-  }
-
-  function handleNext() {
-    if (!validate()) return
-    onNext()
-  }
-
   return (
     <div>
       <h2 style={s.title}>Datos de la escuela de surf</h2>
       <div style={s.card}>
         <div style={s.form}>
-          <Field label="Nombre de la escuela" required={true} hasError={fieldErrors.has("name")} errorText="El nombre de la escuela es obligatorio">
-            <input
-              style={{ ...s.input, ...(fieldErrors.has("name") ? errorInputBorder : {}) }}
-              value={surf.name} onChange={e => setSurf(p => ({ ...p, name: e.target.value }))}
-            />
-          </Field>
-          <OperatorAboutFields what="la escuela" value={surf} onChange={(field, v) => setSurf(p => ({ ...p, [field]: v }))} />
           <div className="form-two-col">
             <Field label="Tipo de clase" required={false}>
               <select style={s.input} value={surf.class_type} onChange={e => setSurf(p => ({ ...p, class_type: e.target.value }))}>
@@ -76,24 +33,13 @@ export default function StepSurf({
                 <option value="intensivo">Intensivo</option>
               </select>
             </Field>
-            <Field label="Duración (horas)" required={false}>
+            <Field label="Duración de la clase (horas)" required={false}>
               <input style={s.input} type="number" step="any" min={0} value={surf.duration} onChange={e => setSurf(p => ({ ...p, duration: sanitizeNum(e.target.value) }))} />
             </Field>
           </div>
-          <SeasonToggle
-            type={surf.season_type}
-            onTypeChange={t => setSurf(p => ({ ...p, season_type: t }))}
-            start={surf.season_start} onStartChange={v => setSurf(p => ({ ...p, season_start: v }))}
-            end={surf.season_end}   onEndChange={v => setSurf(p => ({ ...p, season_end: v }))}
-          />
-          <div className="form-two-col">
-            <Field label="Email" required={false}><input style={s.input} type="email" value={surf.email} onChange={e => setSurf(p => ({ ...p, email: e.target.value }))} /></Field>
-            <Field label="WhatsApp" required={false}><input style={s.input} type="text" placeholder="Ej: 099123456" value={surf.whatsapp} onChange={e => setSurf(p => ({ ...p, whatsapp: e.target.value }))} /></Field>
-          </div>
-          <div className="form-two-col">
-            <Field label="Instagram" required={false}><input style={s.input} type="text" placeholder="@usuario" value={surf.instagram} onChange={e => setSurf(p => ({ ...p, instagram: e.target.value }))} /></Field>
-            <div />
-          </div>
+          <Field label="¿El precio es por…?" required={false} sublabel="Por ejemplo: por clase, por hora">
+            <input style={s.input} type="text" maxLength={60} placeholder="por clase" value={surf.price_note} onChange={e => setSurf(p => ({ ...p, price_note: e.target.value }))} />
+          </Field>
           <Field label="¿Incluye el equipo?" required={false}>
             <TriStateToggle value={surf.equipment_include} onChange={v => setSurf(p => ({ ...p, equipment_include: v }))} />
           </Field>
@@ -103,65 +49,9 @@ export default function StepSurf({
           <Field label="¿En qué idiomas dan las clases?" required={false}>
             <MultiChoiceUnknown label="Idiomas" options={LANGUAGES} value={surf.languages} onChange={v => setSurf(p => ({ ...p, languages: v }))} />
           </Field>
-
-          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: fieldErrors.has("photo") ? "#e53e3e" : "#1b1b19", margin: "0 0 4px" }}>Fotos de la escuela</p>
-            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 14px" }}>La foto de portada es obligatoria</p>
-            {fieldErrors.has("photo") && <p style={errorHintText}>Subí la foto de portada para continuar</p>}
-            {([
-              { label: "Foto de portada",  req: true,  i: 0 },
-              { label: "Foto adicional 2", req: false, i: 1 },
-              { label: "Foto adicional 3", req: false, i: 2 },
-            ]).map(({ label, req, i }) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <input ref={refs[i]} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleSurfPhoto(i, e)} />
-                {surfPhotoPreviews[i] ? (
-                  <div style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                    <img src={surfPhotoPreviews[i]!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSurfPhotoFiles(prev => { const n = [...prev]; n[i] = null; return n })
-                        setSurfPhotoPreviews(prev => { const n = [...prev]; n[i] = null; return n })
-                        if (refs[i].current) refs[i].current!.value = ""
-                      }}
-                      style={{ position: "absolute", top: 3, right: 3, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", lineHeight: 1 }}
-                    >×</button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => refs[i].current?.click()}
-                    style={{ width: 88, height: 64, borderRadius: 10, border: "2px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: "#f7f5f0", flexShrink: 0 }}
-                  >
-                    <span style={{ fontSize: 22, color: "#c8c4bc" }}>+</span>
-                  </div>
-                )}
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", margin: 0 }}>{label}</p>
-                  <p style={{ fontSize: 12, color: req ? "#e53e3e" : "var(--muted)", margin: "2px 0 0" }}>{req ? "(obligatoria)" : "(opcional)"}</p>
-                  {!surfPhotoPreviews[i] && (
-                    <button type="button" onClick={() => refs[i].current?.click()} style={{ ...s.btnAdd, marginTop: 6, padding: "4px 12px", fontSize: 12 }}>
-                      Seleccionar
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
-      {optional && onSkip && (
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <button
-            type="button"
-            onClick={onSkip}
-            style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}
-          >
-            Saltar este paso
-          </button>
-        </div>
-      )}
-      <NavRow onBack={onBack} onNext={handleNext} error={error ?? (fieldErrors.size > 0 ? "Completá los campos marcados en rojo." : null)} />
+      <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>
   )
 }

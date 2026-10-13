@@ -1,6 +1,5 @@
 "use client"
 
-import { operatorPrice } from "@/lib/operatorPage"
 import {
   TREKKING_FEATURES, GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, KAYAK_DIFFICULTY_LABELS, KAYAK_TYPE_LABELS,
   KAYAK_WATER_LABELS, SURFACE_LABELS, SURF_CLASS_LABELS, monthLabel,
@@ -35,27 +34,24 @@ function photosLabel(photos: File[] | undefined): string | null {
 }
 
 export default function StepResumen({
-  selectedCat, isService, createsSpot, basic, trekkingFeatures, routes,
-  surf, kayaks, availableSpots, selectedSpotId, submitting, uploadProgress,
+  selectedCat, createsSpot, basic, trekkingFeatures, routes,
+  surf, kayak, submitting, uploadProgress,
   error, onSubmit, onBack, editTo,
   climbingMode, climbingSpotName, climbingSectorName, trekkingSpotName, sectors, climbingNewRoutes,
-  isPublic, publicTransport, isResponsible, creatingNewSpot,
-  images, previews, surfPhotoPreviews, kayakPhotoPreviews,
+  isPublic, publicTransport, isResponsible,
+  images, previews,
   selectedAmenities, selectedGlampingAmenities, selectedCampingAmenities,
   additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
   trekkingMode, sectorRoutes, experiences,
 }: {
   selectedCat: Category
-  isService: boolean
   // Se carga un lugar nuevo (y no solo un aporte a uno existente).
   createsSpot: boolean
   basic: BasicInfo
   trekkingFeatures: TrekkingFeatures
   routes: RouteItem[]
   surf: SurfItem
-  kayaks: KayakItem[]
-  availableSpots: { id: number; name: string }[]
-  selectedSpotId: number | null
+  kayak: KayakItem
   submitting: boolean
   uploadProgress: string | null
   error: string | null
@@ -72,13 +68,10 @@ export default function StepResumen({
   climbingNewRoutes?: ClimbingRouteItem[]
   isPublic?: boolean | null
   publicTransport?: string | null
-  // null: no se preguntó (playa o laguna nueva).
+  // null: no se preguntó.
   isResponsible?: boolean | null
-  creatingNewSpot?: boolean
   images?: File[]
   previews?: string[]
-  surfPhotoPreviews?: (string | null)[]
-  kayakPhotoPreviews?: (string | null)[]
   selectedAmenities?: string[]
   selectedGlampingAmenities?: string[]
   selectedCampingAmenities?: string[]
@@ -94,6 +87,9 @@ export default function StepResumen({
   const isGlamping = selectedCat.name === "Glamping"
   const isMotorhome = selectedCat.name === "Motorhome"
   const isEscalada = selectedCat.name === "Escalada"
+  // Escuela de surf o servicio de kayak: es un lugar con sus datos propios.
+  const isService = selectedCat.name === "Surf" || selectedCat.name === "Kayak"
+  const priceNote = (selectedCat.name === "Surf" ? surf.price_note : kayak.price_note).trim()
   const showBasicInfoCard = createsSpot
   const namedExperiences = (experiences ?? []).filter(e => e.title.trim())
 
@@ -105,31 +101,14 @@ export default function StepResumen({
     <div>
       <h2 style={s.title}>{createsSpot ? "Revisá tu lugar" : "Revisá tu aporte"}</h2>
 
-      {(createsSpot || isService) && (
-      <SummaryCard title="Información general" onEdit={editTo(createsSpot ? "info" : "lugar")}>
-        {isService && !creatingNewSpot ? (
-          <>
-            <SummaryRow label="Categoría" value={selectedCat.label} />
-            <SummaryRow
-              label="Lugar"
-              value={availableSpots.find(sp => sp.id === selectedSpotId)?.name}
-            />
-            {selectedCat.name === "Surf" && surf.name && (
-              <SummaryRow label="Escuela" value={surf.name} />
-            )}
-            {selectedCat.name === "Kayak" && kayaks[0]?.name && (
-              <SummaryRow label="Servicio" value={kayaks[0].name} />
-            )}
-          </>
-        ) : (
-          <>
-            <SummaryRow label="Nombre" value={basic.name} />
-            <SummaryRow label="Categoría" value={selectedCat.label} />
-            <SummaryRow label="Departamento" value={basic.department} />
-            {isResponsible != null && (
-              <SummaryRow label="Lo cargás como" value={isResponsible ? "Responsable/dueño" : "Visitante"} />
-            )}
-          </>
+      {createsSpot && (
+      <SummaryCard title="Información general" onEdit={editTo("info")}>
+        <SummaryRow label="Nombre" value={basic.name} />
+        <SummaryRow label="Categoría" value={selectedCat.label} />
+        <SummaryRow label="Departamento" value={basic.department} />
+        {isService && <SummaryRow label="Dónde opera" value={basic.operates_at.trim()} />}
+        {isResponsible != null && (
+          <SummaryRow label="Lo cargás como" value={isResponsible ? "Responsable/dueño" : "Visitante"} />
         )}
       </SummaryCard>
       )}
@@ -146,7 +125,12 @@ export default function StepResumen({
 
       {showBasicInfoCard && (
         <SummaryCard title="Precio y temporada" onEdit={editTo("info")}>
-          <SummaryRow label="Precio" value={basic.price ? `$${basic.price}` : "Gratis"} />
+          <SummaryRow
+            label="Precio"
+            value={isService
+              ? (basic.price === "" ? "Sin dato" : basic.price === "0" ? "Gratis" : `Desde $${Number(basic.price).toLocaleString("es-UY")}${priceNote ? ` ${priceNote}` : ""}`)
+              : (basic.price ? `$${basic.price}` : "Gratis")}
+          />
           <SummaryRow label="Temporada" value={seasonLabel} />
         </SummaryCard>
       )}
@@ -391,63 +375,25 @@ export default function StepResumen({
         </SummaryCard>
       )}
 
-      {selectedCat.name === "Surf" && surf.name && (
+      {selectedCat.name === "Surf" && (
         <SummaryCard title="Datos de la escuela de surf" onEdit={editTo("servicio")}>
-          <SummaryRow label="Nombre" value={surf.name} />
-          {surf.class_type && <SummaryRow label="Tipo de clase" value={SURF_CLASS_LABELS[surf.class_type] ?? surf.class_type} />}
-          {surf.description.trim() && <SummaryRow label="Descripción" value={surf.description.trim()} />}
-          {surf.price_from !== "" && <SummaryRow label="Precio" value={operatorPrice(parseInt(surf.price_from), surf.price_note) ?? ""} />}
-          {surf.duration && <SummaryRow label="Duración" value={`${surf.duration} hs`} />}
-          <SummaryRow
-            label="Temporada"
-            value={surf.season_type === "seasonal" ? `Estacional (${monthLabel(surf.season_start)} a ${monthLabel(surf.season_end)})` : "Todo el año"}
-          />
+          <SummaryRow label="Tipo de clase" value={SURF_CLASS_LABELS[surf.class_type] ?? "No sé"} />
+          <SummaryRow label="Duración de la clase" value={surf.duration ? `${surf.duration} hs` : "No sé"} />
           <SummaryRow label="Equipo incluido" value={yesNo(surf.equipment_include) ?? "No sé"} />
           <SummaryRow label="Niveles" value={listLabel(surf.levels, SURF_LEVELS) ?? "No sé"} />
           <SummaryRow label="Idiomas" value={listLabel(surf.languages, LANGUAGES) ?? "No sé"} />
-          {surf.email && <SummaryRow label="Email" value={surf.email} />}
-          {surf.whatsapp && <SummaryRow label="WhatsApp" value={surf.whatsapp} />}
-          {surf.instagram && <SummaryRow label="Instagram" value={surf.instagram} />}
-          {surfPhotoPreviews && surfPhotoPreviews.some(p => p) && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              {surfPhotoPreviews.filter(Boolean).map((src, i) => (
-                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)" }} />
-              ))}
-            </div>
-          )}
         </SummaryCard>
       )}
 
-      {selectedCat.name === "Kayak" && kayaks.filter(k => k.name).length > 0 && (
+      {selectedCat.name === "Kayak" && (
         <SummaryCard title="Datos del servicio de kayak" onEdit={editTo("servicio")}>
-          {kayaks.filter(k => k.name).map((k, i) => (
-            <div key={i} style={{ marginBottom: 10 }}>
-              <SummaryRow label="Nombre" value={k.name} />
-              {k.water_type && <SummaryRow label="Tipo de agua" value={KAYAK_WATER_LABELS[k.water_type] ?? k.water_type} />}
-              {k.difficulty && <SummaryRow label="Dificultad" value={KAYAK_DIFFICULTY_LABELS[k.difficulty] ?? k.difficulty} />}
-              {k.description.trim() && <SummaryRow label="Descripción" value={k.description.trim()} />}
-              {k.price_from !== "" && <SummaryRow label="Precio" value={operatorPrice(parseInt(k.price_from), k.price_note) ?? ""} />}
-              {k.duration && <SummaryRow label="Duración" value={`${k.duration} hs`} />}
-              {k.kayak_type && <SummaryRow label="Tipo de kayak" value={KAYAK_TYPE_LABELS[k.kayak_type] ?? k.kayak_type} />}
-              <SummaryRow
-                label="Temporada"
-                value={k.season_type === "seasonal" ? `Estacional (${monthLabel(k.season_start)} a ${monthLabel(k.season_end)})` : "Todo el año"}
-              />
-              <SummaryRow label="Alquiler disponible" value={yesNo(k.rental_available) ?? "No sé"} />
-              <SummaryRow label="Incluye guía" value={yesNo(k.includes_guide) ?? "No sé"} />
-              <SummaryRow label="Incluye chaleco" value={yesNo(k.includes_life_jacket) ?? "No sé"} />
-              {k.email && <SummaryRow label="Email" value={k.email} />}
-              {k.whatsapp && <SummaryRow label="WhatsApp" value={k.whatsapp} />}
-              {k.instagram && <SummaryRow label="Instagram" value={k.instagram} />}
-            </div>
-          ))}
-          {kayakPhotoPreviews && kayakPhotoPreviews.some(p => p) && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              {kayakPhotoPreviews.filter(Boolean).map((src, i) => (
-                <img key={i} src={src!} alt={`Foto ${i + 1}`} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)" }} />
-              ))}
-            </div>
-          )}
+          <SummaryRow label="Tipo de agua" value={KAYAK_WATER_LABELS[kayak.water_type] ?? "No sé"} />
+          <SummaryRow label="Dificultad" value={KAYAK_DIFFICULTY_LABELS[kayak.difficulty] ?? "No sé"} />
+          <SummaryRow label="Duración de la salida" value={kayak.duration ? `${kayak.duration} hs` : "No sé"} />
+          <SummaryRow label="Tipo de kayak" value={KAYAK_TYPE_LABELS[kayak.kayak_type] ?? "No sé"} />
+          <SummaryRow label="Alquiler disponible" value={yesNo(kayak.rental_available) ?? "No sé"} />
+          <SummaryRow label="Incluye guía" value={yesNo(kayak.includes_guide) ?? "No sé"} />
+          <SummaryRow label="Incluye chaleco" value={yesNo(kayak.includes_life_jacket) ?? "No sé"} />
         </SummaryCard>
       )}
 

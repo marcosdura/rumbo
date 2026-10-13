@@ -1,6 +1,6 @@
 import { contributionResult, type SubmitResult } from "./result"
 import { experiencePayload, glampingUnitPayload } from "./payloads"
-import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, OperatorAbout, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
+import type { Category, BasicInfo, TrekkingFeatures, RouteItem, SectorItem, SurfItem, KayakItem, MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem, ClimbingRouteItem, ExperienceItem } from "./types"
 import { GLAMPING_AMENITY_MAP, PHONE_COUNTRIES, normalizePhoneDigits } from "./constants"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
 import { trackEvent } from "@/lib/analytics"
@@ -272,8 +272,6 @@ export async function submitNewClimbingRoute(params: SubmitNewClimbingRouteParam
 
 interface SubmitParams {
   selectedCat: Category
-  isService: boolean
-  creatingNewSpot: boolean
   token: string | undefined
   basic: BasicInfo
   isPublic: boolean | null
@@ -293,11 +291,8 @@ interface SubmitParams {
   sectors: SectorItem[]
   sectorRoutes: ClimbingRouteItem[]
   surf: SurfItem
-  kayaks: KayakItem[]
+  kayak: KayakItem
   images: File[]
-  surfPhotoFiles: (File | null)[]
-  kayakPhotoFiles: (File | null)[]
-  selectedSpotId: number | null
   ownerEmail: string | null
   experiences: ExperienceItem[]
   setSubmitting: (v: boolean) => void
@@ -333,119 +328,34 @@ function spotPayload(p: SubmitParams) {
   }
 }
 
-// Las fotos de una escuela o un servicio: se suben antes de crearlo (van como
-// URL en photo_1..3). Las que ya se subieron no se vuelven a subir.
-function operatorPhotos(files: (File | null)[], spotId: number, setUploadProgress: (v: string | null) => void) {
-  const urls: (string | null)[] = [null, null, null]
-  const labels = ["foto de portada", "foto adicional 2", "foto adicional 3"]
-  return async () => {
-    for (let i = 0; i < 3; i++) {
-      const file = files[i]
-      if (!file || urls[i]) continue
-      setUploadProgress(`Subiendo ${labels[i]}...`)
-      urls[i] = (await uploadImageToCloudinary(file, { spotId })).url
-    }
-    return { photo_1: urls[0], photo_2: urls[1] ?? null, photo_3: urls[2] ?? null }
-  }
-}
+// Lo propio de una escuela de surf o un servicio de kayak (PUT
+// /spots/{id}/surf-detail o /kayak-detail, después de crear el lugar).
+// "Dónde opera" se carga con los datos básicos. null = no sé.
+const numberOrNull = (v: string) => (v ? parseFloat(v) : null)
 
-// Descripción y precio, igual para escuelas y servicios.
-export function aboutPayload(a: OperatorAbout) {
+export function surfDetailPayload(surf: SurfItem, basic: BasicInfo) {
   return {
-    // ?? "": un borrador guardado antes de que existieran no los trae.
-    description: (a.description ?? "").trim() || null,
-    price_from: a.price_from ? parseInt(a.price_from) : null,
-    price_note: (a.price_note ?? "").trim() || null,
-  }
-}
-
-export function surfPayload(surf: SurfItem) {
-  return {
-    name: surf.name,
     class_type: surf.class_type || null,
-    duration: surf.duration ? parseFloat(surf.duration) : null,
+    duration: numberOrNull(surf.duration),
     equipment_include: surf.equipment_include,
-    season_start: surf.season_type === "seasonal" && surf.season_start ? parseInt(surf.season_start) : null,
-    season_end:   surf.season_type === "seasonal" && surf.season_end   ? parseInt(surf.season_end)   : null,
-    email: surf.email || null, whatsapp: surf.whatsapp || null, instagram: surf.instagram || null,
-    // null = no sé.
-    levels: surf.levels, languages: surf.languages,
-    ...aboutPayload(surf),
+    levels: surf.levels,
+    languages: surf.languages,
+    price_note: surf.price_note.trim() || null,
+    operates_at: basic.operates_at.trim() || null,
   }
 }
 
-export function kayakPayload(k: KayakItem) {
+export function kayakDetailPayload(k: KayakItem, basic: BasicInfo) {
   return {
-    name: k.name,
-    water_type: k.water_type || null, difficulty: k.difficulty || null,
-    duration: k.duration ? parseFloat(k.duration) : null,
-    kayak_type: k.kayak_type || null, rental_available: k.rental_available,
-    season_start: k.season_type === "seasonal" && k.season_start ? parseInt(k.season_start) : null,
-    season_end:   k.season_type === "seasonal" && k.season_end   ? parseInt(k.season_end)   : null,
-    email: k.email || null, whatsapp: k.whatsapp || null, instagram: k.instagram || null,
-    includes_guide: k.includes_guide, includes_life_jacket: k.includes_life_jacket,
-    ...aboutPayload(k),
-  }
-}
-
-// Escuela de surf o servicio de kayak (con sus fotos) para la playa spotId.
-function operatorTasks(p: SubmitParams, spotId: number, created: Created[]): { label: string; task: () => Promise<void> }[] {
-  const { selectedCat, surf, kayaks, surfPhotoFiles, kayakPhotoFiles, token, setUploadProgress } = p
-  if (selectedCat.name === "Surf") {
-    if (!surf.name) return []
-    const photos = operatorPhotos(surfPhotoFiles, spotId, setUploadProgress)
-    return [{
-      label: `Escuela «${surf.name}»`,
-      task: async () => {
-        const { data } = await api.post<Created>("/surfschool/", { spot_id: spotId, ...surfPayload(surf), ...(await photos()) }, { token })
-        created.push(data)
-      },
-    }]
-  }
-  // Las fotos son una sola tanda para el servicio.
-  const photos = operatorPhotos(kayakPhotoFiles, spotId, setUploadProgress)
-  return kayaks.filter(k => k.name).map(k => ({
-    label: `Servicio «${k.name}»`,
-    task: async () => {
-      const { data } = await api.post<Created>("/kayak/", { spot_id: spotId, ...kayakPayload(k), ...(await photos()) }, { token })
-      created.push(data)
-    },
-  }))
-}
-
-async function submitService(p: SubmitParams): Promise<void> {
-  const { creatingNewSpot, selectedCat, surfPhotoFiles, kayakPhotoFiles, selectedSpotId, images, token,
-    setSubmitting, setUploadProgress, setError, setSuccess, setFailures } = p
-  const coverMissing = selectedCat.name === "Surf" ? !surfPhotoFiles[0] : !kayakPhotoFiles[0]
-  if (!creatingNewSpot && coverMissing) { setError("La foto de portada es obligatoria."); return }
-
-  setError(null)
-  setSubmitting(true)
-  try {
-    const created: Created[] = []
-    if (!creatingNewSpot) {
-      // A una playa existente: si falla, no se creó nada y se puede reenviar.
-      for (const { task } of operatorTasks(p, selectedSpotId as number, created)) await task()
-      trackEvent("add_spot_complete", { category: selectedCat.name, creating_new_spot: false })
-      setSuccess(contributionResult(created))
-      return
-    }
-
-    setUploadProgress("Guardando lugar...")
-    const { data: spot } = await api.post<{ id: number }>("/spots", spotPayload(p), { token })
-    // Desde acá la playa ya existe: lo que falle se avisa y se reintenta.
-    const failures: Failure[] = []
-    setUploadProgress("Subiendo imágenes del lugar...")
-    await addImages(failures, images, spot.id, token)
-    for (const { label, task } of operatorTasks(p, spot.id, created)) await attempt(failures, label, task)
-    trackEvent("add_spot_complete", { category: selectedCat.name, creating_new_spot: true })
-    setFailures(failures)
-    setSuccess("spot")
-  } catch (e: unknown) {
-    setError(e instanceof Error ? e.message : "Error inesperado")
-  } finally {
-    setSubmitting(false)
-    setUploadProgress(null)
+    water_type: k.water_type || null,
+    difficulty: k.difficulty || null,
+    duration: numberOrNull(k.duration),
+    kayak_type: k.kayak_type || null,
+    rental_available: k.rental_available,
+    includes_guide: k.includes_guide,
+    includes_life_jacket: k.includes_life_jacket,
+    price_note: k.price_note.trim() || null,
+    operates_at: basic.operates_at.trim() || null,
   }
 }
 
@@ -466,12 +376,10 @@ function glampingAmenityPayload(names: string[]): Record<string, boolean> {
 }
 
 export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
-  if (params.isService) return submitService(params)
-
   const {
     selectedCat, token, basic, selectedAmenities, additionalCategories, motorhomeDetail, campingDetail, glampingUnits,
     selectedGlampingAmenities, selectedCampingAmenities, trekkingFeatures, routes, sectors, sectorRoutes,
-    images, experiences, setSubmitting, setUploadProgress, setError, setSuccess, setFailures,
+    surf, kayak, images, experiences, setSubmitting, setUploadProgress, setError, setSuccess, setFailures,
   } = params
   const cat = selectedCat.name
 
@@ -522,6 +430,13 @@ export async function submitAgregarLugar(params: SubmitParams): Promise<void> {
       if (Object.keys(amenityPayload).length > 0) {
         await add("Servicios del glamping", () => api.post(`/glamping/spots/${spotId}/amenities`, amenityPayload, { token }))
       }
+    }
+
+    if (cat === "Surf") {
+      await add("Datos de la escuela", () => api.put(`/spots/${spotId}/surf-detail`, surfDetailPayload(surf, basic), { token }))
+    }
+    if (cat === "Kayak") {
+      await add("Datos del servicio", () => api.put(`/spots/${spotId}/kayak-detail`, kayakDetailPayload(kayak, basic), { token }))
     }
 
     if (cat === "Motorhome") {
