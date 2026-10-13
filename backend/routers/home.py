@@ -10,7 +10,9 @@ import views
 from auth import get_current_user
 from database import get_db
 from limiter import get_client_ip, limiter
-from models import ClimbingSector, KayakServiceDetail, Route, SpotDB, SurfDetail
+from sqlalchemy import func
+
+from models import Category, ClimbingSector, KayakServiceDetail, Route, SpotCategory, SpotDB, SurfDetail
 from ownership import get_owned_spot_or_admin
 from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
 
@@ -137,6 +139,24 @@ def sitemap_trails(db: Session = Depends(get_db)):
             )
         ]
     return rows(Route, "rutas") + rows(ClimbingSector, "sectores")
+
+
+@router.get("/sitemap/places")
+def sitemap_places(db: Session = Depends(get_db)):
+    """Cuántos lugares publicados hay por actividad y departamento, para las
+    páginas /lugares/... (sus links y el sitemap): así no se arma ninguna
+    página vacía. La actividad es la misma que filtra GET /spots?activity=
+    (cualquier categoría del lugar, no solo la principal)."""
+    rows = (
+        db.query(Category.name, SpotDB.department, func.count(SpotDB.id))
+        .join(SpotCategory, SpotCategory.category_id == Category.id)
+        .join(SpotDB, SpotDB.id == SpotCategory.spot_id)
+        .filter(SpotDB.is_approved.is_(True), SpotDB.owner_deleted_at.is_(None), SpotDB.slug.isnot(None))
+        .group_by(Category.name, SpotDB.department)
+        .order_by(Category.name, SpotDB.department)
+        .all()
+    )
+    return [{"activity": a, "department": d, "count": n} for a, d, n in rows if d]
 
 
 @router.get("/spots/legacy/{kind}/{legacy_id}")
