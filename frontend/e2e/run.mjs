@@ -69,15 +69,17 @@ async function waitFor(url, what, seconds = 90) {
 }
 
 async function main() {
+  // El backend primero: el build arma la home con sus datos (si no, la
+  // home de prueba queda en "No pudimos cargar los lugares").
+  const python = process.env.PYTHON ?? (process.platform === "win32" ? "py" : "python3")
+  start(python, [path.join("e2e", "backend_e2e.py"), new URL(API).port], "backend")
+  await waitFor(`${API}/spots/ids`, "El backend")
   if (!args.includes("--sin-build")) {
     console.log("Compilando el frontend (.next-e2e)...")
     const build = spawnSync(process.execPath, [NEXT, "build"], { cwd: ROOT, env, stdio: "inherit" })
     if (build.status !== 0) throw new Error("Falló el build")
   }
-  const python = process.env.PYTHON ?? (process.platform === "win32" ? "py" : "python3")
-  start(python, [path.join("e2e", "backend_e2e.py"), new URL(API).port], "backend")
   start(process.execPath, [NEXT, "start", "-p", new URL(FRONT).port], "frontend")
-  await waitFor(`${API}/spots/ids`, "El backend")
   await waitFor(FRONT, "El frontend")
   if (args.includes("--servidores")) {
     console.log(`Listo: frontend en ${FRONT}, backend en ${API}. Ctrl+C para cerrar.`)

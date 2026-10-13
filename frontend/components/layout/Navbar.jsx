@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { usePath } from "@/lib/usePath"
 import SearchBar from "@/components/spots/SearchBar"
 import NavBarContent from "@/components/layout/NavBarContent"
 
@@ -12,7 +12,7 @@ function Navbar() {
   const [menuOpen,   setMenuOpen]   = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [heroGone,   setHeroGone]   = useState(false)
-  const pathname = usePathname()
+  const pathname = usePath()
   const isHome = pathname === "/"
 
   // Al cambiar de página: se cierran el menú y la búsqueda, y en la home el

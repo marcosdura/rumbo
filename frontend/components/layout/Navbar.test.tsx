@@ -103,4 +103,12 @@ describe("Navbar", () => {
     // jsdom no aplica las media queries: esto es la vista de PC.
     expect(screen.queryByRole("button", { name: "Buscar" })).toBeNull()
   })
+
+  it("en la home regenerada por Vercel (ruta '/index') se oculta igual sobre el hero (antes: dos barras)", () => {
+    session = null
+    pathname = "/index"
+    const { container } = render(<Navbar />)
+    expect(container.querySelector("nav")!.className).toContain("navbar-home-fixed")
+    pathname = "/spots"
+  })
 })

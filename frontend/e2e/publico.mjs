@@ -29,6 +29,10 @@ export async function run(browser, r) {
     await shot(page, `${label}-detalle`)
     await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
     const home = await barBoxes(page)
+    // La navbar fija arranca oculta en la home: una sola barra a la vista.
+    const visibleBars = await page.evaluate(() => [...document.querySelectorAll(".nav-bar")]
+      .filter(b => { const nav = b.closest("nav"); return !nav || getComputedStyle(nav).opacity !== "0" }).length)
+    r.ok(`[${label}] la home abre con una sola barra`, visibleBars === 1, `${visibleBars} visibles`)
     await shot(page, `${label}-home`)
     r.ok(`[${label}] la barra no salta entre un detalle y la home`, JSON.stringify(detail) === JSON.stringify(home),
       `detalle ${JSON.stringify(detail)} / home ${JSON.stringify(home)}`)
