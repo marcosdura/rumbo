@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   CAMPING_CODEC, CLIMBING_CODEC, KAYAK_CODEC, SURF_CODEC, TREKKING_CODEC,
-  filterChips, sortOf, withPanelFilters, withPractical, withSort,
+  filterChips, listQuery, sortOf, toSearchParams, withPanelFilters, withPractical, withSort,
 } from "./searchFilters"
 import { CAMPING_AMENITY_GROUPS } from "./camping-filters"
 import { TREKKING_FILTERS } from "./trekking-filters"
@@ -54,5 +54,18 @@ describe("chips", () => {
     const campingLabels = CAMPING_AMENITY_GROUPS.flatMap(g => g.amenities.map(a => a.label as string))
     expect(campingLabels).not.toContain("Acepta mascotas")
     expect(TREKKING_FILTERS.amenities.map(a => a.key as string)).not.toContain("pet_friendly")
+  })
+})
+
+describe("el pedido a GET /spots", () => {
+  it("la URL tal cual, con el orden siempre explícito y la tanda", () => {
+    const q = new URLSearchParams(listQuery(new URLSearchParams("activity=Trekking&difficulty=fácil"), 24))
+    expect(Object.fromEntries(q)).toEqual({ activity: "Trekking", difficulty: "fácil", sort: "recommended", limit: "24", offset: "24" })
+    expect(new URLSearchParams(listQuery(new URLSearchParams("sort=rating"))).get("sort")).toBe("rating")
+  })
+
+  it("los searchParams del servidor quedan igual que en el navegador (también los repetidos)", () => {
+    const p = toSearchParams({ activity: "Trekking", difficulty: ["fácil", "difícil"], vacio: undefined })
+    expect(p.toString()).toBe(new URLSearchParams("activity=Trekking&difficulty=fácil&difficulty=difícil").toString())
   })
 })

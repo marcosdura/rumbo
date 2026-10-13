@@ -70,6 +70,12 @@ export async function fakeCloudinary(context) {
   return uploads
 }
 
+// Los mosaicos del mapa (OpenStreetMap), un píxel: si el servicio tardaba,
+// un mosaico colgado no dejaba llegar a "networkidle" y la prueba se cortaba.
+export async function offlineMaps(context) {
+  await context.route(/tile\.openstreetmap\.org/, route => route.fulfill({ body: PIXEL, contentType: "image/png" }))
+}
+
 // Una imagen chica para los <input type=file>.
 export const PHOTO = { name: "foto.png", mimeType: "image/png", buffer: PIXEL }
 

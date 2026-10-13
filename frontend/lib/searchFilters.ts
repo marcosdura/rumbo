@@ -165,6 +165,29 @@ export function sortOf(p: URLSearchParams): string {
   return SORT_OPTIONS.some(o => o.value === sort) ? sort! : DEFAULT_SORT
 }
 
+// Cuántos lugares trae cada tanda de la búsqueda.
+export const PAGE_SIZE = 24
+
+// Lo que se le pide a GET /spots: lo mismo que la URL, con el orden siempre
+// explícito y la tanda. Lo comparten el servidor (la primera tanda viene
+// con la página) y el navegador ("Cargar más", y al cambiar los filtros).
+export function listQuery(p: URLSearchParams, offset = 0): string {
+  const params = new URLSearchParams(p)
+  params.set("sort", sortOf(p))
+  params.set("limit", String(PAGE_SIZE))
+  params.set("offset", String(offset))
+  return params.toString()
+}
+
+// Los searchParams que recibe una página del servidor, como en el navegador.
+export function toSearchParams(obj: Record<string, string | string[] | undefined>): URLSearchParams {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(obj)) {
+    for (const v of Array.isArray(value) ? value : value === undefined ? [] : [value]) params.append(key, v)
+  }
+  return params
+}
+
 // ─── Cambios a la URL ────────────────────────────────────────────────────
 
 const BASE_KEYS = ["activity", "department", "sort", ...PRACTICAL_FILTERS.map(f => f.param)]

@@ -140,3 +140,45 @@ describe("Búsqueda: resultados", () => {
     expect(screen.getByRole("link", { name: "Sumalo" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 })
+
+describe("Búsqueda: la primera tanda viene del servidor", () => {
+  const fromServer = (query: string, total = 30) => ({
+    query, total, spots: [{ id: 7, name: "Laguna Negra" }, { id: 8, name: "Santa Teresa" }],
+  })
+
+  it("si es de esta misma URL, la muestra de entrada y no la vuelve a pedir", async () => {
+    render(<SearchPage initial={fromServer("activity=Trekking")} />)
+    expect(screen.getByText("Laguna Negra")).toBeTruthy()
+    await flush()
+    expect(listRequests).toEqual([])
+  })
+
+  it("Cargar más sigue después de lo que trajo el servidor", async () => {
+    render(<SearchPage initial={fromServer("activity=Trekking")} />)
+    await flush()
+    fireEvent.click(screen.getByRole("button", { name: /Cargar más/ }))
+    await flush()
+    expect(listRequests).toHaveLength(1)
+    expect(new URLSearchParams(listRequests[0].split("?")[1]).get("offset")).toBe("2")
+  })
+
+  it("si es de otra URL (cambiaron los filtros), la pide como siempre", async () => {
+    render(<SearchPage initial={fromServer("activity=Camping")} />)
+    await flush()
+    expect(listRequests).toHaveLength(1)
+    expect(screen.getByText("Cerro Arequita")).toBeTruthy()
+    expect(screen.queryByText("Laguna Negra")).toBeNull()
+  })
+
+  it("al cambiar la URL a la que trajo el servidor, usa esa tanda sin pedirla", async () => {
+    params = new URLSearchParams("activity=Camping")
+    const { rerender } = render(<SearchPage initial={null} />)
+    await flush()
+    expect(listRequests).toHaveLength(1)
+    params = new URLSearchParams("activity=Trekking")
+    rerender(<SearchPage initial={fromServer("activity=Trekking")} />)
+    await flush()
+    expect(listRequests).toHaveLength(1)
+    expect(screen.getByText("Laguna Negra")).toBeTruthy()
+  })
+})

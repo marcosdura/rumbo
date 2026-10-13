@@ -1,7 +1,7 @@
 // Con sesión iniciada: el formulario de agregar lugar entero (cada flujo, de
 // punta a punta) y después el perfil, que tiene que mostrar lo cargado.
 // Verifica en el backend que cada envío haya quedado guardado.
-import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot } from "./lib.mjs"
+import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps } from "./lib.mjs"
 
 // Sufijo por corrida: los nombres no se repiten si la base ya tiene datos.
 const RUN = Date.now().toString(36).slice(-4)
@@ -278,6 +278,7 @@ async function saved(flow) {
 
 export async function run(browser, r) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  await offlineMaps(ctx)
   await loggedIn(ctx, USER)
   const uploads = await fakeCloudinary(ctx)
   const page = await ctx.newPage()
@@ -371,6 +372,7 @@ async function profile(page, r) {
 // El panel de admin con la cuenta de admin de prueba.
 async function admin(browser, r) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  await offlineMaps(ctx)
   await loggedIn(ctx, ADMIN)
   await fakeCloudinary(ctx)
   const page = await ctx.newPage()

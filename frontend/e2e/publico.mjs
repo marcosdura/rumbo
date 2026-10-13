@@ -1,6 +1,6 @@
 // Lo público, en PC y en celular: la barra (que no salte entre páginas), el
 // menú, la 404, legal, el footer y que no haya errores de JavaScript.
-import { FRONT, apiGet, shot } from "./lib.mjs"
+import { FRONT, apiGet, shot, offlineMaps } from "./lib.mjs"
 
 const VIEWPORTS = [["pc", { width: 1280, height: 800 }], ["celular", { width: 390, height: 844 }]]
 
@@ -40,10 +40,16 @@ export async function run(browser, r) {
   const searchHtml = await html("/search?activity=Surf")
   r.ok("SEO — la búsqueda queda fuera de Google, con título según el filtro",
     /<meta name="robots" content="noindex, follow"/.test(searchHtml) && searchHtml.includes("<title>Buscar: Surf en Uruguay | Rumbo</title>"))
+  // Rendimiento: la búsqueda llega con los lugares (antes los pedía el
+  // navegador), el CSS de la card va una vez y hay conexión anticipada.
+  r.ok("Rendimiento — la búsqueda llega con los lugares en el HTML", searchHtml.includes("Playa de Prueba") && searchHtml.includes("Escuela de Prueba"))
+  r.ok("Rendimiento — el CSS de la card no se repite por card", !surfRocha.includes(".spot-card {"))
+  r.ok("Rendimiento — conexión anticipada a Cloudinary", surfRocha.includes('rel="preconnect" href="https://res.cloudinary.com"'))
   const og = await fetch(`${FRONT}/opengraph-image`)
   r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport })
+    await offlineMaps(ctx)
     const page = await ctx.newPage()
     const errors = []
     page.on("pageerror", e => errors.push(e.message))

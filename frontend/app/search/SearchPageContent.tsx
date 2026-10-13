@@ -20,7 +20,7 @@ import type { SurfFilterState } from "../../lib/surf-filters"
 import type { ClimbingFilterState } from "../../lib/climbing-filters"
 import type { CampingFilterState } from "../../lib/camping-filters"
 import {
-  CODECS, PRACTICAL_FILTERS, SORT_OPTIONS, filterChips, hasFilterPanel, isPracticalOn, sortOf,
+  CODECS, PRACTICAL_FILTERS, SORT_OPTIONS, filterChips, hasFilterPanel, isPracticalOn, listQuery, sortOf,
   withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters, withoutPair,
   type FilterActivity,
 } from "../../lib/searchFilters"
@@ -32,18 +32,23 @@ import "./search.css"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
-const PAGE_SIZE = 24
+// La primera tanda que ya pidió el servidor (app/search/page.tsx), para la
+// URL `query`. Antes la página llegaba vacía y recién el navegador pedía
+// los lugares: aparecían a los ~8 s en un celular.
+export type InitialResults = { query: string; spots: SpotListItem[]; total: number }
 
-export default function SearchPage() {
+export default function SearchPage({ initial = null }: { initial?: InitialResults | null }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
   const sort = sortOf(searchParams)
+  // Si el servidor ya trajo los lugares de esta URL, no se vuelven a pedir.
+  const fromServer = initial !== null && initial.query === searchParams.toString()
 
-  const [spots, setSpots]                         = useState<SpotListItem[]>([])
-  const [total, setTotal]                         = useState<number | null>(null)
-  const [loading, setLoading]                     = useState(true)
+  const [spots, setSpots]                         = useState<SpotListItem[]>(fromServer ? initial.spots : [])
+  const [total, setTotal]                         = useState<number | null>(fromServer ? initial.total : null)
+  const [loading, setLoading]                     = useState(!fromServer)
   const [error, setError]                         = useState<string | null>(null)
   const [retryTick, setRetryTick]                 = useState(0)
   const [loadingMore, setLoadingMore]             = useState(false)
@@ -100,14 +105,6 @@ export default function SearchPage() {
     setAtBottom(el.scrollTop >= el.scrollHeight - el.clientHeight - 8)
   }, [spots, loading])
 
-  // Lo que se le pide al backend: lo mismo que la URL, con el orden siempre
-  // explícito. El mapa no ordena ni pagina (necesita todos los pines).
-  const listParams = () => {
-    const params = new URLSearchParams(searchParams)
-    params.set("sort", sort)
-    return params
-  }
-
   // Lo que define la búsqueda: si cambia (o se reintenta), se vuelve a pedir.
   // "Cargando" se prende durante el render, no en el efecto, para no pintar
   // un cuadro con los resultados viejos y sin aviso.
@@ -115,36 +112,45 @@ export default function SearchPage() {
   const [searchedKey, setSearchedKey] = useState(searchKey)
   if (searchKey !== searchedKey) {
     setSearchedKey(searchKey)
-    setLoading(true)
     setError(null)
+    if (fromServer) {
+      setSpots(initial.spots)
+      setTotal(initial.total)
+      setLoading(false)
+    } else {
+      setLoading(true)
+    }
   }
+
+  const track = (count: number | undefined) => trackEvent("search", {
+    search_term: activity || department || "todos",
+    activity: activity || undefined,
+    department: department || undefined,
+    filter_count: activeFilterCount,
+    result_count: count,
+  })
 
   useEffect(() => {
     fetchControllerRef.current?.abort()
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    const params = listParams()
-    params.set("limit", String(PAGE_SIZE))
-    params.set("offset", "0")
-    api.get<SpotListItem[]>(`/spots?${params.toString()}`, { signal: controller.signal })
-      .then(({ data, totalCount }) => {
-        setTotal(totalCount)
-        setSpots(data)
-        setLoading(false)
-        trackEvent("search", {
-          search_term: activity || department || "todos",
-          activity: activity || undefined,
-          department: department || undefined,
-          filter_count: activeFilterCount,
-          result_count: Array.isArray(data) ? data.length : undefined,
+    if (fromServer) {
+      track(initial.spots.length)
+    } else {
+      api.get<SpotListItem[]>(`/spots?${listQuery(searchParams)}`, { signal: controller.signal })
+        .then(({ data, totalCount }) => {
+          setTotal(totalCount)
+          setSpots(data)
+          setLoading(false)
+          track(Array.isArray(data) ? data.length : undefined)
         })
-      })
-      .catch(e => {
-        if (e?.name === "AbortError") return
-        setError(e instanceof Error ? e.message : "Error al cargar los lugares.")
-        setLoading(false)
-      })
+        .catch(e => {
+          if (e?.name === "AbortError") return
+          setError(e instanceof Error ? e.message : "Error al cargar los lugares.")
+          setLoading(false)
+        })
+    }
 
     // Pines del mapa: mismos filtros, sin paginar — no se vuelve a pedir
     // cuando el usuario aprieta "Cargar más" en la lista, ya tiene todo.
@@ -172,10 +178,7 @@ export default function SearchPage() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    const params = listParams()
-    params.set("limit", String(PAGE_SIZE))
-    params.set("offset", String(spots.length))
-    api.get<SpotListItem[]>(`/spots?${params.toString()}`, { signal: controller.signal })
+    api.get<SpotListItem[]>(`/spots?${listQuery(searchParams, spots.length)}`, { signal: controller.signal })
       .then(({ data, totalCount }) => {
         if (totalCount != null) setTotal(totalCount)
         setSpots(prev => [...prev, ...(Array.isArray(data) ? data : [])])
