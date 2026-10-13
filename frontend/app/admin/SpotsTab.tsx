@@ -162,7 +162,7 @@ export default function SpotsTab({
                     Ver
                   </a>
                   <button
-                    // El dominio del sitio (antes decía rumboapp.uy, que no es el nuestro).
+                    // El dominio desde el que se navega (rumboapp.uy en producción).
                     onClick={() => navigator.clipboard.writeText(`${window.location.origin}/spots/${spot.slug ?? spot.id}`)}
                     aria-label="Copiar link"
                     className="action-btn-sm"

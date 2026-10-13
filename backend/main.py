@@ -31,7 +31,8 @@ async def limit_body_size(request: Request, call_next):
         return JSONResponse(status_code=413, content={"detail": "Request demasiado grande"})
     return await call_next(request)
 
-origins = ["http://localhost:3000", "https://rumbo-eight.vercel.app", "https://rumboapp.uy", "https://www.rumboapp.uy",]
+# rumbo-eight.vercel.app no es este sitio (es otra app): no va acá.
+origins = ["http://localhost:3000", "https://rumboapp.uy", "https://www.rumboapp.uy",]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     origins.append(frontend_url)

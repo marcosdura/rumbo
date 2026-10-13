@@ -96,7 +96,7 @@ describe("Aprobar todos", () => {
 })
 
 describe("Link del lugar", () => {
-  it("copia el link del sitio (antes decía rumboapp.uy, que no es nuestro)", async () => {
+  it("copia el link del sitio desde el que se navega", async () => {
     let copied = ""
     Object.assign(navigator, { clipboard: { writeText: (t: string) => { copied = t; return Promise.resolve() } } })
     spots = [spot(1)]
