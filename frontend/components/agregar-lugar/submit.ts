@@ -333,7 +333,7 @@ function spotPayload(p: SubmitParams) {
 // "Dónde opera" se carga con los datos básicos. null = no sé.
 const numberOrNull = (v: string) => (v ? parseFloat(v) : null)
 
-export function surfDetailPayload(surf: SurfItem, basic: BasicInfo) {
+export function surfDetailPayload(surf: SurfItem, basic: { operates_at: string }) {
   return {
     class_type: surf.class_type || null,
     duration: numberOrNull(surf.duration),
@@ -345,7 +345,7 @@ export function surfDetailPayload(surf: SurfItem, basic: BasicInfo) {
   }
 }
 
-export function kayakDetailPayload(k: KayakItem, basic: BasicInfo) {
+export function kayakDetailPayload(k: KayakItem, basic: { operates_at: string }) {
   return {
     water_type: k.water_type || null,
     difficulty: k.difficulty || null,

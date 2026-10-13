@@ -16,7 +16,7 @@ import { errorMessage } from "./changes"
 import type { OwnedPhoto, OwnedRoute, OwnerContent } from "./types"
 import { CldImage } from "next-cloudinary"
 import {
-  CampingAmenitiesForm, ExperienceEditForm, GlampingUnitEditForm, MotorhomeServicesForm, RouteEditForm, TrekkingFeaturesForm,
+  CampingAmenitiesForm, ExperienceEditForm, GlampingUnitEditForm, MotorhomeServicesForm, SurfDetailForm, KayakDetailForm, RouteEditForm, TrekkingFeaturesForm,
 } from "./EditForms"
 
 interface Props {
@@ -207,6 +207,21 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
           <p style={sectionTitle}>Servicios del camping</p>
           <CampingAmenitiesForm initial={content.amenity_ids ?? []}
             onSave={saveEdit("put", `/spots/${spotId}/camping-amenities`, "Servicios del camping")} />
+        </div>
+      )}
+
+      {content.surf_detail && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Datos de la escuela</p>
+          <SurfDetailForm initial={content.surf_detail}
+            onSave={saveEdit("put", `/spots/${spotId}/surf-detail`, "Datos de la escuela")} />
+        </div>
+      )}
+      {content.kayak_service_detail && (
+        <div style={{ ...s.card, padding: 24 }}>
+          <p style={sectionTitle}>Datos del servicio</p>
+          <KayakDetailForm initial={content.kayak_service_detail}
+            onSave={saveEdit("put", `/spots/${spotId}/kayak-detail`, "Datos del servicio")} />
         </div>
       )}
 

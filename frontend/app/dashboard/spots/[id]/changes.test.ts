@@ -100,6 +100,9 @@ describe("priceMode", () => {
     expect(priceMode(["Glamping", "Motorhome"])).toBe("own")
     expect(priceMode(["Glamping"])).toBe("glamping")
     expect(priceMode(["Trekking"])).toBe("none")
+    // Escuela de surf / servicio de kayak: precio "desde".
+    expect(priceMode(["Surf"])).toBe("from")
+    expect(priceMode(["Kayak"])).toBe("from")
     expect(priceMode([])).toBe("none")
   })
 })
@@ -108,5 +111,13 @@ describe("ubicación en los avisos", () => {
   it("el pedido y el aviso previo la nombran", () => {
     expect(describeRequest({ id: 1, status: "pending", reject_reason: null, created_at: null, resolved_at: null, changes: { location: { from: [1, 2], to: [3, 4] } } })).toBe("ubicación")
     expect(describeFields(["location"], 0)).toBe("ubicación")
+  })
+})
+
+describe("pestaña de contenido de una escuela o servicio", () => {
+  it("son sus datos propios (antes listaba las escuelas de una playa)", async () => {
+    const { contentTabLabel } = await import("./changes")
+    expect(contentTabLabel("Surf", false)).toBe("🏄 Datos de la escuela")
+    expect(contentTabLabel("Kayak", false)).toBe("🛶 Datos del servicio")
   })
 })

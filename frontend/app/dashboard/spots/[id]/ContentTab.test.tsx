@@ -275,3 +275,42 @@ describe("ContentTab: fotos y recorridos que subió la gente", () => {
     expect(screen.getByAltText("Foto 1 de La Diagonal")).toBeTruthy()
   })
 })
+
+describe("ContentTab: escuela de surf y servicio de kayak", () => {
+  beforeEach(() => { edits = [] })
+  const surfDetail = { class_type: "grupal", duration: 1.5, equipment_include: true, levels: ["principiante"], languages: null, price_note: "por clase", operates_at: "Playa El Emir" }
+
+  it("una escuela edita sus datos (los mismos campos que al cargarla) y dónde opera", async () => {
+    content = { ...content, surf_detail: surfDetail }
+    render(<ContentTab spotId={3} token="t" reviewed category="Surf" showExperiences={false} showGlamping={false} activities={["Surf"]} />)
+    expect(await screen.findByText("Datos de la escuela")).toBeTruthy()
+    fireEvent.change(screen.getByDisplayValue("Playa El Emir"), { target: { value: "Playa El Emir y La Brava" } })
+    fireEvent.click(screen.getByRole("button", { name: "Guardar datos de la escuela" }))
+    await waitFor(() => expect(edits).toHaveLength(1))
+    expect(edits[0]).toEqual(["put", "/spots/3/surf-detail", {
+      class_type: "grupal", duration: 1.5, equipment_include: true, levels: ["principiante"], languages: null,
+      price_note: "por clase", operates_at: "Playa El Emir y La Brava",
+    }])
+  })
+
+  it("dónde opera no se puede dejar vacío", async () => {
+    content = { ...content, surf_detail: surfDetail }
+    render(<ContentTab spotId={3} token="t" reviewed category="Surf" showExperiences={false} showGlamping={false} activities={["Surf"]} />)
+    fireEvent.change(await screen.findByDisplayValue("Playa El Emir"), { target: { value: " " } })
+    fireEvent.click(screen.getByRole("button", { name: "Guardar datos de la escuela" }))
+    expect((await screen.findByRole("alert")).textContent).toBe("Contá dónde operan.")
+    expect(edits).toEqual([])
+  })
+
+  it("un servicio de kayak, sus datos; una playa (sin datos de escuela), nada", async () => {
+    content = { ...content, surf_detail: null, kayak_service_detail: { water_type: "lago", difficulty: null, duration: null, kayak_type: null, rental_available: null, includes_guide: null, includes_life_jacket: null, price_note: null, operates_at: "Laguna Garzón" } }
+    const { unmount } = render(<ContentTab spotId={3} token="t" reviewed category="Kayak" showExperiences={false} showGlamping={false} activities={["Kayak"]} />)
+    expect(await screen.findByText("Datos del servicio")).toBeTruthy()
+    unmount()
+    content = { ...content, kayak_service_detail: null }
+    render(<ContentTab spotId={3} token="t" reviewed category="Surf" showExperiences={false} showGlamping={false} activities={["Surf"]} />)
+    await waitFor(() => expect(screen.queryByText("Cargando...")).toBeNull())
+    expect(screen.queryByText("Datos de la escuela")).toBeNull()
+  })
+})
+

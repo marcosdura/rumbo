@@ -1,3 +1,4 @@
+import type { KayakServiceDetail, SurfDetail } from "@/lib/serviceDetail"
 export type SpotImage = { cloudinary_public_id: string; is_main: boolean; order: number }
 
 export type Review = {
@@ -83,6 +84,9 @@ export type OwnerContent = {
   // Para corregirlos desde el panel (null = todavía no se cargaron).
   trekking_detail?: Record<string, boolean | null> | null
   motorhome_detail?: Record<string, unknown> | null
+  // Escuela de surf / servicio de kayak (null en el resto y en playas).
+  surf_detail?: SurfDetail | null
+  kayak_service_detail?: KayakServiceDetail | null
   amenity_ids?: number[]
 }
 

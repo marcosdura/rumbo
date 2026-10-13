@@ -3,7 +3,8 @@
 // Correcciones del dueño desde la pestaña de contenido (backend/routers/
 // owner_edits.py): rutas, experiencias y alojamientos ya cargados, las
 // características del trekking y los servicios del camping y del
-// motorhome. Se aplican al instante. Antes solo se podía sumar o borrar.
+// motorhome, y lo propio de una escuela de surf o un servicio de kayak. Se
+// aplican al instante. Antes solo se podía sumar o borrar.
 import { useState, type CSSProperties, type ReactNode } from "react"
 import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
 import { ExperienceCard } from "@/components/agregar-lugar/steps/StepExperiencias"
@@ -12,6 +13,11 @@ import { TREKKING_FEATURES } from "@/components/agregar-lugar/constants"
 import { experiencePayload, glampingUnitPayload, missingGlampingFields } from "@/components/agregar-lugar/payloads"
 import type { ExperienceItem, GlampingDetailItem } from "@/components/agregar-lugar/types"
 import { CAMPING_AMENITY_GROUPS } from "@/lib/camping-filters"
+import { SurfFields } from "@/components/agregar-lugar/steps/StepSurf"
+import { KayakFields } from "@/components/agregar-lugar/steps/StepKayak"
+import { kayakDetailPayload, surfDetailPayload } from "@/components/agregar-lugar/submit"
+import type { KayakItem, SurfItem } from "@/components/agregar-lugar/types"
+import type { KayakServiceDetail, SurfDetail } from "@/lib/serviceDetail"
 import { s } from "./styles"
 import type { OwnedExperience, OwnedGlampingUnit, OwnedRoute } from "./types"
 
@@ -232,6 +238,58 @@ export function MotorhomeServicesForm({ initial, onSave }: { initial: Record<str
         </div>
       </div>
       <Actions saving={saving} error={error} onSave={() => run({ ...values, capacity: num(capacity), max_stay_nights: num(maxStay) })} saveLabel="Guardar servicios" />
+    </div>
+  )
+}
+
+// -------- Escuela de surf / servicio de kayak --------
+// Lo propio (los mismos campos que en agregar lugar) y dónde opera. El
+// nombre, la descripción, el precio y el contacto se editan en Información.
+
+const detailStr = (v: unknown) => (v == null ? "" : String(v))
+
+export function SurfDetailForm({ initial, onSave }: { initial: SurfDetail; onSave: (p: object) => Promise<void> }) {
+  const [surf, setSurf] = useState<SurfItem>({
+    class_type: initial.class_type ?? "", duration: detailStr(initial.duration), equipment_include: initial.equipment_include,
+    levels: initial.levels, languages: initial.languages, price_note: initial.price_note ?? "",
+  })
+  const [operatesAt, setOperatesAt] = useState(initial.operates_at ?? "")
+  const { saving, error, run } = useSave(onSave)
+  return (
+    <div>
+      <OperatesAtField value={operatesAt} onChange={setOperatesAt} />
+      <SurfFields surf={surf} setSurf={setSurf} />
+      <Actions saving={saving} error={error} saveLabel="Guardar datos de la escuela"
+        onSave={() => run(operatesAt.trim() ? surfDetailPayload(surf, { operates_at: operatesAt }) : null, "Contá dónde operan.")} />
+    </div>
+  )
+}
+
+export function KayakDetailForm({ initial, onSave }: { initial: KayakServiceDetail; onSave: (p: object) => Promise<void> }) {
+  const [kayak, setKayak] = useState<KayakItem>({
+    water_type: initial.water_type ?? "", difficulty: initial.difficulty ?? "", duration: detailStr(initial.duration),
+    kayak_type: initial.kayak_type ?? "", rental_available: initial.rental_available, includes_guide: initial.includes_guide,
+    includes_life_jacket: initial.includes_life_jacket, price_note: initial.price_note ?? "",
+  })
+  const [operatesAt, setOperatesAt] = useState(initial.operates_at ?? "")
+  const { saving, error, run } = useSave(onSave)
+  return (
+    <div>
+      <OperatesAtField value={operatesAt} onChange={setOperatesAt} />
+      <KayakFields kayak={kayak} setKayak={setKayak} />
+      <Actions saving={saving} error={error} saveLabel="Guardar datos del servicio"
+        onSave={() => run(operatesAt.trim() ? kayakDetailPayload(kayak, { operates_at: operatesAt }) : null, "Contá dónde operan.")} />
+    </div>
+  )
+}
+
+function OperatesAtField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <Labeled label="Dónde opera">
+        <input value={value} maxLength={200} onChange={e => onChange(e.target.value)} style={s.input}
+          placeholder="Por ejemplo: Playa El Emir y La Brava, Punta del Este" />
+      </Labeled>
     </div>
   )
 }

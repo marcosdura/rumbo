@@ -97,11 +97,13 @@ export function isStaySpot(categoryName: string | null | undefined) {
 // El precio del lugar solo se muestra en Camping y Motorhome (por noche;
 // lib/spotCard.ts). En Glamping va en cada alojamiento. En el resto no hay
 // precio propio: antes el panel lo pedía igual y nunca se veía.
-export type PriceMode = "own" | "glamping" | "none"
+// own: por noche; from: "desde" (escuelas de surf y servicios de kayak).
+export type PriceMode = "own" | "from" | "glamping" | "none"
 
 export function priceMode(activities: string[]): PriceMode {
   if (activities.includes("Camping") || activities.includes("Motorhome")) return "own"
   if (activities.includes("Glamping")) return "glamping"
+  if (activities.includes("Surf") || activities.includes("Kayak")) return "from"
   return "none"
 }
 
@@ -112,8 +114,9 @@ export function contentTabLabel(categoryName: string | null | undefined, hasGlam
   switch (categoryName) {
     case "Trekking": return "🥾 Rutas y características"
     case "Escalada": return "🧗 Sectores y vías"
-    case "Surf": return "🏄 Escuelas de surf"
-    case "Kayak": return "🛶 Kayak"
+    // Cada escuela o servicio es un lugar: acá van sus datos propios.
+    case "Surf": return "🏄 Datos de la escuela"
+    case "Kayak": return "🛶 Datos del servicio"
     default: return null
   }
 }

@@ -9,6 +9,61 @@ import TriStateToggle from "../ui/TriStateToggle"
 import NavRow from "../ui/NavRow"
 import type { KayakItem } from "../types"
 
+// Los campos, también para el panel del dueño (EditForms).
+export function KayakFields({ kayak, setKayak }: {
+  kayak: KayakItem
+  setKayak: React.Dispatch<React.SetStateAction<KayakItem>>
+}) {
+  const upd = <K extends keyof KayakItem>(field: K, value: KayakItem[K]) => setKayak(p => ({ ...p, [field]: value }))
+  return (
+    <div style={s.form}>
+      <div className="form-two-col">
+        <Field label="Tipo de agua" required={false}>
+          <select style={s.input} value={kayak.water_type} onChange={e => upd("water_type", e.target.value)}>
+            <option value="">-</option>
+            <option value="rio">Río</option>
+            <option value="lago">Lago</option>
+            <option value="mar">Mar</option>
+          </select>
+        </Field>
+        <Field label="Dificultad" required={false}>
+          <select style={s.input} value={kayak.difficulty} onChange={e => upd("difficulty", e.target.value)}>
+            <option value="">-</option>
+            <option value="facil">Fácil</option>
+            <option value="intermedio">Intermedio</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </Field>
+      </div>
+      <div className="form-two-col">
+        <Field label="Duración de la salida (horas)" required={false}>
+          <input style={s.input} type="number" step="any" min={0} value={kayak.duration} onChange={e => upd("duration", sanitizeNum(e.target.value))} />
+        </Field>
+        <Field label="Tipo de kayak" required={false}>
+          <select style={s.input} value={kayak.kayak_type} onChange={e => upd("kayak_type", e.target.value)}>
+            <option value="">-</option>
+            <option value="travesia">Travesía</option>
+            <option value="recreativo">Recreativo</option>
+            <option value="rapido">Rápido</option>
+          </select>
+        </Field>
+      </div>
+      <Field label="¿El precio es por…?" required={false} sublabel="Por ejemplo: por hora, por salida">
+        <input style={s.input} type="text" maxLength={60} placeholder="por hora" value={kayak.price_note} onChange={e => upd("price_note", e.target.value)} />
+      </Field>
+      <Field label="¿Alquilás kayaks?" required={false}>
+        <TriStateToggle value={kayak.rental_available} onChange={v => upd("rental_available", v)} />
+      </Field>
+      <Field label="¿Incluye guía?" required={false}>
+        <TriStateToggle value={kayak.includes_guide} onChange={v => upd("includes_guide", v)} />
+      </Field>
+      <Field label="¿Incluye chaleco salvavidas?" required={false}>
+        <TriStateToggle value={kayak.includes_life_jacket} onChange={v => upd("includes_life_jacket", v)} />
+      </Field>
+    </div>
+  )
+}
+
 export default function StepKayak({ kayak, setKayak, error, onBack, onNext }: {
   kayak: KayakItem
   setKayak: React.Dispatch<React.SetStateAction<KayakItem>>
@@ -16,56 +71,11 @@ export default function StepKayak({ kayak, setKayak, error, onBack, onNext }: {
   onBack: () => void
   onNext: () => void
 }) {
-  const upd = <K extends keyof KayakItem>(field: K, value: KayakItem[K]) => setKayak(p => ({ ...p, [field]: value }))
   return (
     <div>
       <h2 style={s.title}>Datos del servicio de kayak</h2>
       <div style={s.card}>
-        <div style={s.form}>
-          <div className="form-two-col">
-            <Field label="Tipo de agua" required={false}>
-              <select style={s.input} value={kayak.water_type} onChange={e => upd("water_type", e.target.value)}>
-                <option value="">-</option>
-                <option value="rio">Río</option>
-                <option value="lago">Lago</option>
-                <option value="mar">Mar</option>
-              </select>
-            </Field>
-            <Field label="Dificultad" required={false}>
-              <select style={s.input} value={kayak.difficulty} onChange={e => upd("difficulty", e.target.value)}>
-                <option value="">-</option>
-                <option value="facil">Fácil</option>
-                <option value="intermedio">Intermedio</option>
-                <option value="dificil">Difícil</option>
-              </select>
-            </Field>
-          </div>
-          <div className="form-two-col">
-            <Field label="Duración de la salida (horas)" required={false}>
-              <input style={s.input} type="number" step="any" min={0} value={kayak.duration} onChange={e => upd("duration", sanitizeNum(e.target.value))} />
-            </Field>
-            <Field label="Tipo de kayak" required={false}>
-              <select style={s.input} value={kayak.kayak_type} onChange={e => upd("kayak_type", e.target.value)}>
-                <option value="">-</option>
-                <option value="travesia">Travesía</option>
-                <option value="recreativo">Recreativo</option>
-                <option value="rapido">Rápido</option>
-              </select>
-            </Field>
-          </div>
-          <Field label="¿El precio es por…?" required={false} sublabel="Por ejemplo: por hora, por salida">
-            <input style={s.input} type="text" maxLength={60} placeholder="por hora" value={kayak.price_note} onChange={e => upd("price_note", e.target.value)} />
-          </Field>
-          <Field label="¿Alquilás kayaks?" required={false}>
-            <TriStateToggle value={kayak.rental_available} onChange={v => upd("rental_available", v)} />
-          </Field>
-          <Field label="¿Incluye guía?" required={false}>
-            <TriStateToggle value={kayak.includes_guide} onChange={v => upd("includes_guide", v)} />
-          </Field>
-          <Field label="¿Incluye chaleco salvavidas?" required={false}>
-            <TriStateToggle value={kayak.includes_life_jacket} onChange={v => upd("includes_life_jacket", v)} />
-          </Field>
-        </div>
+        <KayakFields kayak={kayak} setKayak={setKayak} />
       </div>
       <NavRow onBack={onBack} onNext={onNext} error={error} />
     </div>

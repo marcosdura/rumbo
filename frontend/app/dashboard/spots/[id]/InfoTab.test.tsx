@@ -58,9 +58,15 @@ describe("InfoTab: precio solo donde se muestra", () => {
     expect(screen.getByText(/El precio por noche va en cada alojamiento/)).toBeTruthy()
   })
 
-  it("trekking, escalada, surf o kayak: no se pide (nunca se mostraba)", () => {
+  it("trekking o escalada: no se pide", () => {
     render(<InfoTab {...base} priceMode="none" />)
     expect(screen.queryByText(/Precio/)).toBeNull()
+  })
+
+  it("escuela de surf o servicio de kayak: precio desde", () => {
+    render(<InfoTab {...base} priceMode="from" />)
+    expect(screen.getByText("Precio y temporada")).toBeTruthy()
+    expect(screen.getByText(/Precio desde \(UYU\)/)).toBeTruthy()
   })
 })
 

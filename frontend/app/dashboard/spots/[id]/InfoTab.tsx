@@ -102,12 +102,18 @@ export default function InfoTab({
         {/* Precio y temporada */}
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>
-            {priceMode === "own" ? "Precio y temporada" : "Temporada"}
+            {priceMode === "own" || priceMode === "from" ? "Precio y temporada" : "Temporada"}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {priceMode === "own" && (
               <div>
                 <label style={s.label}>Precio por noche (UYU) — poné 0 si es gratis</label>
+                <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
+              </div>
+            )}
+            {priceMode === "from" && (
+              <div>
+                <label style={s.label}>Precio desde (UYU) — lo más barato que ofrecen; 0 si es gratis</label>
                 <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
               </div>
             )}
