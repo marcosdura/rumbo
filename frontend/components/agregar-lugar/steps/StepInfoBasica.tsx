@@ -48,7 +48,10 @@ export default function StepInfoBasica({
 }) {
   const asksResponsible = setIsResponsible !== undefined
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [nameTaken, setNameTaken] = useState(false)
+  // El último nombre que el backend dijo que ya existe: así, al borrar o
+  // cambiar el nombre, el aviso se va solo (sin un setState en el efecto).
+  const [takenName, setTakenName] = useState<string | null>(null)
+  const nameTaken = !!basic.name.trim() && takenName === basic.name.trim()
   const [checkingName, setCheckingName] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -68,14 +71,14 @@ export default function StepInfoBasica({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     const name = basic.name.trim()
-    if (!name) { setNameTaken(false); return }
+    if (!name) return
     debounceRef.current = setTimeout(async () => {
       setCheckingName(true)
       try {
         const { data } = await api.get<{ exists: boolean }>("/spots/check-name", { params: { name } })
-        setNameTaken(!!data.exists)
+        setTakenName(data.exists ? name : null)
       } catch {
-        setNameTaken(false)
+        setTakenName(null)
       } finally {
         setCheckingName(false)
       }

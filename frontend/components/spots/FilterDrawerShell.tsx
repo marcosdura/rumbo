@@ -29,17 +29,26 @@ export default function FilterDrawerShell<T>({
   const [animatingIn, setAnimatingIn] = useState(false)
   const panelRef = useModalA11y(isOpen, onClose)
 
-  useEffect(() => {
+  // Al abrirse arranca con los filtros aplicados; al cerrarse, la animación
+  // de salida. Se ajusta durante el render (no con setState en un efecto).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setPending(appliedFilters)
       setVisible(true)
-      requestAnimationFrame(() => setAnimatingIn(true))
     } else {
       setAnimatingIn(false)
-      const timer = setTimeout(() => setVisible(false), 300)
-      return () => clearTimeout(timer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      const frame = requestAnimationFrame(() => setAnimatingIn(true))
+      return () => cancelAnimationFrame(frame)
+    }
+    const timer = setTimeout(() => setVisible(false), 300)
+    return () => clearTimeout(timer)
   }, [isOpen])
 
   if (!visible) return null

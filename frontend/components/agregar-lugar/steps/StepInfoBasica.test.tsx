@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
 
 vi.mock("next/dynamic", () => ({ default: () => () => null }))
-vi.mock("@/lib/api", () => ({ api: { get: () => Promise.resolve({ data: { exists: false } }) } }))
+// "Cerro Ocupado" ya existe; cualquier otro nombre, no.
+vi.mock("@/lib/api", () => ({ api: { get: (_: string, o: { params: { name: string } }) => Promise.resolve({ data: { exists: o.params.name === "Cerro Ocupado" } }) } }))
 
 const { default: StepInfoBasica } = await import("./StepInfoBasica")
 const { emptyBasic } = await import("../constants")
@@ -50,5 +51,25 @@ describe("StepInfoBasica: ¿responsable o visitante?", () => {
       expect(screen.getByText(q, { exact: false })).toBeTruthy()
     }
     expect(screen.getAllByRole("button", { name: "No sé" }).length).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe("StepInfoBasica: nombre repetido", () => {
+  it("avisa si ya existe, y al cambiar o borrar el nombre el aviso se va enseguida", async () => {
+    vi.useFakeTimers()
+    render(<Harness ask={false} />)
+    // El primer campo de texto es el nombre.
+    const input = screen.getAllByRole("textbox")[0] as HTMLInputElement
+    fireEvent.change(input, { target: { value: "Cerro Ocupado" } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(500) })
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }))
+    expect(screen.getByText("Ya existe un lugar con este nombre")).toBeTruthy()
+    fireEvent.change(input, { target: { value: "Cerro Libre" } })
+    expect(screen.queryByText("Ya existe un lugar con este nombre")).toBeNull()
+    fireEvent.change(input, { target: { value: "Cerro Ocupado" } })
+    expect(screen.getByText("Ya existe un lugar con este nombre")).toBeTruthy()
+    fireEvent.change(input, { target: { value: "" } })
+    expect(screen.queryByText("Ya existe un lugar con este nombre")).toBeNull()
+    vi.useRealTimers()
   })
 })

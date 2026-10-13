@@ -77,14 +77,12 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  async function load() {
-    try {
-      const { data } = await api.get<OwnerContent>(`/spots/${spotId}/owner-content`, { token })
-      setContent(data)
-      setLoadError(null)
-    } catch {
-      setLoadError("No se pudo cargar. Recargá la página.")
-    }
+  // Con .then y no async/await: el lint de React solo reconoce como
+  // asíncrono el setState que va dentro de un callback.
+  function load() {
+    return api.get<OwnerContent>(`/spots/${spotId}/owner-content`, { token })
+      .then(({ data }) => { setContent(data); setLoadError(null) })
+      .catch(() => setLoadError("No se pudo cargar. Recargá la página."))
   }
 
   useEffect(() => {
