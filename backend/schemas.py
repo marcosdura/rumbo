@@ -412,6 +412,43 @@ class TrekkingDetailCreate(TrekkingDetailOut):
     pass
 
 
+# -------- ESCUELA DE SURF / SERVICIO DE KAYAK (como lugares) --------
+# Lo propio de cada uno; el resto (nombre, fotos, contacto, precio,
+# temporada) es del lugar. None = no sé / sin dato.
+SurfClassType = Literal["grupal", "privada", "intensivo"]
+KayakWater = Literal["rio", "lago", "mar"]
+KayakDifficulty = Literal["facil", "intermedio", "dificil"]
+KayakType = Literal["travesia", "recreativo", "rapido"]
+
+
+class SurfDetailIn(BaseModel):
+    class_type: Optional[SurfClassType] = None
+    duration: Optional[float] = Field(default=None, gt=0, le=24)
+    equipment_include: Optional[bool] = None
+    levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
+    languages: Optional[list[Language]] = Field(default=None, max_length=4)
+    price_note: Optional[str] = Field(default=None, max_length=60)
+    operates_at: Optional[str] = Field(default=None, max_length=200)
+
+    class Config:
+        from_attributes = True
+
+
+class KayakServiceDetailIn(BaseModel):
+    water_type: Optional[KayakWater] = None
+    difficulty: Optional[KayakDifficulty] = None
+    duration: Optional[float] = Field(default=None, gt=0, le=24)
+    kayak_type: Optional[KayakType] = None
+    rental_available: Optional[bool] = None
+    includes_guide: Optional[bool] = None
+    includes_life_jacket: Optional[bool] = None
+    price_note: Optional[str] = Field(default=None, max_length=60)
+    operates_at: Optional[str] = Field(default=None, max_length=200)
+
+    class Config:
+        from_attributes = True
+
+
 # -------- MOTORHOME DETAIL --------
 class MotorhomeDetailCreate(BaseModel):
     capacity: Optional[int] = None

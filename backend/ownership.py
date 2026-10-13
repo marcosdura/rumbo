@@ -5,13 +5,16 @@ from auth import get_current_user_required, is_admin
 from models import SpotDB, GlampingDetail
 
 # Playas y lagunas: lugares públicos. Una vez aprobados son del admin (ni
-# quien los sugirió los edita); lo que tiene dueño propio son las escuelas
-# de surf y los servicios de kayak que trabajan ahí (operators.py).
+# quien los sugirió los edita). Las escuelas de surf y los servicios de
+# kayak también son lugares de Surf / Kayak, pero con sus datos propios
+# (surf_detail / kayak_service_detail) y dueño: esos no son "públicos".
 PUBLIC_VENUE_CATEGORIES = {"Surf", "Kayak"}
 
 
 def is_public_venue(spot: SpotDB) -> bool:
-    return bool(spot.category and spot.category.name in PUBLIC_VENUE_CATEGORIES)
+    if not (spot.category and spot.category.name in PUBLIC_VENUE_CATEGORIES):
+        return False
+    return spot.surf_detail is None and spot.kayak_service_detail is None
 
 
 def is_admin_managed(spot: SpotDB) -> bool:

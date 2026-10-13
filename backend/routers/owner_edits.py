@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
-from models import Amenity, Experience, GlampingDetail, MotorhomeDetail, Route, SpotAmenity, SpotDB, TrekkingDetail
+from models import Amenity, Experience, GlampingDetail, KayakServiceDetail, MotorhomeDetail, Route, SpotAmenity, SpotDB, SurfDetail, TrekkingDetail
 from ownership import assert_owns_spot, get_owned_spot_or_admin
 from schemas import (
     ExperienceResponse, GlampingDetailCreate, GlampingDetailResponse, MotorhomeDetailCreate,
-    MotorhomeDetailResponse, RouteResponse, TrekkingDetailCreate,
+    MotorhomeDetailResponse, RouteResponse, TrekkingDetailCreate, SurfDetailIn, KayakServiceDetailIn,
 )
 
 router = APIRouter(tags=["owner-edits"])
@@ -143,6 +143,34 @@ def set_motorhome_detail(body: MotorhomeDetailCreate, spot: SpotDB = Depends(get
     db.commit()
     db.refresh(detail)
     return detail
+
+
+# Escuela de surf / servicio de kayak: lo propio del lugar, al instante
+# (como el resto de los datos prácticos). Se crea si no estaba.
+def _set_detail(db: Session, spot: SpotDB, model, schema, body: BaseModel, category: str):
+    if category not in {c.category.name for c in spot.spot_categories} | ({spot.category.name} if spot.category else set()):
+        raise HTTPException(status_code=422, detail=f"Este lugar no es de {category}.")
+    detail = db.query(model).filter(model.spot_id == spot.id).first() or model(spot_id=spot.id)
+    data = body.model_dump(exclude_unset=True)
+    if "operates_at" in data and data["operates_at"] is not None:
+        data["operates_at"] = " ".join(data["operates_at"].split()) or None
+    _apply(detail, data)
+    db.add(detail)
+    db.commit()
+    db.refresh(detail)
+    return schema.model_validate(detail)
+
+
+@router.put("/spots/{spot_id}/surf-detail", response_model=SurfDetailIn)
+def set_surf_detail(body: SurfDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """Lo propio de una escuela de surf (clases, niveles, idiomas, dónde opera)."""
+    return _set_detail(db, spot, SurfDetail, SurfDetailIn, body, "Surf")
+
+
+@router.put("/spots/{spot_id}/kayak-detail", response_model=KayakServiceDetailIn)
+def set_kayak_detail(body: KayakServiceDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """Lo propio de un servicio de kayak (agua, dificultad, alquiler, dónde opera)."""
+    return _set_detail(db, spot, KayakServiceDetail, KayakServiceDetailIn, body, "Kayak")
 
 
 class AmenitiesSet(BaseModel):

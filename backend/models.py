@@ -83,6 +83,10 @@ class SpotDB(Base):
     glamping_amenities = relationship("GlampingAmenity", uselist=False, back_populates="spot", cascade="all, delete-orphan")
     trekking_detail = relationship("TrekkingDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
     motorhome_detail = relationship("MotorhomeDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    # Una escuela de surf o un servicio de kayak es un lugar más; esto es lo
+    # propio de cada uno (antes colgaban de una playa o laguna, aparte).
+    surf_detail = relationship("SurfDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
+    kayak_service_detail = relationship("KayakServiceDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
     routes = relationship("Route", back_populates="spot", cascade="all, delete-orphan")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot", cascade="all, delete-orphan")
     kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot", cascade="all, delete-orphan")
@@ -394,6 +398,51 @@ class MotorhomeDetail(Base):
     max_stay_nights  = Column(Integer, nullable=True)
 
     spot = relationship("SpotDB", back_populates="motorhome_detail")
+
+class SurfDetail(Base):
+    """Lo propio de una escuela de surf, que es un lugar de categoría Surf
+    (fotos, reseñas, contacto, precio y temporada son los del lugar). Antes
+    la escuela colgaba de una playa y tenía todo aparte (SurfSchool)."""
+    __tablename__ = "surf_details"
+
+    id = Column(Integer, primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True, nullable=False)
+
+    class_type        = Column(String, nullable=True)      # grupal | privada | intensivo
+    duration          = Column(Float, nullable=True)       # horas por clase
+    equipment_include = Column(Boolean, nullable=True)     # None = no sé
+    levels            = Column(JSON, nullable=True)        # principiante | intermedio | avanzado
+    languages         = Column(JSON, nullable=True)        # espanol | ingles | portugues | otro
+    price_note        = Column(String(60), nullable=True)  # "por clase", "por hora"...
+    operates_at       = Column(String(200), nullable=True) # dónde opera, en texto libre
+    # El id que tenía como escuela (tabla surf_beach): para redirigir las
+    # direcciones viejas /surf/<nombre>-<id>.
+    legacy_id = Column(Integer, nullable=True, index=True)
+
+    spot = relationship("SpotDB", back_populates="surf_detail")
+
+
+class KayakServiceDetail(Base):
+    """Lo propio de un servicio de kayak, que es un lugar de categoría Kayak
+    (como SurfDetail). Antes colgaba de una laguna (KayakDetail)."""
+    __tablename__ = "kayak_service_details"
+
+    id = Column(Integer, primary_key=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), unique=True, nullable=False)
+
+    water_type           = Column(String, nullable=True)      # rio | lago | mar
+    difficulty           = Column(String, nullable=True)      # facil | intermedio | dificil
+    duration             = Column(Float, nullable=True)       # horas
+    kayak_type           = Column(String, nullable=True)      # travesia | recreativo | rapido
+    rental_available     = Column(Boolean, nullable=True)     # None = no sé
+    includes_guide       = Column(Boolean, nullable=True)
+    includes_life_jacket = Column(Boolean, nullable=True)
+    price_note           = Column(String(60), nullable=True)
+    operates_at          = Column(String(200), nullable=True)
+    legacy_id = Column(Integer, nullable=True, index=True)    # id en kayak_details
+
+    spot = relationship("SpotDB", back_populates="kayak_service_detail")
+
 
 class TrekkingDetail(Base):
     __tablename__ = "trekking_details"

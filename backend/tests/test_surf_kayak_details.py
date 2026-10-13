@@ -1,0 +1,54 @@
+"""Lo propio de una escuela de surf o un servicio de kayak, que son lugares
+(PUT /spots/{id}/surf-detail y /kayak-detail)."""
+from conftest import ADMIN, OTHER, OWNER, as_user
+from models import KayakServiceDetail, SurfDetail
+
+
+def test_el_duenio_carga_y_edita_lo_de_su_escuela(client, db, make_spot):
+    # Recién cargada (en revisión): el dueño le suma sus datos.
+    spot = make_spot(name="Escuela Ola", category="Surf", approved=False)
+    body = {"class_type": "grupal", "duration": 1.5, "equipment_include": True, "levels": ["principiante"],
+            "languages": ["espanol", "ingles"], "price_note": "por clase", "operates_at": "  Playa   El Emir "}
+    r = client.put(f"/spots/{spot.id}/surf-detail", json=body, headers=as_user(OWNER))
+    assert r.status_code == 200, r.text
+    assert r.json()["operates_at"] == "Playa El Emir"
+    # Aprobada, la sigue editando su dueño (no es una playa): cambia solo lo que se manda.
+    spot.is_approved = True
+    db.commit()
+    client.put(f"/spots/{spot.id}/surf-detail", json={"levels": None, "duration": 2}, headers=as_user(OWNER))
+    db.expire_all()
+    d = db.query(SurfDetail).filter_by(spot_id=spot.id).one()
+    assert (d.class_type, d.duration, d.levels, d.languages) == ("grupal", 2, None, ["espanol", "ingles"])
+
+
+def test_kayak(client, db, make_spot):
+    spot = make_spot(name="Kayak Sur", category="Kayak", approved=False)
+    r = client.put(f"/spots/{spot.id}/kayak-detail", json={"water_type": "lago", "rental_available": None, "operates_at": "Laguna Garzón"}, headers=as_user(ADMIN))
+    assert r.status_code == 200, r.text
+    d = db.query(KayakServiceDetail).filter_by(spot_id=spot.id).one()
+    assert (d.water_type, d.rental_available, d.operates_at) == ("lago", None, "Laguna Garzón")
+
+
+def test_solo_el_duenio_o_el_admin(client, make_spot):
+    spot = make_spot(name="Escuela Ola", category="Surf")
+    assert client.put(f"/spots/{spot.id}/surf-detail", json={}, headers=as_user(OTHER)).status_code == 403
+
+
+def test_solo_en_lugares_de_esa_actividad(client, make_spot):
+    camping = make_spot(name="Camping", category="Camping")
+    r = client.put(f"/spots/{camping.id}/surf-detail", json={"class_type": "grupal"}, headers=as_user(OWNER))
+    assert r.status_code == 422
+    assert "no es de Surf" in r.json()["detail"]
+
+
+def test_valores_cerrados(client, make_spot):
+    spot = make_spot(name="Kayak Sur", category="Kayak", approved=False)
+    for bad in ({"water_type": "pileta"}, {"difficulty": "extrema"}, {"duration": -1}, {"operates_at": "x" * 201}):
+        assert client.put(f"/spots/{spot.id}/kayak-detail", json=bad, headers=as_user(OWNER)).status_code == 422, bad
+
+
+def test_una_playa_aprobada_sigue_siendo_del_admin(client, make_spot):
+    """Sin datos de escuela es una playa: aprobada, ni quien la cargó la edita."""
+    playa = make_spot(name="Playa Brava", category="Surf")
+    assert client.put(f"/spots/{playa.id}/surf-detail", json={"class_type": "grupal"}, headers=as_user(OWNER)).status_code == 403
+    assert client.put(f"/spots/{playa.id}/surf-detail", json={}, headers=as_user(ADMIN)).status_code == 200
