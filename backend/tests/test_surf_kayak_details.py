@@ -52,3 +52,34 @@ def test_una_playa_aprobada_sigue_siendo_del_admin(client, make_spot):
     playa = make_spot(name="Playa Brava", category="Surf")
     assert client.put(f"/spots/{playa.id}/surf-detail", json={"class_type": "grupal"}, headers=as_user(OWNER)).status_code == 403
     assert client.put(f"/spots/{playa.id}/surf-detail", json={}, headers=as_user(ADMIN)).status_code == 200
+
+
+def test_la_pagina_del_lugar_trae_los_datos_de_la_escuela(client, db, make_spot):
+    spot = make_spot(name="Escuela Ola", category="Surf", slug="escuela-ola")
+    db.add(SurfDetail(spot_id=spot.id, class_type="grupal", levels=["principiante"], operates_at="Playa El Emir"))
+    db.commit()
+    body = client.get("/spots/by-slug/escuela-ola").json()
+    assert body["surf_detail"]["class_type"] == "grupal"
+    assert body["surf_detail"]["operates_at"] == "Playa El Emir"
+    assert body["kayak_service_detail"] is None
+    assert client.get(f"/spots/{spot.id}").json()["surf_detail"]["levels"] == ["principiante"]
+
+
+def test_el_panel_del_duenio_trae_los_datos_para_editarlos(client, db, make_spot):
+    spot = make_spot(name="Kayak Sur", category="Kayak", approved=False)
+    db.add(KayakServiceDetail(spot_id=spot.id, water_type="mar"))
+    db.commit()
+    content = client.get(f"/spots/{spot.id}/owner-content", headers=as_user(OWNER)).json()
+    assert content["kayak_service_detail"]["water_type"] == "mar"
+    assert content["surf_detail"] is None
+
+
+def test_las_direcciones_viejas_llevan_al_lugar(client, db, make_spot):
+    spot = make_spot(name="Escuela Ola", category="Surf", slug="escuela-ola")
+    oculto = make_spot(name="Kayak Oculto", category="Kayak", slug="kayak-oculto", approved=False)
+    db.add_all([SurfDetail(spot_id=spot.id, legacy_id=7), KayakServiceDetail(spot_id=oculto.id, legacy_id=9)])
+    db.commit()
+    assert client.get("/spots/legacy/surf/7").json() == {"slug": "escuela-ola"}
+    assert client.get("/spots/legacy/kayak/7").status_code == 404
+    assert client.get("/spots/legacy/kayak/9").status_code == 404, "sin publicar no se redirige"
+    assert client.get("/spots/legacy/otra/7").status_code == 404

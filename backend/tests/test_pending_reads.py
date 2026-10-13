@@ -122,8 +122,6 @@ def test_un_id_que_no_existe_da_404_y_no_500(client):
 
 
 @pytest.mark.parametrize("params", [
-    {"activity": "Surf", "class_type": "privada"},          # solo la escuela pendiente es privada
-    {"activity": "Kayak", "water_type": "mar"},             # solo el kayak pendiente es de mar
     {"activity": "Trekking", "difficulty": "difícil"},      # solo la ruta pendiente es difícil
     {"activity": "Escalada", "climbing_type": "boulder"},   # solo el sector pendiente es boulder
     {"activity": "Escalada", "grade_range": "experto"},     # solo la vía pendiente es 8a
@@ -135,8 +133,6 @@ def test_los_filtros_de_busqueda_ignoran_pendientes(client, world, params):
 
 
 @pytest.mark.parametrize("params", [
-    {"activity": "Surf", "class_type": "grupal"},
-    {"activity": "Kayak", "water_type": "río"},
     {"activity": "Trekking", "difficulty": "fácil"},
     {"activity": "Escalada", "climbing_type": "deportiva"},
     {"activity": "Escalada", "grade_range": "principiante"},
@@ -147,10 +143,8 @@ def test_los_filtros_si_encuentran_lo_aprobado(client, world, params):
     assert world["spot"].id in ids, params
 
 
-def test_tiene_escuela_de_surf_ignora_las_pendientes(client, world):
-    ids = [s["id"] for s in client.get("/spots", params={"activity": "Surf", "has_surf_school": "true"}).json()]
-    assert world["spot"].id in ids
-    assert world["solo_pendiente"].id not in ids
+# Surf y kayak: las escuelas y servicios son lugares (una en revisión es un
+# lugar en revisión): ver test_search_surf_kayak.py.
 
 
 @pytest.mark.parametrize("prefix,key", [("/surf-reviews", "surf_pending"), ("/kayak-reviews", "kayak_pending")])

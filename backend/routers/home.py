@@ -9,7 +9,7 @@ import views
 from auth import get_current_user
 from database import get_db
 from limiter import get_client_ip, limiter
-from models import ClimbingSector, Route, SpotDB
+from models import ClimbingSector, KayakServiceDetail, Route, SpotDB, SurfDetail
 from ownership import get_owned_spot_or_admin
 from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
 
@@ -129,3 +129,20 @@ def sitemap_trails(db: Session = Depends(get_db)):
             )
         ]
     return rows(Route, "rutas") + rows(ClimbingSector, "sectores")
+
+
+@router.get("/spots/legacy/{kind}/{legacy_id}")
+def legacy_operator(kind: str, legacy_id: int, db: Session = Depends(get_db)):
+    """Las direcciones viejas de escuelas y kayaks (/surf/<nombre>-<id>,
+    /kayak/<nombre>-<id>): a qué lugar redirigir, ahora que son lugares."""
+    model = {"surf": SurfDetail, "kayak": KayakServiceDetail}.get(kind)
+    if model is None:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    spot = (
+        db.query(SpotDB).join(model, model.spot_id == SpotDB.id)
+        .filter(model.legacy_id == legacy_id, SpotDB.is_approved.is_(True), SpotDB.owner_deleted_at.is_(None))
+        .first()
+    )
+    if not spot or not spot.slug:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    return {"slug": spot.slug}

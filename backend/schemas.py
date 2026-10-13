@@ -525,6 +525,9 @@ class SpotResponse(BaseModel):
     glamping_amenities: GlampingAmenityResponse | None = None
     motorhome_detail: MotorhomeDetailResponse | None = None
     trekking_detail:  TrekkingDetailOut      | None = None
+    # Escuela de surf / servicio de kayak (None en playas, lagunas y el resto).
+    surf_detail: SurfDetailIn | None = None
+    kayak_service_detail: KayakServiceDetailIn | None = None
     amenities: list[AmenityResponse] = []
 
     @field_validator("amenities", mode="before")

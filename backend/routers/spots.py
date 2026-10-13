@@ -7,8 +7,8 @@ from auth import get_current_user_required, is_admin, get_current_admin_user
 from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue, is_admin_managed
 from auth import ADMIN_EMAIL
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
-from schemas import ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, SurfDetail, KayakServiceDetail, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
+from schemas import SurfDetailIn, KayakServiceDetailIn, ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -265,73 +265,41 @@ def build_spots_filter_query(
         for field, val in active_amenity.items():
             query = query.filter(getattr(TrekkingDetail, field) == val)
 
-    is_kayak = activity == "Kayak"
-    kayak_joined = False
+    # Surf y kayak: los filtros son de las escuelas y los servicios (lugares
+    # con surf_detail / kayak_service_detail); las playas y lagunas no los
+    # tienen, así que con un filtro puesto quedan afuera.
+    def ranges(column, values):
+        conds = []
+        for d in values or []:
+            if d == "corta":   conds.append(column < 2)
+            elif d == "media": conds.append(and_(column >= 2, column <= 5))
+            elif d == "larga": conds.append(column > 5)
+        return conds
 
-    if is_kayak and water_type:
-        query = query.outerjoin(SpotDB.kayak_detail).filter(KayakDetail.water_type.in_(water_type))
-        kayak_joined = True
+    if activity == "Kayak":
+        kayak_conds = []
+        if water_type:
+            kayak_conds.append(KayakServiceDetail.water_type.in_(water_type))
+        if kayak_difficulty:
+            kayak_conds.append(KayakServiceDetail.difficulty.in_(kayak_difficulty))
+        if ranges(KayakServiceDetail.duration, kayak_duration):
+            kayak_conds.append(or_(*ranges(KayakServiceDetail.duration, kayak_duration)))
+        if rental_available is not None:
+            kayak_conds.append(KayakServiceDetail.rental_available == rental_available)
+        if kayak_conds:
+            query = query.join(SpotDB.kayak_service_detail).filter(*kayak_conds)
 
-    if is_kayak and kayak_difficulty:
-        if not kayak_joined:
-            query = query.outerjoin(SpotDB.kayak_detail)
-            kayak_joined = True
-        query = query.filter(KayakDetail.difficulty.in_(kayak_difficulty))
-
-    if is_kayak and kayak_duration:
-        if not kayak_joined:
-            query = query.outerjoin(SpotDB.kayak_detail)
-            kayak_joined = True
-        kd_conds = []
-        for d in kayak_duration:
-            if d == "corta":   kd_conds.append(KayakDetail.duration < 2)
-            elif d == "media": kd_conds.append(and_(KayakDetail.duration >= 2, KayakDetail.duration <= 5))
-            elif d == "larga": kd_conds.append(KayakDetail.duration > 5)
-        if kd_conds:
-            query = query.filter(or_(*kd_conds))
-
-    if is_kayak and rental_available is not None:
-        if not kayak_joined:
-            query = query.outerjoin(SpotDB.kayak_detail)
-            kayak_joined = True
-        query = query.filter(KayakDetail.rental_available == rental_available)
-
-    if kayak_joined:
-        query = query.distinct()
-
-    is_surf = activity == "Surf"
-    surf_joined = False
-
-    if is_surf and class_type:
-        query = query.outerjoin(SpotDB.surf_schools).filter(SurfSchool.class_type.in_(class_type))
-        surf_joined = True
-
-    if is_surf and surf_duration:
-        if not surf_joined:
-            query = query.outerjoin(SpotDB.surf_schools)
-            surf_joined = True
-        sd_conds = []
-        for d in surf_duration:
-            if d == "corta":   sd_conds.append(SurfSchool.duration < 2)
-            elif d == "media": sd_conds.append(and_(SurfSchool.duration >= 2, SurfSchool.duration <= 5))
-            elif d == "larga": sd_conds.append(SurfSchool.duration > 5)
-        if sd_conds:
-            query = query.filter(or_(*sd_conds))
-
-    if is_surf and equipment_included is not None:
-        if not surf_joined:
-            query = query.outerjoin(SpotDB.surf_schools)
-            surf_joined = True
-        query = query.filter(SurfSchool.equipment_include == equipment_included)
-
-    if is_surf and has_surf_school:
-        if not surf_joined:
-            query = query.outerjoin(SpotDB.surf_schools)
-            surf_joined = True
-        query = query.filter(SurfSchool.id != None)
-
-    if surf_joined:
-        query = query.distinct()
+    if activity == "Surf":
+        surf_conds = []
+        if class_type:
+            surf_conds.append(SurfDetail.class_type.in_(class_type))
+        if ranges(SurfDetail.duration, surf_duration):
+            surf_conds.append(or_(*ranges(SurfDetail.duration, surf_duration)))
+        if equipment_included is not None:
+            surf_conds.append(SurfDetail.equipment_include == equipment_included)
+        # "Solo escuelas": sin las playas.
+        if surf_conds or has_surf_school:
+            query = query.join(SpotDB.surf_detail).filter(*surf_conds)
 
     is_climbing = activity == "Escalada"
     climbing_joined = False
@@ -421,7 +389,7 @@ def build_spots_filter_query(
             if column is not None:
                 query = query.filter(SpotDB.id.in_(select(MotorhomeDetail.spot_id).where(column == True)))  # noqa: E712
 
-    return sort_spots(db, query, sort)
+    return sort_spots(db, query, sort, services_first=activity in ("Surf", "Kayak"))
 
 
 # Precio por noche del glamping (pesos), para los rangos del filtro.
@@ -437,7 +405,7 @@ MOTORHOME_SERVICE_FILTERS = {
 }
 
 
-def sort_spots(db: Session, query, sort: Optional[str]):
+def sort_spots(db: Session, query, sort: Optional[str], services_first: bool = False):
     """Ordena los lugares que dejaron los filtros. Primero se toman solo los
     ids (los filtros pueden usar DISTINCT, y Postgres no deja ordenar un
     DISTINCT por algo que no esté en el SELECT) y el orden va afuera.
@@ -447,9 +415,17 @@ def sort_spots(db: Session, query, sort: Optional[str]):
       que no tienen reseñas, al final (nullslast: en Postgres un DESC pone
       los NULL primero).
     - name: alfabético.
-    - recent / oldest: por fecha de carga."""
+    - recent / oldest: por fecha de carga.
+    En surf y kayak (services_first) primero van las escuelas y servicios y
+    después las playas y lagunas, cada grupo con ese orden."""
     ids = query.order_by(None).with_entities(SpotDB.id.label("id")).distinct().subquery()
     base = db.query(SpotDB).filter(SpotDB.id.in_(select(ids.c.id)))
+    if services_first:
+        is_service = or_(
+            select(SurfDetail.id).where(SurfDetail.spot_id == SpotDB.id).exists(),
+            select(KayakServiceDetail.id).where(KayakServiceDetail.spot_id == SpotDB.id).exists(),
+        )
+        base = base.order_by(case((is_service, 0), else_=1))
     if sort == "name":
         return base.order_by(func.lower(SpotDB.name), SpotDB.id)
     if sort == "rating":
@@ -727,6 +703,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.glamping_detail),
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
+            selectinload(SpotDB.surf_detail),
+            selectinload(SpotDB.kayak_service_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
             selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
@@ -773,6 +751,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "glamping_detail": spot.glamping_detail,
         "glamping_amenities": spot.glamping_amenities,
         "motorhome_detail": spot.motorhome_detail,
+        "surf_detail": spot.surf_detail,
+        "kayak_service_detail": spot.kayak_service_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [sa.amenity for sa in spot.amenities if sa.amenity is not None],
         "routes": spot.routes,
@@ -877,6 +857,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.glamping_detail),
             selectinload(SpotDB.glamping_amenities),
             selectinload(SpotDB.motorhome_detail),
+            selectinload(SpotDB.surf_detail),
+            selectinload(SpotDB.kayak_service_detail),
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
             selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
@@ -908,6 +890,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "glamping_detail": spot.glamping_detail,
         "glamping_amenities": spot.glamping_amenities,
         "motorhome_detail": spot.motorhome_detail,
+        "surf_detail": spot.surf_detail,
+        "kayak_service_detail": spot.kayak_service_detail,
         "trekking_detail": spot.trekking_detail,
         "amenities": [
             sa.amenity for sa in spot.amenities if sa.amenity is not None
@@ -1423,6 +1407,8 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
         "kayaks": [dump(KayakDetailResponse, k) for k in kayaks],
         # Para editarlos desde el panel (routers/owner_edits.py).
         "trekking_detail": TrekkingDetailCreate.model_validate(spot.trekking_detail).model_dump() if spot.trekking_detail else None,
+        "surf_detail": dump(SurfDetailIn, spot.surf_detail) if spot.surf_detail else None,
+        "kayak_service_detail": dump(KayakServiceDetailIn, spot.kayak_service_detail) if spot.kayak_service_detail else None,
         "motorhome_detail": (
             MotorhomeDetailCreate.model_validate(spot.motorhome_detail, from_attributes=True).model_dump()
             if spot.motorhome_detail else None
