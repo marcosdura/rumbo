@@ -43,7 +43,7 @@ export default function MyRequestsCard({ token }: { token: string }) {
         <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>Cargando...</p>
       ) : items.length === 0 ? (
         <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>
-          No tenés pedidos. Acá vas a ver los cambios que pidas en tus lugares o escuelas (nombre, descripción, fotos)
+          No tenés pedidos. Acá vas a ver los cambios que pidas en tus lugares (nombre, descripción, fotos)
           y los pedidos para hacerte cargo de un lugar, mientras se revisan y cuando se resuelvan.
         </p>
       ) : (

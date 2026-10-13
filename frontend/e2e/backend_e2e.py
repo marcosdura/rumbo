@@ -45,7 +45,7 @@ from fastapi import Depends  # noqa: E402
 import auth  # noqa: E402
 import main  # noqa: E402
 from database import SessionLocal  # noqa: E402
-from models import Amenity, Category, ClimbingSector, Route, SpotCategory, SpotDB, User  # noqa: E402
+from models import Amenity, Category, ClimbingSector, Route, SpotCategory, SpotDB, SurfDetail, User  # noqa: E402
 
 cloudinary.uploader.destroy = lambda public_id: {"result": "ok"}
 # Sin límite de pedidos por minuto (como los tests del backend): un
@@ -102,6 +102,9 @@ def seed():
     db.add(ClimbingSector(spot_id=roca.id, name="Sector Norte", slug="sector-norte"))
     spot("Playa de Prueba", 4, department="Rocha")
     spot("Laguna de Prueba", 5, department="Rocha")
+    # Una escuela que vino del sistema viejo (su dirección era /surf/<nombre>-7).
+    escuela = spot("Escuela de Prueba", 4, department="Rocha")
+    db.add(SurfDetail(spot_id=escuela.id, operates_at="Playa de Prueba", legacy_id=7))
     db.commit()
     db.close()
 

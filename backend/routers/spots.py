@@ -4,11 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user_required, is_admin, get_current_admin_user
-from ownership import get_owned_spot_or_admin, can_manage_spot, is_public_venue, is_admin_managed
+from ownership import get_owned_spot_or_admin, can_manage_spot, is_admin_managed
 from auth import ADMIN_EMAIL
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, KayakDetail, SurfSchool, SurfDetail, KayakServiceDetail, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
-from schemas import SurfDetailIn, KayakServiceDetailIn, ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, SurfSchoolResponse, KayakDetailResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, CampingDetail, TrekkingDetail, Route, SurfDetail, KayakServiceDetail, GlampingDetail, SpotImage, SpotCategory, MotorhomeDetail, GlampingAmenity, Experience
+from schemas import SurfDetailIn, KayakServiceDetailIn, ClimbingRouteResponse, SpotReject, SpotEditRequest, SpotCreate, SpotResponse, ClimbingSectorResponse, CampingDetailCreate, TrekkingDetailCreate, RouteResponse, GlampingDetailResponse, SpotCategoryAddRequest, MotorhomeDetailCreate, ExperienceCreate, ExperienceResponse
 import models
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
@@ -19,7 +19,6 @@ from slugs import generate_slug
 import contributions
 import item_photos as item_photos_domain
 from notifications import notify, notify_admin, spot_link
-import operators as operators_domain
 from spot_changes import unpublish_spot, reject_spot as reject_spot_with_reason, plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
 import cloudinary
@@ -661,16 +660,6 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
     # Las fotos de un pedido de cambio pendiente también están en Cloudinary
     # (sin fila en spot_images): el cascade borra el pedido, pero no el archivo.
     pending = get_pending_request(db, spot_id)
-    # Las escuelas de surf y los kayaks guardan sus fotos como URL (no en
-    # spot_images): antes quedaban en Cloudinary para siempre.
-    operator_photos = []
-    for school in db.query(SurfSchool).execution_options(include_pending=True).filter(SurfSchool.spot_id == spot_id):
-        operator_photos += contributions.item_photos("surf_school", school)
-    for kayak in db.query(KayakDetail).execution_options(include_pending=True).filter(KayakDetail.spot_id == spot_id):
-        operator_photos += contributions.item_photos("kayak", kayak)
-    # Y las fotos nuevas de pedidos de cambio pendientes de esas escuelas.
-    for change in db.query(models.OperatorChangeRequest).filter_by(spot_id=spot_id, status="pending"):
-        operator_photos += operators_domain.discard_change(change, "cancelled", by=admin.get("email"))
     # Fotos de rutas, sectores y vías (también las en revisión).
     item_photo_ids = [
         p.cloudinary_public_id
@@ -680,7 +669,6 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
         item_photo_ids
         + [img.cloudinary_public_id for img in images]
         + (request_photos(pending) if pending else [])
-        + [p for p in operator_photos if p]
     )
 
     # Antes esto era un DELETE FROM spots crudo, que rompía con
@@ -713,8 +701,6 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
             selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
-            selectinload(SpotDB.kayak_detail),
-            selectinload(SpotDB.surf_schools),
         )
         .filter(SpotDB.slug == slug, SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
         .first()
@@ -764,8 +750,6 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "experiences": spot.experiences,
         "climbing_sectors": [_attach_sector_stats(sec) for sec in spot.climbing_sectors],
-        "kayak_detail": spot.kayak_detail,
-        "surf_schools": spot.surf_schools,
         "average_rating": average_rating,
         "review_count": review_count,
         "is_public": spot.is_public,
@@ -867,8 +851,6 @@ def get_spot(id: int, db: Session = Depends(get_db)):
             selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
             selectinload(SpotDB.experiences).selectinload(Experience.category),
             selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
-            selectinload(SpotDB.kayak_detail),
-            selectinload(SpotDB.surf_schools),
         )
         .filter(SpotDB.id == id)
         .first()
@@ -905,8 +887,6 @@ def get_spot(id: int, db: Session = Depends(get_db)):
         "images": sorted(spot.images, key=lambda img: (0 if img.is_main else 1, img.order, img.id)),
         "experiences": spot.experiences,
         "climbing_sectors": [_attach_sector_stats(sec) for sec in spot.climbing_sectors],
-        "kayak_detail": spot.kayak_detail,
-        "surf_schools": spot.surf_schools,
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "is_public": spot.is_public,
@@ -1071,21 +1051,6 @@ def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
     return sectors
 
 
-# devuelve los detalles del kayak segun el spot
-@router.get("/spots/{spot_id}/kayak-detail", response_model=list[KayakDetailResponse])
-def get_kayak_detail(spot_id: int, db: Session = Depends(get_db)):
-    kayaks = db.query(KayakDetail).filter(KayakDetail.spot_id == spot_id).all()
-    if not kayaks:
-        raise HTTPException(status_code=404, detail="Kayak no encontrado")
-    return kayaks
-
-
-# edvuelve las escuelas de surf segun el spot
-@router.get("/spots/{spot_id}/surf-schools", response_model=list[SurfSchoolResponse])
-def get_surf_schools(spot_id: int, db: Session = Depends(get_db)):
-    return db.query(SurfSchool).filter(SurfSchool.spot_id == spot_id).all()
-
-
 @router.get("/admin/spots")
 def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     spots = (
@@ -1205,11 +1170,7 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
-    # El dueño (o el admin) sube fotos del lugar. En una playa o laguna,
-    # cualquier logueado sube las de su escuela de surf o servicio de kayak
-    # (quedan en la carpeta de la playa; operators.assert_valid_photos exige
-    # ese formato al guardarlas).
-    # Y en un lugar publicado con rutas o sectores, cualquier logueado sube
+    # El dueño (o el admin) sube fotos del lugar. Y en un lugar publicado con rutas o sectores, cualquier logueado sube
     # fotos de una ruta, sector o vía (item_photos.add_photos valida a cuál).
     # (También con la primera ruta o sector todavía en revisión: agregar lugar
     # sube sus fotos apenas los crea.)
@@ -1217,7 +1178,7 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
         db.query(Route).execution_options(include_pending=True).filter(Route.spot_id == spot.id).first() is not None
         or db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.spot_id == spot.id).first() is not None
     )
-    if not can_manage_spot(spot, user) and not is_public_venue(spot) and not community_photos:
+    if not can_manage_spot(spot, user) and not community_photos:
         raise HTTPException(status_code=403, detail="No autorizado")
     #
     # El formato es el que arma lib/uploadImage.ts: "{spot_id}/{16 hex}".
@@ -1380,8 +1341,6 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
     )
     routes = every(Route).filter(Route.spot_id == spot.id).order_by(Route.id).all()
     sectors = every(ClimbingSector).filter(ClimbingSector.spot_id == spot.id).order_by(ClimbingSector.id).all()
-    surf_schools = every(SurfSchool).filter(SurfSchool.spot_id == spot.id).order_by(SurfSchool.id).all()
-    kayaks = every(KayakDetail).filter(KayakDetail.spot_id == spot.id).order_by(KayakDetail.id).all()
 
     def dump(schema, obj):
         return schema.model_validate(obj).model_dump(mode="json")
@@ -1408,8 +1367,6 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
             }
             for s in sectors
         ],
-        "surf_schools": [dump(SurfSchoolResponse, s) for s in surf_schools],
-        "kayaks": [dump(KayakDetailResponse, k) for k in kayaks],
         # Para editarlos desde el panel (routers/owner_edits.py).
         "trekking_detail": TrekkingDetailCreate.model_validate(spot.trekking_detail).model_dump() if spot.trekking_detail else None,
         "surf_detail": dump(SurfDetailIn, spot.surf_detail) if spot.surf_detail else None,

@@ -45,13 +45,15 @@ describe("ContributionsList", () => {
     expect(screen.getByText("La Diagonal · 6a")).toBeTruthy()
   })
 
-  it("muestra las fotos de una escuela de surf", () => {
+  it("muestra la foto de una ruta y si lo sumó el dueño", () => {
+    vi.stubEnv("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME", "rumbo")
     renderList({ contributions: [contribution({
-      kind: "surf_school", author_email: "duenio@test.com",
-      item: { name: "Escuela Ola", photo_1: "https://res.cloudinary.com/x/image/upload/a.jpg" },
+      kind: "photo", author_email: "duenio@test.com",
+      item: { cloudinary_public_id: "rumbo/spots/3/abc", target_name: "Cumbre" },
     })] })
     expect(document.querySelectorAll(".photo-grid img")).toHaveLength(1)
     expect(screen.getByText("dueño del lugar")).toBeTruthy()
+    vi.unstubAllEnvs()
   })
 
   it("aprobar y rechazar avisan al padre con el id del aporte", () => {

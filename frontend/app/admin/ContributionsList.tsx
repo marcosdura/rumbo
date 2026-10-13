@@ -27,7 +27,7 @@ export default function ContributionsList({ contributions, loadError, loading, a
         Aportes nuevos
       </p>
       <p style={{ fontSize: 13, color: "var(--muted-strong)", marginBottom: 16, lineHeight: 1.5 }}>
-        Experiencias, alojamientos, rutas, sectores, vías, surf y kayak sumados a lugares ya aprobados.
+        Experiencias, alojamientos, rutas, sectores, vías y fotos sumados a lugares ya aprobados.
         Cada uno se aprueba o rechaza por separado; al rechazar se borra (y sus fotos).
       </p>
 

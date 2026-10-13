@@ -1,10 +1,9 @@
 // "Mis pedidos" (GET /me/requests, backend/routers/me.py): cambios en tus
-// lugares y escuelas, y pedidos para hacerte cargo de un lugar.
+// lugares y pedidos para hacerte cargo de un lugar.
 import { describeFields } from "@/app/dashboard/spots/[id]/changes"
-import { describeOperatorFields } from "@/app/dashboard/operadores/[kind]/[id]/operator"
 
 export type MyRequest = {
-  kind: "spot_change" | "operator_change" | "claim"
+  kind: "spot_change" | "claim"
   id: number
   status: "pending" | "approved" | "rejected"
   fields: string[]
@@ -25,7 +24,7 @@ export function requestTitle(r: MyRequest): string {
 
 export function requestDetail(r: MyRequest): string | null {
   if (r.kind === "claim") return null
-  const fields = r.kind === "spot_change" ? describeFields(r.fields, r.photo_count ?? 0) : describeOperatorFields(r.fields)
+  const fields = describeFields(r.fields, r.photo_count ?? 0)
   return fields ? `Pediste cambiar ${fields}` : null
 }
 

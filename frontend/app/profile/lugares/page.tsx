@@ -1,13 +1,12 @@
 "use client"
 
-// "Lugares que administrás": tus lugares, tus escuelas o servicios, y los
-// que sugeriste como visitante.
+// "Lugares que administrás": tus lugares (también escuelas de surf y
+// servicios de kayak) y los que sugeriste como visitante.
 import { useEffect, useState } from "react"
 import { api } from "@/lib/api"
 import type { MySpotSummary } from "@/lib/types"
 import ProfileSubpage from "../ProfileSubpage"
 import MySpotsCard from "../MySpotsCard"
-import MyOperatorsCard from "../MyOperatorsCard"
 import SuggestedCard, { type SuggestedSpot } from "../SuggestedCard"
 
 function ManagedPlaces({ token }: { token: string }) {
@@ -36,7 +35,6 @@ function ManagedPlaces({ token }: { token: string }) {
   return (
     <>
       <MySpotsCard mySpots={mine.filter(s => !suggestedIds.has(s.id))} />
-      <MyOperatorsCard token={token} />
       <SuggestedCard spots={suggested} />
     </>
   )

@@ -8,7 +8,7 @@ let calls: string[] = []
 const queue = (count: number, oldest: string | null = null) => ({ count, oldest })
 const pair = { current: 0, previous: 0 }
 const emptySummary = {
-  queues: { new_spots: queue(0), changes: queue(0), contributions: queue(0), operator_changes: queue(0), reports: queue(0), claims: queue(0) },
+  queues: { new_spots: queue(0), changes: queue(0), contributions: queue(0), reports: queue(0), claims: queue(0) },
   metrics: { users: pair, reviews: pair, favorites: pair, views: pair, new_spots: pair },
   views_by_day: [], top_viewed: [], top_favorited: [],
   content_health: { no_photos: { count: 0, spots: [] }, no_description: { count: 0, spots: [] }, no_reviews: { count: 0, spots: [] } },
@@ -143,7 +143,7 @@ describe("Organización del panel", () => {
     await open(/^📝 Cambios y aportes/)
     await open(/^⚑ Reportes/)
     expect(calls.filter(c => c !== "get /admin/summary")).toEqual([
-      "get /admin/reports", "get /admin/change-requests", "get /admin/contributions", "get /admin/operator-change-requests",
+      "get /admin/reports", "get /admin/change-requests", "get /admin/contributions",
     ])
   })
 
@@ -198,15 +198,5 @@ describe("Avisos de admin", () => {
     const tabs = [...block.matchAll(/:\s*"([a-z-]+)"/g)].map(m => m[1])
     expect(tabs.length).toBeGreaterThan(5)
     for (const t of tabs) expect(ADMIN_MODES).toContain(t)
-  })
-})
-
-describe("Escuelas y servicios", () => {
-  it("es una pestaña de Gestión y pide la lista al abrirla", async () => {
-    await load()
-    expect(calls).not.toContain("get /admin/operators")
-    await open(/^🏄 Escuelas y servicios/)
-    expect(calls).toContain("get /admin/operators")
-    expect(window.location.search).toBe("?tab=escuelas")
   })
 })

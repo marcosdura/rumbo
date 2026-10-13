@@ -24,7 +24,8 @@ def migrate(setup):
             "(2, 'Laguna Garzón', 'laguna-garzon', 'x', 'Rocha', -34.8, -54.6, 5, 0, 0)"))
         c.execute(text("INSERT INTO users (id, email) VALUES ('u1', 'ana@x.com'), ('u2', 'beto@x.com')"))
         setup(c)
-    command.upgrade(alembic_config(url), "head")
+    # Hasta 0021: 0022 borra las tablas viejas que se revisan acá.
+    command.upgrade(alembic_config(url), "0021")
     return engine
 
 

@@ -1,7 +1,7 @@
 """Notificaciones dentro de la app: los endpoints y qué evento avisa a quién
 (notifications.py)."""
 from conftest import ADMIN, OTHER, OWNER, as_user
-from models import Category, Notification, Review, SurfSchool
+from models import Category, Notification, Review, SurfDetail
 
 THIRD = "tercero@test.com"
 
@@ -158,20 +158,6 @@ def test_retirar_un_aporte_no_avisa(client, db, make_spot):
     assert inbox(db, OTHER) == []
 
 
-# -------- Escuelas --------
-
-def test_cambio_de_escuela(client, db, make_spot):
-    beach = make_spot(name="Playa", category="Surf")
-    school = SurfSchool(spot_id=beach.id, name="Ola", owner_email=THIRD)
-    db.add(school)
-    db.commit()
-    client.patch(f"/operators/surf_school/{school.id}", json={"name": "Ola Nueva"}, headers=as_user(THIRD))
-    assert kinds(db, ADMIN) == ["admin_operator_change"]
-    change_id = client.get("/admin/operator-change-requests", headers=as_user(ADMIN)).json()[0]["id"]
-    client.post(f"/admin/operator-change-requests/{change_id}/approve", headers=as_user(ADMIN))
-    assert inbox(db, THIRD) == [("change_approved", "Se aprobó tu cambio en «Ola Nueva»")]
-
-
 # -------- Reseñas --------
 
 def test_resenia_nueva_avisa_al_duenio(client, db, make_spot, make_user):
@@ -191,14 +177,13 @@ def test_el_duenio_que_resenia_lo_suyo_no_se_avisa(client, db, make_spot, make_u
 
 
 def test_resenia_de_escuela_avisa_al_duenio_de_la_escuela(client, db, make_spot, make_user):
-    beach = make_spot(name="Playa", category="Surf")
-    school = SurfSchool(spot_id=beach.id, name="Ola", owner_email=THIRD)
-    db.add(school)
+    # La escuela es un lugar: la reseña avisa a su dueño, como cualquier otra.
+    school = make_spot(name="Ola", category="Surf", owner=THIRD)
+    db.add(SurfDetail(spot_id=school.id))
     db.commit()
     make_user(OTHER)
-    client.post(f"/surf-reviews/{school.id}", json={"rating": 5}, headers=as_user(OTHER))
-    assert kinds(db, THIRD) == ["new_review"]
-    assert inbox(db, OWNER) == [], "no al que cargó la playa"
+    client.post(f"/reviews/{school.id}", json={"rating": 5}, headers=as_user(OTHER))
+    assert inbox(db, THIRD) == [("new_review", "Nueva reseña en «Ola»")]
 
 
 # -------- Reportes --------

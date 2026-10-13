@@ -1,7 +1,7 @@
 """Aportes: cosas nuevas que se suman a un spot ya aprobado.
 
 Antes, el dueño podía sumar por API experiencias, unidades de glamping,
-rutas, sectores, surf o kayak a un spot aprobado y quedaban publicados sin
+rutas o sectores a un spot aprobado y quedaban publicados sin
 revisión (el mismo bait-and-switch que cierran los pedidos de cambio de
 spot_changes.py). Ahora:
 
@@ -16,7 +16,6 @@ spot_changes.py). Ahora:
 Un sector sugerido trae sus vías: las vías que el autor carga dentro de su
 propio sector pendiente no tienen registro propio y se aprueban con él.
 """
-import re
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -25,10 +24,9 @@ from sqlalchemy.orm import Session
 from auth import is_admin
 from models import (
     ClimbingRoute, ClimbingSector, Contribution, Experience, GlampingDetail,
-    ItemPhoto, KayakDetail, Route, RouteTrack, SpotCategory, SpotDB, SurfSchool,
+    ItemPhoto, Route, RouteTrack, SpotCategory, SpotDB,
 )
 from spot_changes import destroy_cloudinary_images
-from ownership import is_public_venue
 from notifications import notify, notify_admin, spot_link
 
 KIND_MODELS = {
@@ -37,8 +35,6 @@ KIND_MODELS = {
     "trekking_route": Route,
     "climbing_sector": ClimbingSector,
     "climbing_route": ClimbingRoute,
-    "surf_school": SurfSchool,
-    "kayak": KayakDetail,
     # Una foto de una ruta, sector o vía (item_photos.py).
     "photo": ItemPhoto,
     # El recorrido (GPX) de una ruta de trekking (route_tracks.py).
@@ -47,9 +43,6 @@ KIND_MODELS = {
 
 # Los que cualquier usuario logueado puede sugerir en un spot ajeno.
 COMMUNITY_KINDS = {"climbing_sector", "climbing_route"}
-# Escuelas de surf y servicios de kayak: en una playa o laguna los suma
-# cualquiera, que pasa a ser su dueño (operators.py).
-OPERATOR_KINDS = {"surf_school", "kayak"}
 
 
 def _title(kind, item) -> str:
@@ -64,34 +57,10 @@ def _title(kind, item) -> str:
     return item.name or "Sin nombre"
 
 
-def public_id_from_url(url: str):
-    """Las fotos de surf y kayak se guardan como URL completa de Cloudinary
-    (https://res.cloudinary.com/<cloud>/image/upload/v123/<public_id>.jpg),
-    no como public_id: para destruirlas hay que sacarlo de la URL."""
-    if not url:
-        return None
-    m = re.search(r"/upload/(?:[^/]*,[^/]*/)?(?:v\d+/)?(.+?)(?:\.[a-zA-Z0-9]+)?$", url)
-    return m.group(1) if m else None
-
-
-def is_own_new_photo_id_url(spot_id: int, url: str):
-    """Si `url` es una foto de nuestro Cloudinary con el formato de la
-    carpeta de ese spot, devuelve su public_id; si no, None."""
-    if not url or not url.startswith("https://res.cloudinary.com/"):
-        return None
-    public_id = public_id_from_url(url)
-    if public_id and re.fullmatch(rf"(rumbo/spots/)?{spot_id}/[0-9a-f]{{16}}", public_id):
-        return public_id
-    return None
-
-
 def item_photos(kind, item):
     if kind == "photo":
         return [item.cloudinary_public_id]
-    if kind not in ("surf_school", "kayak"):
-        return []
-    urls = [item.photo_1, item.photo_2, item.photo_3]
-    return [pid for pid in (public_id_from_url(u) for u in urls) if pid]
+    return []
 
 
 def decide(spot: SpotDB, kind: str, user: dict) -> bool:
@@ -100,10 +69,6 @@ def decide(spot: SpotDB, kind: str, user: dict) -> bool:
     si el usuario no puede sumarlo."""
     if is_admin(user):
         return False
-    if kind in OPERATOR_KINDS and is_public_venue(spot):
-        # Siempre a revisión, también en una playa recién sugerida: el admin
-        # revisa la playa y la escuela.
-        return True
     owner = spot.owner_email == user.get("email")
     if kind in COMMUNITY_KINDS and spot.is_approved:
         # Cualquiera sugiere en un spot aprobado; el dueño también pasa por
@@ -270,13 +235,12 @@ def serialize(db: Session, contribution: Contribution, with_item: bool = False) 
     if with_item:
         from schemas import (
             ClimbingRouteResponse, ClimbingSectorResponse, ExperienceResponse,
-            GlampingDetailResponse, KayakDetailResponse, RouteResponse, SurfSchoolResponse,
+            GlampingDetailResponse, RouteResponse,
         )
         schemas_by_kind = {
             "experience": ExperienceResponse, "glamping_unit": GlampingDetailResponse,
             "trekking_route": RouteResponse, "climbing_sector": ClimbingSectorResponse,
-            "climbing_route": ClimbingRouteResponse, "surf_school": SurfSchoolResponse,
-            "kayak": KayakDetailResponse,
+            "climbing_route": ClimbingRouteResponse,
         }
         item = get_item(db, contribution)
         if contribution.kind == "photo":

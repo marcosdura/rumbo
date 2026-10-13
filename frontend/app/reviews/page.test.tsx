@@ -22,7 +22,7 @@ vi.mock("@/lib/api", () => ({
 const { default: MyReviewsPage } = await import("./page")
 
 const spotReview = { kind: "spot", id: 1, target_name: "Cerro Arequita", href: "/spots/cerro#reviews", rating: 5, comment: "Hermoso", created_at: "2026-09-01T00:00:00", updated_at: null }
-const surfReview = { kind: "surf", id: 7, target_name: "Escuela Ola", href: "/surf/escuela-ola-4#reviews", rating: 4, comment: null, created_at: "2026-09-02T00:00:00", updated_at: null }
+const schoolReview = { kind: "spot", id: 7, target_name: "Escuela Ola", href: "/spots/escuela-ola#reviews", rating: 4, comment: null, created_at: "2026-09-02T00:00:00", updated_at: null }
 
 afterEach(() => {
   sessionState = { data: { id_token: "t" }, status: "authenticated" }
@@ -41,27 +41,26 @@ describe("Mis reseñas", () => {
     expect(calls).toEqual([])
   })
 
-  it("las de lugares, escuelas y kayaks, cada una lleva a sus reseñas", async () => {
-    reviews = [surfReview, spotReview]
+  it("cada una lleva a las reseñas de su lugar", async () => {
+    reviews = [schoolReview, spotReview]
     await load()
     expect(screen.getByRole("heading", { name: "Mis reseñas" })).toBeTruthy()
-    expect(screen.getByText("🏄 Escuela de surf")).toBeTruthy()
-    expect(screen.getByRole("link", { name: "Escuela Ola" }).getAttribute("href")).toBe("/surf/escuela-ola-4#reviews")
+    expect(screen.getByRole("link", { name: "Escuela Ola" }).getAttribute("href")).toBe("/spots/escuela-ola#reviews")
     expect(screen.getByRole("link", { name: "Cerro Arequita" }).getAttribute("href")).toBe("/spots/cerro#reviews")
     expect(screen.getByRole("link", { name: "← Volver al perfil" })).toBeTruthy()
   })
 
-  it("editar y borrar van al endpoint de su tipo", async () => {
-    reviews = [surfReview]
+  it("editar y borrar van a /reviews", async () => {
+    reviews = [schoolReview]
     await load()
     fireEvent.click(screen.getByRole("button", { name: "Editar" }))
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" })) })
-    expect(calls.at(-1)).toEqual({ method: "patch", url: "/surf-reviews/7", body: { rating: 4, comment: "" } })
+    expect(calls.at(-1)).toEqual({ method: "patch", url: "/reviews/7", body: { rating: 4, comment: "" } })
     expect(screen.getByText("Cambió")).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
     // El "Eliminar" del modal de confirmación es el último.
     await act(async () => { fireEvent.click(screen.getAllByRole("button", { name: "Eliminar" }).at(-1)!) })
-    expect(calls.at(-1)).toEqual({ method: "del", url: "/surf-reviews/7" })
+    expect(calls.at(-1)).toEqual({ method: "del", url: "/reviews/7" })
     expect(screen.getByText("Todavía no escribiste reseñas")).toBeTruthy()
   })
 

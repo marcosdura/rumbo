@@ -16,8 +16,8 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from models import (
-    Contribution, Favorite, KayakReview, OperatorChangeRequest, Report, Review, SpotChangeRequest,
-    SpotClaim, SpotDB, SpotImage, SpotView, SurfReview, User,
+    Contribution, Favorite, Report, Review, SpotChangeRequest,
+    SpotClaim, SpotDB, SpotImage, SpotView, User,
 )
 
 DAYS = 30
@@ -46,7 +46,6 @@ def queues(db: Session) -> dict:
         "new_spots": _queue(new_spots, SpotDB.created_at),
         "changes": _queue(db.query(SpotChangeRequest).filter(SpotChangeRequest.status == "pending"), SpotChangeRequest.created_at),
         "contributions": _queue(db.query(Contribution).filter(Contribution.status == "pending"), Contribution.created_at),
-        "operator_changes": _queue(db.query(OperatorChangeRequest).filter(OperatorChangeRequest.status == "pending"), OperatorChangeRequest.created_at),
         "reports": {**_queue(open_reports, Report.created_at), "count": report_groups},
         "claims": _queue(db.query(SpotClaim).filter(SpotClaim.status == "pending"), SpotClaim.created_at),
     }
@@ -79,7 +78,7 @@ def metrics(db: Session, today: date) -> dict:
 
     return {
         "users": counts(created(User)),
-        "reviews": counts(lambda w: sum(created(m)(w) for m in (Review, SurfReview, KayakReview))),
+        "reviews": counts(created(Review)),
         "favorites": counts(created(Favorite)),
         "views": counts(lambda w: db.query(SpotView).filter(SpotView.day.between(*w)).count()),
         "new_spots": counts(lambda w: _published(db).filter(_between_days(SpotDB.created_at, w)).count()),

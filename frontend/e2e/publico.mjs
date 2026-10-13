@@ -25,6 +25,11 @@ export async function run(browser, r) {
   r.ok("SEO — /favorites fuera de Google", /<meta name="robots" content="noindex, nofollow"/.test(await html("/favorites")))
   const sitemapXml = await html("/sitemap.xml")
   r.ok("SEO — el sitemap incluye rutas y sectores", sitemapXml.includes("/rutas/") && sitemapXml.includes("/sectores/"))
+  // Las direcciones viejas de escuelas y kayaks llevan al lugar (permanente).
+  const old = await fetch(`${FRONT}/surf/escuela-vieja-7`, { redirect: "manual" })
+  r.ok("SEO — la dirección vieja de una escuela lleva a su lugar", old.status === 308 && (old.headers.get("location") ?? "").endsWith("/spots/escuela-de-prueba"),
+    `${old.status} ${old.headers.get("location")}`)
+  r.ok("SEO — un kayak viejo que no existe da 404", (await fetch(`${FRONT}/kayak/nada-999`, { redirect: "manual" })).status === 404)
   const og = await fetch(`${FRONT}/opengraph-image`)
   r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {

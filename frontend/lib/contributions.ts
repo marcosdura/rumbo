@@ -2,6 +2,8 @@
 // revisión (backend/contributions.py). Lo comparten "Tus aportes" en
 // /profile y la pestaña "Cambios pendientes" del admin.
 
+// surf_school y kayak: aportes viejos (rechazados) que todavía pueden verse
+// en "Tus aportes". Ya no se crean: las escuelas y los kayaks son lugares.
 export type ContributionKind =
   | "experience" | "glamping_unit" | "trekking_route" | "climbing_sector"
   | "climbing_route" | "surf_school" | "kayak" | "photo" | "track"
@@ -53,8 +55,8 @@ export const KIND_FIELDS: Record<ContributionKind, [string, string][]> = {
   trekking_route: [["name", "Nombre"], ["distance_km", "Distancia (km)"], ["duration_hours", "Duración (h)"], ["difficulty", "Dificultad"], ["elevation_gain", "Desnivel +"]],
   climbing_sector: [["name", "Nombre"], ["type", "Tipo"], ["max_altitude", "Altitud máxima"], ["restrictions", "Restricciones"]],
   climbing_route: [["name", "Nombre"], ["grade", "Grado"], ["type", "Tipo"], ["length", "Largo (m)"], ["bolts", "Chapas"], ["description", "Descripción"]],
-  surf_school: [["name", "Nombre"], ["class_type", "Tipo de clase"], ["duration", "Duración (h)"], ["email", "Email"], ["whatsapp", "WhatsApp"], ["instagram", "Instagram"]],
-  kayak: [["name", "Nombre"], ["water_type", "Tipo de agua"], ["difficulty", "Dificultad"], ["duration", "Duración (h)"], ["email", "Email"], ["whatsapp", "WhatsApp"]],
+  surf_school: [],
+  kayak: [],
   // Foto de una ruta, sector o vía: la foto se ve en itemPhotos.
   photo: [["target_name", "De"]],
   // El recorrido de una ruta: un resumen (el mapa se ve al aprobarlo).
@@ -69,14 +71,8 @@ export function itemDetails(kind: ContributionKind, item: Record<string, unknown
     .map(([field, label]) => [label, String(item[field])])
 }
 
-// Fotos de surf y kayak (URLs completas de Cloudinary).
+// La foto de una ruta, sector o vía (se guarda el public_id, no la URL).
 export function itemPhotos(item: Record<string, unknown> | null): string[] {
-  if (!item) return []
-  // Fotos de rutas, sectores y vías: se guarda el public_id, no la URL.
-  if (typeof item.cloudinary_public_id === "string") {
-    return [`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${item.cloudinary_public_id}`]
-  }
-  return ["photo_1", "photo_2", "photo_3"]
-    .map(k => item[k])
-    .filter((v): v is string => typeof v === "string" && v.length > 0)
+  if (!item || typeof item.cloudinary_public_id !== "string") return []
+  return [`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${item.cloudinary_public_id}`]
 }

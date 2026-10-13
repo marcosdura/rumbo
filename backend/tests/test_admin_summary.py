@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 import admin_summary
 from conftest import ADMIN, as_user
 from models import (
-    Contribution, Favorite, OperatorChangeRequest, Report, Review, SpotChangeRequest, SpotClaim, SpotImage,
+    Contribution, Favorite, Report, Review, SpotChangeRequest, SpotClaim, SpotImage,
     SpotView, User,
 )
 
@@ -40,7 +40,6 @@ def test_bandeja_cuenta_lo_pendiente_y_desde_cuando_espera(db, make_spot):
         SpotChangeRequest(spot_id=spot.id, requested_by="d@test.com", changes={}, created_at=at(4)),
         SpotChangeRequest(spot_id=spot.id, requested_by="d@test.com", changes={}, status="approved", created_at=at(9)),
         Contribution(kind="photo", item_id=1, spot_id=spot.id, author_email="a@test.com", title="Foto", created_at=at(2)),
-        OperatorChangeRequest(kind="kayak", operator_id=1, spot_id=spot.id, requested_by="k@test.com", changes={}, created_at=at(6)),
         SpotClaim(spot_id=spot.id, user_email="c@test.com", created_at=at(5)),
         # Dos reportes sobre lo mismo son una sola decisión; otro sobre otra cosa, otra.
         Report(target_kind="spot", target_id=spot.id, spot_id=spot.id, reporter_email="r1@test.com", reason="spam", created_at=at(7)),
@@ -55,7 +54,7 @@ def test_bandeja_cuenta_lo_pendiente_y_desde_cuando_espera(db, make_spot):
     assert q["new_spots"]["oldest"].startswith(pendiente_viejo.created_at.date().isoformat())
     assert q["changes"]["count"] == 1
     assert q["contributions"]["count"] == 1
-    assert q["operator_changes"]["count"] == 1
+    assert "operator_changes" not in q
     assert q["claims"]["count"] == 1
     assert q["reports"]["count"] == 2
     assert q["reports"]["oldest"].startswith(at(7).date().isoformat())

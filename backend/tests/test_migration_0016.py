@@ -25,7 +25,7 @@ def test_copia_el_precio_del_camping_si_el_lugar_no_tenia():
                     "VALUES (:id, :name, 'x', 'Rocha', 1, :price, 1, 0)"), {"id": spot_id, "name": f"Lugar {spot_id}", "price": price})
             c.execute(text("INSERT INTO camping_details (spot_id, price) VALUES (1, 450.4), (2, 200), (3, NULL)"))
 
-        command.upgrade(alembic_config(url), "head")
+        command.upgrade(alembic_config(url), "0016")
         with engine.connect() as c:
             rows = c.execute(text("SELECT id, price FROM spots ORDER BY id")).all()
         engine.dispose()

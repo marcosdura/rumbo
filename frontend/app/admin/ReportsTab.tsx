@@ -8,7 +8,7 @@ import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 
 // GET /admin/reports: reportes abiertos agrupados por cosa reportada.
 export type ReportGroup = {
-  target_kind: "spot" | "review" | "surf_review" | "kayak_review" | "surf_school" | "kayak"
+  target_kind: "spot" | "review"
   target_id: number
   target: {
     exists: boolean
@@ -16,7 +16,6 @@ export type ReportGroup = {
     owner_email?: string | null
     rating?: number
     comment?: string | null
-    parent_name?: string
     spot?: { id: number; name: string; slug: string | null; is_approved: boolean }
   }
   actions: ("dismiss" | "delete" | "unpublish")[]
@@ -29,15 +28,10 @@ export const groupKey = (g: Pick<ReportGroup, "target_kind" | "target_id">) => `
 const KIND_LABELS: Record<ReportGroup["target_kind"], string> = {
   spot: "Lugar",
   review: "Reseña",
-  surf_review: "Reseña de escuela de surf",
-  kayak_review: "Reseña de kayak",
-  surf_school: "Escuela de surf",
-  kayak: "Servicio de kayak",
 }
 
 const DELETE_LABEL: Partial<Record<ReportGroup["target_kind"], string>> = {
-  review: "Eliminar reseña", surf_review: "Eliminar reseña", kayak_review: "Eliminar reseña",
-  surf_school: "Eliminar escuela", kayak: "Eliminar servicio",
+  review: "Eliminar reseña",
 }
 
 interface Props {
@@ -118,7 +112,7 @@ export default function ReportsTab({ groups, loadError, loading, token, onResolv
                     </div>
                     {t.exists && t.spot && (
                       <p style={{ fontSize: 12, color: "var(--muted-strong)", margin: 0 }}>
-                        {t.parent_name ? `${t.parent_name} · ` : ""}en {t.spot.name}
+                        en {t.spot.name}
                         {!t.spot.is_approved && " (no publicado)"}
                       </p>
                     )}

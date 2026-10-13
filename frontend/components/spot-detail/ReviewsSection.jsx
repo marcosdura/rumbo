@@ -7,8 +7,6 @@ import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import ReportButton from "@/components/ui/ReportButton"
 
-// Tipo de reporte de una reseña según de qué es (backend/reports.py).
-const REVIEW_REPORT_KIND = { spot: "review", surf: "surf_review", kayak: "kayak_review" }
 import { trackEvent } from "@/lib/analytics"
 import { timeAgo } from "@/lib/notifications"
 import { api } from "@/lib/api"
@@ -43,7 +41,7 @@ function Avatar({ user, size = 36 }) {
 
 const REVIEWS_PAGE_SIZE = 10
 
-export default function ReviewsSection({ spotId, entityType = "spot" }) {
+export default function ReviewsSection({ spotId }) {
   const { data: session } = useSession()
   const [reviews, setReviews] = useState([])
   const [reviewsTotal, setReviewsTotal] = useState(0)
@@ -68,15 +66,8 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
 
   const token = session?.id_token
 
-  const basePath =
-    entityType === "surf"  ? `/surf-reviews/${spotId}`  :
-    entityType === "kayak" ? `/kayak-reviews/${spotId}` :
-    `/reviews/${spotId}`
-
-  const deleteBasePath =
-    entityType === "surf"  ? `/surf-reviews`  :
-    entityType === "kayak" ? `/kayak-reviews` :
-    `/reviews`
+  const basePath = `/reviews/${spotId}`
+  const deleteBasePath = "/reviews"
 
   // El error se limpia recién al cargar bien: mientras reintenta, "Cargando..."
   // tiene prioridad sobre el aviso de error.
@@ -145,7 +136,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
         await api.patch(`${deleteBasePath}/${editingId}`, { rating, comment }, { token })
       } else {
         await api.post(basePath, { rating, comment }, { token })
-        trackEvent("post_review", { entity_type: entityType, rating, spot_id: spotId })
+        trackEvent("post_review", { entity_type: "spot", rating, spot_id: spotId })
       }
       closeForm()
       loadReviews()
@@ -430,7 +421,7 @@ export default function ReviewsSection({ spotId, entityType = "spot" }) {
                     <StarDisplay rating={review.rating} size={14} />
                     {!review.is_mine && (
                       <ReportButton
-                        targetKind={REVIEW_REPORT_KIND[entityType]}
+                        targetKind="review"
                         targetId={review.id}
                         what="esta reseña"
                         className="reviews-edit-btn"

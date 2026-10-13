@@ -89,8 +89,6 @@ class SpotDB(Base):
     kayak_service_detail = relationship("KayakServiceDetail", uselist=False, back_populates="spot", cascade="all, delete-orphan")
     routes = relationship("Route", back_populates="spot", cascade="all, delete-orphan")
     climbing_sectors = relationship("ClimbingSector", back_populates="spot", cascade="all, delete-orphan")
-    kayak_detail = relationship("KayakDetail", uselist=True, back_populates="spot", cascade="all, delete-orphan")
-    surf_schools = relationship("SurfSchool", uselist=True, back_populates="spot", cascade="all, delete-orphan")
     images = relationship("SpotImage", back_populates="spot", cascade="all, delete-orphan")
     favorites = relationship("Favorite", back_populates="spot", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="spot", cascade="all, delete-orphan")
@@ -98,7 +96,6 @@ class SpotDB(Base):
     change_requests = relationship("SpotChangeRequest", back_populates="spot", cascade="all, delete-orphan")
     contributions = relationship("Contribution", back_populates="spot", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="spot", cascade="all, delete-orphan")
-    operator_change_requests = relationship("OperatorChangeRequest", back_populates="spot", cascade="all, delete-orphan")
 
 
 class SpotChangeRequest(Base):
@@ -145,42 +142,6 @@ class SpotChangeRequest(Base):
     owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
 
     spot = relationship("SpotDB", back_populates="change_requests")
-
-
-class OperatorChangeRequest(Base):
-    """Pedido de cambio sobre una escuela de surf o un servicio de kayak ya
-    aprobado: lo mismo que SpotChangeRequest para los spots (nombre y fotos
-    a revisión; el resto se aplica al instante). Ver operators.py.
-
-    changes: {"name": {"from", "to"}, "photos": {"from": [...], "to": [...]}}
-    Las fotos son las 3 del operador (URLs); "to" es como quedarían.
-    """
-    __tablename__ = "operator_change_requests"
-    __table_args__ = (
-        Index(
-            "uq_operator_change_pending", "kind", "operator_id", unique=True,
-            postgresql_where=text("status = 'pending'"),
-            sqlite_where=text("status = 'pending'"),
-        ),
-    )
-
-    id            = Column(Integer, primary_key=True, index=True)
-    kind          = Column(String, nullable=False)   # "surf_school" | "kayak"
-    # Sin FK: apunta a surf_beach o kayak_details según kind. Al borrar el
-    # operador se cancelan sus pedidos (operators.cancel_pending_change).
-    operator_id   = Column(Integer, nullable=False)
-    spot_id       = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
-    requested_by  = Column(String, nullable=False)
-    # "pending" | "approved" | "rejected" | "cancelled"
-    status        = Column(String, nullable=False, default="pending", index=True)
-    changes       = Column(JSON, nullable=False)
-    reject_reason = Column(String, nullable=True)
-    created_at    = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    resolved_at   = Column(DateTime(timezone=True), nullable=True)
-    resolved_by   = Column(String, nullable=True)
-    owner_dismissed_at = Column(DateTime(timezone=True), nullable=True)
-
-    spot = relationship("SpotDB", back_populates="operator_change_requests")
 
 
 class Notification(Base):
@@ -402,7 +363,7 @@ class MotorhomeDetail(Base):
 class SurfDetail(Base):
     """Lo propio de una escuela de surf, que es un lugar de categoría Surf
     (fotos, reseñas, contacto, precio y temporada son los del lugar). Antes
-    la escuela colgaba de una playa y tenía todo aparte (SurfSchool)."""
+    la escuela colgaba de una playa y tenía todo aparte (tabla surf_beach)."""
     __tablename__ = "surf_details"
 
     id = Column(Integer, primary_key=True)
@@ -424,7 +385,7 @@ class SurfDetail(Base):
 
 class KayakServiceDetail(Base):
     """Lo propio de un servicio de kayak, que es un lugar de categoría Kayak
-    (como SurfDetail). Antes colgaba de una laguna (KayakDetail)."""
+    (como SurfDetail). Antes colgaba de una laguna (tabla kayak_details)."""
     __tablename__ = "kayak_service_details"
 
     id = Column(Integer, primary_key=True)
@@ -618,129 +579,6 @@ class RouteTrack(ReviewedContent, Base):
         return self.route.name if self.route else None
 
 
-class KayakDetail(ReviewedContent, Base):
-    __tablename__ = "kayak_details"
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
-    # Dueño propio de la escuela/servicio (quien lo sumó a la playa), distinto
-    # del dueño del lugar. NULL = lo maneja el admin (los de antes de esto).
-    owner_email = Column(String, nullable=True, index=True)
-    spot = relationship("SpotDB", back_populates="kayak_detail")
-    # Sin esto, borrar un spot con servicios de kayak fallaba: KayakReview
-    # tiene FK a kayak_details.id, y esa cascada no se disparaba sola
-    # porque no había ninguna relación (en ningún sentido) entre las dos.
-    reviews = relationship("KayakReview", back_populates="kayak_detail", cascade="all, delete-orphan")
-
-    name = Column(String)
-    water_type = Column(String)       # rio | lago | mar
-    difficulty = Column(String)       # facil | intermedio | dificil
-    duration = Column(Float)          # horas
-
-    kayak_type = Column(String)       # travesia | recreativo | rapido
-
-    # null = "no sé" (antes default=False: el "no sé" quedaba como "no").
-    rental_available = Column(Boolean, nullable=True)
-    includes_guide       = Column(Boolean, nullable=True)
-    includes_life_jacket = Column(Boolean, nullable=True)
-
-    # Lo que el visitante más pregunta: qué ofrece y cuánto sale. El precio
-    # es "desde" (pesos) con una nota libre ("por clase", "alquiler por hora").
-    description = Column(Text, nullable=True)
-    price_from = Column(Integer, nullable=True)
-    price_note = Column(String(60), nullable=True)
-
-    email = Column(String, nullable=True)
-    whatsapp = Column(String, nullable=True)
-    instagram = Column(String, nullable=True)
-    season_start = Column(Integer, nullable=True)
-    season_end = Column(Integer, nullable=True)
-    photo_1 = Column(String, nullable=True)
-    photo_2 = Column(String, nullable=True)
-    photo_3 = Column(String, nullable=True)
-
-    @property
-    def spot_name(self):
-        return self.spot.name if self.spot else None
-
-    @property
-    def spot_department(self):
-        return self.spot.department if self.spot else None
-
-    # La página pública lleva a la playa y a "Cómo llegar".
-    @property
-    def spot_slug(self):
-        return self.spot.slug if self.spot else None
-
-    @property
-    def spot_lat(self):
-        return self.spot.lat if self.spot else None
-
-    @property
-    def spot_lng(self):
-        return self.spot.lng if self.spot else None
-
-
-class SurfSchool(ReviewedContent, Base):
-    __tablename__ = "surf_beach"
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), index=True)
-    # Dueño propio de la escuela/servicio (quien lo sumó a la playa), distinto
-    # del dueño del lugar. NULL = lo maneja el admin (los de antes de esto).
-    owner_email = Column(String, nullable=True, index=True)
-    spot = relationship("SpotDB", back_populates="surf_schools")
-    # Idem KayakDetail.reviews — sin esto, borrar un spot con escuelas de
-    # surf fallaba por la FK de SurfReview a surf_beach.id sin cascada.
-    reviews = relationship("SurfReview", back_populates="surf_school", cascade="all, delete-orphan")
-
-    name = Column(String)
-    class_type = Column(String)        # grupal | privada | intensivo
-    duration = Column(Float)
-    equipment_include = Column(Boolean)
-    # Listas; null = "no sé" (quien lo cargó no lo sabía).
-    levels    = Column(JSON, nullable=True)     # principiante | intermedio | avanzado
-    languages = Column(JSON, nullable=True)     # espanol | ingles | portugues | otro
-
-    # Lo que el visitante más pregunta: qué ofrece y cuánto sale. El precio
-    # es "desde" (pesos) con una nota libre ("por clase", "alquiler por hora").
-    description = Column(Text, nullable=True)
-    price_from = Column(Integer, nullable=True)
-    price_note = Column(String(60), nullable=True)
-
-    email = Column(String, nullable=True)
-    whatsapp = Column(String, nullable=True)
-    instagram = Column(String, nullable=True)
-    season_start = Column(Integer, nullable=True)
-    season_end = Column(Integer, nullable=True)
-    photo_1 = Column(String, nullable=True)
-    photo_2 = Column(String, nullable=True)
-    photo_3 = Column(String, nullable=True)
-
-    @property
-    def spot_name(self):
-        return self.spot.name if self.spot else None
-
-    @property
-    def spot_department(self):
-        return self.spot.department if self.spot else None
-
-    # La página pública lleva a la playa y a "Cómo llegar".
-    @property
-    def spot_slug(self):
-        return self.spot.slug if self.spot else None
-
-    @property
-    def spot_lat(self):
-        return self.spot.lat if self.spot else None
-
-    @property
-    def spot_lng(self):
-        return self.spot.lng if self.spot else None
-
-
 class User(Base):
     __tablename__ = "users"
 
@@ -752,9 +590,6 @@ class User(Base):
     terms_accepted_at = Column(DateTime, nullable=True)
     favorites    = relationship("Favorite", back_populates="user")
     reviews      = relationship("Review", back_populates="user")
-    surf_reviews = relationship("SurfReview", back_populates="user")
-    kayak_reviews = relationship("KayakReview", back_populates="user")
-
 
 
 class SpotImage(Base):
@@ -767,7 +602,6 @@ class SpotImage(Base):
     order = Column(Integer, default=0)
 
     spot = relationship("SpotDB", back_populates="images")
-
 
 
 class Favorite(Base):
@@ -808,40 +642,6 @@ class Review(Base):
 
     spot = relationship("SpotDB", back_populates="reviews")
     user = relationship("User", back_populates="reviews")
-
-
-class SurfReview(Base):
-    __tablename__ = "surf_reviews"
-
-    __table_args__ = (UniqueConstraint("user_id", "surf_beach_id", name="uq_surfreview_user_beach"),)
-
-    id            = Column(Integer, primary_key=True)
-    surf_beach_id = Column(Integer, ForeignKey("surf_beach.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id       = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    rating        = Column(Integer, nullable=False)
-    comment       = Column(Text, nullable=True)
-    created_at    = Column(DateTime, server_default=func.now())
-    updated_at    = Column(DateTime(timezone=True), nullable=True)
-
-    surf_school = relationship("SurfSchool", back_populates="reviews")
-    user        = relationship("User", back_populates="surf_reviews")
-
-
-class KayakReview(Base):
-    __tablename__ = "kayak_reviews"
-
-    __table_args__ = (UniqueConstraint("user_id", "kayak_details_id", name="uq_kayakreview_user_detail"),)
-
-    id               = Column(Integer, primary_key=True)
-    kayak_details_id = Column(Integer, ForeignKey("kayak_details.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id          = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    rating           = Column(Integer, nullable=False)
-    comment          = Column(Text, nullable=True)
-    created_at       = Column(DateTime, server_default=func.now())
-    updated_at       = Column(DateTime(timezone=True), nullable=True)
-
-    kayak_detail = relationship("KayakDetail", back_populates="reviews")
-    user         = relationship("User", back_populates="kayak_reviews")
 
 
 class Experience(ReviewedContent, Base):

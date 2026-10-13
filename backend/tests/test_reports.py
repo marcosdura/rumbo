@@ -1,9 +1,9 @@
-"""Reportes: reportar spots, reseñas y escuelas; la cola del admin y sus
+"""Reportes: reportar spots y reseñas; la cola del admin y sus
 acciones (reports.py)."""
 import pytest
 
-from conftest import ADMIN, OTHER, OWNER, as_user, every
-from models import Report, Review, SpotDB, SurfReview, SurfSchool
+from conftest import ADMIN, OTHER, OWNER, as_user
+from models import Report, Review, SpotDB
 
 REPORTER = "reporta@test.com"
 
@@ -90,18 +90,10 @@ def test_el_autor_no_reporta_su_resenia(client, review):
     assert report(client, "review", review.id, user=OTHER).status_code == 400
 
 
-def test_reportar_una_escuela_y_su_resenia(client, db, make_spot, make_user):
-    beach = make_spot(name="Playa", category="Surf")
-    school = SurfSchool(spot_id=beach.id, name="Ola", owner_email="op@test.com")
-    db.add(school)
-    db.flush()
-    author = make_user(OTHER)
-    sr = SurfReview(surf_beach_id=school.id, user_id=author.id, rating=5, comment="spam")
-    db.add(sr)
-    db.commit()
-    assert report(client, "surf_school", school.id, "closed").status_code == 201
-    assert report(client, "surf_review", sr.id, "spam").status_code == 201
-    assert {r.spot_id for r in db.query(Report)} == {beach.id}
+@pytest.mark.parametrize("kind", ["surf_school", "kayak", "surf_review", "kayak_review"])
+def test_los_tipos_viejos_de_escuela_ya_no_se_reportan(client, kind):
+    # Las escuelas y los kayaks son lugares: se reportan como "spot".
+    assert report(client, kind, 1).status_code == 422
 
 
 def test_la_motivos_que_se_ofrecen(client):
@@ -155,18 +147,6 @@ def test_borrar_una_resenia_reportada(client, db, review):
     assert resolve(client, "review", review.id, "delete").status_code == 200
     assert db.query(Review).count() == 0
     assert db.query(Report).one().resolution == "deleted"
-
-
-def test_borrar_una_escuela_reportada_borra_sus_fotos(client, db, make_spot, destroyed):
-    beach = make_spot(name="Playa", category="Surf")
-    url = f"https://res.cloudinary.com/demo/image/upload/v1/rumbo/spots/{beach.id}/{1:016x}.jpg"
-    school = SurfSchool(spot_id=beach.id, name="Ola", owner_email="op@test.com", photo_1=url)
-    db.add(school)
-    db.commit()
-    report(client, "surf_school", school.id, "closed")
-    assert resolve(client, "surf_school", school.id, "delete").status_code == 200
-    assert every(db, SurfSchool).count() == 0
-    assert destroyed == [f"rumbo/spots/{beach.id}/{1:016x}"]
 
 
 def test_accion_que_no_aplica(client, make_spot):

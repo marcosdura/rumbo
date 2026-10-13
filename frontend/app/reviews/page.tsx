@@ -1,8 +1,7 @@
 "use client"
 
-// "Mis reseñas": las de lugares, escuelas de surf y servicios de kayak
-// (antes solo las de lugares), con el mismo armazón que las otras páginas
-// del menú del perfil. Cada una se edita o se borra acá.
+// "Mis reseñas", con el mismo armazón que las otras páginas del menú del
+// perfil. Cada una se edita o se borra acá.
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
@@ -12,11 +11,7 @@ import { api } from "@/lib/api"
 import { timeAgo } from "@/lib/notifications"
 import type { MyReview } from "@/lib/types"
 
-// A qué endpoint va cada una para editarla o borrarla.
-const BASE: Record<MyReview["kind"], string> = { spot: "/reviews", surf: "/surf-reviews", kayak: "/kayak-reviews" }
-const KIND_LABEL: Record<MyReview["kind"], string | null> = { spot: null, surf: "🏄 Escuela de surf", kayak: "🛶 Servicio de kayak" }
-
-const key = (r: Pick<MyReview, "kind" | "id">) => `${r.kind}-${r.id}`
+const key = (r: Pick<MyReview, "id">) => String(r.id)
 
 const button = {
   padding: "8px 16px", borderRadius: 12, fontSize: 13, fontFamily: "inherit", cursor: "pointer",
@@ -48,7 +43,7 @@ function MyReviews({ token, onCount }: { token: string; onCount: (n: number) => 
     setDeleting(true)
     setDeleteError(null)
     try {
-      await api.del(`${BASE[deleteTarget.kind]}/${deleteTarget.id}`, { token })
+      await api.del(`/reviews/${deleteTarget.id}`, { token })
       const next = (reviews ?? []).filter(r => key(r) !== key(deleteTarget))
       setReviews(next)
       onCount(next.length)
@@ -72,7 +67,7 @@ function MyReviews({ token, onCount }: { token: string; onCount: (n: number) => 
     setSaveError(false)
     try {
       const { data } = await api.patch<Pick<MyReview, "rating" | "comment" | "updated_at">>(
-        `${BASE[r.kind]}/${r.id}`, { rating: editRating, comment: editComment }, { token },
+        `/reviews/${r.id}`, { rating: editRating, comment: editComment }, { token },
       )
       setReviews(prev => prev?.map(x => (key(x) === key(r) ? { ...x, ...data } : x)) ?? null)
       setEditing(null)
@@ -127,7 +122,6 @@ function MyReviews({ token, onCount }: { token: string; onCount: (n: number) => 
           <div key={key(r)} className="my-review">
             <div className="my-review-head">
               <div>
-                {KIND_LABEL[r.kind] && <p style={{ fontSize: 11, color: "var(--muted-strong)", margin: "0 0 2px" }}>{KIND_LABEL[r.kind]}</p>}
                 {r.href ? <Link href={r.href} className="my-review-target">{name}</Link> : <span className="my-review-target">{name}</span>}
                 <p style={{ fontSize: 11, color: "var(--muted)", margin: "3px 0 0" }}>
                   {timeAgo(r.created_at)}{r.updated_at && " · editada"}

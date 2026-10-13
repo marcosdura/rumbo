@@ -43,20 +43,6 @@ for name in amenities_list:
 
 
 # FUNCIONES
-def create_surf_school(spot, name, class_type, duration, equipment_include):
-    existing = db.query(models.SurfSchool).filter_by(spot_id=spot.id).first()
-    if existing:
-        return existing
-    surf = models.SurfSchool(
-        spot_id=spot.id, name=name, class_type=class_type,
-        duration=duration, equipment_include=equipment_include
-    )
-    db.add(surf)
-    db.commit()
-    db.refresh(surf)
-    return surf
-
-
 def create_spot(name, description, department, category_name, lat=None, lng=None):
     existing = db.query(models.SpotDB).filter_by(name=name).first()
     if existing:
@@ -118,20 +104,6 @@ def create_climbing_route(sector, name, grade, bolts):
     )
     db.add(route)
     db.commit()
-
-
-def create_kayak(spot, name, water_type, difficulty, duration, kayak_type, rental_available):
-    existing = db.query(models.KayakDetail).filter_by(spot_id=spot.id).first()
-    if existing:
-        return existing
-    kayak = models.KayakDetail(
-        spot_id=spot.id, name=name, water_type=water_type, difficulty=difficulty,
-        duration=duration, kayak_type=kayak_type, rental_available=rental_available
-    )
-    db.add(kayak)
-    db.commit()
-    db.refresh(kayak)
-    return kayak
 
 
 def add_images_to_spot(spot, public_ids):
@@ -290,15 +262,6 @@ kayak1 = create_spot(
     "Rocha", "Kayak",
     lat=-34.77415916494965, lng=-54.561067676903
 )
-create_kayak(
-    kayak1,
-    name="Travesía Laguna Garzón",
-    water_type="lago",
-    difficulty="facil",
-    duration=2.5,
-    kayak_type="travesia",
-    rental_available=True
-)
 add_amenities(kayak1, ["Playa", "Estacionamiento", "Kayak", "Acceso a río/lago/mar"])
 add_images_to_spot(kayak1, [
     "LagunaGarzon1_dkvxzx",
@@ -315,17 +278,9 @@ surf1 = create_spot(
     "imponentes y sin acceso por ruta asfaltada, la Playa Sur (La Calavera) es la única "
     "del litoral uruguayo orientada al este-nordeste, lo que le otorga condiciones únicas "
     "cuando llega el swell del sudeste. Olas para todos los niveles, picos variables y casi "
-    "sin gente en el agua. Los lobos marinos de la colonia cercana son los locales del lineup. "
-    "Hay escuela de surf con clases individuales y grupales.",
+    "sin gente en el agua. Los lobos marinos de la colonia cercana son los locales del lineup.",
     "Rocha", "Surf",
     lat=-34.40234018046439, lng=-53.78392926811369
-)
-create_surf_school(
-    surf1,
-    name="Cabo Polonio Surf School",
-    class_type="grupal",
-    duration=2.0,
-    equipment_include=True
 )
 add_amenities(surf1, ["Playa", "Estacionamiento", "Acepta mascotas"])
 add_images_to_spot(surf1, [
@@ -343,13 +298,6 @@ surf2 = create_spot(
     "calidad, naturaleza y tranquilidad a la vez.",
     "Rocha", "Surf",
     lat=-33.97202834968614, lng=-53.53086361378421
-)
-create_surf_school(
-    surf2,
-    name="Santa Teresa Surf",
-    class_type="privada",
-    duration=1.5,
-    equipment_include=True
 )
 add_amenities(surf2, ["Playa", "Estacionamiento", "Acepta mascotas", "Ducha"])
 add_images_to_spot(surf2, [

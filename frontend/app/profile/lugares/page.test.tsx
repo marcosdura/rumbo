@@ -10,7 +10,6 @@ vi.mock("next-auth/react", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: (url: string) => pushed.push(url) }) }))
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/ui/LoadingScreen", () => ({ default: () => <p>pantalla de carga</p> }))
-vi.mock("../MyOperatorsCard", () => ({ default: () => <p>tus escuelas</p> }))
 vi.mock("@/lib/api", () => ({
   api: { get: (url: string) => Promise.resolve({ data: responses[url] ?? [] }) },
 }))
@@ -27,7 +26,7 @@ const mySpot = (id: number, name: string) => ({ id, name, images: [], is_approve
 const flush = () => act(() => Promise.resolve())
 
 describe("Lugares que administrás", () => {
-  it("tus lugares, tus escuelas y los que sugeriste, sin repetir el sugerido en revisión", async () => {
+  it("tus lugares y los que sugeriste, sin repetir el sugerido en revisión", async () => {
     responses = {
       "/spots/mine": [mySpot(1, "Mi camping"), mySpot(2, "Sugerido en revisión")],
       "/me/suggested": [
@@ -39,7 +38,6 @@ describe("Lugares que administrás", () => {
     await flush()
     expect(screen.getByRole("heading", { name: "Lugares que administrás" })).toBeTruthy()
     expect(screen.getByText("Mi camping")).toBeTruthy()
-    expect(screen.getByText("tus escuelas")).toBeTruthy()
     expect(screen.getAllByText("Sugerido en revisión")).toHaveLength(1)
     expect(screen.getByRole("link", { name: "Ver →" }).getAttribute("href")).toBe("/spots/sugerido-publicado")
     expect(screen.getByRole("link", { name: "← Volver al perfil" }).getAttribute("href")).toBe("/profile")

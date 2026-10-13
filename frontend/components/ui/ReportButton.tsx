@@ -1,6 +1,6 @@
 "use client"
 
-// "Reportar" algo publicado: un spot, una reseña o una escuela/kayak
+// "Reportar" algo publicado: un spot o una reseña
 // (backend/reports.py). Sin sesión pide el login; al enviar solo muestra un
 // "gracias" — quien reporta no ve qué decide el admin.
 import { useState, type CSSProperties } from "react"
@@ -9,7 +9,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import { api, ApiError } from "@/lib/api"
 
-export type ReportTargetKind = "spot" | "review" | "surf_review" | "kayak_review" | "surf_school" | "kayak"
+export type ReportTargetKind = "spot" | "review"
 
 type Reason = { value: string; label: string }
 

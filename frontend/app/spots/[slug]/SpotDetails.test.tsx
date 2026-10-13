@@ -34,7 +34,7 @@ const { default: SpotDetail } = await import("./SpotDetails")
 function spot(category: string, extra: Record<string, unknown> = {}) {
   return {
     id: 12, name: "Cerro Arequita", slug: "cerro-arequita", description: "", department: "Lavalleja",
-    category: { name: category }, images: [], routes: [], climbing_sectors: [], kayak_detail: [], surf_schools: [],
+    category: { name: category }, images: [], routes: [], climbing_sectors: [],
     ...extra,
   }
 }

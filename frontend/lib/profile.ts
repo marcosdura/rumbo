@@ -68,7 +68,7 @@ export function menuRows(s: ProfileSummary): ProfileMenuRow[] {
     {
       href: "/profile/lugares", icon: "🏕️", title: "Lugares que administrás", count: places,
       badge: s.managed_rejected ? { variant: "red", text: plural(s.managed_rejected, "rechazado", "rechazados") } : null,
-      hint: places ? "Tus lugares, tus escuelas y los que sugeriste" : "Todavía no cargaste ningún lugar",
+      hint: places ? "Tus lugares y los que sugeriste" : "Todavía no cargaste ningún lugar",
     },
     {
       href: "/profile/aportes", icon: "➕", title: "Mis aportes", count: s.contributions,

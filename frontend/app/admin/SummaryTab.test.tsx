@@ -9,7 +9,7 @@ const NOW = new Date("2026-10-12T12:00:00Z").getTime()
 const summary = (extra: Partial<AdminSummary> = {}): AdminSummary => ({
   queues: {
     new_spots: queue(2, "2026-10-09T12:00:00Z"), changes: queue(0), contributions: queue(1, "2026-10-12T10:00:00Z"),
-    operator_changes: queue(0), reports: queue(0), claims: queue(0),
+    reports: queue(0), claims: queue(0),
   },
   metrics: { users: pair(5, 2), reviews: pair(3, 3), favorites: pair(1, 4), views: pair(120, 80), new_spots: pair(0, 0) },
   views_by_day: [{ day: "2026-10-11", count: 4 }, { day: "2026-10-12", count: 6 }],

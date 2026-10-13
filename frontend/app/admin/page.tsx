@@ -11,13 +11,11 @@ import { api, ApiError } from "@/lib/api"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 import { spotStatus, ADMIN_MODES, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
 import SummaryTab, { type AdminSummary } from "./SummaryTab"
-import OperatorsTab from "./OperatorsTab"
 import SpotsTab from "./SpotsTab"
 import PhotosTab from "./PhotosTab"
 import DeactivatedTab from "./DeactivatedTab"
 import ChangesTab from "./ChangesTab"
 import ContributionsList from "./ContributionsList"
-import OperatorChangesList, { type AdminOperatorChange } from "./OperatorChangesList"
 import ReportsTab, { groupKey, type ReportGroup } from "./ReportsTab"
 import ClaimsTab, { type AdminClaim } from "./ClaimsTab"
 import type { AdminContribution } from "@/lib/contributions"
@@ -72,12 +70,6 @@ export default function AdminPage() {
   const [contributionsError, setContributionsError] = useState<string | null>(null)
   const [contributionActionLoading, setContributionActionLoading] = useState<number | null>(null)
   const [contributionActionErrors, setContributionActionErrors] = useState<Record<number, string>>({})
-  // Pedidos de cambio de escuelas de surf y servicios de kayak.
-  const [operatorChanges, setOperatorChanges] = useState<AdminOperatorChange[]>([])
-  const [operatorChangesLoading, setOperatorChangesLoading] = useState(true)
-  const [operatorChangesError, setOperatorChangesError] = useState<string | null>(null)
-  const [operatorActionLoading, setOperatorActionLoading] = useState<number | null>(null)
-  const [operatorActionErrors, setOperatorActionErrors] = useState<Record<number, string>>({})
   // Reportes abiertos (pestaña "Reportes"); acá solo se cargan, para el
   // contador. Las acciones las maneja ReportsTab.
   const [reportGroups, setReportGroups] = useState<ReportGroup[]>([])
@@ -89,7 +81,7 @@ export default function AdminPage() {
   const [claimsError, setClaimsError] = useState<string | null>(null)
   // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
   // pedido de cambio de escuela.
-  type RejectType = "change" | "contribution" | "operator" | "spot"
+  type RejectType = "change" | "contribution" | "spot"
   const [rejecting, setRejecting] = useState<{ type: RejectType; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
@@ -150,10 +142,6 @@ export default function AdminPage() {
       .then(({ data }) => setContributions(Array.isArray(data) ? data : []))
       .catch(() => setContributionsError("Error al cargar los aportes pendientes."))
       .finally(() => setContributionsLoading(false))
-    api.get<AdminOperatorChange[]>("/admin/operator-change-requests", { token })
-      .then(({ data }) => setOperatorChanges(Array.isArray(data) ? data : []))
-      .catch(() => setOperatorChangesError("Error al cargar los cambios de escuelas."))
-      .finally(() => setOperatorChangesLoading(false))
   }, [token, opened.cambios])
 
   useEffect(() => {
@@ -220,28 +208,13 @@ export default function AdminPage() {
     }
   }
 
-  async function handleApproveOperatorChange(id: number) {
-    setOperatorActionLoading(id)
-    setOperatorActionErrors(prev => withError(prev, id, null))
-    try {
-      await api.post(`/admin/operator-change-requests/${id}/approve`, undefined, { token })
-      setOperatorChanges(prev => prev.filter(c => c.id !== id))
-    } catch (e) {
-      setOperatorActionErrors(prev => withError(prev, id,
-        e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo."))
-    } finally {
-      setOperatorActionLoading(null)
-    }
-  }
-
   const REJECT_URL: Record<RejectType, (id: number) => string> = {
     change: id => `/admin/change-requests/${id}/reject`,
     contribution: id => `/admin/contributions/${id}/reject`,
-    operator: id => `/admin/operator-change-requests/${id}/reject`,
     spot: id => `/admin/spots/${id}/reject`,
   }
   const LOADING_SETTER: Record<RejectType, (v: number | null) => void> = {
-    change: setChangeActionLoading, contribution: setContributionActionLoading, operator: setOperatorActionLoading,
+    change: setChangeActionLoading, contribution: setContributionActionLoading,
     spot: setActionLoading,
   }
 
@@ -267,7 +240,6 @@ export default function AdminPage() {
         // Despublicar vuelca su pedido de cambio pendiente sobre el spot.
         setChangeRequests(prev => prev.filter(r => r.spot_id !== id))
       }
-      else setOperatorChanges(prev => prev.filter(c => c.id !== id))
       setRejecting(null)
     } catch (e) {
       setRejectError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo rechazar. Intentá de nuevo.")
@@ -405,7 +377,7 @@ export default function AdminPage() {
 
   const pending = activeSpots.filter(s => spotStatus(s) === "pending").length
   const rejected = activeSpots.filter(s => spotStatus(s) === "rejected").length
-  const pendingReviews = changeRequests.length + contributions.length + operatorChanges.length
+  const pendingReviews = changeRequests.length + contributions.length
   const rejectingSpot = rejecting?.type === "spot" ? spots.find(s => s.id === rejecting.id) ?? null : null
   // "Lugares nuevos" es la lista fija en pendientes.
   const shownFilter: SpotFilter = mode === "nuevos" ? "pending" : filter
@@ -418,8 +390,8 @@ export default function AdminPage() {
   const known = (key: keyof typeof opened, isLoading: boolean) => opened[key] && !isLoading
   const counts: Partial<Record<AdminMode, number | undefined>> = {
     nuevos: known("spots", loading) ? pending : q?.new_spots.count,
-    cambios: known("cambios", changesLoading || contributionsLoading || operatorChangesLoading)
-      ? pendingReviews : q && q.changes.count + q.contributions.count + q.operator_changes.count,
+    cambios: known("cambios", changesLoading || contributionsLoading)
+      ? pendingReviews : q && q.changes.count + q.contributions.count,
     reportes: known("reportes", reportsLoading) ? reportGroups.length : q?.reports.count,
     reclamos: known("reclamos", claimsLoading) ? claims.length : q?.claims.count,
     "cuentas-eliminadas": known("spots", loading) ? deactivatedSpots.length : undefined,
@@ -433,7 +405,6 @@ export default function AdminPage() {
     ] },
     { title: "Gestión", tabs: [
       { id: "lugares", label: "🗺️ Lugares" },
-      { id: "escuelas", label: "🏄 Escuelas y servicios" },
       { id: "fotos", label: "📷 Fotos" },
       { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
     ] },
@@ -574,18 +545,6 @@ export default function AdminPage() {
           />
         )}
 
-        {mode === "cambios" && (
-          <OperatorChangesList
-            changes={operatorChanges}
-            loadError={operatorChangesError}
-            loading={operatorChangesLoading}
-            actionLoading={operatorActionLoading}
-            actionErrors={operatorActionErrors}
-            onApprove={handleApproveOperatorChange}
-            onRejectRequest={id => openReject("operator", id)}
-          />
-        )}
-
         {mode === "reportes" && (
           <ReportsTab
             groups={reportGroups}
@@ -613,8 +572,6 @@ export default function AdminPage() {
             }}
           />
         )}
-
-        {mode === "escuelas" && <OperatorsTab token={token} />}
 
         {mode === "fotos" && (
           <PhotosTab
@@ -687,7 +644,7 @@ export default function AdminPage() {
             : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
         confirmLabel={rejectingSpot?.is_approved ? "Despublicar" : "Rechazar"}
         loading={rejecting !== null && {
-          change: changeActionLoading, contribution: contributionActionLoading, operator: operatorActionLoading,
+          change: changeActionLoading, contribution: contributionActionLoading,
           spot: actionLoading,
         }[rejecting.type] === rejecting.id}
         loadingLabel="Rechazando..."

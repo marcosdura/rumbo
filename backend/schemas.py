@@ -80,33 +80,6 @@ class ChangeRequestReject(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 
 
-class OperatorEditRequest(BaseModel):
-    """PATCH /operators/{kind}/{id}. Solo se toca lo que viene. Los campos
-    que no correspondan al tipo (por ejemplo water_type en una escuela de
-    surf) se ignoran. photos: cómo quedan las 3 fotos (URLs, en orden)."""
-    name: str | None = Field(default=None, max_length=200)
-    class_type: Optional[str] = Field(default=None, max_length=50)
-    equipment_include: Optional[bool] = None
-    water_type: Optional[str] = Field(default=None, max_length=50)
-    difficulty: Optional[str] = Field(default=None, max_length=50)
-    kayak_type: Optional[str] = Field(default=None, max_length=50)
-    rental_available: Optional[bool] = None
-    includes_guide: Optional[bool] = None
-    includes_life_jacket: Optional[bool] = None
-    levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
-    languages: Optional[list[Language]] = Field(default=None, max_length=4)
-    duration: Optional[float] = None
-    description: Optional[str] = Field(default=None, max_length=2000)
-    price_from: Optional[int] = Field(default=None, ge=0)
-    price_note: Optional[str] = Field(default=None, max_length=60)
-    email: Optional[str] = Field(default=None, max_length=254)
-    whatsapp: Optional[str] = Field(default=None, max_length=30)
-    instagram: Optional[str] = Field(default=None, max_length=100)
-    season_start: Optional[int] = None
-    season_end: Optional[int] = None
-    photos: Optional[list[str]] = Field(default=None, max_length=3)
-
-
 class SpotReject(BaseModel):
     # Obligatorio: es lo que el dueño necesita para saber qué corregir.
     reason: str = Field(min_length=1, max_length=500)
@@ -298,88 +271,6 @@ class ClimbingRouteResponse(ClimbingRouteBase):
         from_attributes = True
 
 
-# -------- KAYAK --------
-class KayakDetail(BaseModel):
-    name: str = Field(max_length=200)
-    water_type: Optional[str] = Field(default=None, max_length=50)
-    difficulty: Optional[str] = Field(default=None, max_length=50)
-    duration: Optional[float] = None
-    kayak_type: Optional[str] = Field(default=None, max_length=50)
-    rental_available: Optional[bool] = None
-    # None = "no sé".
-    includes_guide: Optional[bool] = None
-    includes_life_jacket: Optional[bool] = None
-    description: Optional[str] = Field(default=None, max_length=2000)
-    price_from: Optional[int] = Field(default=None, ge=0)
-    price_note: Optional[str] = Field(default=None, max_length=60)
-    email: Optional[str] = Field(default=None, max_length=254)
-    whatsapp: Optional[str] = Field(default=None, max_length=30)
-    instagram: Optional[str] = Field(default=None, max_length=100)
-    season_start: Optional[int] = None
-    season_end: Optional[int] = None
-    photo_1: Optional[str] = Field(default=None, max_length=500)
-    photo_2: Optional[str] = Field(default=None, max_length=500)
-    photo_3: Optional[str] = Field(default=None, max_length=500)
-
-class KayakDetailCreate(KayakDetail):
-    spot_id: int
-
-class KayakDetailResponse(KayakDetail):
-    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
-    is_approved: bool = True
-    id: int
-    spot_id: Optional[int] = None
-    spot_name: Optional[str] = None
-    spot_department: Optional[str] = None
-    spot_slug: Optional[str] = None
-    spot_lat: Optional[float] = None
-    spot_lng: Optional[float] = None
-
-    class Config:
-        from_attributes = True
-
-
-# -------- SURF --------
-class SurfSchool(BaseModel):
-    name: str = Field(max_length=200)
-    duration: Optional[float] = None
-    class_type: Optional[str] = Field(default=None, max_length=50)
-    equipment_include: Optional[bool] = None
-    # None = "no sé".
-    levels: Optional[list[SurfLevel]] = Field(default=None, max_length=3)
-    languages: Optional[list[Language]] = Field(default=None, max_length=4)
-    description: Optional[str] = Field(default=None, max_length=2000)
-    price_from: Optional[int] = Field(default=None, ge=0)
-    price_note: Optional[str] = Field(default=None, max_length=60)
-    email: Optional[str] = Field(default=None, max_length=254)
-    whatsapp: Optional[str] = Field(default=None, max_length=30)
-    instagram: Optional[str] = Field(default=None, max_length=100)
-    season_start: Optional[int] = None
-    season_end: Optional[int] = None
-    photo_1: Optional[str] = Field(default=None, max_length=500)
-    photo_2: Optional[str] = Field(default=None, max_length=500)
-    photo_3: Optional[str] = Field(default=None, max_length=500)
-
-
-class SurfSchoolCreate(SurfSchool):
-    spot_id: int
-
-
-class SurfSchoolResponse(SurfSchool):
-    # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
-    is_approved: bool = True
-    id: int
-    spot_id: Optional[int] = None
-    spot_name: Optional[str] = None
-    spot_department: Optional[str] = None
-    spot_slug: Optional[str] = None
-    spot_lat: Optional[float] = None
-    spot_lng: Optional[float] = None
-
-    class Config:
-        from_attributes = True
-
-
 # -------- SPOT IMAGE --------
 class SpotImageResponse(BaseModel):
     id: int
@@ -545,8 +436,6 @@ class SpotResponse(BaseModel):
     images: list[SpotImageResponse] = []
     experiences: list[ExperienceResponse] = []
     climbing_sectors: list[ClimbingSectorResponse] = []
-    kayak_detail: list[KayakDetailResponse] = []
-    surf_schools: list[SurfSchoolResponse] = []
     average_rating: float | None = None
     review_count: int = 0
     owner_email: str | None = None
@@ -590,8 +479,6 @@ class ReviewCreate(BaseModel):
     comment: str | None = Field(default=None, max_length=1000)
 
 
-# Compartida por reviews de spots, surf y kayak — las tres eran idénticas
-# campo a campo (ReviewResponse/SurfReviewResponse/KayakReviewResponse).
 class ReviewResponse(BaseModel):
     id: int
     rating: int

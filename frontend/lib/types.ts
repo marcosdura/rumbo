@@ -1,43 +1,6 @@
 // Respuestas públicas del backend que usan las páginas del servidor
 // (metadata, JSON-LD y la página en sí). Solo los campos que se leen.
 
-// GET /{surf,kayak}-reviews/{id}/summary
-export type ReviewSummary = { average: number | null; total: number }
-
-// Lo común de GET /surfschool/{id} y GET /kayak/{id} (backend/schemas.py).
-export type PublicOperatorBase = {
-  id: number
-  name: string
-  duration: number | null
-  email: string | null; whatsapp: string | null; instagram: string | null
-  season_start: number | null; season_end: number | null
-  photo_1: string | null; photo_2: string | null; photo_3: string | null
-  spot_id: number | null; spot_name: string | null; spot_department: string | null
-  // La playa o laguna: para llevar a su página y a "Cómo llegar".
-  spot_slug: string | null; spot_lat: number | null; spot_lng: number | null
-  // Qué ofrece y cuánto sale: precio "desde" (pesos) con una nota libre.
-  description: string | null
-  price_from: number | null; price_note: string | null
-}
-
-export type PublicSurfSchool = PublicOperatorBase & {
-  class_type: string | null
-  equipment_include: boolean | null
-  // null = no sé.
-  levels: string[] | null
-  languages: string[] | null
-}
-
-export type PublicKayak = PublicOperatorBase & {
-  water_type: string | null
-  difficulty: string | null
-  kayak_type: string | null
-  rental_available: boolean | null
-  // null = no sé.
-  includes_guide: boolean | null
-  includes_life_jacket: boolean | null
-}
-
 // GET /spots/by-slug/{slug}. SpotDetails (.jsx) usa muchos más campos.
 export type PublicSpot = {
   id: number
@@ -88,10 +51,10 @@ export type MySpotSummary = SpotListItem & {
 }
 
 // GET /reviews/user/me
-// GET /reviews/user/me: de un lugar, una escuela de surf o un servicio de
-// kayak. `href` lleva a las reseñas de esa página.
+// GET /reviews/user/me: `href` lleva a las reseñas del lugar (las escuelas
+// de surf y los servicios de kayak también son lugares).
 export type MyReview = {
-  kind: "spot" | "surf" | "kayak"
+  kind: "spot"
   id: number
   target_name: string | null
   href: string | null

@@ -12,7 +12,7 @@ type SpotRef = { id: number; name: string; slug: string | null }
 type Missing = { count: number; spots: SpotRef[] }
 
 export type AdminSummary = {
-  queues: Record<"new_spots" | "changes" | "contributions" | "operator_changes" | "reports" | "claims", Queue>
+  queues: Record<"new_spots" | "changes" | "contributions" | "reports" | "claims", Queue>
   metrics: Record<"users" | "reviews" | "favorites" | "views" | "new_spots", Pair>
   views_by_day: { day: string; count: number }[]
   top_viewed: (SpotRef & { count: number })[]
@@ -25,7 +25,6 @@ export const QUEUES: { key: keyof AdminSummary["queues"]; label: string; tab: Ad
   { key: "new_spots", label: "Lugares nuevos", tab: "nuevos" },
   { key: "changes", label: "Cambios de lugares", tab: "cambios" },
   { key: "contributions", label: "Aportes de la comunidad", tab: "cambios" },
-  { key: "operator_changes", label: "Cambios de escuelas y servicios", tab: "cambios" },
   { key: "reports", label: "Reportes", tab: "reportes" },
   { key: "claims", label: "Pedidos de responsables", tab: "reclamos" },
 ]

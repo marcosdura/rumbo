@@ -26,20 +26,19 @@ describe("robots y sitemap", () => {
     expect(all.some(u => u.includes("/agregar-lugar"))).toBe(false)
   })
 
-  it("incluye los lugares, las rutas y los sectores (antes no estaban), las escuelas y los kayaks", async () => {
+  it("incluye los lugares (también escuelas y kayaks), las rutas y los sectores (antes no estaban)", async () => {
     lists = {
-      "/spots/ids": [{ id: 1, slug: "cerro" }],
+      "/spots/ids": [{ id: 1, slug: "cerro" }, { id: 4, slug: "escuela-ola" }],
       "/sitemap/trails": [{ kind: "rutas", spot_slug: "cerro", slug: "cumbre" }, { kind: "sectores", spot_slug: "roca", slug: "norte" }],
-      "/surfschool/ids": [{ id: 4, name: "Escuela Ola" }],
-      "/kayak/ids": [{ id: 7, name: "Kayak Sur" }],
     }
     expect(await urls()).toEqual(expect.arrayContaining([
       "https://rumboapp.uy/spots/cerro",
       "https://rumboapp.uy/spots/cerro/rutas/cumbre",
       "https://rumboapp.uy/spots/roca/sectores/norte",
-      "https://rumboapp.uy/surf/escuela-ola-4",
-      "https://rumboapp.uy/kayak/kayak-sur-7",
+      "https://rumboapp.uy/spots/escuela-ola",
     ]))
+    // Las direcciones viejas de escuelas y kayaks ya no van (redirigen).
+    expect((await urls()).some(u => u.includes("/surf/") || u.includes("/kayak/"))).toBe(false)
   })
 
   it("si una lista falla, el resto sale igual", async () => {

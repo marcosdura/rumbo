@@ -24,7 +24,7 @@ def test_alquiler_no_pasa_a_no_se_y_si_queda():
                 c.execute(text("INSERT INTO kayak_details (id, spot_id, name, rental_available, is_approved) VALUES (:id, 1, 'K', :r, 1)"),
                           {"id": kid, "r": rental})
 
-        command.upgrade(alembic_config(url), "head")
+        command.upgrade(alembic_config(url), "0017")
         with engine.connect() as c:
             rows = c.execute(text("SELECT id, rental_available FROM kayak_details ORDER BY id")).all()
         engine.dispose()

@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from models import User, Favorite, Review, SurfReview, KayakReview, SpotDB, SpotChangeRequest
+from models import User, Favorite, Review, SpotDB, SpotChangeRequest
 from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
 from spot_changes import close_request, request_photos, destroy_cloudinary_images
 import contributions
-import operators
-from models import OperatorChangeRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -38,8 +36,6 @@ async def delete_account(
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    db.query(KayakReview).filter(KayakReview.user_id == user_id).delete()
-    db.query(SurfReview).filter(SurfReview.user_id == user_id).delete()
     db.query(Review).filter(Review.user_id == user_id).delete()
     db.query(Favorite).filter(Favorite.user_id == user_id).delete()
 
@@ -67,9 +63,6 @@ async def delete_account(
     # Sus aportes pendientes (también sectores sugeridos en spots ajenos) se
     # retiran: nadie va a ver el resultado.
     orphan_photos += contributions.withdraw_all_by_author(db, db_user.email)
-    # Y los pedidos de cambio pendientes de sus escuelas de surf / kayak.
-    for change in db.query(OperatorChangeRequest).filter_by(requested_by=db_user.email, status="pending"):
-        orphan_photos += operators.discard_change(change, "cancelled", by=db_user.email)
 
     db.delete(db_user)
     db.commit()

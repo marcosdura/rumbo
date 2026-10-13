@@ -30,7 +30,7 @@ def test_copia_mascotas_y_senial_a_los_lugares():
             c.execute(text("INSERT INTO spot_amenities (spot_id, amenity_id) VALUES (3, 23)"))
             # 4: nada
 
-        command.upgrade(alembic_config(url), "head")
+        command.upgrade(alembic_config(url), "0013")
         with engine.connect() as c:
             rows = c.execute(text("SELECT id, pets_allowed, cell_signal, reservation_required FROM spots ORDER BY id")).all()
         engine.dispose()

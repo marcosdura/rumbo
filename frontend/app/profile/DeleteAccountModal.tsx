@@ -42,7 +42,7 @@ export default function DeleteAccountModal({
 
         <ul style={{ fontSize: 14, color: "#4a4a46", lineHeight: 1.8, margin: "0 0 20px", paddingLeft: 20 }}>
           <li>Tu perfil y datos personales serán eliminados</li>
-          <li>Todas tus reseñas de lugares, escuelas de surf y servicios de kayak se van a eliminar</li>
+          <li>Todas tus reseñas se van a eliminar</li>
           <li>No podrás recuperar esta información</li>
         </ul>
 

@@ -27,7 +27,6 @@ ADMIN_TABS = {
     "admin_spot_resubmitted": "nuevos",
     "admin_change_request": "cambios",
     "admin_contribution": "cambios",
-    "admin_operator_change": "cambios",
     "admin_report": "reportes",
     "admin_claim": "reclamos",
 }

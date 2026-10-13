@@ -42,8 +42,6 @@ beforeEach(() => {
       ] },
       { id: 32, name: "Sector sugerido", type: null, is_approved: false, routes: [] },
     ],
-    surf_schools: [{ id: 51, name: "Escuela Ola", is_approved: false }],
-    kayaks: [],
   }
   postResponse = { is_approved: false }
   posts = []
@@ -159,13 +157,6 @@ describe("ContentTab según el tipo de lugar", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Eliminar La Diagonal" }))
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }))
     await waitFor(() => expect(deletes).toEqual(["/climbingroutes/41"]))
-  })
-
-  it("surf: ya no lista escuelas colgadas del lugar (cada escuela es un lugar con su propio panel)", async () => {
-    renderTab(false, "Surf")
-    await screen.findByText(/./)
-    expect(screen.queryByText("Escuela Ola")).toBeNull()
-    expect(screen.queryByRole("link", { name: "＋ Agregar una escuela" })).toBeNull()
   })
 })
 

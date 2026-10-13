@@ -3,9 +3,9 @@ import { KIND_LABELS, itemDetails, itemPhotos } from "./contributions"
 
 describe("itemDetails", () => {
   it("muestra solo los campos cargados, con su etiqueta", () => {
-    const item = { name: "Escuela Ola", class_type: "grupal", duration: null, email: "", whatsapp: "099" }
-    expect(itemDetails("surf_school", item)).toEqual([
-      ["Nombre", "Escuela Ola"], ["Tipo de clase", "grupal"], ["WhatsApp", "099"],
+    const item = { name: "La Diagonal", grade: "6a", type: null, description: "", bolts: 8 }
+    expect(itemDetails("climbing_route", item)).toEqual([
+      ["Nombre", "La Diagonal"], ["Grado", "6a"], ["Chapas", "8"],
     ])
   })
 
@@ -16,13 +16,18 @@ describe("itemDetails", () => {
   })
 
   it("sin elemento no hay nada que mostrar", () => {
-    expect(itemDetails("kayak", null)).toEqual([])
+    expect(itemDetails("trekking_route", null)).toEqual([])
+  })
+
+  it("un aporte viejo de escuela (ya no se crean) tiene nombre y nada más", () => {
+    expect(KIND_LABELS.surf_school).toBe("Escuela de surf")
+    expect(itemDetails("surf_school", { name: "Escuela Ola" })).toEqual([])
   })
 })
 
 describe("itemPhotos", () => {
-  it("devuelve las fotos cargadas", () => {
-    expect(itemPhotos({ photo_1: "https://a", photo_2: null, photo_3: "https://c" })).toEqual(["https://a", "https://c"])
+  it("sin foto no hay nada (las URLs viejas de escuelas ya no se muestran)", () => {
+    expect(itemPhotos({ photo_1: "https://a" })).toEqual([])
     expect(itemPhotos({ name: "sin fotos" })).toEqual([])
     expect(itemPhotos(null)).toEqual([])
   })

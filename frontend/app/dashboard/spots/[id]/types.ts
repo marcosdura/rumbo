@@ -73,14 +73,11 @@ export type OwnedRoute = {
   route_type?: string | null; description?: string | null
 }
 export type OwnedSector = { id: number; name: string; type: string | null; is_approved: boolean; routes: OwnedRoute[]; photos?: OwnedPhoto[] }
-export type OwnedOperator = { id: number; name: string; is_approved: boolean }
 export type OwnerContent = {
   experiences: OwnedExperience[]
   glamping_units: OwnedGlampingUnit[]
   routes: OwnedRoute[]
   sectors: OwnedSector[]
-  surf_schools: OwnedOperator[]
-  kayaks: OwnedOperator[]
   // Para corregirlos desde el panel (null = todavía no se cargaron).
   trekking_detail?: Record<string, boolean | null> | null
   motorhome_detail?: Record<string, unknown> | null

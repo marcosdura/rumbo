@@ -1,12 +1,11 @@
 """Lo del usuario para /profile: el resumen y los números del menú, sus
-pedidos (cambios en sus lugares y escuelas, y pedidos para hacerse cargo de
+pedidos (cambios en sus lugares, y pedidos para hacerse cargo de
 un lugar) y los lugares que sugirió como visitante."""
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-import operators
 from auth import get_current_user_required, is_admin
 from database import get_db
 from models import Contribution, Favorite, SpotClaim, SpotDB, User
@@ -22,14 +21,6 @@ def managed_spots(db: Session, user: dict) -> list[SpotDB]:
     pasó al admin (playa, o sugerido como visitante) ya no es suyo."""
     rows = db.query(SpotDB).filter(SpotDB.owner_email == user.get("email")).order_by(SpotDB.created_at.desc()).all()
     return [s for s in rows if is_admin(user) or not (is_admin_managed(s) and s.is_approved)]
-
-
-def owned_operators(db: Session, email: str) -> list[tuple[str, object]]:
-    found = []
-    for kind, model in operators.OPERATOR_MODELS.items():
-        rows = db.query(model).execution_options(include_pending=True).filter(model.owner_email == email).order_by(model.id).all()
-        found += [(kind, op) for op in rows]
-    return found
 
 
 def _iso(dt):
@@ -53,17 +44,6 @@ def my_requests(db: Session, user: dict) -> list[dict]:
                 "reject_reason": r.reject_reason,
                 "created_at": _iso(r.created_at), "resolved_at": _iso(r.resolved_at),
                 "dismiss_url": f"/spots/{spot.id}/change-request/dismiss",
-            })
-    for kind, op in owned_operators(db, email):
-        r = operators.owner_visible_change(db, kind, op.id)
-        if r:
-            items.append({
-                "kind": "operator_change", "id": r.id, "status": r.status,
-                "fields": sorted((r.changes or {}).keys()),
-                "target": {"name": op.name, "href": f"/dashboard/operadores/{kind}/{op.id}"},
-                "reject_reason": r.reject_reason,
-                "created_at": _iso(r.created_at), "resolved_at": _iso(r.resolved_at),
-                "dismiss_url": f"/operators/{kind}/{op.id}/change-request/dismiss",
             })
     claims = (
         db.query(SpotClaim).options(joinedload(SpotClaim.spot))
@@ -126,11 +106,10 @@ def summary(db: Session = Depends(get_db), user: dict = Depends(get_current_user
     return {
         "member_since": _iso(db_user.created_at) if db_user else None,
         "favorites": db.query(Favorite).filter(Favorite.user_id == sub).count(),
-        # Las de lugares, escuelas de surf y servicios de kayak.
         "reviews": my_reviews_count(db, sub),
         # Un lugar sugerido en revisión es suyo mientras se revisa, pero se
         # cuenta (y se muestra) en "sugeridos", no dos veces.
-        "managed": sum(1 for s in spots if s.suggested_by_email != email) + len(owned_operators(db, email)),
+        "managed": sum(1 for s in spots if s.suggested_by_email != email),
         "managed_rejected": sum(1 for s in spots if not s.is_approved and s.rejected_at),
         "suggested": db.query(SpotDB).filter(SpotDB.suggested_by_email == email, SpotDB.owner_deleted_at.is_(None)).count(),
         "contributions": len(contributions),

@@ -3,13 +3,10 @@ queda pendiente, y aprobar / rechazar / retirar."""
 import pytest
 
 from conftest import ADMIN, OTHER, OWNER, as_user, every
-from contributions import public_id_from_url
 from models import (
     Category, ClimbingRoute, ClimbingSector, Contribution, Experience, GlampingDetail,
-    KayakDetail, Route, SpotCategory, SurfSchool,
+    Route, SpotCategory,
 )
-
-CLOUD_URL = "https://res.cloudinary.com/demo/image/upload/v1712/rumbo/spots/{spot}/{n:016x}.jpg"
 
 
 @pytest.fixture
@@ -41,17 +38,6 @@ def post_climbing_route(client, sector_id, user, name="La Diagonal"):
     return client.post("/climbingroutes/", json={"sector_id": sector_id, "name": name, "grade": "6a"}, headers=as_user(user))
 
 
-def post_surf(client, spot, user, photos=0):
-    body = {"spot_id": spot.id, "name": "Escuela Ola"}
-    for i in range(photos):
-        body[f"photo_{i + 1}"] = CLOUD_URL.format(spot=spot.id, n=i)
-    return client.post("/surfschool/", json=body, headers=as_user(user))
-
-
-def post_kayak(client, spot, user):
-    return client.post("/kayak/", json={"spot_id": spot.id, "name": "Kayak Laguna"}, headers=as_user(user))
-
-
 def contribution_of(db, kind):
     return db.query(Contribution).filter_by(kind=kind).one()
 
@@ -69,8 +55,6 @@ def mine(client, user=OWNER):
 OWNER_ONLY = [
     ("glamping_unit", post_glamping, GlampingDetail),
     ("trekking_route", post_trekking, Route),
-    ("surf_school", post_surf, SurfSchool),
-    ("kayak", post_kayak, KayakDetail),
 ]
 
 
@@ -209,21 +193,20 @@ def test_listado_admin_trae_el_elemento_y_el_spot(client, make_spot):
     assert [r["name"] for r in entry["item"]["routes"]] == ["La Diagonal"]
 
 
-def test_rechazar_borra_el_elemento_y_sus_fotos(client, db, make_spot, destroyed):
+def test_rechazar_borra_el_elemento(client, db, make_spot):
     spot = make_spot()
-    post_surf(client, spot, OWNER, photos=2)
-    c = contribution_of(db, "surf_school")
+    post_trekking(client, spot, OWNER)
+    c = contribution_of(db, "trekking_route")
     r = client.post(f"/admin/contributions/{c.id}/reject", json={"reason": " Faltan datos de contacto "}, headers=as_user(ADMIN))
     assert r.status_code == 200
-    assert every(db, SurfSchool).count() == 0
-    assert destroyed == [f"rumbo/spots/{spot.id}/{0:016x}", f"rumbo/spots/{spot.id}/{1:016x}"]
+    assert every(db, Route).count() == 0
     [visto] = mine(client)
-    assert (visto["status"], visto["reject_reason"], visto["title"]) == ("rejected", "Faltan datos de contacto", "Escuela Ola")
+    assert (visto["status"], visto["reject_reason"], visto["title"]) == ("rejected", "Faltan datos de contacto", "Sendero al mirador")
 
 
 def test_no_se_resuelve_dos_veces(client, db, make_spot):
-    post_kayak(client, make_spot(), OWNER)
-    c = contribution_of(db, "kayak")
+    post_glamping(client, make_spot(), OWNER)
+    c = contribution_of(db, "glamping_unit")
     client.post(f"/admin/contributions/{c.id}/approve", headers=as_user(ADMIN))
     assert client.post(f"/admin/contributions/{c.id}/reject", json={}, headers=as_user(ADMIN)).status_code == 409
 
@@ -239,13 +222,12 @@ def test_cada_aporte_se_revisa_por_separado(client, db, make_spot):
 
 # -------- Autor --------
 
-def test_retirar_un_aporte_pendiente(client, db, make_spot, destroyed):
+def test_retirar_un_aporte_pendiente(client, db, make_spot):
     spot = make_spot()
-    post_surf(client, spot, OWNER, photos=1)
-    c = contribution_of(db, "surf_school")
+    post_trekking(client, spot, OWNER)
+    c = contribution_of(db, "trekking_route")
     assert client.post(f"/contributions/{c.id}/withdraw", headers=as_user(OWNER)).status_code == 200
-    assert every(db, SurfSchool).count() == 0
-    assert destroyed == [f"rumbo/spots/{spot.id}/{0:016x}"]
+    assert every(db, Route).count() == 0
     assert mine(client) == [], "los retirados no se muestran"
 
 
@@ -290,15 +272,6 @@ def test_borrar_glamping_pendiente_retira_el_aporte(client, db, make_spot):
 
 # -------- Casos borde --------
 
-def test_borrar_el_spot_borra_fotos_de_surf_y_kayak(client, db, make_spot, destroyed):
-    spot = make_spot(approved=False)
-    post_surf(client, spot, OWNER, photos=2)
-    r = client.delete(f"/spots/{spot.id}", headers=as_user(ADMIN))
-    assert r.status_code == 200
-    assert f"rumbo/spots/{spot.id}/{1:016x}" in destroyed
-    assert db.query(Contribution).count() == 0
-
-
 def test_borrar_la_cuenta_retira_sus_aportes_en_spots_ajenos(client, db, make_spot, make_user):
     spot = make_spot()
     post_sector(client, spot, OTHER)
@@ -306,17 +279,6 @@ def test_borrar_la_cuenta_retira_sus_aportes_en_spots_ajenos(client, db, make_sp
     assert client.delete("/users/me", headers=as_user(OTHER)).status_code == 200
     assert contribution_of(db, "climbing_sector").status == "withdrawn"
     assert every(db, ClimbingSector).count() == 0
-
-
-@pytest.mark.parametrize("url,expected", [
-    ("https://res.cloudinary.com/demo/image/upload/v1712/rumbo/spots/4/abc.jpg", "rumbo/spots/4/abc"),
-    ("https://res.cloudinary.com/demo/image/upload/rumbo/spots/4/abc.webp", "rumbo/spots/4/abc"),
-    ("https://res.cloudinary.com/demo/image/upload/w_280,h_220,c_fill/v1/Surf/Ola/Ola1.png", "Surf/Ola/Ola1"),
-    ("", None),
-    (None, None),
-])
-def test_public_id_desde_url(url, expected):
-    assert public_id_from_url(url) == expected
 
 
 # -------- Dashboard del dueño --------
