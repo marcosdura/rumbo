@@ -5,7 +5,8 @@
 // características del trekking y los servicios del camping y del
 // motorhome, y lo propio de una escuela de surf o un servicio de kayak. Se
 // aplican al instante. Antes solo se podía sumar o borrar.
-import { useState, type CSSProperties, type ReactNode } from "react"
+import { useId, useState, type CSSProperties, type ReactNode } from "react"
+import { linkFirstControl } from "@/components/ui/linkControl"
 import TriStateToggle from "@/components/agregar-lugar/ui/TriStateToggle"
 import { ExperienceCard } from "@/components/agregar-lugar/steps/StepExperiencias"
 import { GlampingUnitCard } from "@/components/agregar-lugar/steps/StepGlampingUnidades"
@@ -54,8 +55,13 @@ function useSave(onSave: (payload: object) => Promise<void>) {
   return { saving, error, run }
 }
 
+// La etiqueta apunta a su campo; si son botones, los agrupa con ese nombre.
 function Labeled({ label, children }: { label: string; children: ReactNode }) {
-  return <div><label style={s.label}>{label}</label>{children}</div>
+  const id = useId()
+  const [content, linkedId] = linkFirstControl(children, { id: `${id}-campo` })
+  return linkedId
+    ? <div><label htmlFor={linkedId} style={s.label}>{label}</label>{content}</div>
+    : <div role="group" aria-labelledby={id}><p id={id} style={s.label}>{label}</p>{content}</div>
 }
 
 // -------- Ruta de trekking --------

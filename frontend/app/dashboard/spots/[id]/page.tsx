@@ -382,13 +382,13 @@ export default function SpotDashboardPage() {
     return (
       <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <Navbar />
-        <div role="alert" style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
+        <main id="contenido" role="alert" style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
           <p style={{ color: "var(--danger)", fontSize: 14, margin: "0 0 12px" }}>No se pudo cargar tu lugar.</p>
           <button type="button" onClick={() => { setLoadError(false); setLoading(true); setLoadAttempt(n => n + 1) }}
             style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontFamily: "inherit", border: "1px solid var(--border)", background: "#fff", cursor: "pointer" }}>
             Reintentar
           </button>
-        </div>
+        </main>
       </div>
     )
   }
@@ -397,9 +397,9 @@ export default function SpotDashboardPage() {
     return (
       <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <Navbar />
-        <div style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
+        <main id="contenido" style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px" }}>
           <p style={{ color: "var(--muted)", fontSize: 14 }}>Cargando...</p>
-        </div>
+        </main>
       </div>
     )
   }
@@ -422,7 +422,7 @@ export default function SpotDashboardPage() {
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <Navbar />
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
+      <main id="contenido" style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
@@ -589,7 +589,7 @@ export default function SpotDashboardPage() {
 
         {tab === "reviews" && <ReviewsTab reviews={reviews} total={reviewsTotal} onMore={loadMoreReviews} loadingMore={loadingMoreReviews} />}
 
-      </div>
+      </main>
 
       <ConfirmModal
         open={reviewPreview !== null}

@@ -35,11 +35,13 @@ export default function PhotosTab({
         <input
           type="text"
           placeholder="Buscar spot..."
+          aria-label="Buscar lugar"
           value={searchPhotos}
           onChange={e => setSearchPhotos(e.target.value)}
           style={{ ...input, maxWidth: 400, marginBottom: 8, display: "block" }}
         />
         <select
+          aria-label="Lugar"
           style={{ ...input, maxWidth: 400 }}
           value={photoSpotId ?? ""}
           onChange={e => setPhotoSpotId(Number(e.target.value) || null)}

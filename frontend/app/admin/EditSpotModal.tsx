@@ -100,16 +100,18 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={labelStyle}>Nombre</label>
+            <label htmlFor="edit-spot-nombre" style={labelStyle}>Nombre</label>
             <input
+              id="edit-spot-nombre"
               value={editingSpot.name}
               onChange={e => setEditingSpot(prev => prev ? { ...prev, name: e.target.value } : null)}
               style={inputStyle}
             />
           </div>
           <div>
-            <label style={labelStyle}>Descripción</label>
+            <label htmlFor="edit-spot-descripcion" style={labelStyle}>Descripción</label>
             <textarea
+              id="edit-spot-descripcion"
               value={editingSpot.description}
               onChange={e => setEditingSpot(prev => prev ? { ...prev, description: e.target.value } : null)}
               rows={4}

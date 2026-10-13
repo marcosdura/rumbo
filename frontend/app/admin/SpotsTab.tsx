@@ -44,7 +44,7 @@ export default function SpotsTab({
     <div>
       {showFilters && <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {(["pending", "rejected", "approved", "all"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
+          <button aria-pressed={filter === f} key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
             {f === "pending" ? `Pendientes (${pending})`
               : f === "rejected" ? `Rechazados (${rejected})`
               : f === "approved" ? "Publicados" : "Todos"}
@@ -56,11 +56,13 @@ export default function SpotsTab({
         <input
           type="text"
           placeholder="Buscar por nombre, categoría, departamento..."
+          aria-label="Buscar lugares"
           value={searchSpots}
           onChange={e => setSearchSpots(e.target.value)}
           style={{ ...input, flex: 1, minWidth: 200, width: "auto" }}
         />
         <select
+          aria-label="Ordenar"
           value={sortBy}
           onChange={e => setSortBy(e.target.value as SortBy)}
           style={{ ...input, width: "auto" }}

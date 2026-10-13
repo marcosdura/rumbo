@@ -19,6 +19,8 @@ export default function TriStateToggle({
           <button
             key={String(opt.v)}
             type="button"
+            // Para el lector de pantalla: cuál está elegido (antes solo se veía por el color).
+            aria-pressed={active}
             onClick={() => onChange(opt.v)}
             style={{
               padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500,

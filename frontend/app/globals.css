@@ -364,3 +364,29 @@ input[type="number"] {
   font-size: 14px; font-weight: 600; color: #1b1b19; margin: 0;
   display: flex; align-items: center; gap: 6px;
 }
+
+/* Todo campo muestra dónde está el foco. Varios se sacaban el contorno
+   (outline: none) sin poner otra marca, y con el teclado no se veía en qué
+   campo se estaba. El buscador marca el campo entero (SearchBar.jsx). */
+:where(input, select, textarea):not(.search-field-input):focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 1px;
+}
+
+/* "Saltar al contenido" (app/layout.tsx): fuera de la pantalla hasta que
+   llega el foco del teclado. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 3000;
+  background: var(--primary-dark);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 12px; }

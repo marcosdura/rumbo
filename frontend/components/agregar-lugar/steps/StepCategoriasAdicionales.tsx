@@ -201,20 +201,20 @@ export default function StepCategoriasAdicionales({
                 </select>
               </Field>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_water") ? "#e53e3e" : "#1b1b19" }}>
-                  ¿Tiene agua? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_water") ? "#c53030" : "#1b1b19" }}>
+                  ¿Tiene agua? <span style={{ color: "#c53030", fontSize: 12 }}>*</span>
                 </span>
                 <BinaryToggle value={motorhomeDetail.has_water} onChange={v => updMotorhome("has_water", v)} />
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_electricity") ? "#e53e3e" : "#1b1b19" }}>
-                  ¿Tiene electricidad? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_electricity") ? "#c53030" : "#1b1b19" }}>
+                  ¿Tiene electricidad? <span style={{ color: "#c53030", fontSize: 12 }}>*</span>
                 </span>
                 <BinaryToggle value={motorhomeDetail.has_electricity} onChange={v => updMotorhome("has_electricity", v)} />
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_dump_station") ? "#e53e3e" : "#1b1b19" }}>
-                  ¿Tiene dump station? <span style={{ color: "#e53e3e", fontSize: 12 }}>*</span>
+                <span style={{ fontSize: 14, color: motorhomeErrors.has("has_dump_station") ? "#c53030" : "#1b1b19" }}>
+                  ¿Tiene dump station? <span style={{ color: "#c53030", fontSize: 12 }}>*</span>
                 </span>
                 <BinaryToggle value={motorhomeDetail.has_dump_station} onChange={v => updMotorhome("has_dump_station", v)} />
               </div>

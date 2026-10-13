@@ -71,7 +71,7 @@ export default function LegalPage() {
 
       <Navbar />
 
-      <main style={{ flex: 1 }}>
+      <main id="contenido" style={{ flex: 1 }}>
         <div className="legal-wrapper">
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>

@@ -132,7 +132,7 @@ export default function ProfilePage() {
 
       <Navbar />
 
-      <div className="profile-wrapper">
+      <main id="contenido" className="profile-wrapper">
         {/* Header, como el de Mis reviews y Favoritos */}
         <div className="fade-up fade-up-1" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -153,7 +153,7 @@ export default function ProfilePage() {
           <ProfileMenu rows={menuRows(summary ?? EMPTY_SUMMARY)} />
           <AccountActions onDeleteRequest={openDeleteModal} />
         </div>
-      </div>
+      </main>
 
       <DeleteAccountModal
         open={showDeleteModal}

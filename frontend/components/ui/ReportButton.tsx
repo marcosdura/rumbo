@@ -108,10 +108,11 @@ export default function ReportButton({ targetKind, targetId, what, label = "Repo
             </label>
           ))}
         </fieldset>
-        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", margin: "14px 0 6px" }}>
+        <label htmlFor={`report-comment-${targetKind}-${targetId}`} style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", margin: "14px 0 6px" }}>
           Comentario {reason === "other" ? "(obligatorio)" : "(opcional)"}
         </label>
         <textarea
+          id={`report-comment-${targetKind}-${targetId}`}
           value={comment}
           onChange={e => setComment(e.target.value)}
           maxLength={500}

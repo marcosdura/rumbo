@@ -1,15 +1,16 @@
 // Con sesión iniciada: el formulario de agregar lugar entero (cada flujo, de
 // punta a punta) y después el perfil, que tiene que mostrar lo cargado.
 // Verifica en el backend que cada envío haya quedado guardado.
-import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps } from "./lib.mjs"
+import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps, a11yProblems } from "./lib.mjs"
 
 // Sufijo por corrida: los nombres no se repiten si la base ya tiene datos.
 const RUN = Date.now().toString(36).slice(-4)
 const named = base => `${base} ${RUN}`
 
-// Un campo de agregar-lugar por el texto de su etiqueta (ui/Field.tsx).
-const field = (page, label) =>
-  page.locator(`xpath=//div[starts-with(normalize-space(.), "${label}")]/following-sibling::*[self::input or self::textarea or self::select][1]`).first()
+// Un campo de agregar-lugar por el texto de su etiqueta (ui/Field.tsx), como
+// lo encuentra un lector de pantalla.
+const escapeRe = text => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const field = (page, label) => page.getByLabel(new RegExp(`^${escapeRe(label)}`)).first()
 
 const heading = page => page.locator("h2").first().textContent()
 
@@ -339,6 +340,18 @@ async function profile(page, r) {
   const camping = (await apiGet("/admin/spots", ADMIN)).find(sp => sp.name === named("Camping E2E"))
   await open(page, `/dashboard/spots/${camping.id}`)
   r.ok("Perfil — el panel de un lugar propio abre", await page.getByRole("heading", { name: named("Camping E2E") }).count() > 0)
+  let problems = await a11yProblems(page)
+  r.ok("Accesibilidad — el panel de un lugar", problems.length === 0, problems.slice(0, 3).join(" | "))
+  for (const path of ["/profile", "/profile/lugares", "/favorites", "/notificaciones"]) {
+    await open(page, path)
+    problems = await a11yProblems(page)
+    r.ok(`Accesibilidad — ${path}`, problems.length === 0, problems.slice(0, 3).join(" | "))
+  }
+  await open(page, "/agregar-lugar")
+  await page.getByRole("button", { name: /Camping/ }).first().click()
+  await page.waitForTimeout(500)
+  problems = await a11yProblems(page)
+  r.ok("Accesibilidad — el formulario de agregar lugar", problems.length === 0, problems.slice(0, 3).join(" | "))
   await shot(page, "perfil-panel-lugar")
 
   // Favorito y reseña en un lugar publicado: aparecen en el perfil.
@@ -396,6 +409,12 @@ async function admin(browser, r) {
 
   // Una escuela es un lugar más: está entre los lugares nuevos.
   r.ok("Admin — la escuela cargada está entre los lugares nuevos", await page.locator(".spot-row").filter({ hasText: named("Escuela E2E") }).count() === 1)
+
+  for (const tab of ["nuevos", "lugares", "cambios", "reportes", "fotos"]) {
+    await open(page, `/admin?tab=${tab}`)
+    const problems = await a11yProblems(page)
+    r.ok(`Accesibilidad — admin, ${tab}`, problems.length === 0, problems.slice(0, 3).join(" | "))
+  }
 
   r.ok("Admin — sin errores de JavaScript", errors.length === 0, errors.slice(0, 2).join(" | "))
   await ctx.close()

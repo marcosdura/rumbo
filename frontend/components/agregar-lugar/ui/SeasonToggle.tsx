@@ -4,9 +4,9 @@ import { MONTHS } from "../constants"
 import Field from "./Field"
 import { s } from "../styles"
 
-function MonthSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function MonthSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
   return (
-    <select style={s.input} value={value} onChange={e => onChange(e.target.value)}>
+    <select aria-label={label} style={s.input} value={value} onChange={e => onChange(e.target.value)}>
       <option value="">-</option>
       {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
     </select>
@@ -32,6 +32,7 @@ export default function SeasonToggle({
           <button
             key={t}
             type="button"
+            aria-pressed={type === t}
             onClick={() => onTypeChange(t)}
             style={{
               padding: "6px 16px", borderRadius: 20,
@@ -48,10 +49,10 @@ export default function SeasonToggle({
       {type === "seasonal" && (
         <div className="form-two-col">
           <Field label="Desde" required={false}>
-            <MonthSelect value={start} onChange={onStartChange} />
+            <MonthSelect label="Desde" value={start} onChange={onStartChange} />
           </Field>
           <Field label="Hasta" required={false}>
-            <MonthSelect value={end} onChange={onEndChange} />
+            <MonthSelect label="Hasta" value={end} onChange={onEndChange} />
           </Field>
         </div>
       )}

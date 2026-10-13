@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, type ReactNode } from "react"
+import { useId, useRef, useState, type ReactNode } from "react"
 import { useModalA11y } from "@/lib/useModalA11y"
 
 // Modal de confirmación genérico, mismo estilo visual que el modal de
@@ -47,6 +47,7 @@ export default function ConfirmModal({
   onCancel,
 }: Props) {
   const [typed, setTyped] = useState("")
+  const phraseId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   // El foco inicial va al campo de "CONFIRMAR" cuando lo hay; si no, el hook
   // enfoca el primer elemento del panel.
@@ -129,12 +130,13 @@ export default function ConfirmModal({
 
         {confirmPhrase && (
           <>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", margin: "16px 0 6px" }}>
+            <label htmlFor={phraseId} style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", margin: "16px 0 6px" }}>
               Para confirmar, escribí{" "}
               <span style={{ fontWeight: 700, color: "var(--danger)" }}>{confirmPhrase}</span>
               {" "}en el campo de abajo
             </label>
             <input
+              id={phraseId}
               ref={inputRef}
               type="text"
               value={typed}

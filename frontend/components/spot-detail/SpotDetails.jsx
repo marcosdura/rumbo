@@ -100,7 +100,8 @@ function SpotDetails({ spot }) {
         .detail-value-dim {
           font-size: 14px;
           font-weight: 400;
-          color: #b0ac9e;
+          /* Antes #b0ac9e: contraste 2,3 a 1, ilegible para muchos. */
+          color: var(--muted);
           font-style: italic;
           text-align: right;
           min-width: 0;

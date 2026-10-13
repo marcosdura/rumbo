@@ -196,6 +196,9 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
         }
         .search-field:hover { background: #f7f5f0; }
         .search-field.is-open { background: #f0f7f3; }
+        /* Dónde está el foco (el campo no tiene borde propio): antes, con el
+           teclado, no se veía en qué campo se estaba escribiendo. */
+        .search-field:focus-within { box-shadow: inset 0 0 0 2px var(--primary); }
 
         .search-field-label {
           font-size: 11px;

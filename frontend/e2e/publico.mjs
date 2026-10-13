@@ -1,6 +1,6 @@
 // Lo público, en PC y en celular: la barra (que no salte entre páginas), el
 // menú, la 404, legal, el footer y que no haya errores de JavaScript.
-import { FRONT, apiGet, shot, offlineMaps } from "./lib.mjs"
+import { FRONT, apiGet, shot, offlineMaps, a11yProblems } from "./lib.mjs"
 
 const VIEWPORTS = [["pc", { width: 1280, height: 800 }], ["celular", { width: 390, height: 844 }]]
 
@@ -91,6 +91,29 @@ export async function run(browser, r) {
 
     const footer = await page.locator("footer").evaluate(el => el.textContent)
     r.ok(`[${label}] footer con Explorar y sin "Código abierto"`, footer.includes("Explorar") && !footer.includes("Código abierto"))
+
+    // Accesibilidad: lo grave, el contenido principal y el título, en cada tipo de página.
+    for (const path of ["/", "/search?activity=Surf", "/lugares/surf/rocha", "/spots/cerro-de-prueba", "/spots/cerro-de-prueba/rutas/sendero-uno", "/legal"]) {
+      await page.goto(`${FRONT}${path}`, { waitUntil: "networkidle" })
+      const problems = await a11yProblems(page)
+      r.ok(`[${label}] accesibilidad de ${path}`, problems.length === 0, problems.slice(0, 3).join(" | "))
+    }
+    if (label === "pc") {
+      // Con el teclado, lo primero es "Saltar al contenido", y lleva a lo principal.
+      await page.goto(`${FRONT}/spots/cerro-de-prueba`, { waitUntil: "networkidle" })
+      await page.keyboard.press("Tab")
+      const first = await page.evaluate(() => document.activeElement?.textContent)
+      await page.keyboard.press("Enter")
+      r.ok("[pc] Tab: primero «Saltar al contenido», que lleva al contenido", first === "Saltar al contenido" && page.url().endsWith("#contenido"), first ?? "")
+      // En la home, la barra fija (oculta sobre el hero) no recibe el foco.
+      await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
+      let inHidden = false
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press("Tab")
+        inHidden ||= await page.evaluate(() => !!document.activeElement?.closest(".navbar-home-fixed:not(.navbar-visible)"))
+      }
+      r.ok("[pc] en la home el teclado no entra en la barra oculta", !inHidden)
+    }
 
     r.ok(`[${label}] sin errores de JavaScript`, errors.length === 0, errors.slice(0, 2).join(" | "))
     await ctx.close()

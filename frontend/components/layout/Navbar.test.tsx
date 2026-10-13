@@ -111,4 +111,15 @@ describe("Navbar", () => {
     expect(container.querySelector("nav")!.className).toContain("navbar-home-fixed")
     pathname = "/spots"
   })
+
+  it("oculta sobre el hero, el teclado no entra en ella (inert); en otras páginas sí", () => {
+    session = null
+    pathname = "/"
+    const { container, unmount } = render(<Navbar />)
+    expect(container.querySelector("nav")!.hasAttribute("inert")).toBe(true)
+    unmount()
+    pathname = "/spots"
+    const other = render(<Navbar />)
+    expect(other.container.querySelector("nav")!.hasAttribute("inert")).toBe(false)
+  })
 })

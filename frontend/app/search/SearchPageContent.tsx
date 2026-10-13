@@ -210,7 +210,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
     <div className="search-root">
       <Navbar />
 
-      <div className="search-layout">
+      <main id="contenido" className="search-layout">
 
         {/* ── Lista ── */}
         <div className="search-list-panel">
@@ -465,7 +465,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
           </button>
         </div>
 
-      </div>
+      </main>
 
       {panelActivity === "Trekking" && (
         <FilterDrawer

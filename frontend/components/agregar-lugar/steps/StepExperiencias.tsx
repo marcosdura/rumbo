@@ -110,7 +110,7 @@ export function ExperienceCard({
         {/* Category */}
         <div>
           <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", marginBottom: 8 }}>
-            Categoría <span style={{ fontSize: 12, color: "#e53e3e" }}>*</span>
+            Categoría <span style={{ fontSize: 12, color: "#c53030" }}>*</span>
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {EXPERIENCE_CATEGORIES.map(cat => {
@@ -119,6 +119,7 @@ export function ExperienceCard({
                 <button
                   key={cat.id}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() => upd(setExperiences, index, "category_id", String(cat.id))}
                   style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 13,
@@ -185,6 +186,7 @@ export function ExperienceCard({
                 <button
                   key={opt.value}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() =>
                     upd(
                       setExperiences,

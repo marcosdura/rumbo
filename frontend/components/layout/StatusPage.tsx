@@ -9,7 +9,7 @@ export default function StatusPage({ emoji, title, text, children }: {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <Navbar />
-      <main style={{ flex: 1, maxWidth: 640, width: "100%", margin: "0 auto", padding: "64px 16px", textAlign: "center" }}>
+      <main id="contenido" style={{ flex: 1, maxWidth: 640, width: "100%", margin: "0 auto", padding: "64px 16px", textAlign: "center" }}>
         <p style={{ fontSize: 40, margin: "0 0 8px" }} aria-hidden="true">{emoji}</p>
         <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(26px, 4vw, 34px)", fontWeight: 600, color: "#1b1b19", margin: "0 0 10px" }}>
           {title}

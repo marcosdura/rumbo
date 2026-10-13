@@ -76,6 +76,20 @@ export async function offlineMaps(context) {
   await context.route(/tile\.openstreetmap\.org/, route => route.fulfill({ body: PIXEL, contentType: "image/png" }))
 }
 
+// Accesibilidad con axe: lo grave (lo que impide usar la página con lector
+// de pantalla o teclado) y que la página tenga su contenido principal y su
+// título. Devuelve "regla (cuántos)" por cada problema; vacío = bien.
+const AXE = path.join(import.meta.dirname, "..", "node_modules", "axe-core", "axe.min.js")
+export async function a11yProblems(page) {
+  await page.addScriptTag({ path: AXE })
+  return page.evaluate(async () => {
+    const { violations } = await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] })
+    return violations
+      .filter(v => v.impact === "critical" || v.impact === "serious" || ["landmark-one-main", "page-has-heading-one"].includes(v.id))
+      .map(v => `${v.id} (${v.nodes.length}): ${v.nodes[0]?.target.join(" ")}`)
+  })
+}
+
 // Una imagen chica para los <input type=file>.
 export const PHOTO = { name: "foto.png", mimeType: "image/png", buffer: PIXEL }
 

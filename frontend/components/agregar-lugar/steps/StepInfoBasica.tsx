@@ -123,9 +123,9 @@ export default function StepInfoBasica({
       <div style={s.form}>
         {asksResponsible && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("responsible") ? "#e53e3e" : "#1b1b19" }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("responsible") ? "#c53030" : "#1b1b19" }}>
               ¿Sos el responsable o dueño de este lugar?{" "}
-              <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
+              <span style={{ fontSize: 12, color: "#c53030", fontWeight: 400 }}>(obligatorio)</span>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {([
@@ -139,7 +139,7 @@ export default function StepInfoBasica({
                   onClick={() => { setIsResponsible!(opt.value); setFieldErrors(prev => { const n = new Set(prev); n.delete("responsible"); return n }) }}
                   style={{
                     padding: "6px 16px", borderRadius: 20,
-                    border: `1px solid ${isResponsible === opt.value ? "var(--primary)" : fieldErrors.has("responsible") ? "#e53e3e" : "var(--border)"}`,
+                    border: `1px solid ${isResponsible === opt.value ? "var(--primary)" : fieldErrors.has("responsible") ? "#c53030" : "var(--border)"}`,
                     background: isResponsible === opt.value ? "var(--primary)" : "#f7f5f0",
                     color: isResponsible === opt.value ? "#fff" : "#1b1b19",
                     fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
@@ -211,7 +211,7 @@ export default function StepInfoBasica({
           </Field>
           <div />
         </div>
-        <div style={fieldErrors.has("season_start") || fieldErrors.has("season_end") ? { border: "1px solid #e53e3e", borderRadius: 12, padding: 10 } : {}}>
+        <div style={fieldErrors.has("season_start") || fieldErrors.has("season_end") ? { border: "1px solid #c53030", borderRadius: 12, padding: 10 } : {}}>
           <SeasonToggle
             type={basic.season_type}
             onTypeChange={t => setBasic(prev => ({ ...prev, season_type: t }))}
@@ -300,9 +300,9 @@ export default function StepInfoBasica({
         {/* ¿Público o privado? (no en escuelas y servicios: son un negocio) */}
         {!service && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("isPublic") ? "#e53e3e" : "#1b1b19" }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: fieldErrors.has("isPublic") ? "#c53030" : "#1b1b19" }}>
             ¿El lugar es público o privado?{" "}
-            <span style={{ fontSize: 12, color: "#e53e3e", fontWeight: 400 }}>(obligatorio)</span>
+            <span style={{ fontSize: 12, color: "#c53030", fontWeight: 400 }}>(obligatorio)</span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {([
@@ -312,10 +312,11 @@ export default function StepInfoBasica({
               <button
                 key={String(opt.value)}
                 type="button"
+                aria-pressed={isPublic === opt.value}
                 onClick={() => setIsPublic(opt.value)}
                 style={{
                   padding: "6px 16px", borderRadius: 20,
-                  border: `1px solid ${isPublic === opt.value ? "var(--primary)" : fieldErrors.has("isPublic") ? "#e53e3e" : "var(--border)"}`,
+                  border: `1px solid ${isPublic === opt.value ? "var(--primary)" : fieldErrors.has("isPublic") ? "#c53030" : "var(--border)"}`,
                   background: isPublic === opt.value ? "var(--primary)" : "#f7f5f0",
                   color: isPublic === opt.value ? "#fff" : "#1b1b19",
                   fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
@@ -343,6 +344,7 @@ export default function StepInfoBasica({
               <button
                 key={opt.value}
                 type="button"
+                aria-pressed={publicTransport === opt.value}
                 onClick={() => setPublicTransport(prev => prev === opt.value ? null : opt.value)}
                 style={{
                   padding: "6px 16px", borderRadius: 20,
@@ -371,7 +373,7 @@ export default function StepInfoBasica({
           ))}
         </div>
 
-        <div style={fieldErrors.has("location") ? { border: "1px solid #e53e3e", borderRadius: 12, padding: 10 } : {}}>
+        <div style={fieldErrors.has("location") ? { border: "1px solid #c53030", borderRadius: 12, padding: 10 } : {}}>
           <LocationPicker
             lat={basic.lat ? parseFloat(basic.lat) : null}
             lng={basic.lng ? parseFloat(basic.lng) : null}

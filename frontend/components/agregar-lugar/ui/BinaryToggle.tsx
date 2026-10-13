@@ -18,6 +18,7 @@ export default function BinaryToggle({
           <button
             key={String(opt.v)}
             type="button"
+            aria-pressed={active}
             onClick={() => onChange(opt.v)}
             style={{
               padding: "4px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500,

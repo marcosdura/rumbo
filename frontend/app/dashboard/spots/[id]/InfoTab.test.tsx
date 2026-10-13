@@ -102,3 +102,32 @@ describe("InfoTab: ubicación", () => {
     expect(screen.queryByRole("button", { name: "marcar en el mapa" })).toBeNull()
   })
 })
+
+describe("InfoTab: accesible", () => {
+  const props = {
+    editName: "La Aguada", setEditName: noop, editDescription: "", setEditDescription: noop,
+    editEmail: "", setEditEmail: noop, editWhatsapp: "", setEditWhatsapp: noop, editInstagram: "", setEditInstagram: noop,
+    editPrice: "", setEditPrice: noop, editSeasonType: "seasonal" as const, setEditSeasonType: noop,
+    editSeasonStart: "", setEditSeasonStart: noop, editSeasonEnd: "", setEditSeasonEnd: noop,
+    editIsPublic: true, setEditIsPublic: noop, editPublicTransport: null, setEditPublicTransport: noop,
+    editPractical: { pets_allowed: true, reservation_required: null, cell_signal: null }, setEditPractical: noop,
+    lockSensitive: false, sensitiveReviewed: false, priceMode: "own" as const,
+    location: [null, null] as [null, null], newLocation: null, setNewLocation: noop,
+  }
+
+  it("cada campo se nombra con su etiqueta (antes eran textos sueltos)", () => {
+    render(<InfoTab {...props} />)
+    expect((screen.getByLabelText("Nombre") as HTMLInputElement).value).toBe("La Aguada")
+    for (const name of ["Descripción", "Email", "WhatsApp", "Instagram", "Desde", "Hasta"]) expect(screen.getByLabelText(name)).toBeTruthy()
+    expect(screen.getByLabelText(/Precio por noche/)).toBeTruthy()
+  })
+
+  it("las preguntas con botones son grupos con nombre, y se sabe cuál está elegido", () => {
+    render(<InfoTab {...props} />)
+    const publico = screen.getByRole("group", { name: "¿El lugar es público o privado?" })
+    expect(publico.querySelector("button[aria-pressed='true']")!.textContent).toContain("Público")
+    expect(screen.getByRole("group", { name: "Temporada" }).querySelector("button[aria-pressed='true']")!.textContent).toContain("Temporada específica")
+    const pets = screen.getByRole("group", { name: /¿Acepta mascotas\?/ })
+    expect(pets.querySelector("button[aria-pressed='true']")!.textContent).toBe("Sí")
+  })
+})

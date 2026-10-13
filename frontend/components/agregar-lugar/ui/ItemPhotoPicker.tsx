@@ -58,7 +58,7 @@ export default function ItemPhotoPicker({ files, onChange, label }: {
           </>
         )}
       </div>
-      {error && <p style={{ fontSize: 12, color: "#e53e3e", margin: "6px 0 0" }}>{error}</p>}
+      {error && <p style={{ fontSize: 12, color: "#c53030", margin: "6px 0 0" }}>{error}</p>}
     </div>
   )
 }

@@ -37,7 +37,7 @@ describe("StepInfoBasica: ¿responsable o visitante?", () => {
   it("es obligatoria: sin responder queda marcada", () => {
     render(<Harness ask />)
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }))
-    expect(screen.getByText(QUESTION).getAttribute("style")).toContain("rgb(229, 62, 62)")
+    expect(screen.getByText(QUESTION).getAttribute("style")).toContain("rgb(197, 48, 48)")
   })
 
   it("en una playa nueva no se pregunta", () => {
@@ -71,5 +71,19 @@ describe("StepInfoBasica: nombre repetido", () => {
     fireEvent.change(input, { target: { value: "" } })
     expect(screen.queryByText("Ya existe un lugar con este nombre")).toBeNull()
     vi.useRealTimers()
+  })
+
+  it("las preguntas de acceso dicen cuál está elegido", () => {
+    render(
+      <StepInfoBasica
+        basic={emptyBasic()} setBasic={() => {}} upd={() => {}}
+        isPublic={true} setIsPublic={() => {}} publicTransport="no" setPublicTransport={() => {}}
+        error={null} onBack={() => {}} onNext={() => {}}
+      />,
+    )
+    expect(screen.getByRole("button", { name: /Público/ }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: /Privado/ }).getAttribute("aria-pressed")).toBe("false")
+    expect(screen.getByRole("button", { name: "❌ No" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "✅ Sí" }).getAttribute("aria-pressed")).toBe("false")
   })
 })

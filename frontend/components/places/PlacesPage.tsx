@@ -98,7 +98,7 @@ export default function PlacesPage({ activity, department, counts, spots, total 
 
       <Navbar />
 
-      <main style={{ flex: 1 }}>
+      <main id="contenido" style={{ flex: 1 }}>
         <div className="places-wrapper">
           {activity && department && (
             <p style={{ fontSize: 13, margin: "0 0 12px" }}>

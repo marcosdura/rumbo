@@ -62,4 +62,12 @@ describe("SpotsTab", () => {
     renderTab([spot({ suggested_by_visitor: true }), spot({ id: 2, name: "Otro" })])
     expect(screen.getAllByText("🎒 Sugerido por un visitante")).toHaveLength(1)
   })
+
+  it("los filtros dicen cuál está elegido, y la búsqueda y el orden tienen nombre", () => {
+    renderTab([spot()])
+    expect(screen.getByRole("button", { name: "Todos" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "Publicados" }).getAttribute("aria-pressed")).toBe("false")
+    expect(screen.getByRole("combobox", { name: "Ordenar" })).toBeTruthy()
+    expect(screen.getByRole("textbox", { name: "Buscar lugares" })).toBeTruthy()
+  })
 })

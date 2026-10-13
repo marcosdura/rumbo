@@ -86,6 +86,9 @@ export default function RootLayout({
         ))}
       </head>
       <body className="min-h-full flex flex-col">
+        {/* Para el teclado: salta la barra y va directo a lo principal de la
+            página (<main id="contenido">). Se ve solo al llegar con Tab. */}
+        <a href="#contenido" className="skip-link">Saltar al contenido</a>
         <Providers>
           {children}
         </Providers>

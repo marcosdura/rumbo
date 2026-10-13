@@ -59,6 +59,7 @@ export default function StepAmenities({
                 <button
                   key={name}
                   type="button"
+                  aria-pressed={sel}
                   onClick={() => handleToggle(name)}
                   style={{
                     display: "flex", alignItems: "center", gap: 5,

@@ -34,7 +34,7 @@ export default function ProfileSubpage({ title, count, children }: {
         }
       `}</style>
       <Navbar />
-      <div className="profile-sub-wrapper">
+      <main id="contenido" className="profile-sub-wrapper">
         {/* Mismo link que "← Volver al perfil" del dashboard. */}
         <Link href="/profile" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
           ← Volver al perfil
@@ -56,7 +56,7 @@ export default function ProfileSubpage({ title, count, children }: {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {children(session.id_token)}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

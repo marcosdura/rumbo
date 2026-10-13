@@ -75,4 +75,10 @@ describe("EditSpotModal", () => {
     expect(screen.getByRole("dialog")).toBeTruthy()
     expect(screen.queryByRole("alert")).toBeNull()
   })
+
+  it("nombre y descripción se nombran con su etiqueta", () => {
+    render(<Harness onSave={async () => {}} />)
+    expect((screen.getByLabelText("Nombre") as HTMLInputElement).value).toBe("Cascada")
+    expect((screen.getByLabelText("Descripción") as HTMLTextAreaElement).value).toBe("Linda")
+  })
 })

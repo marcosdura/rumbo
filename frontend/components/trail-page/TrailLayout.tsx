@@ -85,7 +85,7 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
 
       <Navbar />
 
-      <main className="trail-inner">
+      <main id="contenido" className="trail-inner">
         {/* Al lugar, no router.back(): entrando por un link de afuera sacaba de Rumbo. */}
         <Link href={`/spots/${spot.slug}`} className="trail-back">← {spot.name}</Link>
 

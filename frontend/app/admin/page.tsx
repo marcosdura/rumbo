@@ -434,7 +434,7 @@ export default function AdminPage() {
 
       <Navbar />
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 60px" }}>
+      <main id="contenido" style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 60px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
@@ -598,7 +598,7 @@ export default function AdminPage() {
             onDeleteRequest={id => { setDeleteError(null); setDeleteConfirmId(id) }}
           />
         )}
-      </div>
+      </main>
 
       <ConfirmModal
         open={deleteConfirmId !== null}

@@ -69,14 +69,14 @@ export default function InfoTab({
         )}
 
         <div>
-          <label style={s.label}>Nombre</label>
-          <input value={editName} onChange={e => setEditName(e.target.value)} disabled={lockSensitive} style={{ ...s.input, ...lockedInput }} />
+          <label htmlFor="info-nombre" style={s.label}>Nombre</label>
+          <input id="info-nombre" value={editName} onChange={e => setEditName(e.target.value)} disabled={lockSensitive} style={{ ...s.input, ...lockedInput }} />
           {pendingName !== undefined && <PendingHint value={pendingName} />}
         </div>
 
         <div>
-          <label style={s.label}>Descripción</label>
-          <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} disabled={lockSensitive} rows={5} style={{ ...s.input, resize: "vertical", ...lockedInput }} />
+          <label htmlFor="info-descripcion" style={s.label}>Descripción</label>
+          <textarea id="info-descripcion" value={editDescription} onChange={e => setEditDescription(e.target.value)} disabled={lockSensitive} rows={5} style={{ ...s.input, resize: "vertical", ...lockedInput }} />
           {pendingDescription !== undefined && <PendingHint value={pendingDescription} />}
         </div>
 
@@ -85,16 +85,16 @@ export default function InfoTab({
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Contacto</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
-              <label style={s.label}>Email</label>
-              <input value={editEmail} onChange={e => setEditEmail(e.target.value)} style={s.input} type="email" placeholder="email@ejemplo.com" />
+              <label htmlFor="info-email" style={s.label}>Email</label>
+              <input id="info-email" value={editEmail} onChange={e => setEditEmail(e.target.value)} style={s.input} type="email" placeholder="email@ejemplo.com" />
             </div>
             <div>
-              <label style={s.label}>WhatsApp</label>
-              <input value={editWhatsapp} onChange={e => setEditWhatsapp(e.target.value)} style={s.input} placeholder="+598 99 000 000" />
+              <label htmlFor="info-whatsapp" style={s.label}>WhatsApp</label>
+              <input id="info-whatsapp" value={editWhatsapp} onChange={e => setEditWhatsapp(e.target.value)} style={s.input} placeholder="+598 99 000 000" />
             </div>
             <div>
-              <label style={s.label}>Instagram</label>
-              <input value={editInstagram} onChange={e => setEditInstagram(e.target.value)} style={s.input} placeholder="@usuario" />
+              <label htmlFor="info-instagram" style={s.label}>Instagram</label>
+              <input id="info-instagram" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} style={s.input} placeholder="@usuario" />
             </div>
           </div>
         </div>
@@ -107,14 +107,14 @@ export default function InfoTab({
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {priceMode === "own" && (
               <div>
-                <label style={s.label}>Precio por noche (UYU) — poné 0 si es gratis</label>
-                <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
+                <label htmlFor="info-precio" style={s.label}>Precio por noche (UYU) — poné 0 si es gratis</label>
+                <input id="info-precio" value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
               </div>
             )}
             {priceMode === "from" && (
               <div>
-                <label style={s.label}>Precio desde (UYU) — lo más barato que ofrecen; 0 si es gratis</label>
-                <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
+                <label htmlFor="info-precio" style={s.label}>Precio desde (UYU) — lo más barato que ofrecen; 0 si es gratis</label>
+                <input id="info-precio" value={editPrice} onChange={e => setEditPrice(e.target.value)} style={s.input} type="number" min={0} placeholder="0" />
               </div>
             )}
             {priceMode === "glamping" && (
@@ -122,14 +122,14 @@ export default function InfoTab({
                 El precio por noche va en cada alojamiento (pestaña de alojamiento); la card muestra el más barato.
               </p>
             )}
-            <div>
-              <label style={s.label}>Temporada</label>
+            <div role="group" aria-labelledby="info-temporada">
+              <p id="info-temporada" style={s.label}>Temporada</p>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                 {([
                   { value: "all_year", label: "🗓️ Todo el año" },
                   { value: "seasonal", label: "📅 Temporada específica" },
                 ] as { value: "all_year" | "seasonal"; label: string }[]).map(opt => (
-                  <button key={opt.value} type="button" onClick={() => setEditSeasonType(opt.value)} style={s.pill(editSeasonType === opt.value)}>
+                  <button key={opt.value} type="button" aria-pressed={editSeasonType === opt.value} onClick={() => setEditSeasonType(opt.value)} style={s.pill(editSeasonType === opt.value)}>
                     {opt.label}
                   </button>
                 ))}
@@ -137,15 +137,15 @@ export default function InfoTab({
               {editSeasonType === "seasonal" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
-                    <label style={s.label}>Desde</label>
-                    <select value={editSeasonStart} onChange={e => setEditSeasonStart(e.target.value)} style={s.input}>
+                    <label htmlFor="info-desde" style={s.label}>Desde</label>
+                    <select id="info-desde" value={editSeasonStart} onChange={e => setEditSeasonStart(e.target.value)} style={s.input}>
                       <option value="">Mes...</option>
                       {MONTHS.map((m, i) => <option key={i+1} value={String(i+1)}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={s.label}>Hasta</label>
-                    <select value={editSeasonEnd} onChange={e => setEditSeasonEnd(e.target.value)} style={s.input}>
+                    <label htmlFor="info-hasta" style={s.label}>Hasta</label>
+                    <select id="info-hasta" value={editSeasonEnd} onChange={e => setEditSeasonEnd(e.target.value)} style={s.input}>
                       <option value="">Mes...</option>
                       {MONTHS.map((m, i) => <option key={i+1} value={String(i+1)}>{m}</option>)}
                     </select>
@@ -185,36 +185,36 @@ export default function InfoTab({
         <div style={{ borderTop: "1px solid #ede9e1", paddingTop: 16 }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", margin: "0 0 12px" }}>Acceso</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <label style={s.label}>¿El lugar es público o privado?</label>
+            <div role="group" aria-labelledby="info-publico">
+              <p id="info-publico" style={s.label}>¿El lugar es público o privado?</p>
               <div style={{ display: "flex", gap: 8 }}>
                 {([
                   { value: true, label: "🏛️ Público" },
                   { value: false, label: "🔒 Privado" },
                 ] as { value: boolean; label: string }[]).map(opt => (
-                  <button key={String(opt.value)} type="button" onClick={() => setEditIsPublic(opt.value)} style={s.pill(editIsPublic === opt.value)}>
+                  <button key={String(opt.value)} type="button" aria-pressed={editIsPublic === opt.value} onClick={() => setEditIsPublic(opt.value)} style={s.pill(editIsPublic === opt.value)}>
                     {opt.label}
                   </button>
                 ))}
               </div>
             </div>
-            <div>
-              <label style={s.label}>¿Accesible en transporte público?</label>
+            <div role="group" aria-labelledby="info-transporte">
+              <p id="info-transporte" style={s.label}>¿Accesible en transporte público?</p>
               <div style={{ display: "flex", gap: 8 }}>
                 {([
                   { value: "si", label: "✅ Sí" },
                   { value: "no", label: "❌ No" },
                   { value: "nose", label: "🤷 No sé" },
                 ] as { value: string; label: string }[]).map(opt => (
-                  <button key={opt.value} type="button" onClick={() => setEditPublicTransport(prev => prev === opt.value ? null : opt.value)} style={s.pill(editPublicTransport === opt.value)}>
+                  <button key={opt.value} type="button" aria-pressed={editPublicTransport === opt.value} onClick={() => setEditPublicTransport(prev => prev === opt.value ? null : opt.value)} style={s.pill(editPublicTransport === opt.value)}>
                     {opt.label}
                   </button>
                 ))}
               </div>
             </div>
             {PRACTICAL_FIELDS.map(f => (
-              <div key={f.key}>
-                <label style={s.label}>{f.emoji} {f.question}</label>
+              <div key={f.key} role="group" aria-labelledby={`info-${f.key}`}>
+                <p id={`info-${f.key}`} style={s.label}>{f.emoji} {f.question}</p>
                 <TriStateToggle value={editPractical[f.key]} onChange={v => setEditPractical(f.key, v)} />
               </div>
             ))}

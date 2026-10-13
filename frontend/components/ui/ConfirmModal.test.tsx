@@ -58,4 +58,9 @@ describe("ConfirmModal", () => {
     expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe("")
     expect((screen.getByRole("button", { name: "Eliminar" }) as HTMLButtonElement).disabled).toBe(true)
   })
+
+  it("el campo de la frase se nombra con su etiqueta", () => {
+    render(<ConfirmModal {...base} confirmPhrase="CONFIRMAR" />)
+    expect(screen.getByLabelText(/Para confirmar, escribí/).tagName).toBe("INPUT")
+  })
 })

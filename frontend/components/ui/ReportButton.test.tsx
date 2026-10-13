@@ -77,4 +77,10 @@ describe("ReportButton", () => {
     expect(await screen.findByText("Ya lo reportaste: lo estamos revisando.")).toBeTruthy()
     await waitFor(() => expect(screen.queryByText("✓ Gracias, lo vamos a revisar")).toBeNull())
   })
+
+  it("el comentario se nombra con su etiqueta", async () => {
+    open()
+    await screen.findByLabelText("Otro")
+    expect(screen.getByLabelText(/Comentario/).tagName).toBe("TEXTAREA")
+  })
 })

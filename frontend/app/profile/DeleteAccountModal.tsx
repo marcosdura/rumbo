@@ -46,10 +46,11 @@ export default function DeleteAccountModal({
           <li>No podrás recuperar esta información</li>
         </ul>
 
-        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", marginBottom: 6 }}>
+        <label htmlFor="delete-account-confirm" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#4a4a46", marginBottom: 6 }}>
           Para confirmar, escribí <span style={{ fontWeight: 700, color: "var(--danger)" }}>CONFIRMAR</span> en el campo de abajo
         </label>
         <input
+          id="delete-account-confirm"
           ref={inputRef}
           type="text"
           value={confirmText}

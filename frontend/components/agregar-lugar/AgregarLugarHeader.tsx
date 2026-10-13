@@ -39,6 +39,9 @@ export default function AgregarLugarHeader({ stepLabel, progress = [], incomplet
           </button>
         )}
       </div>
+      {/* El título de la página para el lector de pantalla (a la vista ya
+          está el paso actual); antes la página no tenía ningún <h1>. */}
+      <h1 className="sr-only">Agregar un lugar{stepLabel ? `: ${stepLabel}` : ""}</h1>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, justifyContent: "center" }}>
         <Image src="/RumboLogo.png" alt="Rumbo" width={36} height={36} style={{ objectFit: "contain", borderRadius: 8 }} />
         <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "var(--font-nunito)" }}>rumbo</span>

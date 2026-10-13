@@ -48,7 +48,12 @@ function Navbar() {
   }, [searchOpen])
 
   return (
-    <nav className={`navbar-root${isHome ? ` navbar-home-fixed${heroGone ? " navbar-visible" : ""}` : ""}`}>
+    // Oculta sobre el hero, también para el teclado y el lector de pantalla
+    // (inert): antes Tab entraba en sus botones invisibles.
+    <nav
+      className={`navbar-root${isHome ? ` navbar-home-fixed${heroGone ? " navbar-visible" : ""}` : ""}`}
+      inert={isHome && !heroGone ? true : undefined}
+    >
       <style>{`
         .navbar-root {
           font-family: var(--font-dm-sans), sans-serif;

@@ -264,7 +264,7 @@ function SpotDetail({ spot }) {
       {showShare && <ShareModal name={spot.name} onClose={() => setShowShare(false)} />}
       <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
-          <div className="spot-page-inner">
+          <main id="contenido" className="spot-page-inner">
 
             <button
               onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}
@@ -464,7 +464,7 @@ function SpotDetail({ spot }) {
               )}
             </div>
 
-          </div>
+          </main>
           <Footer />
         </div>
       </div>
