@@ -1,10 +1,11 @@
 import Image from "next/image"
 import Link from "next/link"
+import { activityHref } from "@/lib/places"
 
 // Sin "use client": no tiene estado, así que no manda JavaScript a cada página.
 
-// Explorar: las actividades llevan a la búsqueda filtrada (los mismos nombres
-// que usa el buscador). También suman links internos para Google.
+// Explorar: cada actividad lleva a su página (/lugares/camping, lib/places.ts;
+// los mismos nombres que usa el buscador). También son links internos para Google.
 export const EXPLORE_LINKS = [
   { activity: "Camping", label: "🏕️ Camping" },
   { activity: "Glamping", label: "🛖 Glamping" },
@@ -191,7 +192,7 @@ export default function Footer() {
             <p className="sf-col-title">Explorar</p>
             <ul className="sf-col-links">
               {EXPLORE_LINKS.map(l => (
-                <li key={l.activity}><Link href={`/search?activity=${l.activity}`}>{l.label}</Link></li>
+                <li key={l.activity}><Link href={activityHref(l.activity)}>{l.label}</Link></li>
               ))}
               <li><Link href="/agregar-lugar">＋ Sumá un lugar</Link></li>
             </ul>

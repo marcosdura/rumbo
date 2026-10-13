@@ -11,9 +11,10 @@ const { activities } = await import("@/components/spots/SearchBar") as unknown a
 afterEach(() => vi.useRealTimers())
 
 describe("Footer", () => {
-  it("Explorar: cada actividad lleva a la búsqueda filtrada, y está Sumá un lugar", () => {
+  it("Explorar: cada actividad lleva a su página, y está Sumá un lugar", () => {
     render(<Footer />)
-    expect(screen.getByRole("link", { name: "🧗 Escalada" }).getAttribute("href")).toBe("/search?activity=Escalada")
+    expect(screen.getByRole("link", { name: "🧗 Escalada" }).getAttribute("href")).toBe("/lugares/escalada")
+    for (const l of EXPLORE_LINKS) expect(screen.getByRole("link", { name: l.label }).getAttribute("href")).not.toContain("/search")
     expect(screen.getByRole("link", { name: "＋ Sumá un lugar" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 

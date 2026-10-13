@@ -30,6 +30,16 @@ export async function run(browser, r) {
   r.ok("SEO — la dirección vieja de una escuela lleva a su lugar", old.status === 308 && (old.headers.get("location") ?? "").endsWith("/spots/escuela-de-prueba"),
     `${old.status} ${old.headers.get("location")}`)
   r.ok("SEO — un kayak viejo que no existe da 404", (await fetch(`${FRONT}/kayak/nada-999`, { redirect: "manual" })).status === 404)
+  // Las páginas por actividad y departamento llegan a Google con los lugares.
+  const surfRocha = await html("/lugares/surf/rocha")
+  r.ok("SEO — /lugares/surf/rocha trae su título y los lugares en el HTML",
+    surfRocha.includes("<title>Surf en Rocha | Rumbo</title>") && surfRocha.includes('href="/spots/escuela-de-prueba"') && surfRocha.includes('href="/spots/playa-de-prueba"'))
+  r.ok("SEO — una combinación sin lugares da 404", (await fetch(`${FRONT}/lugares/surf/artigas`)).status === 404)
+  r.ok("SEO — el sitemap incluye las páginas /lugares y no la búsqueda",
+    sitemapXml.includes("/lugares/surf/rocha</loc>") && sitemapXml.includes("/lugares/trekking</loc>") && !sitemapXml.includes("/search</loc>"))
+  const searchHtml = await html("/search?activity=Surf")
+  r.ok("SEO — la búsqueda queda fuera de Google, con título según el filtro",
+    /<meta name="robots" content="noindex, follow"/.test(searchHtml) && searchHtml.includes("<title>Buscar: Surf en Uruguay | Rumbo</title>"))
   const og = await fetch(`${FRONT}/opengraph-image`)
   r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {
@@ -58,6 +68,13 @@ export async function run(browser, r) {
     const opened = await menu.getAttribute("aria-expanded")
     await page.keyboard.press("Escape")
     r.ok(`[${label}] el menú abre y Escape lo cierra`, opened === "true" && (await menu.getAttribute("aria-expanded")) === "false")
+
+    await page.goto(`${FRONT}/lugares/surf`, { waitUntil: "networkidle" })
+    const cards = await page.locator(".places-grid .spot-card").count()
+    await page.getByRole("link", { name: /^Rocha/ }).click()
+    await page.waitForURL("**/lugares/surf/rocha")
+    r.ok(`[${label}] /lugares/surf muestra los lugares y lleva a Surf en Rocha`, cards === 2 && (await page.locator("h1").textContent()).includes("Surf en Rocha"), `${cards} cards`)
+    await shot(page, `${label}-lugares`)
 
     const res = await page.goto(`${FRONT}/esto-no-existe`, { waitUntil: "networkidle" })
     r.ok(`[${label}] 404 propia`, res.status() === 404 && (await page.getByRole("heading", { name: "No encontramos esta página" }).count()) === 1)

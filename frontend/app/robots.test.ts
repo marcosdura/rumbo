@@ -41,6 +41,24 @@ describe("robots y sitemap", () => {
     expect((await urls()).some(u => u.includes("/surf/") || u.includes("/kayak/"))).toBe(false)
   })
 
+  it("incluye las páginas /lugares con lugares, y no la búsqueda (Google no la indexa)", async () => {
+    lists = { "/sitemap/places": [{ activity: "Camping", department: "Rocha", count: 2 }] }
+    const all = await urls()
+    expect(all).toEqual(expect.arrayContaining([
+      "https://rumboapp.uy/lugares/camping",
+      "https://rumboapp.uy/lugares/surf",
+      "https://rumboapp.uy/lugares/rocha",
+      "https://rumboapp.uy/lugares/camping/rocha",
+    ]))
+    expect(all).not.toContain("https://rumboapp.uy/lugares/surf/rocha")
+    expect(all.some(u => u.includes("/search"))).toBe(false)
+  })
+
+  it("si falla la lista de /lugares, igual van las páginas de cada actividad", async () => {
+    lists = { "/sitemap/places": null }
+    expect(await urls()).toContain("https://rumboapp.uy/lugares/kayak")
+  })
+
   it("si una lista falla, el resto sale igual", async () => {
     lists = { "/spots/ids": [{ id: 1, slug: "cerro" }], "/sitemap/trails": null }
     expect(await urls()).toContain("https://rumboapp.uy/spots/cerro")

@@ -38,6 +38,7 @@ import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
 import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
 import { cameFromRumbo, offSeasonNotice } from "@/lib/spotDetail"
+import { activityHref, departmentHref } from "@/lib/places"
 import NearbySpots from "@/components/spot-detail/NearbySpots"
 import Link from "next/link"
 
@@ -305,9 +306,10 @@ function SpotDetail({ spot }) {
                   </button>
                 </span>
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
-                {/* Las pills llevan a la búsqueda de esa actividad o departamento. */}
+                {/* Las pills llevan a esa actividad en el departamento ("Camping en
+                    Rocha") y a los lugares del departamento (lib/places.ts). */}
                 {(spot.categories?.length > 0 ? spot.categories : spot.category ? [spot.category] : []).map((cat) => (
-                  <Link key={cat.name} href={`/search?activity=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                  <Link key={cat.name} href={activityHref(cat.name, spot.department)} style={{ textDecoration: "none" }}>
                     <Pill variant="beige" hover>
                       {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}
                       {cat.name}
@@ -315,7 +317,7 @@ function SpotDetail({ spot }) {
                   </Link>
                 ))}
                 {spot.department && (
-                  <Link href={`/search?department=${encodeURIComponent(spot.department)}`} style={{ textDecoration: "none" }}>
+                  <Link href={departmentHref(spot.department)} style={{ textDecoration: "none" }}>
                     <Pill variant="dark-green" hover>{spot.department}</Pill>
                   </Link>
                 )}

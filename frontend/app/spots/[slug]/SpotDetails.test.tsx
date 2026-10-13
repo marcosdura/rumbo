@@ -191,11 +191,11 @@ describe("Página del lugar: contacto y orden en el celular", () => {
 })
 
 describe("Página del lugar: para seguir navegando", () => {
-  it("las pills llevan a la búsqueda de la actividad y del departamento", async () => {
+  it("las pills llevan a la actividad en ese departamento y a los lugares del departamento", async () => {
     render(<SpotDetail spot={spot("Camping", { categories: [{ id: 1, name: "Camping" }, { id: 2, name: "Trekking" }] })} />)
     await screen.findByText("Cerro Arequita")
-    expect(screen.getByRole("link", { name: /Trekking/ }).getAttribute("href")).toBe("/search?activity=Trekking")
-    expect(screen.getByRole("link", { name: "Lavalleja" }).getAttribute("href")).toBe("/search?department=Lavalleja")
+    expect(screen.getByRole("link", { name: /Trekking/ }).getAttribute("href")).toBe("/lugares/trekking/lavalleja")
+    expect(screen.getByRole("link", { name: "Lavalleja" }).getAttribute("href")).toBe("/lugares/lavalleja")
   })
 
   it("muestra los cercanos del lugar", async () => {
