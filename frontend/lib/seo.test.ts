@@ -1,11 +1,46 @@
 import { describe, expect, it } from "vitest"
-import { breadcrumb, metaDescription, pageTitle, shareImages, socialMetadata, spotFallbackDescription } from "./seo"
+import { breadcrumb, metaDescription, pageTitle, richTitle, shareImages, socialMetadata, spotFallbackDescription, spotTitle } from "./seo"
 
 describe("títulos", () => {
   it("sin espacios de más (antes 'Sendero Norte  | Rumbo')", () => {
     expect(pageTitle("Sendero Norte ")).toBe("Sendero Norte | Rumbo")
     expect(pageTitle("  Área   protegida ")).toBe("Área protegida | Rumbo")
     expect(pageTitle(null)).toBe("Rumbo")
+  })
+})
+
+describe("títulos con la actividad y el lugar", () => {
+  const spot = (name: string, category: string, extra: Record<string, unknown> = {}) =>
+    ({ name, department: "Rocha", category: { name: category }, ...extra })
+
+  it("suma la actividad y el departamento", () => {
+    expect(spotTitle(spot("Laguna Negra", "Camping"))).toBe("Laguna Negra — Camping en Rocha | Rumbo")
+  })
+
+  it("si el nombre ya dice la actividad no la repite (sin importar tildes ni mayúsculas)", () => {
+    expect(spotTitle(spot("Camping Santa Teresa", "Camping"))).toBe("Camping Santa Teresa — Rocha | Rumbo")
+    expect(richTitle("ESCALADA en Cerro", { activity: "Escalada", keyword: "escalada", place: "Lavalleja" })).toBe("ESCALADA en Cerro — Lavalleja | Rumbo")
+  })
+
+  it("distingue la escuela de surf de la playa", () => {
+    expect(spotTitle(spot("Ola Brava", "Surf", { surf_detail: {} }))).toBe("Ola Brava — Escuela de surf en Rocha | Rumbo")
+    expect(spotTitle(spot("Playa El Emir", "Surf", { surf_detail: null }))).toBe("Playa El Emir — Surf en Rocha | Rumbo")
+  })
+
+  it("sin departamento, solo la actividad", () => {
+    expect(spotTitle({ name: "Cascada", category: { name: "Trekking" } })).toBe("Cascada — Trekking | Rumbo")
+  })
+
+  it("si no entra en 60 caracteres saca primero el lugar y después la actividad", () => {
+    const largo = "Sendero de los Cerros y las Quebradas"
+    expect(richTitle(largo, { activity: "Trekking", place: "Lavalleja" })).toBe(`${largo} — Trekking | Rumbo`)
+    const muyLargo = "Sendero de los Cerros, las Quebradas y los Arroyos"
+    expect(richTitle(muyLargo, { activity: "Trekking", place: "Lavalleja" })).toBe(`${muyLargo} | Rumbo`)
+    for (const t of [richTitle(largo, { activity: "Trekking", place: "Lavalleja" })]) expect(t.length).toBeLessThanOrEqual(60)
+  })
+
+  it("sin nombre, Rumbo", () => {
+    expect(richTitle("  ", { activity: "Camping", place: "Rocha" })).toBe("Rumbo")
   })
 })
 

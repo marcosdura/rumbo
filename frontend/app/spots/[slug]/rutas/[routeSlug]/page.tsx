@@ -12,7 +12,7 @@ import { routeDescription } from "@/lib/metadata"
 import { otherRouteFacts, routeStats, sharePhoto, type RoutePage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
 import JsonLd from "@/components/seo/JsonLd"
-import { breadcrumb, metaDescription, pageTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
+import { breadcrumb, metaDescription, pageTitle, richTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string; routeSlug: string }>
@@ -28,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, routeSlug } = await params
   const page = await getRoutePage(slug, routeSlug)
   const photo = page ? sharePhoto(page.route.photos, page.spot) : null
-  const title = pageTitle(page?.route.name ?? routeSlug)
+  const title = page
+    ? richTitle(page.route.name, { activity: "Trekking", keyword: "trekking", place: page.spot.name })
+    : pageTitle(routeSlug)
   const description = metaDescription(page?.route.description) || routeDescription(page?.route ?? null)
   const image = photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null
   return { title, description, ...socialMetadata({ title, description, path: `/spots/${slug}/rutas/${routeSlug}`, image }) }

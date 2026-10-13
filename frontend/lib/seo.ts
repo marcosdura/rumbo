@@ -15,6 +15,45 @@ export function pageTitle(name: string | null | undefined): string {
   return clean ? `${clean} | Rumbo` : "Rumbo"
 }
 
+// Google corta el título más o menos ahí.
+const MAX_TITLE = 60
+const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+
+// "Camping Santa Teresa — Rocha | Rumbo", "Cerro Arequita — Trekking en
+// Lavalleja | Rumbo": lo que la gente busca ("camping en Rocha") queda en el
+// título. Si el nombre ya dice la actividad (`keyword`) no se repite. Si no
+// entra, se saca primero el lugar y después la actividad.
+export function richTitle(
+  name: string | null | undefined,
+  { activity, keyword, place }: { activity?: string | null; keyword?: string | null; place?: string | null },
+): string {
+  const clean = cleanText(name)
+  if (!clean) return "Rumbo"
+  const where = cleanText(place)
+  const said = !!keyword && fold(clean).includes(fold(keyword))
+  const what = said ? "" : cleanText(activity)
+  const candidates = [
+    what && where ? `${what} en ${where}` : what || where,
+    what,
+  ]
+  for (const extra of candidates) {
+    const title = extra ? `${clean} — ${extra} | Rumbo` : ""
+    if (title && title.length <= MAX_TITLE) return title
+  }
+  return pageTitle(clean)
+}
+
+// Qué es un lugar, para el título: la escuela de surf o el servicio de
+// kayak se distinguen de la playa o la laguna.
+export function spotTitle(spot: {
+  name: string; department?: string | null; category?: unknown
+  surf_detail?: unknown; kayak_service_detail?: unknown
+}): string {
+  const category = (spot.category as { name?: string } | null | undefined)?.name ?? null
+  const activity = category === "Surf" && spot.surf_detail ? "Escuela de surf" : category
+  return richTitle(spot.name, { activity, keyword: category, place: spot.department })
+}
+
 // Hasta 160 caracteres, cortando en una palabra completa con "…". Antes se
 // cortaba a la mitad de una palabra ("uno de los puntos más frec").
 export function metaDescription(text: string | null | undefined, max = MAX_DESCRIPTION): string {

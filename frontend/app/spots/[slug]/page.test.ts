@@ -59,7 +59,7 @@ describe("SEO del lugar", () => {
   it("título sin espacios de más y descripción cortada en una palabra", async () => {
     const long = "Spot de surf urbano a pocos metros de la Península de Punta del Este. Las rocas cercanas generan rompientes interesantes que lo hacen uno de los puntos más frecuentados."
     const m = await meta("emir", { ...cabo, name: "Playa El Emir ", description: long })
-    expect(m.title).toBe("Playa El Emir | Rumbo")
+    expect(m.title).toBe("Playa El Emir — Rocha | Rumbo")
     expect(String(m.description).endsWith("…")).toBe(true)
     expect(String(m.description).length).toBeLessThanOrEqual(160)
   })

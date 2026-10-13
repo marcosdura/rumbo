@@ -13,7 +13,7 @@ import { sectorDescription } from "@/lib/metadata"
 import { otherSectorFacts, sectorStats, sharePhoto, type SectorPage } from "@/lib/trailPage"
 import { shareImageUrl } from "@/lib/spotDetail"
 import JsonLd from "@/components/seo/JsonLd"
-import { breadcrumb, pageTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
+import { breadcrumb, pageTitle, richTitle, socialMetadata, trailJsonLd } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string; sectorSlug: string }>
@@ -28,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, sectorSlug } = await params
   const page = await getSectorPage(slug, sectorSlug)
   const photo = page ? sharePhoto(page.sector.photos, page.spot) : null
-  const title = pageTitle(page?.sector.name ?? sectorSlug)
+  const title = page
+    ? richTitle(page.sector.name, { activity: "Escalada", keyword: "escalada", place: page.spot.name })
+    : pageTitle(sectorSlug)
   const description = sectorDescription(page?.sector ?? null)
   const image = photo ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, photo) : null
   return { title, description, ...socialMetadata({ title, description, path: `/spots/${slug}/sectores/${sectorSlug}`, image }) }

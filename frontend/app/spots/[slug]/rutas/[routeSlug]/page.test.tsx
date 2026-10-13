@@ -43,7 +43,7 @@ describe("metadata de la ruta", () => {
   it("con los datos de la ruta", async () => {
     page = { route, spot, others: [] }
     const meta = await generateMetadata({ params })
-    expect(meta.title).toBe("Cumbre | Rumbo")
+    expect(meta.title).toBe("Cumbre — Trekking en Cerro Arequita | Rumbo")
     expect(meta.description).toBe("Ruta de trekking: 4 km, 1.5 h, dificultad moderado.")
   })
 
@@ -166,7 +166,7 @@ describe("SEO", () => {
   it("canónica, og:url y título sin espacios de más", async () => {
     page = { route: { ...route, name: "Cumbre " }, spot, others: [] }
     const meta = await generateMetadata({ params })
-    expect(meta.title).toBe("Cumbre | Rumbo")
+    expect(meta.title).toBe("Cumbre — Trekking en Cerro Arequita | Rumbo")
     expect(meta.alternates?.canonical).toBe("/spots/arequita/rutas/cumbre")
     expect(meta.openGraph?.url).toBe("/spots/arequita/rutas/cumbre")
   })

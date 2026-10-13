@@ -8,7 +8,7 @@ import { nullIfNotFound } from "@/lib/notFound"
 import type { PublicSpot } from "@/lib/types"
 import { shareImageUrl } from "@/lib/spotDetail"
 import { SITE_URL } from "@/lib/site"
-import { breadcrumb, metaDescription, pageTitle, socialMetadata, spotFallbackDescription } from "@/lib/seo"
+import { breadcrumb, metaDescription, socialMetadata, spotFallbackDescription, spotTitle } from "@/lib/seo"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? shareImageUrl(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, mainImage.cloudinary_public_id)
     : undefined
 
-  const title = pageTitle(spot.name)
+  const title = spotTitle(spot)
   const description = metaDescription(spot.description) || spotFallbackDescription(spot)
   return {
     title,

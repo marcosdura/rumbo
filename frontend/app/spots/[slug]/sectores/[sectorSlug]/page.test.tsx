@@ -43,7 +43,7 @@ describe("metadata del sector", () => {
   it("cuenta las vías con routes_count", async () => {
     page = { sector: { ...sector, routes_count: 8 }, spot, routes, others: [] }
     const meta = await generateMetadata({ params })
-    expect(meta.title).toBe("Norte | Rumbo")
+    expect(meta.title).toBe("Norte — Escalada en Cerro Arequita | Rumbo")
     expect(meta.description).toBe("Sector de escalada: 8 vías, graduación 5b–6c.")
   })
 
@@ -145,7 +145,7 @@ describe("SEO", () => {
   it("canónica, og:url y título sin espacios de más", async () => {
     page = { sector: { ...sector, name: "Norte " }, spot, routes, others: [] }
     const meta = await generateMetadata({ params })
-    expect(meta.title).toBe("Norte | Rumbo")
+    expect(meta.title).toBe("Norte — Escalada en Cerro Arequita | Rumbo")
     expect(meta.alternates?.canonical).toBe("/spots/arequita/sectores/norte")
     expect(meta.openGraph?.url).toBe("/spots/arequita/sectores/norte")
   })
