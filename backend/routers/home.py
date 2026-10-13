@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -72,10 +73,12 @@ NEARBY_SPOTS_LIMIT = 4
 
 
 @router.get("/spots/{spot_id}/nearby")
-def spots_near_spot(spot_id: int, db: Session = Depends(get_db)):
+def spots_near_spot(spot_id: int, services: Optional[str] = None, db: Session = Depends(get_db)):
     """"Cerca de acá" en la página del lugar: hasta 4 lugares publicados a
     menos de 25 km, del más cercano al más lejano, con la distancia. Para
-    armar la salida (camping + trekking cerca, por ejemplo)."""
+    armar la salida (camping + trekking cerca, por ejemplo).
+    services=surf|kayak: solo escuelas de surf o servicios de kayak (las
+    "escuelas cerca" en la página de una playa)."""
     spot = db.get(SpotDB, spot_id)
     if not spot or not spot.is_approved:
         raise HTTPException(status_code=404, detail="Spot not found")
@@ -91,8 +94,13 @@ def spots_near_spot(spot_id: int, db: Session = Depends(get_db)):
             SpotDB.lat.between(spot.lat - dlat, spot.lat + dlat),
             SpotDB.lng.between(spot.lng - dlng, spot.lng + dlng),
         )
-        .all()
     )
+    service_model = {"surf": SurfDetail, "kayak": KayakServiceDetail}.get(services or "")
+    if services and service_model is None:
+        raise HTTPException(status_code=422, detail="services: surf o kayak")
+    if service_model is not None:
+        candidates = candidates.join(service_model, service_model.spot_id == SpotDB.id)
+    candidates = candidates.all()
     near = sorted(
         ((distance_km(spot.lat, spot.lng, c.lat, c.lng), c) for c in candidates),
         key=lambda pair: pair[0],

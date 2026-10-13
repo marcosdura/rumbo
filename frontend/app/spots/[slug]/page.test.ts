@@ -78,4 +78,12 @@ describe("SEO del lugar", () => {
     expect(ld.map((x: { "@type": string }) => x["@type"])).toEqual(["Place", "BreadcrumbList"])
     expect(ld[1].itemListElement[1].item).toBe("https://rumboapp.uy/spots/cabo-2")
   })
+
+  it("una escuela de surf es un negocio para Google (SportsActivityLocation)", async () => {
+    spotData = { ...cabo, surf_detail: { class_type: "grupal" } }
+    const { renderToStaticMarkup } = await import("react-dom/server")
+    const html = renderToStaticMarkup(await SpotPage({ params: Promise.resolve({ slug: "escuela-1" }) }))
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1])
+    expect(ld[0]["@type"]).toBe("SportsActivityLocation")
+  })
 })

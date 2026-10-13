@@ -83,3 +83,18 @@ def test_las_direcciones_viejas_llevan_al_lugar(client, db, make_spot):
     assert client.get("/spots/legacy/kayak/7").status_code == 404
     assert client.get("/spots/legacy/kayak/9").status_code == 404, "sin publicar no se redirige"
     assert client.get("/spots/legacy/otra/7").status_code == 404
+
+
+def test_escuelas_cerca_de_una_playa(client, db, make_spot):
+    playa = make_spot(name="Playa Brava", category="Surf", lat=-34.96, lng=-54.94)
+    escuela = make_spot(name="Escuela Cerca", category="Surf", lat=-34.95, lng=-54.93)
+    make_spot(name="Camping Cerca", category="Camping", lat=-34.95, lng=-54.92)
+    lejos = make_spot(name="Escuela Lejos", category="Surf", lat=-33.0, lng=-54.0)
+    db.add_all([SurfDetail(spot_id=escuela.id, price_note="por clase"), SurfDetail(spot_id=lejos.id)])
+    db.commit()
+    near = client.get(f"/spots/{playa.id}/nearby", params={"services": "surf"}).json()
+    assert [s["name"] for s in near] == ["Escuela Cerca"]
+    # La card muestra el precio con su aclaración.
+    assert near[0]["surf_detail"]["price_note"] == "por clase"
+    assert sorted(s["name"] for s in client.get(f"/spots/{playa.id}/nearby").json()) == ["Camping Cerca", "Escuela Cerca"]
+    assert client.get(f"/spots/{playa.id}/nearby", params={"services": "otra"}).status_code == 422

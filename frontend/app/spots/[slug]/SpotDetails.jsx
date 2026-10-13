@@ -20,8 +20,7 @@ import SpotDetails from "../../../components/spot-detail/SpotDetails"
 import TrekkingRoutes from "../../../components/spot-detail/TrekkingRoutes"
 import TrekkingAmenitiesCard from "../../../components/spot-detail/TrekkingAmenitiesCard"
 import ClimbingSectorsCards from "../../../components/spot-detail/ClimbingSectorsCards"
-import KayakDetail from "../../../components/spot-detail/KayakDetail"
-import SurfSchoolDetail from "../../../components/spot-detail/SurfSchoolDetail"
+import ServiceSection from "@/components/spot-detail/ServiceSection"
 import Footer from "../../../components/layout/Footer"
 import { CldImage } from 'next-cloudinary'
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
@@ -49,8 +48,9 @@ const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr
 function SpotDetail({ spot }) {
   const routes = spot.routes ?? []
   const sectors = spot.climbing_sectors ?? []
-  const kayakDetails = spot.kayak_detail ?? []
-  const surfSchools = spot.surf_schools ?? []
+  // Playa (Surf) o laguna (Kayak): sin datos de escuela ni de servicio.
+  const venueService = spot.category?.name === "Surf" ? "surf" : spot.category?.name === "Kayak" ? "kayak" : null
+  const isVenue = venueService !== null && !spot.surf_detail && !spot.kayak_service_detail
   const [showShare, setShowShare] = useState(false)
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -428,36 +428,22 @@ function SpotDetail({ spot }) {
                 <ExperienciasSection spotId={spot.id} />
               )}
 
-              {/* Playas y lagunas son lugares públicos: cualquiera suma su escuela
-                  o servicio (queda en revisión y pasa a ser su dueño), así que la
-                  sección se muestra aunque esté vacía. */}
-              {spot.category?.name === "Kayak" && kayakDetails.length > 0 && (
-                <KayakDetail
-                  kayaks={kayakDetails}
-                  action={<AddButton href={addToSpotUrl("kayak", spot.id)}>＋ Sumar tu servicio de kayak</AddButton>}
-                />
-              )}
-              {spot.category?.name === "Kayak" && kayakDetails.length === 0 && (
-                <EmptySection
-                  title="Alquiler de Kayaks"
-                  text="Todavía no hay servicios de kayak en este lugar. ¿Ofrecés uno? Sumalo y lo revisamos."
-                  href={addToSpotUrl("kayak", spot.id)}
-                  label="＋ Sumar tu servicio de kayak"
-                />
-              )}
-              {spot.category?.name === "Surf" && surfSchools.length > 0 && (
-                <SurfSchoolDetail
-                  surfSchools={surfSchools}
-                  action={<AddButton href={addToSpotUrl("surf", spot.id)}>＋ Sumar tu escuela de surf</AddButton>}
-                />
-              )}
-              {spot.category?.name === "Surf" && surfSchools.length === 0 && (
-                <EmptySection
-                  title="Escuelas de Surf"
-                  text="Todavía no hay escuelas de surf en esta playa. ¿Tenés una? Sumala y la revisamos."
-                  href={addToSpotUrl("surf", spot.id)}
-                  label="＋ Sumar tu escuela de surf"
-                />
+              {/* Escuela de surf o servicio de kayak: sus datos propios. */}
+              <ServiceSection spot={spot} />
+              {/* Playa o laguna (Surf / Kayak sin datos de escuela): las escuelas o
+                  servicios que hay cerca. Antes colgaban de la playa. */}
+              {isVenue && (
+                <>
+                  <NearbySpots
+                    spotId={spot.id}
+                    services={venueService}
+                    label={venueService === "surf" ? "Para aprender o alquilar" : "Para salir a remar"}
+                    title={venueService === "surf" ? "Escuelas de surf cerca" : "Servicios de kayak cerca"}
+                  />
+                  <div>
+                    <AddButton href="/agregar-lugar">{venueService === "surf" ? "＋ Sumar tu escuela de surf" : "＋ Sumar tu servicio de kayak"}</AddButton>
+                  </div>
+                </>
               )}
 
               {/* Reviews */}

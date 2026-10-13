@@ -58,7 +58,8 @@ export default async function SpotPage({ params }: Props) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Place",
+    // Una escuela de surf o un servicio de kayak es un negocio; el resto, un lugar.
+    "@type": spot.surf_detail || spot.kayak_service_detail ? "SportsActivityLocation" : "Place",
     name: spot.name.trim(),
     description: spot.description?.trim() || spotFallbackDescription(spot),
     url: `${SITE_URL}/spots/${slug}`,

@@ -2,8 +2,9 @@
 // calificación o "Nuevo", y una línea con el dato clave (precio), si está
 // fuera de temporada y si acepta mascotas. Todo sale de lo que ya trae el
 // listado (GET /spots, /home, /favorites).
+import { servicePriceNote, type ServiceSpot } from "./serviceDetail"
 
-export type CardSpot = {
+export type CardSpot = ServiceSpot & {
   price?: number | null
   created_at?: string | null
   season_start?: number | null
@@ -50,9 +51,16 @@ export function ratingLabel(spot: CardSpot, now = new Date()): { kind: "rating" 
 const PRICED_PER_NIGHT = ["Camping", "Motorhome"]
 
 // El precio según la categoría principal: por noche en camping y motorhome,
-// "desde" el alojamiento más barato en glamping. null si no aplica o no se sabe.
+// "desde" el alojamiento más barato en glamping, "desde" con su aclaración
+// en escuelas y servicios. null si no aplica o no se sabe.
 export function priceLabel(spot: CardSpot): string | null {
   const category = primaryCategory(spot)
+  // Escuela de surf o servicio de kayak: "Desde $1.200 por clase".
+  const note = servicePriceNote(spot)
+  if (note !== undefined) {
+    if (spot.price == null) return null
+    return spot.price === 0 ? "Gratis" : `Desde ${money(spot.price)}${note ? ` ${note}` : ""}`
+  }
   if (category === "Glamping") {
     const prices = (spot.glamping_detail ?? []).map(u => u.price_per_night).filter((p): p is number => typeof p === "number" && p > 0)
     return prices.length ? `Desde ${money(Math.min(...prices))} / noche` : null

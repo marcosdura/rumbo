@@ -27,7 +27,7 @@ vi.mock("../../../components/spot-detail/SpotImages", () => ({ default: () => nu
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: () => null }))
 vi.mock("../../../components/spot-detail/ExperienciasSection", () => ({ default: () => null }))
-vi.mock("@/components/spot-detail/NearbySpots", () => ({ default: ({ spotId }: { spotId: number }) => <p>cercanos de {spotId}</p> }))
+vi.mock("@/components/spot-detail/NearbySpots", () => ({ default: ({ spotId, services, title }: { spotId: number; services?: string; title?: string }) => <p>cercanos de {spotId}{services ? ` (${services}: ${title})` : ""}</p> }))
 
 const { default: SpotDetail } = await import("./SpotDetails")
 
@@ -78,15 +78,34 @@ describe("Página del lugar: accesos para sumar contenido", () => {
     expect(screen.queryByRole("link", { name: "Administrar →" })).toBeNull()
   })
 
-  it("surf: cualquiera puede sumar su escuela, aunque la playa no tenga ninguna", async () => {
+  it("una playa muestra las escuelas de surf cercanas e invita a sumar la tuya", async () => {
     render(<SpotDetail spot={spot("Surf")} />)
-    const link = await screen.findByRole("link", { name: "＋ Sumar tu escuela de surf" })
-    expect(link.getAttribute("href")).toBe("/agregar-lugar?sumar=surf&spot=12")
+    expect(screen.getByText("cercanos de 12 (surf: Escuelas de surf cerca)")).toBeTruthy()
+    expect((await screen.findByRole("link", { name: "＋ Sumar tu escuela de surf" })).getAttribute("href")).toBe("/agregar-lugar")
   })
 
-  it("kayak con servicios también ofrece sumar", async () => {
-    render(<SpotDetail spot={spot("Kayak", { kayak_detail: [{ id: 1, name: "Kayak Laguna" }] })} />)
-    expect(await screen.findByRole("link", { name: "＋ Sumar tu servicio de kayak" })).toBeTruthy()
+  it("una escuela de surf muestra sus datos (y no las escuelas cercanas)", () => {
+    render(<SpotDetail spot={spot("Surf", { surf_detail: {
+      class_type: "grupal", duration: 1.5, equipment_include: true, levels: ["principiante"], languages: ["espanol"],
+      price_note: "por clase", operates_at: "Playa El Emir",
+    } })} />)
+    expect(screen.getByText("La escuela")).toBeTruthy()
+    expect(screen.getByText("📍 Playa El Emir")).toBeTruthy()
+    expect(screen.getByText("👥 Grupal")).toBeTruthy()
+    expect(screen.queryByText(/Escuelas de surf cerca/)).toBeNull()
+    expect(screen.queryByRole("link", { name: "＋ Sumar tu escuela de surf" })).toBeNull()
+  })
+
+  it("una laguna muestra los servicios de kayak cercanos; un servicio, sus datos", () => {
+    const { unmount } = render(<SpotDetail spot={spot("Kayak")} />)
+    expect(screen.getByText("cercanos de 12 (kayak: Servicios de kayak cerca)")).toBeTruthy()
+    unmount()
+    render(<SpotDetail spot={spot("Kayak", { kayak_service_detail: {
+      water_type: "lago", difficulty: "facil", duration: null, kayak_type: null, rental_available: true,
+      includes_guide: null, includes_life_jacket: null, price_note: null, operates_at: null,
+    } })} />)
+    expect(screen.getByText("El servicio")).toBeTruthy()
+    expect(screen.getByText("🏪 Disponible")).toBeTruthy()
   })
 
   it("cualquiera puede reportar el lugar, menos su dueño", async () => {

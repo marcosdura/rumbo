@@ -519,6 +519,8 @@ SPOT_LIST_OPTIONS = (
     joinedload(SpotDB.images),
     selectinload(SpotDB.glamping_detail),
     selectinload(SpotDB.glamping_amenities),
+    selectinload(SpotDB.surf_detail),
+    selectinload(SpotDB.kayak_service_detail),
 )
 
 
@@ -559,6 +561,9 @@ def serialize_spot_list(db: Session, spots: list) -> list[dict]:
             "categories": categories,
             "glamping_detail": spot.glamping_detail,
             "glamping_amenities": spot.glamping_amenities,
+            # Escuela / servicio: la card muestra "Desde $X por clase".
+            "surf_detail": SurfDetailIn.model_validate(spot.surf_detail).model_dump() if spot.surf_detail else None,
+            "kayak_service_detail": KayakServiceDetailIn.model_validate(spot.kayak_service_detail).model_dump() if spot.kayak_service_detail else None,
             "average_rating": round(float(agg.average_rating), 1) if agg else None,
             "review_count": agg.review_count if agg else 0,
         }
