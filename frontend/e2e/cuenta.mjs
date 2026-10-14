@@ -394,7 +394,7 @@ async function admin(browser, r) {
 
   await open(page, "/admin")
   const nuevos = page.getByRole("button", { name: /^🆕 Lugares nuevos/ })
-  r.ok("Admin — el resumen abre y cuenta los lugares nuevos", /\(\d+\)/.test(await nuevos.textContent()), await nuevos.textContent())
+  r.ok("Admin — el resumen abre y cuenta los lugares nuevos", /\d+$/.test((await nuevos.textContent()).trim()), await nuevos.textContent())
   await shot(page, "admin-resumen")
 
   await nuevos.click()

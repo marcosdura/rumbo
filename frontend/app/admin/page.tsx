@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
-import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
-import { tab } from "@/lib/theme"
 import { api, ApiError } from "@/lib/api"
 import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 import { spotStatus, ADMIN_MODES, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
@@ -20,6 +17,14 @@ import ReportsTab, { groupKey, type ReportGroup } from "./ReportsTab"
 import ClaimsTab, { type AdminClaim } from "./ClaimsTab"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
+import AdminSidebar, { type SidebarGroup } from "./AdminSidebar"
+
+// El título de la página: la sección en la que se está, sin el emoji.
+function sectionTitle(mode: AdminMode, groups: SidebarGroup[]): string {
+  if (mode === "resumen") return "Resumen"
+  const label = groups.flatMap(g => g.tabs).find(t => t.id === mode)?.label ?? "Panel de administración"
+  return label.replace(/^\S+\s/, "")
+}
 
 export default function AdminPage() {
   const { data: session } = useSession()
@@ -430,62 +435,25 @@ export default function AdminPage() {
       <style>{`
         .spot-row { background: #fff; border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-card); padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
         .action-btn-sm { padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+        /* Todo el ancho de la pantalla: la barra lateral y el contenido. */
+        .admin-layout { display: flex; gap: 24px; padding: 24px 24px 60px; max-width: 1600px; margin: 0 auto; box-sizing: border-box; }
+        .admin-main { flex: 1; min-width: 0; }
+        .admin-title { font-size: 24px; font-weight: 700; color: #1b1b19; margin: 4px 0 18px; }
+        @media (max-width: 860px) {
+          .admin-layout { flex-direction: column; gap: 14px; padding: 14px 14px 48px; }
+          .admin-title { font-size: 20px; margin-bottom: 12px; }
+        }
       `}</style>
 
       <Navbar />
 
-      <main id="contenido" style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 60px" }}>
+      <div className="admin-layout">
+        <AdminSidebar groups={TAB_GROUPS} mode={mode} counts={counts} onGo={go} />
 
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Link href="/" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
-            ← Volver al inicio
-          </Link>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 26, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
-                Panel de administración
-              </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Pill variant="dark-green" size="sm">modo admin</Pill>
-
-              </div>
-            </div>
-            <a href="/agregar-lugar"
-              style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
-              + Agregar lugar
-            </a>
-          </div>
-        </div>
-
-        {/* Pestañas: la portada y dos grupos (trabajo pendiente y gestión). En
-            el celular cada grupo es una fila que se desliza. */}
-        <nav aria-label="Secciones del panel" style={{ marginBottom: 20 }}>
-          <style>{`
-            .admin-tabs-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-            .admin-tabs-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); min-width: 86px; }
-            @media (max-width: 640px) {
-              .admin-tabs-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-              .admin-tabs-row > * { flex-shrink: 0; }
-            }
-          `}</style>
-          <div className="admin-tabs-row">
-            <button onClick={() => go("resumen")} style={tab(mode === "resumen")} aria-current={mode === "resumen" ? "page" : undefined}>📊 Resumen</button>
-          </div>
-          {TAB_GROUPS.map(g => (
-            <div key={g.title} className="admin-tabs-row">
-              <span className="admin-tabs-title">{g.title}</span>
-              {g.tabs.map(t => {
-                const n = counts[t.id]
-                return (
-                  <button key={t.id} onClick={() => go(t.id)} style={tab(mode === t.id)} aria-current={mode === t.id ? "page" : undefined}>
-                    {t.label}{n ? ` (${n})` : ""}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </nav>
+      <main id="contenido" className="admin-main">
+        {/* El nombre de la sección (antes: "Panel de administración", con
+            "Volver al inicio", "modo admin" y "+ Agregar lugar"). */}
+        <h1 className="admin-title">{sectionTitle(mode, TAB_GROUPS)}</h1>
 
         {notice && (
           <div role="alert" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "#fdf0f0", border: "1px solid #fecaca", color: "#7c1d1d", borderRadius: 12, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>
@@ -599,6 +567,7 @@ export default function AdminPage() {
           />
         )}
       </main>
+      </div>
 
       <ConfirmModal
         open={deleteConfirmId !== null}

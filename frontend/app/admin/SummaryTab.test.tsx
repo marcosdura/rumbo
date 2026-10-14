@@ -35,6 +35,12 @@ describe("Resumen del admin: bandeja", () => {
     expect(screen.getByText("Para revisar (3)")).toBeTruthy()
   })
 
+  it("lo pendiente se distingue de lo que está al día (color y franja)", () => {
+    render_()
+    expect(screen.getByRole("button", { name: /Lugares nuevos/ }).className).toContain("has-work")
+    expect(screen.getByRole("button", { name: /Reportes/ }).className).toContain("is-clear")
+  })
+
   it("tocar una cola lleva a su pestaña", () => {
     const went: string[] = []
     render_(summary(), t => went.push(t))

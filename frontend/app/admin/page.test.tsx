@@ -150,9 +150,21 @@ describe("Organización del panel", () => {
   it("los contadores de las pestañas salen del resumen hasta que se abre cada una", async () => {
     summary = { ...emptySummary, queues: { ...emptySummary.queues, new_spots: queue(3), changes: queue(1), contributions: queue(2), reports: queue(4) } }
     await load()
-    expect(screen.getByRole("button", { name: "🆕 Lugares nuevos (3)" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "📝 Cambios y aportes (3)" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "⚑ Reportes (4)" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "🆕 Lugares nuevos 3" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "📝 Cambios y aportes 3" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "⚑ Reportes 4" })).toBeTruthy()
+  })
+
+  it("encabezado limpio: el nombre de la sección, sin volver al inicio, modo admin ni agregar lugar", async () => {
+    await load()
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Resumen")
+    await open(/^⚑ Reportes/)
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Reportes")
+    expect(screen.queryByText(/Volver al inicio/)).toBeNull()
+    expect(screen.queryByText("modo admin")).toBeNull()
+    expect(screen.queryByRole("link", { name: /Agregar lugar/ })).toBeNull()
+    // Las secciones están en la barra lateral.
+    expect(screen.getByRole("navigation", { name: "Secciones del panel" }).querySelectorAll("button").length).toBeGreaterThan(5)
   })
 
   it("tocar una cola del resumen lleva a su pestaña, y queda en la URL", async () => {

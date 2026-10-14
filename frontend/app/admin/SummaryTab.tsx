@@ -53,7 +53,8 @@ export function delta({ current, previous }: Pair): { text: string; tone: "up" |
   return { text: "= igual", tone: "same" }
 }
 
-const TONE_COLOR = { up: "var(--primary)", down: "var(--danger)", same: "var(--muted)" }
+const TONE_COLOR = { up: "var(--primary)", down: "var(--danger)", same: "var(--muted-strong)" }
+const TONE_BG = { up: "#e3f2e9", down: "#fde8e8", same: "#efece6" }
 
 function spotHref(s: SpotRef) {
   return s.slug ? `/spots/${s.slug}` : `/dashboard/spots/${s.id}`
@@ -115,9 +116,15 @@ export default function SummaryTab({ summary, loading, error, onGo, now }: {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <style>{`
-        .admin-queue { text-align: left; font-family: inherit; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
-        .admin-queue:hover { border-color: var(--primary); transform: translateY(-1px); }
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        /* Más chicas y con más contraste: entra más en pantalla y lo
+           pendiente se distingue de un vistazo. */
+        .admin-queue { text-align: left; font-family: inherit; cursor: pointer; border-radius: 14px; padding: 10px 12px; transition: box-shadow 0.15s, transform 0.15s; }
+        .admin-queue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .admin-queue.has-work { background: #fff8e1; border: 1px solid #f2c94c; border-left: 4px solid #d99a00; }
+        .admin-queue.is-clear { background: #f1f8f4; border: 1px solid #cfe8d8; border-left: 4px solid #74b98f; }
+        .admin-metric { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; border-top-width: 3px; }
+        .admin-delta { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
       `}</style>
 
       <section aria-labelledby="bandeja">
@@ -126,11 +133,10 @@ export default function SummaryTab({ summary, loading, error, onGo, now }: {
           {QUEUES.map(q => {
             const { count, oldest } = summary.queues[q.key]
             return (
-              <button key={q.key} type="button" className="admin-queue" onClick={() => onGo(q.tab)}
-                style={{ ...card, padding: "12px 14px", borderColor: count > 0 ? "#f0d98a" : "var(--border)" }}>
-                <span style={{ display: "block", fontSize: 24, fontWeight: 700, color: count > 0 ? "#1b1b19" : "var(--muted)" }}>{count}</span>
-                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#3d3d3a" }}>{q.label}</span>
-                <span style={{ display: "block", fontSize: 11, color: count > 0 ? "#78590a" : "var(--primary)", marginTop: 2 }}>
+              <button key={q.key} type="button" className={`admin-queue ${count > 0 ? "has-work" : "is-clear"}`} onClick={() => onGo(q.tab)}>
+                <span style={{ display: "block", fontSize: 22, fontWeight: 800, lineHeight: 1.1, color: count > 0 ? "#1b1b19" : "#2d6a4f" }}>{count}</span>
+                <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#1b1b19", marginTop: 2 }}>{q.label}</span>
+                <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: count > 0 ? "#7a5200" : "#2d6a4f", marginTop: 2 }}>
                   {count > 0 ? `El más viejo, ${timeAgo(oldest, now)}` : "Al día ✓"}
                 </span>
               </button>
@@ -146,11 +152,12 @@ export default function SummaryTab({ summary, loading, error, onGo, now }: {
             const pair = summary.metrics[m.key]
             const d = delta(pair)
             return (
-              <div key={m.key} style={{ ...card, padding: "12px 14px" }}>
-                <span style={{ display: "block", fontSize: 24, fontWeight: 700, color: "#1b1b19" }}>{pair.current}</span>
-                <span style={{ display: "block", fontSize: 13, color: "#3d3d3a" }}>{m.label}</span>
-                <span style={{ display: "block", fontSize: 11, color: TONE_COLOR[d.tone], marginTop: 2 }} title={`Los 30 días anteriores: ${pair.previous}`}>
-                  {d.text} <span style={{ color: "var(--muted)" }}>vs. 30 días anteriores</span>
+              <div key={m.key} className="admin-metric" style={{ borderTopColor: TONE_COLOR[d.tone] }}>
+                <span style={{ display: "block", fontSize: 22, fontWeight: 800, lineHeight: 1.1, color: "#1b1b19" }}>{pair.current}</span>
+                <span style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#3d3d3a", marginTop: 2 }}>{m.label}</span>
+                <span style={{ display: "block", fontSize: 11, marginTop: 4 }} title={`Los 30 días anteriores: ${pair.previous}`}>
+                  <span className="admin-delta" style={{ background: TONE_BG[d.tone], color: TONE_COLOR[d.tone] }}>{d.text}</span>{" "}
+                  <span style={{ color: "var(--muted-strong)" }}>vs. 30 días anteriores</span>
                 </span>
               </div>
             )

@@ -72,6 +72,13 @@ async function waitFor(url, what, seconds = 90) {
 async function main() {
   // El backend primero: el build arma la home con sus datos (si no, la
   // home de prueba queda en "No pudimos cargar los lugares").
+  // Si ya hay algo en los puertos (un servidor de otra corrida que quedó
+  // abierto), las pruebas irían contra él sin avisar: con un build viejo,
+  // fallaban cosas que no tenían nada que ver.
+  for (const url of [API, FRONT]) {
+    const busy = await fetch(url).then(() => true, () => false)
+    if (busy) throw new Error(`Ya hay algo escuchando en ${url}: cerralo antes de correr las pruebas.`)
+  }
   const python = process.env.PYTHON ?? (process.platform === "win32" ? "py" : "python3")
   start(python, [path.join("e2e", "backend_e2e.py"), new URL(API).port], "backend")
   await waitFor(`${API}/spots/ids`, "El backend")
