@@ -16,7 +16,6 @@ vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") } }
 vi.mock("@/components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("@/components/layout/Footer", () => ({ default: () => null }))
 vi.mock("@/components/spots/SpotCard", () => ({
-  EAGER_CARDS: 4,
   default: ({ spot, priority }: { spot: Spot; priority?: boolean }) => <a href={`/spots/${spot.slug}`} data-priority={String(!!priority)}>{spot.name}</a>,
 }))
 vi.mock("@/components/seo/JsonLd", () => ({ default: ({ data }: { data: unknown }) => <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} /> }))

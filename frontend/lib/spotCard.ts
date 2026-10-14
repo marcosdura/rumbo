@@ -4,6 +4,14 @@
 // listado (GET /spots, /home, /favorites).
 import { servicePriceNote, type ServiceSpot } from "./serviceDetail"
 
+// Cuántas cards de arriba cargan la foto de entrada (las que se ven sin
+// scrollear en PC; en el celular, las primeras dos). Con "lazy" el navegador
+// esperaba ~3,7 s para pedir la foto más grande de la pantalla. Va acá y no
+// en SpotCard.jsx: SpotCard es de cliente, y una página del servidor que
+// importa un valor de ahí no recibe el número (antes /lugares nunca cargaba
+// ninguna de entrada).
+export const EAGER_CARDS = 4
+
 export type CardSpot = ServiceSpot & {
   price?: number | null
   created_at?: string | null

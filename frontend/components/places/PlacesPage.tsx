@@ -4,7 +4,8 @@ import Link from "next/link"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import JsonLd from "@/components/seo/JsonLd"
-import SpotCard, { EAGER_CARDS } from "@/components/spots/SpotCard"
+import SpotCard from "@/components/spots/SpotCard"
+import { EAGER_CARDS } from "@/lib/spotCard"
 import type { SpotListItem } from "@/lib/types"
 import {
   activitiesIn, departmentsWith, placesHeading, placesJsonLd, placesPath, searchPath,

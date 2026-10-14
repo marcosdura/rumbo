@@ -14,11 +14,6 @@ const CATEGORY_EMOJI = {
   Escalada: "🧗", Surf: "🏄", Kayak: "🛶", Motorhome: "🚐",
 }
 
-// Cuántas cards de arriba cargan la foto de entrada (las que se ven sin
-// scrollear en PC; en el celular, las primeras dos). Con "lazy" el navegador
-// esperaba ~3,7 s para pedir la foto más grande de la pantalla.
-export const EAGER_CARDS = 4
-
 function SpotCard({ spot, isHighlighted = false, activeCategory, priority = false }) {
   const [showExtraCategories, setShowExtraCategories] = useState(false)
   const [extraCategoriesPos, setExtraCategoriesPos] = useState(null)

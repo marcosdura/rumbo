@@ -1,6 +1,6 @@
 // Lo público, en PC y en celular: la barra (que no salte entre páginas), el
 // menú, la 404, legal, el footer y que no haya errores de JavaScript.
-import { FRONT, apiGet, shot, offlineMaps, a11yProblems } from "./lib.mjs"
+import { FRONT, apiGet, shot, offlineMaps, a11yProblems, fakeCloudinary } from "./lib.mjs"
 
 const VIEWPORTS = [["pc", { width: 1280, height: 800 }], ["celular", { width: 390, height: 844 }]]
 
@@ -44,12 +44,18 @@ export async function run(browser, r) {
   // navegador), el CSS de la card va una vez y hay conexión anticipada.
   r.ok("Rendimiento — la búsqueda llega con los lugares en el HTML", searchHtml.includes("Playa de Prueba") && searchHtml.includes("Escuela de Prueba"))
   r.ok("Rendimiento — el CSS de la card no se repite por card", !surfRocha.includes(".spot-card {"))
+  // Las fotos de las primeras cards se piden de entrada (antes, en /lugares,
+  // todas con "lazy": la foto más grande se pedía a los ~3,7 s).
+  const playaImg = surfRocha.match(/<img[^>]*alt="Playa de Prueba"[^>]*>/)?.[0] ?? ""
+  r.ok("Rendimiento — /lugares precarga la foto de las primeras cards",
+    /<link rel="preload" as="image"[^>]*rumbo\/spots\/e2e\/playa/.test(surfRocha) && playaImg !== "" && !playaImg.includes('loading="lazy"'), playaImg.slice(0, 120))
   r.ok("Rendimiento — conexión anticipada a Cloudinary", surfRocha.includes('rel="preconnect" href="https://res.cloudinary.com"'))
   const og = await fetch(`${FRONT}/opengraph-image`)
   r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport })
     await offlineMaps(ctx)
+    await fakeCloudinary(ctx)
     const page = await ctx.newPage()
     const errors = []
     page.on("pageerror", e => errors.push(e.message))

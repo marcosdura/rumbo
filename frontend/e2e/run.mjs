@@ -13,6 +13,7 @@
 //
 // Las capturas quedan en e2e/shots/. Correrlo antes de cada push.
 import { spawn, spawnSync } from "node:child_process"
+import fs from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
 import { ADMIN, API, FRONT, USER, launch, report } from "./lib.mjs"
@@ -74,6 +75,9 @@ async function main() {
   const python = process.env.PYTHON ?? (process.platform === "win32" ? "py" : "python3")
   start(python, [path.join("e2e", "backend_e2e.py"), new URL(API).port], "backend")
   await waitFor(`${API}/spots/ids`, "El backend")
+  // La caché de respuestas de la API (fetch con revalidate) sobrevive entre
+  // corridas: sin borrarla, las páginas usaban datos de un seed anterior.
+  fs.rmSync(path.join(ROOT, ".next-e2e", "cache", "fetch-cache"), { recursive: true, force: true })
   if (!args.includes("--sin-build")) {
     console.log("Compilando el frontend (.next-e2e)...")
     const build = spawnSync(process.execPath, [NEXT, "build"], { cwd: ROOT, env, stdio: "inherit" })
