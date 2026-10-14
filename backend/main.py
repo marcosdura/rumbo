@@ -1,11 +1,14 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from routers import admin_summary, spots, categories, amenities, routes, sectors, upsert, images, favorites, reviews, users, glamping, climbingroutes, change_requests, contributions, reports, notifications, claims, home, me, item_photos, owner_edits
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from database import get_db
 
 # El esquema lo manejan las migraciones de Alembic (backend/alembic/), no
 # create_all: create_all solo crea tablas que no existen, nunca agrega
@@ -48,6 +51,18 @@ app.add_middleware(
     # aunque estén en la respuesta) — lo usa la paginación de /spots y reviews.
     expose_headers=["X-Total-Count"],
 )
+
+# Para saber si el backend está vivo (Railway puede usarlo para no dar por
+# bueno un deploy que arrancó pero no responde): prueba la base con una
+# consulta mínima. Sin detalles del error: es público.
+@app.get("/health")
+def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "error"})
+    return {"status": "ok"}
+
 
 app.include_router(spots.router)
 app.include_router(categories.router)
