@@ -444,10 +444,16 @@ export default function SpotDashboardPage() {
               </div>
             </div>
             {/* Sin aprobar, la página pública no existe todavía (daba 404). */}
-            {spot.slug && spot.is_approved && (
+            {spot.slug && spot.is_approved ? (
               <a href={`/spots/${spot.slug}`} target="_blank" rel="noopener noreferrer"
                 style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
                 Ver lugar →
+              </a>
+            ) : (
+              // Sin publicar, la página pública da 404: la vista previa la muestra igual.
+              <a href={`/dashboard/spots/${spot.id}/vista-previa`} target="_blank" rel="noopener noreferrer"
+                style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
+                Vista previa →
               </a>
             )}
           </div>

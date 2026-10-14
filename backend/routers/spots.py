@@ -682,32 +682,28 @@ def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depen
     return {"message": "Spot deleted"}
 
 
-@router.get("/spots/by-slug/{slug}", response_model=SpotResponse)
-def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
-    spot = (
-        db.query(SpotDB)
-        .options(
-            selectinload(SpotDB.category),
-            selectinload(SpotDB.routes),
-            selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
-            selectinload(SpotDB.images),
-            selectinload(SpotDB.trekking_detail),
-            selectinload(SpotDB.camping_detail),
-            selectinload(SpotDB.glamping_detail),
-            selectinload(SpotDB.glamping_amenities),
-            selectinload(SpotDB.motorhome_detail),
-            selectinload(SpotDB.surf_detail),
-            selectinload(SpotDB.kayak_service_detail),
-            selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
-            selectinload(SpotDB.experiences).selectinload(Experience.category),
-            selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
-        )
-        .filter(SpotDB.slug == slug, SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
-        .first()
-    )
-    if not spot:
-        raise HTTPException(status_code=404, detail="Spot not found")
+# Lo que se carga de un lugar para mostrar su página (por slug y en la vista
+# previa del admin y del dueño).
+SPOT_DETAIL_OPTIONS = (
+    selectinload(SpotDB.category),
+    selectinload(SpotDB.routes),
+    selectinload(SpotDB.amenities).selectinload(SpotAmenity.amenity),
+    selectinload(SpotDB.images),
+    selectinload(SpotDB.trekking_detail),
+    selectinload(SpotDB.camping_detail),
+    selectinload(SpotDB.glamping_detail),
+    selectinload(SpotDB.glamping_amenities),
+    selectinload(SpotDB.motorhome_detail),
+    selectinload(SpotDB.surf_detail),
+    selectinload(SpotDB.kayak_service_detail),
+    selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
+    selectinload(SpotDB.experiences).selectinload(Experience.category),
+    selectinload(SpotDB.climbing_sectors).selectinload(ClimbingSector.routes),
+)
 
+
+def spot_detail(db: Session, spot: SpotDB) -> dict:
+    """La página de un lugar: todos sus datos y su puntaje de reseñas."""
     # Antes esto devolvía average_rating/review_count hardcodeados en None/0
     # — mismo cálculo real que ya usa GET /spots, pero para un solo spot.
     agg = (
@@ -735,6 +731,8 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "season_start": spot.season_start,
         "season_end": spot.season_end,
         "slug": spot.slug,
+        # Para la vista previa (en la página pública siempre es True).
+        "is_approved": bool(spot.is_approved),
         "created_at": spot.created_at,
         "category": spot.category,
         "categories": [sc.category for sc in spot.spot_categories],
@@ -761,6 +759,28 @@ def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
         "reservation_required": spot.reservation_required,
         "cell_signal": spot.cell_signal,
     }
+
+
+@router.get("/spots/by-slug/{slug}", response_model=SpotResponse)
+def get_spot_by_slug(slug: str, db: Session = Depends(get_db)):
+    spot = (
+        db.query(SpotDB)
+        .options(*SPOT_DETAIL_OPTIONS)
+        .filter(SpotDB.slug == slug, SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))
+        .first()
+    )
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    return spot_detail(db, spot)
+
+
+@router.get("/spots/{spot_id}/preview", response_model=SpotResponse)
+def preview_spot(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+    """Vista previa: la página del lugar aunque todavía no esté publicado (o
+    lo hayan despublicado). Solo para el admin y su dueño; antes el "Ver" del
+    admin abría la página pública, que daba 404 para un lugar nuevo."""
+    full = db.query(SpotDB).options(*SPOT_DETAIL_OPTIONS).filter(SpotDB.id == spot.id).first()
+    return spot_detail(db, full)
 
 
 @router.get("/spots/mine")

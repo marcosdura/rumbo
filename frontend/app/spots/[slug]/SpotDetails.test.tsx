@@ -218,3 +218,19 @@ describe("Página del lugar: accesibilidad", () => {
     expect((await screen.findByText("12 reseñas")).tagName).toBe("BUTTON")
   })
 })
+
+describe("Vista previa (admin o dueño)", () => {
+  it("avisa que no está publicado y no cuenta como visita", async () => {
+    views = []
+    render(<SpotDetail spot={spot("Camping", { is_approved: false })} preview />)
+    await screen.findByText("Cerro Arequita")
+    expect(screen.getByRole("status").textContent).toContain("todavía no está publicado")
+    expect(views).toEqual([])
+  })
+
+  it("en la página pública, sin aviso", async () => {
+    render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    expect(screen.queryByText(/Vista previa/)).toBeNull()
+  })
+})

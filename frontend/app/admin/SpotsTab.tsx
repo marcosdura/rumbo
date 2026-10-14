@@ -159,7 +159,8 @@ export default function SpotsTab({
                       Rechazar
                     </button>
                   )}
-                  <a href={`/spots/${spot.slug ?? spot.id}`} target="_blank" rel="noopener noreferrer"
+                  {/* Sin publicar, la página pública da 404: va a la vista previa. */}
+                  <a href={spot.is_approved && spot.slug ? `/spots/${spot.slug}` : `/dashboard/spots/${spot.id}/vista-previa`} target="_blank" rel="noopener noreferrer"
                     className="action-btn-sm" style={{ background: "#fff", color: "#3d3d3a", border: "1px solid var(--border)", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                     Ver
                   </a>

@@ -70,4 +70,11 @@ describe("SpotsTab", () => {
     expect(screen.getByRole("combobox", { name: "Ordenar" })).toBeTruthy()
     expect(screen.getByRole("textbox", { name: "Buscar lugares" })).toBeTruthy()
   })
+
+  it("Ver: la página pública si está publicado; si no, la vista previa (la pública da 404)", () => {
+    renderTab([spot({ id: 4, is_approved: false, slug: "nuevo" }), spot({ id: 5, is_approved: true, slug: "publicado" })])
+    const [nuevo, publicado] = screen.getAllByRole("link", { name: "Ver" })
+    expect(nuevo.getAttribute("href")).toBe("/dashboard/spots/4/vista-previa")
+    expect(publicado.getAttribute("href")).toBe("/spots/publicado")
+  })
 })

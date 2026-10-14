@@ -46,7 +46,9 @@ const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
-function SpotDetail({ spot }) {
+// preview: la vista previa del admin o del dueño (/dashboard/spots/[id]/vista-previa):
+// avisa que no está publicado y no cuenta como visita.
+function SpotDetail({ spot, preview = false }) {
   const routes = spot.routes ?? []
   const sectors = spot.climbing_sectors ?? []
   // Playa (Surf) o laguna (Kayak): sin datos de escuela ni de servicio.
@@ -70,7 +72,7 @@ function SpotDetail({ spot }) {
   // sabe si hay sesión, para no contar a la misma persona como dos. El
   // backend la cuenta una vez por persona y por día.
   useEffect(() => {
-    if (!spot?.id || status === "loading") return
+    if (!spot?.id || status === "loading" || preview) return
     api.post(`/spots/${spot.id}/view`, undefined, { token: session?.id_token }).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una por lugar y por carga de sesión
   }, [spot?.id, status])
@@ -265,6 +267,11 @@ function SpotDetail({ spot }) {
       <div className="flex flex-1 spot-page">
         <div className="flex-1 overflow-y-auto">
           <main id="contenido" className="spot-page-inner">
+            {preview && (
+              <p role="status" style={{ background: spot.is_approved ? "#eef7f1" : "#fef9e7", border: `1px solid ${spot.is_approved ? "#b7dfc8" : "#f0d98a"}`, color: spot.is_approved ? "#1f5135" : "#6b4e06", borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 600, margin: "0 0 16px" }}>
+                👁 Vista previa: {spot.is_approved ? "este lugar ya está publicado." : "este lugar todavía no está publicado. Así lo va a ver la gente."}
+              </p>
+            )}
 
             <button
               onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}

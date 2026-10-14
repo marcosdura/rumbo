@@ -77,6 +77,8 @@ describe("Panel del dueño", () => {
     mine = [spot({ is_approved: false })]
     await load()
     expect(screen.queryByRole("link", { name: "Ver lugar →" })).toBeNull()
+    // En su lugar, la vista previa (la página como la va a ver la gente).
+    expect(screen.getByRole("link", { name: "Vista previa →" }).getAttribute("href")).toMatch(/^\/dashboard\/spots\/\d+\/vista-previa$/)
   })
 
   it("publicado: lo dice y Ver lugar lleva a su página", async () => {
