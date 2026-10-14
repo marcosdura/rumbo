@@ -443,7 +443,7 @@ export default function AdminPage() {
           </Link>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 26, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 26, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
                 Panel de administración
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

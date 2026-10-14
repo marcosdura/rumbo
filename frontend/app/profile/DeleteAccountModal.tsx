@@ -32,7 +32,7 @@ export default function DeleteAccountModal({
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
       >
-        <h2 id="delete-account-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 12px" }}>
+        <h2 id="delete-account-modal-title" style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 22, fontWeight: 700, color: "#1b1b19", margin: "0 0 12px" }}>
           ¿Eliminar tu cuenta?
         </h2>
 

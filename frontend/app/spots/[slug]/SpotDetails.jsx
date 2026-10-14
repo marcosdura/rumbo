@@ -185,9 +185,9 @@ function SpotDetail({ spot, preview = false }) {
         }
 
         .spot-title {
-          font-family: var(--font-playfair-display), serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 38px;
-          font-weight: 600;
+          font-weight: 700;
           color: #1b1b19;
           line-height: 1.15;
           margin: 0;

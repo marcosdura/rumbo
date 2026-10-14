@@ -93,7 +93,7 @@ function MyReviews({ token, onCount }: { token: string; onCount: (n: number) => 
     return (
       <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 20, padding: "48px 32px", textAlign: "center" }}>
         <p style={{ fontSize: 40, margin: "0 0 12px", opacity: 0.25 }}>💬</p>
-        <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+        <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
           Todavía no escribiste reseñas
         </p>
         <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.6 }}>Visitá un lugar y contá tu experiencia.</p>
@@ -109,7 +109,7 @@ function MyReviews({ token, onCount }: { token: string; onCount: (n: number) => 
       <style>{`
         .my-review { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
         .my-review-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .my-review-target { font-family: var(--font-playfair-display), serif; font-size: 17px; font-weight: 600; color: #1b1b19; text-decoration: none; }
+        .my-review-target { font-family: var(--font-dm-sans), sans-serif; font-size: 17px; font-weight: 700; color: #1b1b19; text-decoration: none; }
         .my-review-target:hover { color: var(--primary); }
         .my-review-action { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
         .my-review-action:hover { color: var(--primary); }

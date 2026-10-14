@@ -66,10 +66,10 @@ export default async function Home() {
         }}>Uruguay al natural</p>
 
         <h1 className="fade-up fade-up-2" style={{
-          fontFamily: "var(--font-playfair-display), serif",
+          fontFamily: "var(--font-dm-sans), sans-serif",
           color: "#fff",
           fontSize: "clamp(32px, 5vw, 52px)",
-          fontWeight: 600,
+          fontWeight: 700,
           lineHeight: 1.15,
           marginBottom: 12,
           letterSpacing: "-0.02em",

@@ -28,7 +28,7 @@ function Favorites({ token }: { token: string }) {
     return (
       <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 20, padding: "48px 32px", textAlign: "center" }}>
         <p style={{ fontSize: 40, margin: "0 0 12px", opacity: 0.25 }}>❤️</p>
-        <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+        <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
           Todavía no tenés favoritos
         </p>
         <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.6 }}>

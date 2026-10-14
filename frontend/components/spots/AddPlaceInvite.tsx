@@ -11,7 +11,7 @@ export default function AddPlaceInvite() {
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
       }}>
         <div style={{ minWidth: 0, flex: "1 1 280px" }}>
-          <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+          <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 22, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
             ¿Conocés un lugar que no está?
           </p>
           <p style={{ fontSize: 14, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5 }}>

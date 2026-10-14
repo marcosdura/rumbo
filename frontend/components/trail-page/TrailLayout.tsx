@@ -48,7 +48,7 @@ export function StatGrid({ stats }: { stats: Stat[] }) {
       {stats.map(s => (
         <div key={s.label} className="trail-stat">
           <p style={{ fontSize: 22, margin: "0 0 6px" }}>{s.icon}</p>
-          <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 18, fontWeight: 600, color: "#1b1b19", margin: "0 0 4px" }}>{s.value}</p>
+          <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 18, fontWeight: 700, color: "#1b1b19", margin: "0 0 4px" }}>{s.value}</p>
           <p style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>{s.label}</p>
         </div>
       ))}
@@ -95,7 +95,7 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }} />
               <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--primary)", margin: 0 }}>{eyebrow}</p>
             </div>
-            <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(26px, 4vw, 36px)", fontWeight: 600, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
+            <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "clamp(26px, 4vw, 36px)", fontWeight: 700, color: "#1b1b19", margin: 0, lineHeight: 1.2 }}>
               {title}
             </h1>
           </div>

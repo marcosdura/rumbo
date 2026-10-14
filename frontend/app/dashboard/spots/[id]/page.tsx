@@ -431,7 +431,7 @@ export default function SpotDashboardPage() {
           </Link>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 26, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 26, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
                 {spot.name}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -492,7 +492,7 @@ export default function SpotDashboardPage() {
                 {stat.emoji}
               </div>
               <div>
-                <p style={{ fontSize: 22, fontFamily: "var(--font-playfair-display), serif", fontWeight: 600, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
+                <p style={{ fontSize: 22, fontFamily: "var(--font-dm-sans), sans-serif", fontWeight: 700, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
                 <p style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{stat.label}</p>
               </div>
             </div>

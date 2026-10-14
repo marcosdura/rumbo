@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito, Playfair_Display, DM_Sans } from "next/font/google";
+import { Nunito, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google"
 import "./globals.css";
 import Providers from "@/components/layout/Providers"
@@ -7,17 +7,13 @@ import { SITE_URL, preconnectOrigins } from "@/lib/site"
 import { DEFAULT_SHARE_IMAGE } from "@/lib/seo"
 
 // Sin Geist ni Geist Mono (las que trae Next): solo las usaba el formulario
-// de agregar lugar, que ahora usa DM Sans como el resto. Dos fuentes menos
-// por página.
+// de agregar lugar, que ahora usa DM Sans como el resto. Tampoco Playfair
+// Display: los títulos usan DM Sans en negrita, como los nombres de las
+// cards. Una fuente menos que bajar en cada página.
 const nunito = Nunito({
   variable: "--font-nunito",
   subsets: ["latin"],
   weight: ["600"],
-});
-
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair-display",
-  subsets: ["latin"],
 });
 
 const dmSans = DM_Sans({
@@ -78,7 +74,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${nunito.variable} ${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${nunito.variable} ${dmSans.variable} h-full antialiased`}
     >
       <head>
         {preconnectOrigins(process.env.NEXT_PUBLIC_API_URL).map(o => (

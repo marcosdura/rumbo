@@ -93,8 +93,8 @@ export default function NavBarContent({ menuOpen, setMenuOpen, pathname, center 
 
 
         .navbar-logo {
-          font-family: var(--font-playfair-display), serif;
-          font-weight: 600;
+          font-family: var(--font-dm-sans), sans-serif;
+          font-weight: 700;
           font-size: 22px;
           color: #fff;
           text-decoration: none;

@@ -88,8 +88,8 @@ export default function SpotSection({ label, title, count, spots, loading, href,
       onMouseLeave={() => href && setHovered(false)}
     >
       <h2 className="spot-section-title" style={{
-        fontFamily: "var(--font-playfair-display), serif",
-        fontWeight: 600,
+        fontFamily: "var(--font-dm-sans), sans-serif",
+        fontWeight: 700,
         color: hovered ? "var(--primary)" : "#1b1b19",
         margin: 0, lineHeight: 1.2,
         transition: "color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",

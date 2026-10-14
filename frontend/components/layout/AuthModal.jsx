@@ -153,8 +153,8 @@ export default function AuthModal({ onClose, reason, pending }) {
 
           {/* Título */}
           <h2 id="auth-modal-title" style={{
-            fontFamily: "var(--font-playfair-display), serif",
-            fontSize: 24, fontWeight: 600,
+            fontFamily: "var(--font-dm-sans), sans-serif",
+            fontSize: 24, fontWeight: 700,
             color: "#1b1b19", textAlign: "center", margin: "0 0 16px",
           }}>
             {reason ? `Iniciá sesión para ${reason}` : "Iniciá sesión"}

@@ -123,7 +123,7 @@ export default function ProfilePage() {
         .delete-btn-cancel:hover { background: #f7f5f0; }
 
         .profile-wrapper { max-width: 768px; width: 100%; margin: 0 auto; padding: 40px 24px 64px; box-sizing: border-box; }
-        .profile-title   { font-family: var(--font-playfair-display), serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .profile-title   { font-family: var(--font-dm-sans), sans-serif; font-size: 36px; font-weight: 700; color: #1b1b19; margin: 0; line-height: 1.2; }
         @media (max-width: 768px) {
           .profile-wrapper { padding: 24px 16px 48px; }
           .profile-title   { font-size: 26px; }

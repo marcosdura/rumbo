@@ -27,7 +27,7 @@ export default function ProfileSubpage({ title, count, children }: {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <style>{`
         .profile-sub-wrapper { max-width: 768px; width: 100%; margin: 0 auto; padding: 40px 24px 64px; box-sizing: border-box; }
-        .profile-sub-title   { font-family: var(--font-playfair-display), serif; font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2; }
+        .profile-sub-title   { font-family: var(--font-dm-sans), sans-serif; font-size: 36px; font-weight: 700; color: #1b1b19; margin: 0; line-height: 1.2; }
         @media (max-width: 768px) {
           .profile-sub-wrapper { padding: 24px 16px 48px; }
           .profile-sub-title   { font-size: 26px; }

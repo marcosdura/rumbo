@@ -175,7 +175,7 @@ export const createPopupHtml = (spot, categories) => {
   return `
     <a href="/spots/${spot.slug}" style="text-decoration:none;">
       <div style="cursor:pointer; font-family: var(--font-dm-sans), sans-serif; min-width:180px; padding:2px 0;">
-        <p style="font-family: var(--font-playfair-display), serif; font-weight:600; font-size:15px; color:#1b1b19; margin:0 0 4px;">
+        <p style="font-family: var(--font-dm-sans), sans-serif; font-weight:700; font-size:15px; color:#1b1b19; margin:0 0 4px;">
           ${escapeHtml(spot.name)}
         </p>
         <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">

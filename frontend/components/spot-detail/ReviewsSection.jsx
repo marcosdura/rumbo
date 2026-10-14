@@ -282,12 +282,12 @@ export default function ReviewsSection({ spotId }) {
                 Opiniones
               </span>
             </div>
-            <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 22, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
+            <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 22, fontWeight: 700, color: "#1b1b19", margin: 0 }}>
               Reseñas
             </p>
             {summary?.total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                <span style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 36, fontWeight: 600, color: "#1b1b19", lineHeight: 1 }}>
+                <span style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 36, fontWeight: 700, color: "#1b1b19", lineHeight: 1 }}>
                   {summary.average}
                 </span>
                 <div>

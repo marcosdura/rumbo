@@ -91,7 +91,7 @@ function ShareModal({ name, onClose }) {
               Compartir
             </p>
           </div>
-          <h2 id="share-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 20px" }}>
+          <h2 id="share-modal-title" style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 20px" }}>
             {name}
           </h2>
 

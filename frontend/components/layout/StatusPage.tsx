@@ -11,7 +11,7 @@ export default function StatusPage({ emoji, title, text, children }: {
       <Navbar />
       <main id="contenido" style={{ flex: 1, maxWidth: 640, width: "100%", margin: "0 auto", padding: "64px 16px", textAlign: "center" }}>
         <p style={{ fontSize: 40, margin: "0 0 8px" }} aria-hidden="true">{emoji}</p>
-        <h1 style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: "clamp(26px, 4vw, 34px)", fontWeight: 600, color: "#1b1b19", margin: "0 0 10px" }}>
+        <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "clamp(26px, 4vw, 34px)", fontWeight: 700, color: "#1b1b19", margin: "0 0 10px" }}>
           {title}
         </h1>
         <p style={{ fontSize: 15, color: "var(--muted-strong)", lineHeight: 1.5, margin: "0 0 28px" }}>{text}</p>

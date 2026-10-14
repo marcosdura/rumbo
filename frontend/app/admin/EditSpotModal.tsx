@@ -22,7 +22,7 @@ export function saveErrorMessage(e: unknown): string {
 
 // Modal de formulario — no puede usar ConfirmModal (ese es para confirmar,
 // no para editar), pero sí el mismo lenguaje visual: overlay 0.45, card
-// #f5f4f0 con borde, título en Playfair, botones a la derecha, cierra al
+// #f5f4f0 con borde, título en negrita, botones a la derecha, cierra al
 // clickear afuera.
 export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, onSave }: Props) {
   const [saving, setSaving] = useState(false)
@@ -94,7 +94,7 @@ export default function EditSpotModal({ editingSpot, setEditingSpot, onCancel, o
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
       >
-        <h2 id="edit-spot-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 18px" }}>
+        <h2 id="edit-spot-modal-title" style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 18px" }}>
           Editar spot
         </h2>
 

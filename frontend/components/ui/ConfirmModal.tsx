@@ -116,7 +116,7 @@ export default function ConfirmModal({
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-modal-title" style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 10px" }}>
+        <h2 id="confirm-modal-title" style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 10px" }}>
           {title}
         </h2>
 

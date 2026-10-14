@@ -16,8 +16,8 @@ export const s = {
     fontSize: 14, color: "#1b1b19", fontWeight: 400,
   },
   statNumber: {
-    fontFamily: "var(--font-playfair-display), serif",
-    fontSize: 28, fontWeight: 600, color: "#1b1b19",
+    fontFamily: "var(--font-dm-sans), sans-serif",
+    fontSize: 28, fontWeight: 700, color: "#1b1b19",
     lineHeight: 1, marginBottom: 4,
   },
   statLabel: {

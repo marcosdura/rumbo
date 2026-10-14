@@ -37,9 +37,9 @@ function TrekkingRoutes({ routes, spotSlug, action }) {
           margin-bottom: 16px;
         }
         .route-card-title {
-          font-family: var(--font-playfair-display), serif;
+          font-family: var(--font-dm-sans), sans-serif;
           font-size: 18px;
-          font-weight: 600;
+          font-weight: 700;
           color: #1b1b19;
           margin: 0;
         }

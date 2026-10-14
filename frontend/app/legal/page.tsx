@@ -20,8 +20,8 @@ export default function LegalPage() {
       <style>{`
         .legal-wrapper { max-width: 720px; width: 100%; margin: 0 auto; padding: 40px 24px 64px; box-sizing: border-box; }
         .legal-page-title {
-          font-family: var(--font-playfair-display), serif;
-          font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2;
+          font-family: var(--font-dm-sans), sans-serif;
+          font-size: 36px; font-weight: 700; color: #1b1b19; margin: 0; line-height: 1.2;
         }
         .legal-updated { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
 

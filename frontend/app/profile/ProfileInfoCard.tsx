@@ -32,7 +32,7 @@ export default function ProfileInfoCard({ userName, userEmail, userImage, member
         )}
       </div>
       <div style={{ minWidth: 0 }}>
-        <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 2px" }}>
+        <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 2px" }}>
           {userName}
         </p>
         <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

@@ -228,9 +228,9 @@ input[type="number"] {
 }
 
 .sector-card-title {
-  font-family: var(--font-playfair-display), serif;
+  font-family: var(--font-dm-sans), sans-serif;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1b1b19;
   margin: 0;
 }
@@ -250,9 +250,9 @@ input[type="number"] {
 }
 
 .sector-stat-val {
-  font-family: var(--font-playfair-display), serif;
+  font-family: var(--font-dm-sans), sans-serif;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1b1b19;
   margin: 0 0 2px;
 }

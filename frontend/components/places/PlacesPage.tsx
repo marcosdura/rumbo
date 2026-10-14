@@ -64,8 +64,8 @@ export default function PlacesPage({ activity, department, counts, spots, total 
       <style>{`
         .places-wrapper { max-width: 1100px; width: 100%; margin: 0 auto; padding: 40px 24px 64px; box-sizing: border-box; }
         .places-title {
-          font-family: var(--font-playfair-display), serif;
-          font-size: 36px; font-weight: 600; color: #1b1b19; margin: 0; line-height: 1.2;
+          font-family: var(--font-dm-sans), sans-serif;
+          font-size: 36px; font-weight: 700; color: #1b1b19; margin: 0; line-height: 1.2;
         }
         .places-intro { font-size: 15px; color: var(--muted-strong); line-height: 1.6; margin: 10px 0 0; max-width: 640px; }
         .places-count { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
@@ -129,7 +129,7 @@ export default function PlacesPage({ activity, department, counts, spots, total 
           ) : (
             <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 20, padding: "48px 32px", textAlign: "center", marginTop: 28 }}>
               <p style={{ fontSize: 40, margin: "0 0 12px", opacity: 0.25 }}>{activity?.emoji ?? "🧭"}</p>
-              <p style={{ fontFamily: "var(--font-playfair-display), serif", fontSize: 20, fontWeight: 600, color: "#1b1b19", margin: "0 0 6px" }}>
+              <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 20, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
                 Todavía no hay lugares
               </p>
               <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.6 }}>
