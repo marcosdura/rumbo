@@ -390,3 +390,21 @@ input[type="number"] {
   transition: top 0.15s ease;
 }
 .skip-link:focus { top: 12px; }
+
+/* Home: debajo del buscador, la invitación a sumar un lugar. El botón es el
+   de "Agregar lugar" de la barra (NavBarContent.jsx), con su mismo hover,
+   pero visible también en el celular. */
+.hero-invite {
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 22px;
+  font-family: var(--font-dm-sans), sans-serif; font-size: 14px; color: #b7e4c7;
+}
+.hero-invite-btn {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-dm-sans), sans-serif; font-size: 13px; font-weight: 600;
+  color: #fff; text-decoration: none; white-space: nowrap;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  padding: 7px 16px; border-radius: 10px;
+  transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-invite-btn:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }

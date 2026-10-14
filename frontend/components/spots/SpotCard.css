@@ -13,13 +13,19 @@
               border-color 0.2s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   will-change: transform, box-shadow;
+  /* La card y su foto viven en su propia capa siempre (translateZ y
+     backface-visibility): si no, al terminar el hover el navegador las
+     volvía a dibujar y las acomodaba al píxel, y la foto daba un saltito
+     (se nota con la pantalla escalada, por ejemplo Windows al 125%). */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 .spot-card:hover {
-  transform: translateY(-3px);
+  transform: translate3d(0, -3px, 0);
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 .spot-card.highlighted {
-  transform: translateY(-3px);
+  transform: translate3d(0, -3px, 0);
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
@@ -27,6 +33,7 @@
   height: 160px;
   overflow: hidden;
   position: relative;
+  transform: translateZ(0);
 }
 .spot-card-img-wrap img {
   width: 100%;
@@ -34,9 +41,11 @@
   object-fit: cover;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
+  transform: scale(1) translateZ(0);
+  backface-visibility: hidden;
 }
 .spot-card:hover .spot-card-img-wrap img {
-  transform: scale(1.07);
+  transform: scale(1.07) translateZ(0);
 }
 
 .spot-card-img-overlay {

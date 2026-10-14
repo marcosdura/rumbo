@@ -123,3 +123,12 @@ describe("Navbar", () => {
     expect(other.container.querySelector("nav")!.hasAttribute("inert")).toBe(false)
   })
 })
+
+describe("Navbar: hover de los botones", () => {
+  it("Agregar lugar e Iniciar sesión tienen el mismo hover que el menú y la campanita", async () => {
+    const { readFileSync } = await import("node:fs")
+    const src = readFileSync("components/layout/NavBarContent.jsx", "utf-8")
+    const hover = (sel: string) => src.match(new RegExp(`\${sel}:hover \{([^}]*)\}`))?.[1].trim()
+    expect(hover(".signin-nav-btn")).toBe(hover(".icon-btn"))
+  })
+})

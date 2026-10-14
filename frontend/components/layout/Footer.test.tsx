@@ -18,6 +18,14 @@ describe("Footer", () => {
     expect(screen.getByRole("link", { name: "＋ Sumá un lugar" }).getAttribute("href")).toBe("/agregar-lugar")
   })
 
+  it("Explorar va en dos columnas", () => {
+    render(<Footer />)
+    const list = screen.getByRole("link", { name: "🧗 Escalada" }).closest("ul")!
+    expect(list.className).toContain("two-cols")
+    const css = Array.from(document.querySelectorAll("style")).map(s => s.textContent).join("")
+    expect(css).toMatch(/\.sf-col-links\.two-cols \{[^}]*grid-template-columns: repeat\(2/)
+  })
+
   it("las actividades son las mismas que las del buscador (si no, el link no filtra)", () => {
     expect(EXPLORE_LINKS.map(l => l.activity).sort()).toEqual([...activities].sort())
   })

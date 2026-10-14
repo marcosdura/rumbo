@@ -35,7 +35,11 @@ describe("Home", () => {
     expect(order).toEqual(["Populares", "Recién agregados", "¿Conocés un lugar que no está?", "Lugares en Rocha"])
     // Solo la primera fila carga sus fotos de entrada: es la que se ve sin scrollear.
     expect(Array.from(container.querySelectorAll("h2[data-eager]")).map(h => h.getAttribute("data-eager"))).toEqual(["true", "false", "false"])
-    expect(screen.getByRole("link", { name: "＋ Agregar lugar" }).getAttribute("href")).toBe("/agregar-lugar")
+    // Dos invitaciones: debajo del buscador (con el botón de la barra) y entre las secciones.
+    const invites = screen.getAllByRole("link", { name: "＋ Agregar lugar" })
+    expect(invites.map(l => l.getAttribute("href"))).toEqual(["/agregar-lugar", "/agregar-lugar"])
+    expect(invites[0].className).toBe("hero-invite-btn")
+    expect(invites[0].closest("header")).toBeTruthy()
   })
 
   it("el hero muestra cuántos lugares y departamentos hay", async () => {
@@ -47,7 +51,8 @@ describe("Home", () => {
   it("sin lugares todavía, igual invita a sumar uno", async () => {
     home = { stats: { spots: 0, departments: 0 }, sections: [] }
     render(await Home())
-    expect(screen.getByText("¿Conocés un lugar que no está?")).toBeTruthy()
+    // La del hero y la de las secciones.
+    expect(screen.getAllByText("¿Conocés un lugar que no está?")).toHaveLength(2)
   })
 
   it("si el backend no responde al regenerarla, tira el error: Next sigue mostrando la última home buena", async () => {

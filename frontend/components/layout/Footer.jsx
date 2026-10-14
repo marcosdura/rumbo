@@ -103,6 +103,11 @@ export default function Footer() {
           list-style: none; padding: 0; margin: 0;
           display: flex; flex-direction: column; gap: 9px;
         }
+        /* Explorar: dos columnas (son 8 links; en una sola, la columna era la
+           más larga del footer). */
+        .sf-col-links.two-cols {
+          display: grid; grid-template-columns: repeat(2, max-content); column-gap: 28px; row-gap: 9px;
+        }
         .sf-col-links a {
           font-size: 13px;
           color: var(--muted-strong);
@@ -190,7 +195,7 @@ export default function Footer() {
           {/* Explorar */}
           <div>
             <p className="sf-col-title">Explorar</p>
-            <ul className="sf-col-links">
+            <ul className="sf-col-links two-cols">
               {EXPLORE_LINKS.map(l => (
                 <li key={l.activity}><Link href={activityHref(l.activity)}>{l.label}</Link></li>
               ))}

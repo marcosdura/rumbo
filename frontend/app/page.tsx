@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Fragment } from "react"
 import type { Metadata } from "next"
 import JsonLd from "@/components/seo/JsonLd"
@@ -85,6 +86,12 @@ export default async function Home() {
 
         <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center" }}>
           <SearchBar hero />
+        </div>
+
+        {/* Invitación a sumar un lugar, con el mismo botón de la barra. */}
+        <div className="fade-up fade-up-4 hero-invite">
+          <span>¿Conocés un lugar que no está?</span>
+          <Link href="/agregar-lugar" className="hero-invite-btn">＋ Agregar lugar</Link>
         </div>
         </div>
       </header>

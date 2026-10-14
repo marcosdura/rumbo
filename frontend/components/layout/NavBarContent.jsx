@@ -233,10 +233,12 @@ export default function NavBarContent({ menuOpen, setMenuOpen, pathname, center 
           border-radius: 10px;
           cursor: pointer;
           white-space: nowrap;
-          transition: background 0.2s;
+          transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           position: relative; z-index: 1;
         }
-        .signin-nav-btn:hover { background: rgba(255,255,255,0.25); }
+        /* El mismo hover que el menú, la campanita y el avatar (.icon-btn). */
+        .signin-nav-btn:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
         /* Mismo estilo que "Iniciar sesión": es la otra acción principal. */
         .addplace-nav-btn { text-decoration: none; display: inline-flex; align-items: center; }
 
