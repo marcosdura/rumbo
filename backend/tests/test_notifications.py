@@ -169,10 +169,13 @@ def test_resenia_nueva_avisa_al_duenio(client, db, make_spot, make_user):
     assert db.query(Notification).filter_by(user_email=OWNER).one().body == "★★★★ · Muy lindo"
 
 
-def test_el_duenio_que_resenia_lo_suyo_no_se_avisa(client, db, make_spot, make_user):
+def test_el_duenio_no_resenia_lo_suyo(client, db, make_spot, make_user):
+    # Antes podía (y ponerse 5 estrellas); ahora ni la reseña ni el aviso.
     spot = make_spot()
     make_user(OWNER)
-    client.post(f"/reviews/{spot.id}", json={"rating": 5}, headers=as_user(OWNER))
+    r = client.post(f"/reviews/{spot.id}", json={"rating": 5}, headers=as_user(OWNER))
+    assert r.status_code == 403
+    assert db.query(Review).count() == 0
     assert inbox(db, OWNER) == []
 
 

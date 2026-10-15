@@ -12,7 +12,8 @@ from limiter import limiter
 from notifications import notify
 
 
-def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, parent_not_found_detail, owner_of=None):
+def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, parent_not_found_detail, owner_of=None,
+                        is_public=lambda parent: True):
     """reviews.py, kayak_reviews.py y surf_reviews.py eran 3 copias casi
     idénticas de este mismo CRUD (summary, listado paginado, alta, baja) —
     cambiaba solo el modelo de review, el FK al padre y el mensaje de
@@ -96,8 +97,13 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
             raise HTTPException(status_code=400, detail="El rating debe ser entre 1 y 5")
 
         parent = db.query(parent_model).filter(parent_model.id == parent_id).first()
-        if not parent:
+        # Solo lo publicado: antes, pegándole a la API, se podía reseñar un
+        # lugar en revisión, rechazado o de una cuenta borrada.
+        if not parent or not is_public(parent):
             raise HTTPException(status_code=404, detail=parent_not_found_detail)
+        # Ni el dueño lo suyo: se podía poner 5 estrellas a sí mismo.
+        if owner_of and owner_of(parent)[0] == user.get("email"):
+            raise HTTPException(status_code=403, detail="No podés reseñar tu propio lugar.")
 
         if not db.query(User).filter(User.id == user_id).first():
             raise HTTPException(status_code=404, detail="Usuario no encontrado")

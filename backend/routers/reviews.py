@@ -13,6 +13,7 @@ router = build_review_router(
     parent_model=SpotDB,
     parent_not_found_detail="Spot no encontrado",
     owner_of=lambda spot: (spot.owner_email, spot.name, f"/spots/{spot.slug}#reviews"),
+    is_public=lambda spot: bool(spot.is_approved) and spot.owner_deleted_at is None,
 )
 
 
