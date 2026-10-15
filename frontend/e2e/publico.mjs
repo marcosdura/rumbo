@@ -1,6 +1,6 @@
 // Lo público, en PC y en celular: la barra (que no salte entre páginas), el
 // menú, la 404, legal, el footer y que no haya errores de JavaScript.
-import { FRONT, apiGet, shot, offlineMaps, a11yProblems, fakeCloudinary } from "./lib.mjs"
+import { FRONT, apiGet, shot, offlineMaps, a11yProblems, fakeCloudinary, cspViolations } from "./lib.mjs"
 
 const VIEWPORTS = [["pc", { width: 1280, height: 800 }], ["celular", { width: 390, height: 844 }]]
 
@@ -50,12 +50,18 @@ export async function run(browser, r) {
   r.ok("Rendimiento — /lugares precarga la foto de las primeras cards",
     /<link rel="preload" as="image"[^>]*rumbo\/spots\/e2e\/playa/.test(surfRocha) && playaImg !== "" && !playaImg.includes('loading="lazy"'), playaImg.slice(0, 120))
   r.ok("Rendimiento — conexión anticipada a Cloudinary", surfRocha.includes('rel="preconnect" href="https://res.cloudinary.com"'))
+  // Seguridad: las cabeceras están en las páginas y no se anuncia Next.js.
+  const home = await fetch(`${FRONT}/`)
+  r.ok("Seguridad — cabeceras (CSP, sin iframes ajenos, nosniff) y sin X-Powered-By",
+    /frame-ancestors 'none'/.test(home.headers.get("content-security-policy") ?? "") && home.headers.get("x-frame-options") === "DENY"
+    && home.headers.get("x-content-type-options") === "nosniff" && !home.headers.has("x-powered-by"))
   const og = await fetch(`${FRONT}/opengraph-image`)
   r.ok("SEO — la imagen por defecto para compartir se genera", og.ok && og.headers.get("content-type") === "image/png")
   for (const [label, viewport] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport })
     await offlineMaps(ctx)
     await fakeCloudinary(ctx)
+    const csp = cspViolations(ctx)
     const page = await ctx.newPage()
     const errors = []
     page.on("pageerror", e => errors.push(e.message))
@@ -122,6 +128,7 @@ export async function run(browser, r) {
     }
 
     r.ok(`[${label}] sin errores de JavaScript`, errors.length === 0, errors.slice(0, 2).join(" | "))
+    r.ok(`[${label}] la política de seguridad (CSP) no bloquea nada del sitio`, csp.length === 0, csp.slice(0, 2).join(" | "))
     await ctx.close()
   }
 }

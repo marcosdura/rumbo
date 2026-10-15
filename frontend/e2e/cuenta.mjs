@@ -1,7 +1,7 @@
 // Con sesión iniciada: el formulario de agregar lugar entero (cada flujo, de
 // punta a punta) y después el perfil, que tiene que mostrar lo cargado.
 // Verifica en el backend que cada envío haya quedado guardado.
-import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps, a11yProblems } from "./lib.mjs"
+import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps, a11yProblems, cspViolations } from "./lib.mjs"
 
 // Sufijo por corrida: los nombres no se repiten si la base ya tiene datos.
 const RUN = Date.now().toString(36).slice(-4)
@@ -280,6 +280,7 @@ async function saved(flow) {
 export async function run(browser, r) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   await offlineMaps(ctx)
+  const csp = cspViolations(ctx)
   await loggedIn(ctx, USER)
   const uploads = await fakeCloudinary(ctx)
   const page = await ctx.newPage()
@@ -305,6 +306,7 @@ export async function run(browser, r) {
   r.ok("Formulario — fotos subidas a Cloudinary (simulado)", uploads.length > 0, `${uploads.length}`)
 
   await profile(page, r)
+  r.ok("Cuenta — la política de seguridad (CSP) no bloquea nada", csp.length === 0, csp.slice(0, 2).join(" | "))
   r.ok("Cuenta — sin errores de JavaScript", errors.length === 0, errors.slice(0, 2).join(" | "))
   await ctx.close()
 
@@ -386,6 +388,7 @@ async function profile(page, r) {
 async function admin(browser, r) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   await offlineMaps(ctx)
+  const csp = cspViolations(ctx)
   await loggedIn(ctx, ADMIN)
   await fakeCloudinary(ctx)
   const page = await ctx.newPage()
@@ -416,6 +419,7 @@ async function admin(browser, r) {
     r.ok(`Accesibilidad — admin, ${tab}`, problems.length === 0, problems.slice(0, 3).join(" | "))
   }
 
+  r.ok("Admin — la política de seguridad (CSP) no bloquea nada", csp.length === 0, csp.slice(0, 2).join(" | "))
   r.ok("Admin — sin errores de JavaScript", errors.length === 0, errors.slice(0, 2).join(" | "))
   await ctx.close()
 }

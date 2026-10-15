@@ -90,6 +90,16 @@ export async function a11yProblems(page) {
   })
 }
 
+// Lo que la política de seguridad (CSP, lib/securityHeaders.ts) bloquee en
+// cualquier página del contexto: si bloquea algo que el sitio usa, se nota acá.
+export function cspViolations(context) {
+  const found = []
+  context.on("console", msg => {
+    if (/Content Security Policy|Refused to (load|connect|execute|frame)/i.test(msg.text())) found.push(msg.text().slice(0, 200))
+  })
+  return found
+}
+
 // Una imagen chica para los <input type=file>.
 export const PHOTO = { name: "foto.png", mimeType: "image/png", buffer: PIXEL }
 
