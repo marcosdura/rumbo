@@ -413,7 +413,22 @@ async function admin(browser, r) {
   // Una escuela es un lugar más: está entre los lugares nuevos.
   r.ok("Admin — la escuela cargada está entre los lugares nuevos", await page.locator(".spot-row").filter({ hasText: named("Escuela E2E") }).count() === 1)
 
-  for (const tab of ["nuevos", "lugares", "cambios", "reportes", "fotos"]) {
+  // Importar vías desde una planilla (solo el admin, desde la barra lateral).
+  await open(page, "/admin?tab=importar-vias")
+  await page.getByLabel("Lugar").selectOption({ label: "Roca de Prueba (Lavalleja)" })
+  await page.waitForTimeout(500)
+  const norte = await page.locator('select[aria-label="Sector"] option', { hasText: "Sector Norte" }).getAttribute("value")
+  await page.getByLabel("Sector").selectOption(norte)
+  await page.getByLabel("Subir planilla").setInputFiles({
+    name: "vias.csv", mimeType: "text/csv",
+    buffer: Buffer.from(["Nombre;Grado;Tipo;Chapas", "Via Importada E2E;6b+;deportiva;8", ""].join("\n"), "utf-8"),
+  })
+  await page.getByRole("button", { name: "Importar 1 vías" }).click()
+  await page.waitForTimeout(800)
+  const imported = (await apiGet(`/sectors/${norte}/routes`)).find(r => r.name === "Via Importada E2E")
+  r.ok("Admin — importar vías desde una planilla", imported?.grade === "6b+" && imported?.bolts === 8, JSON.stringify(imported ?? null))
+
+  for (const tab of ["nuevos", "lugares", "cambios", "reportes", "fotos", "importar-vias"]) {
     await open(page, `/admin?tab=${tab}`)
     const problems = await a11yProblems(page)
     r.ok(`Accesibilidad — admin, ${tab}`, problems.length === 0, problems.slice(0, 3).join(" | "))

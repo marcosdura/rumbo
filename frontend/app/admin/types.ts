@@ -58,8 +58,8 @@ export type AdminChangeRequest = {
 export type AdminMode =
   | "resumen"
   | "nuevos" | "cambios" | "reportes" | "reclamos"
-  | "lugares" | "fotos" | "cuentas-eliminadas"
+  | "lugares" | "fotos" | "importar-vias" | "cuentas-eliminadas"
 
-export const ADMIN_MODES: AdminMode[] = ["resumen", "nuevos", "cambios", "reportes", "reclamos", "lugares", "fotos", "cuentas-eliminadas"]
+export const ADMIN_MODES: AdminMode[] = ["resumen", "nuevos", "cambios", "reportes", "reclamos", "lugares", "fotos", "importar-vias", "cuentas-eliminadas"]
 
 export type SortBy = "name" | "category" | "department" | "date_desc" | "date_asc"

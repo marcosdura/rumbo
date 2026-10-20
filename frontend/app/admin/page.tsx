@@ -18,6 +18,7 @@ import ClaimsTab, { type AdminClaim } from "./ClaimsTab"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 import AdminSidebar, { type SidebarGroup } from "./AdminSidebar"
+import ImportRoutesTab from "./ImportRoutesTab"
 
 // El título de la página: la sección en la que se está, sin el emoji.
 function sectionTitle(mode: AdminMode, groups: SidebarGroup[]): string {
@@ -38,7 +39,7 @@ export default function AdminPage() {
   // (antes eran 6 pedidos al entrar, incluidos todos los lugares con fotos).
   const [opened, setOpened] = useState({ spots: false, cambios: false, reportes: false, reclamos: false })
   const wants = {
-    spots: mode === "nuevos" || mode === "lugares" || mode === "fotos" || mode === "cuentas-eliminadas",
+    spots: mode === "nuevos" || mode === "lugares" || mode === "fotos" || mode === "importar-vias" || mode === "cuentas-eliminadas",
     cambios: mode === "cambios", reportes: mode === "reportes", reclamos: mode === "reclamos",
   }
   if ((Object.keys(wants) as (keyof typeof wants)[]).some(k => wants[k] && !opened[k])) {
@@ -411,6 +412,7 @@ export default function AdminPage() {
     { title: "Gestión", tabs: [
       { id: "lugares", label: "🗺️ Lugares" },
       { id: "fotos", label: "📷 Fotos" },
+      { id: "importar-vias", label: "📥 Importar vías" },
       { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
     ] },
   ]
@@ -540,6 +542,8 @@ export default function AdminPage() {
             }}
           />
         )}
+
+        {mode === "importar-vias" && <ImportRoutesTab spots={spots} token={token} loading={loading} />}
 
         {mode === "fotos" && (
           <PhotosTab

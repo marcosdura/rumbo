@@ -163,6 +163,8 @@ describe("Organización del panel", () => {
     expect(screen.queryByText(/Volver al inicio/)).toBeNull()
     expect(screen.queryByText("modo admin")).toBeNull()
     expect(screen.queryByRole("link", { name: /Agregar lugar/ })).toBeNull()
+    // Importar vías: en la barra lateral, dentro de Gestión.
+    expect(screen.getByRole("list", { name: "Gestión" }).textContent).toContain("Importar vías")
     // Las secciones están en la barra lateral.
     expect(screen.getByRole("navigation", { name: "Secciones del panel" }).querySelectorAll("button").length).toBeGreaterThan(5)
   })
