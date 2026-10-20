@@ -47,4 +47,26 @@ describe("SearchBar", () => {
     fireEvent.click(screen.getByRole("button", { name: /Buscar/ }))
     expect(pushed).toEqual(["/search?activity=Camping&department="])
   })
+
+  it("la X aparece al elegir, y sigue al volver a abrir el campo (antes se ocultaba justo ahí)", () => {
+    render(<SearchBar />)
+    fireEvent.focus(activityInput())
+    fireEvent.mouseDown(screen.getByText(/Surf/))
+    expect(screen.getByRole("button", { name: "Borrar actividad" })).toBeTruthy()
+    // Vuelve a tocar el campo: se abre la lista y la X sigue ahí.
+    fireEvent.click(activityInput())
+    fireEvent.focus(activityInput())
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Borrar actividad" }))
+    expect(activityInput().value).toBe("")
+    expect(screen.queryByRole("button", { name: "Borrar actividad" })).toBeNull()
+  })
+
+  it("lo escrito también se borra con la X, y el campo queda abierto", () => {
+    render(<SearchBar />)
+    fireEvent.focus(departmentInput())
+    fireEvent.change(departmentInput(), { target: { value: "Ro" } })
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Borrar departamento" }))
+    expect(departmentInput().value).toBe("")
+    expect(screen.getByText("Rocha")).toBeTruthy()
+  })
 })

@@ -86,6 +86,9 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
   }
 
   const openActivity = () => {
+    // Ya abierto (por ejemplo, la X le devuelve el cursor): no reponer lo
+    // elegido, que pisaría lo que se acaba de borrar.
+    if (openField === "activity") return
     // Keep existing value editable; don't wipe it
     setActivityInput(activity)
     setOpenField("activity")
@@ -96,6 +99,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
   }
 
   const openDepartment = () => {
+    if (openField === "department") return
     setDepartmentInput(department)
     setOpenField("department")
     setTimeout(() => {
@@ -110,10 +114,14 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
     setOpenField(null)
   }
 
+  // La X: borra lo elegido y lo escrito. Si el campo estaba abierto, sigue
+  // abierto y con el cursor adentro para escribir otra cosa.
   const clearActivity = (e) => {
+    e.preventDefault()
     e.stopPropagation()
     setActivity("")
     setActivityInput("")
+    if (openField === "activity") activityInputRef.current?.focus()
   }
 
   const selectDepartment = (d) => {
@@ -123,9 +131,11 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
   }
 
   const clearDepartment = (e) => {
+    e.preventDefault()
     e.stopPropagation()
     setDepartment("")
     setDepartmentInput("")
+    if (openField === "department") departmentInputRef.current?.focus()
   }
 
   // Keyboard handler shared by both inputs
@@ -336,6 +346,10 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
           background: #d0cdc7;
           color: #fff;
           font-size: 13px;
+          border: none;
+          padding: 0;
+          font-family: inherit;
+          line-height: 1;
           cursor: pointer;
           flex-shrink: 0;
           transition: background 0.15s;
@@ -405,8 +419,10 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
               onFocus={openActivity}
               onKeyDown={handleKeyDown}
             />
-            {activity && openField !== "activity" && (
-              <span className="clear-btn" onClick={clearActivity}>✕</span>
+            {/* Siempre que haya algo, también con el campo abierto (antes se
+                ocultaba justo al volver a tocarlo). */}
+            {(openField === "activity" ? activityInput : activity) && (
+              <button type="button" className="clear-btn" aria-label="Borrar actividad" onMouseDown={clearActivity} onClick={e => e.stopPropagation()}>✕</button>
             )}
           </div>
 
@@ -458,8 +474,8 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
               onFocus={openDepartment}
               onKeyDown={handleKeyDown}
             />
-            {department && openField !== "department" && (
-              <span className="clear-btn" onClick={clearDepartment}>✕</span>
+            {(openField === "department" ? departmentInput : department) && (
+              <button type="button" className="clear-btn" aria-label="Borrar departamento" onMouseDown={clearDepartment} onClick={e => e.stopPropagation()}>✕</button>
             )}
           </div>
 
