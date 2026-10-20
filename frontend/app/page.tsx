@@ -84,7 +84,9 @@ export default async function Home() {
           marginBottom: 40,
         }}>{heroTagline(data?.stats ?? null)}</p>
 
-        <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center" }}>
+        {/* Por encima de la invitación de abajo: las dos animan (fade-up) y la
+            que viene después en la página tapaba las listas del buscador. */}
+        <div className="fade-up fade-up-3" style={{ display: "flex", justifyContent: "center", position: "relative", zIndex: 2 }}>
           <SearchBar hero />
         </div>
 

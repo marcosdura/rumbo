@@ -87,6 +87,20 @@ export async function run(browser, r) {
     await page.keyboard.press("Escape")
     r.ok(`[${label}] el menú abre y Escape lo cierra`, opened === "true" && (await menu.getAttribute("aria-expanded")) === "false")
 
+    // La lista del buscador del hero queda por encima de "¿Conocés un lugar
+    // que no está?" (antes el texto se veía encima de las opciones).
+    await page.locator("#hero-section").getByPlaceholder("¿Qué querés hacer?").click()
+    await page.waitForTimeout(500)
+    const invite = await page.evaluate(() => {
+      const list = document.querySelector("#hero-section .search-dropdown").getBoundingClientRect()
+      const overlaps = [...document.querySelectorAll(".hero-invite > *")].map(el => el.getBoundingClientRect())
+        .filter(b => b.left < list.right && b.right > list.left && b.top < list.bottom && b.bottom > list.top)
+      const covered = overlaps.filter(b => !document.elementFromPoint(Math.max(b.left, list.left) + 4, Math.max(b.top, list.top) + 4)?.closest(".search-dropdown"))
+      return { overlaps: overlaps.length, covered: covered.length }
+    })
+    await page.keyboard.press("Escape")
+    r.ok(`[${label}] la lista del buscador del hero tapa la invitación de abajo`, invite.covered === 0 && (label !== "pc" || invite.overlaps > 0), JSON.stringify(invite))
+
     await page.goto(`${FRONT}/lugares/surf`, { waitUntil: "networkidle" })
     const cards = await page.locator(".places-grid .spot-card").count()
     await page.getByRole("link", { name: /^Rocha/ }).click()
