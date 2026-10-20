@@ -4,7 +4,7 @@
 // completa y sus fotos, con el botón para subir (antes la descripción se
 // cortaba y en el celular no se veía). En escalada se dice "vía" (antes la
 // tabla decía "rutas" y el botón "Sugerir una vía").
-import { Fragment, useState } from "react"
+import { useState } from "react"
 import Pill from "@/components/ui/Pill"
 import ItemPhotos from "./ItemPhotos"
 import { gradeVariant, type Via } from "@/lib/trailPage"
@@ -20,28 +20,35 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
   return (
     <div>
       <style>{`
-        .via-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr 24px; gap: 16px; padding: 12px 16px; border-radius: 12px; align-items: center; transition: background 0.15s; width: 100%; box-sizing: border-box; }
+        .via-row { display: grid; grid-template-columns: 16px 2fr 1fr 1fr 1fr 2fr; gap: 16px; padding: 12px 16px; border-radius: 12px; align-items: center; transition: background 0.15s; width: 100%; box-sizing: border-box; }
         button.via-row { background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; }
-        button.via-row:hover, button.via-row[aria-expanded="true"] { background: #f7f5f0; }
-        .via-detail { padding: 4px 16px 18px 46px; display: flex; flex-direction: column; gap: 14px; }
+        button.via-row:hover { background: #f7f5f0; }
+        /* La vía abierta y su detalle son una sola tarjeta: antes el detalle
+           quedaba suelto debajo y no se veía de qué vía era. */
+        .via-item { border: 1px solid transparent; border-radius: 12px; transition: background 0.15s, border-color 0.15s; }
+        .via-item.is-open { background: #fff; border-color: #b7dfc8; box-shadow: inset 4px 0 0 var(--primary); margin: 6px 0; }
+        .via-item.is-open button.via-row { background: #eef7f1; border-radius: 11px 11px 0 0; }
+        .via-chevron { color: var(--muted); font-size: 14px; line-height: 1; transition: transform 0.2s; display: inline-block; }
+        .via-item.is-open .via-chevron { transform: rotate(90deg); color: var(--primary); }
+        .via-detail { padding: 12px 16px 18px 48px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid #dcefe3; }
         @media (max-width: 640px) {
-          .via-row { grid-template-columns: 2fr 1fr 1fr 24px; }
+          .via-row { grid-template-columns: 16px 2fr 1fr 1fr; }
           .via-col-length, .via-col-desc { display: none; }
-          .via-detail { padding: 4px 8px 16px; }
+          .via-detail { padding: 10px 12px 16px; }
         }
       `}</style>
       <div className="via-row" style={{ borderBottom: "1px solid #ede9e1", borderRadius: 0, paddingTop: 0 }}>
+        <span />
         <p style={head}>Nombre</p>
         <p style={head}>Grado</p>
         <p style={head}>Chapas</p>
         <p className="via-col-length" style={head}>Largo</p>
         <p className="via-col-desc" style={head}>Descripción</p>
-        <span />
       </div>
       {vias.map((v, i) => {
         const open = openId === v.id
         return (
-          <Fragment key={v.id}>
+          <div key={v.id} className={`via-item${open ? " is-open" : ""}`}>
             <button
               type="button"
               className="via-row"
@@ -49,6 +56,8 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
               aria-controls={`via-${v.id}`}
               onClick={() => setOpenId(open ? null : v.id)}
             >
+              {/* La flecha, a la izquierda: indica que la fila se abre. */}
+              <span aria-hidden="true" className="via-chevron">›</span>
               <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <span style={{ fontSize: 11, color: "#d0cdc7", fontFamily: "monospace", width: 20, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19" }}>{v.name}</span>
@@ -60,7 +69,6 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
               <span className="via-col-desc" style={{ fontSize: 13, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {v.description || "—"}
               </span>
-              <span aria-hidden="true" style={{ color: "var(--muted)", fontSize: 12, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
             </button>
             {open && (
               <div id={`via-${v.id}`} className="via-detail">
@@ -78,7 +86,7 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
                 />
               </div>
             )}
-          </Fragment>
+          </div>
         )
       })}
     </div>

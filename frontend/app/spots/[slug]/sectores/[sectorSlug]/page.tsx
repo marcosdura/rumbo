@@ -57,16 +57,8 @@ export default async function SectorPage({ params }: Props) {
     <>
     <JsonLd data={ld} />
     <TrailLayout spot={spot} eyebrow="Sector de escalada" title={sector.name}>
-      {sector.type && (
-        <div><Pill variant="green" size="lg">🧗 {sector.type}</Pill></div>
-      )}
-      {/* Un texto que puede ser largo: aviso, no pill (como el de acceso privado). */}
-      {restrictions && (
-        <div role="note" style={{ background: "#fdf0f0", border: "1px solid #f5c0c0", borderRadius: 12, padding: "10px 14px", fontSize: 13, color: "#7f1d1d", lineHeight: 1.5, whiteSpace: "pre-line" }}>
-          ⚠️ <strong>Restricciones:</strong> {restrictions}
-        </div>
-      )}
-      <StatGrid stats={sectorStats(sector)} />
+      {/* Las fotos primero; los datos debajo, en chico (antes eran recuadros
+          grandes arriba y las fotos quedaban más abajo). */}
       <SectionCard title="Fotos del sector">
         <ItemPhotos
           photos={sector.photos} slots={sector.photo_slots} target="climbing_sector" targetId={sector.id}
@@ -74,6 +66,18 @@ export default async function SectorPage({ params }: Props) {
           emptyText="Este sector todavía no tiene fotos. ¿Escalaste acá? Sumá las tuyas."
         />
       </SectionCard>
+      {(sector.type || sectorStats(sector).length > 0) && (
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          {sector.type && <Pill variant="green">🧗 {sector.type}</Pill>}
+          <StatGrid stats={sectorStats(sector)} compact />
+        </div>
+      )}
+      {/* Un texto que puede ser largo: aviso, no pill (como el de acceso privado). */}
+      {restrictions && (
+        <div role="note" style={{ background: "#fdf0f0", border: "1px solid #f5c0c0", borderRadius: 12, padding: "10px 14px", fontSize: 13, color: "#7f1d1d", lineHeight: 1.5, whiteSpace: "pre-line" }}>
+          ⚠️ <strong>Restricciones:</strong> {restrictions}
+        </div>
+      )}
       {/* Escalada es abierta: cualquiera sugiere vías (pasan por revisión). */}
       <SectionCard
         title={`Vías${routes.length ? ` — ${routes.length}` : ""}`}

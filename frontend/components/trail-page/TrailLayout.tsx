@@ -41,8 +41,23 @@ export function OtherLinks({ title, items }: { title: string; items: { href: str
 }
 
 // Solo los datos que se saben (lib/trailPage.ts).
-export function StatGrid({ stats }: { stats: Stat[] }) {
+// compact: una fila de datos chicos (el sector, debajo de sus fotos) en vez
+// de los recuadros grandes.
+export function StatGrid({ stats, compact = false }: { stats: Stat[]; compact?: boolean }) {
   if (stats.length === 0) return null
+  if (compact) {
+    return (
+      <ul className="trail-stats-compact">
+        {stats.map(s => (
+          <li key={s.label}>
+            <span aria-hidden="true">{s.icon}</span>
+            <strong>{s.value}</strong>
+            <span className="trail-stats-compact-label">{s.label}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
   return (
     <div className="trail-stats">
       {stats.map(s => (
@@ -70,6 +85,14 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
         .trail-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; margin-bottom: 24px; transition: color 0.15s; }
         .trail-back:hover { color: #1b1b19; }
         .trail-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+        .trail-stats-compact { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+        .trail-stats-compact li {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+          font-size: 13px; color: #1b1b19;
+        }
+        .trail-stats-compact strong { font-weight: 700; }
+        .trail-stats-compact-label { font-size: 11px; font-weight: 600; color: var(--muted-strong); text-transform: uppercase; letter-spacing: 0.06em; }
         .trail-stat { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .trail-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .trail-body { display: flex; flex-direction: column; gap: 20px; }

@@ -85,6 +85,16 @@ describe("página del sector", () => {
     expect(screen.queryByText("Sin características registradas.")).toBeNull()
   })
 
+  it("las fotos van arriba; los datos, debajo y en chico", async () => {
+    page = { sector, spot, routes, others: [] }
+    render(await SectorPage({ params }))
+    const photos = screen.getByText("Fotos del sector")
+    const stats = document.querySelector(".trail-stats-compact")!
+    expect(stats).toBeTruthy()
+    expect(document.querySelector(".trail-stats")).toBeNull()
+    expect(photos.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it("sin vías, lo dice", async () => {
     page = { sector: { ...sector, routes_count: 0 }, spot, routes: [], others: [] }
     render(await SectorPage({ params }))
