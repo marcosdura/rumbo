@@ -118,10 +118,10 @@ function SpotDetail({ spot, preview = false }) {
         .img-reveal:nth-child(5) { animation-delay: 0.3s; }
         @keyframes imgReveal { to { opacity: 1; transform: scale(1); } }
 
-        .img-zoom img {
-          transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .img-zoom:hover img { transform: scale(1.06); }
+        /* Sin zoom al pasar el mouse (el mismo "ajuste" de las cards al
+           terminar la animación): se oscurece apenas para invitar a abrirla. */
+        .img-zoom::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.2s; pointer-events: none; }
+        .img-zoom:hover::after { background: rgba(0,0,0,0.08); }
 
         .rating-badge {
           display: inline-flex;

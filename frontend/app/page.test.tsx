@@ -40,6 +40,8 @@ describe("Home", () => {
     expect(invites.map(l => l.getAttribute("href"))).toEqual(["/agregar-lugar", "/agregar-lugar"])
     expect(invites[0].className).toBe("hero-invite-btn")
     expect(invites[0].closest("header")).toBeTruthy()
+    // Poco aire debajo de la invitación (antes quedaba mucho espacio vacío).
+    expect((invites[0].closest("header") as HTMLElement).style.padding).toBe("0px 0px 28px")
   })
 
   it("el hero muestra cuántos lugares y departamentos hay", async () => {
@@ -78,7 +80,7 @@ describe("Home", () => {
     render(await Home())
     const hero = document.getElementById("hero-section")!
     expect(hero.firstElementChild).toBe(screen.getByTestId("hero-bar"))
-    expect(hero.style.padding).toBe("0px 0px 52px")
+    expect(hero.style.padding).toBe("0px 0px 28px")
   })
 
   it("SEO: canónica '/' y datos del sitio para Google (WebSite y Organization con el logo)", async () => {

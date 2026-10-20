@@ -50,7 +50,7 @@ export default async function Home() {
       <Navbar />
 
       {/* Hero — scrollea con la página */}
-      <header id="hero-section" style={{ background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "0 0 52px", textAlign: "center" }}>
+      <header id="hero-section" style={{ background: "linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 65%, #40916c 100%)", position: "relative", zIndex: 20, padding: "0 0 28px", textAlign: "center" }}>
         {/* La misma barra que el Navbar (con su propio margen): no salta al
             venir de otra página ni cuando aparece el Navbar fijo. */}
         <HeroHeader />

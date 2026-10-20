@@ -117,10 +117,9 @@ describe("SpotCard", () => {
 })
 
 describe("SpotCard: hover sin saltito", () => {
-  it("la card y su foto quedan siempre en su propia capa (no se redibujan al terminar el hover)", () => {
-    expect(css).toMatch(/\.spot-card \{[^}]*transform: translate3d\(0, 0, 0\);[^}]*backface-visibility: hidden;/)
-    expect(css).toMatch(/\.spot-card:hover \{[^}]*transform: translate3d\(0, -3px, 0\);/)
-    expect(css).toMatch(/\.spot-card-img-wrap img \{[^}]*transform: scale\(1\) translateZ\(0\);/)
-    expect(css).toMatch(/\.spot-card:hover \.spot-card-img-wrap img \{[^}]*transform: scale\(1\.07\) translateZ\(0\);/)
+  it("la foto no hace zoom (al terminar, el navegador la redibujaba y se notaba un ajuste); la card sube", () => {
+    expect(css).not.toMatch(/\.spot-card:hover \.spot-card-img-wrap img/)
+    expect(css).not.toMatch(/scale\(/)
+    expect(css).toMatch(/\.spot-card:hover \{[^}]*transform: translateY\(-3px\);/)
   })
 })
