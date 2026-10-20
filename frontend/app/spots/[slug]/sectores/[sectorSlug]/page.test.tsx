@@ -93,6 +93,11 @@ describe("página del sector", () => {
     expect(stats).toBeTruthy()
     expect(document.querySelector(".trail-stats")).toBeNull()
     expect(photos.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Sin repetir la etiqueta cuando el valor ya la dice ("2 vías", no "2 vías VÍAS").
+    for (const li of stats.querySelectorAll("li")) {
+      const label = li.querySelector(".trail-stats-compact-label")?.textContent?.toLowerCase()
+      if (label) expect(li.querySelector("strong")!.textContent!.toLowerCase()).not.toContain(label)
+    }
   })
 
   it("sin vías, lo dice", async () => {

@@ -52,7 +52,10 @@ export function StatGrid({ stats, compact = false }: { stats: Stat[]; compact?: 
           <li key={s.label}>
             <span aria-hidden="true">{s.icon}</span>
             <strong>{s.value}</strong>
-            <span className="trail-stats-compact-label">{s.label}</span>
+            {/* "2 vías" ya dice qué es: sin repetir "Vías" al lado. */}
+            {!String(s.value).toLowerCase().includes(s.label.toLowerCase()) && (
+              <span className="trail-stats-compact-label">{s.label}</span>
+            )}
           </li>
         ))}
       </ul>
