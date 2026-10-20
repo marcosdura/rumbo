@@ -6,7 +6,8 @@ from models import ClimbingSector
 from schemas import ClimbingSectorCreate, ClimbingSectorResponse
 from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
-from auth import get_current_user_required
+from auth import get_current_user_required, get_current_admin_user
+import route_import
 from models import SpotDB
 from ownership import assert_owns_spot
 import contributions
@@ -148,3 +149,16 @@ def get_sector_routes(sector_id: int, db: Session = Depends(get_db)):
     if not sector:
         raise HTTPException(status_code=404, detail="Sector not found")
     return db.query(ClimbingRoute).filter(ClimbingRoute.sector_id == sector_id).all()
+
+
+@router.post("/{sector_id}/routes/import")
+@limiter.limit("10/minute")
+def import_sector_routes(request: Request, sector_id: int, body: route_import.RouteImport, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+    """Vías desde una planilla (panel de admin, "Importar vías"): crea las
+    nuevas y actualiza las que ya están (mismo nombre en el sector)."""
+    sector = db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.id == sector_id).first()
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector no encontrado")
+    result = route_import.import_routes(db, sector, body.routes)
+    db.commit()
+    return result
