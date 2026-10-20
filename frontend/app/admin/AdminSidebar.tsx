@@ -32,7 +32,11 @@ export default function AdminSidebar({ groups, mode, counts, onGo }: {
       <style>{`
         .admin-sidebar {
           width: 236px; flex-shrink: 0; align-self: flex-start;
-          position: sticky; top: 16px;
+          /* Pegada debajo del Navbar (que también queda fijo arriba: 77px)
+             donde arranca, así no se mueve con el scroll. Antes iba a 16px y
+             al bajar se metía debajo del Navbar. */
+          position: sticky; top: 101px;
+          max-height: calc(100vh - 117px); overflow-y: auto;
           background: #fff; border: 1px solid var(--border); border-radius: 16px;
           padding: 10px; box-sizing: border-box;
         }
@@ -58,7 +62,7 @@ export default function AdminSidebar({ groups, mode, counts, onGo }: {
 
         @media (max-width: 860px) {
           .admin-sidebar {
-            width: 100%; position: static; padding: 6px;
+            width: 100%; position: static; max-height: none; padding: 6px;
             display: flex; gap: 4px; overflow-x: auto;
           }
           .admin-side-group { display: flex; gap: 4px; flex-shrink: 0; }
