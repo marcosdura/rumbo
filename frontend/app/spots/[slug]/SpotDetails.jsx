@@ -106,17 +106,6 @@ function SpotDetail({ spot, preview = false }) {
 
         .spot-page { font-family: var(--font-dm-sans), sans-serif; }
 
-        .img-reveal {
-          opacity: 0;
-          transform: scale(1.03);
-          animation: imgReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-        .img-reveal:nth-child(1) { animation-delay: 0.05s; }
-        .img-reveal:nth-child(2) { animation-delay: 0.15s; }
-        .img-reveal:nth-child(3) { animation-delay: 0.2s; }
-        .img-reveal:nth-child(4) { animation-delay: 0.25s; }
-        .img-reveal:nth-child(5) { animation-delay: 0.3s; }
-        @keyframes imgReveal { to { opacity: 1; transform: scale(1); } }
 
         /* Sin zoom al pasar el mouse (el mismo "ajuste" de las cards al
            terminar la animación): se oscurece apenas para invitar a abrirla. */

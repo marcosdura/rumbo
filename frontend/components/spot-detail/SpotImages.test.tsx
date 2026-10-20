@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 
 // El CldImage simulado deja ver cómo se pidió cada foto.
 vi.mock("next-cloudinary", () => ({
-  CldImage: (p: { alt: string; src: string; priority?: boolean; loading?: string }) =>
-    <img alt={p.alt} src={p.src} data-priority={String(!!p.priority)} data-loading={p.loading ?? ""} />,
+  CldImage: (p: { alt: string; src: string; priority?: boolean; loading?: string; onLoad?: () => void; sizes?: string }) =>
+    <img alt={p.alt} src={p.src} data-priority={String(!!p.priority)} data-loading={p.loading ?? ""} data-sizes={p.sizes} onLoad={p.onLoad} />,
 }))
 vi.mock("./ImageGallery", () => ({
   default: ({ startIndex }: { startIndex: number }) => <div role="dialog">galería desde {startIndex}</div>,
@@ -19,6 +19,7 @@ const images = [1, 2, 3].map(i => ({ cloudinary_public_id: `rumbo/spots/1/foto${
 describe("SpotImages", () => {
   it("tocar una foto abre la galería en esa foto", () => {
     render(<SpotImages images={images} name="Cascada" />)
+    fireEvent.load(screen.getByAltText("Cascada 1"))
     fireEvent.click(screen.getByAltText("Cascada 2"))
     expect(screen.getByRole("dialog").textContent).toBe("galería desde 1")
   })
@@ -38,8 +39,40 @@ describe("SpotImages", () => {
   it("solo la foto principal carga con prioridad; las demás, en diferido", () => {
     const five = [1, 2, 3, 4, 5, 6].map(i => ({ cloudinary_public_id: `rumbo/spots/1/foto${i}` }))
     render(<SpotImages images={five} name="Cascada" />)
+    fireEvent.load(screen.getByAltText("Cascada 1"))
     const imgs = screen.getAllByRole("img")
     expect(imgs.map(i => i.dataset.priority)).toEqual(["true", "false", "false", "false", "false"])
     expect(imgs.slice(1).every(i => i.dataset.loading === "lazy")).toBe(true)
+  })
+
+  it("las miniaturas se piden recién cuando terminó la principal (antes llegaban antes que ella)", () => {
+    render(<SpotImages images={images} name="Cascada" />)
+    expect(screen.getAllByRole("img").map(i => i.getAttribute("alt"))).toEqual(["Cascada 1"])
+    fireEvent.load(screen.getByAltText("Cascada 1"))
+    expect(screen.getAllByRole("img").map(i => i.getAttribute("alt"))).toEqual(["Cascada 1", "Cascada 2", "Cascada 3"])
+  })
+
+  it("si la principal tarda demasiado, las miniaturas arrancan igual", () => {
+    vi.useFakeTimers()
+    render(<SpotImages images={images} name="Cascada" />)
+    expect(screen.queryByAltText("Cascada 2")).toBeNull()
+    act(() => { vi.advanceTimersByTime(2500) })
+    expect(screen.getByAltText("Cascada 2")).toBeTruthy()
+    vi.useRealTimers()
+  })
+
+  it("cada foto aparece cuando cargó; la principal muestra mientras una versión borrosa", () => {
+    render(<SpotImages images={images} name="Cascada" />)
+    const main = screen.getByAltText("Cascada 1")
+    const box = main.parentElement as HTMLElement
+    expect(box.className).not.toContain("is-loaded")
+    expect(box.style.backgroundImage).toContain("e_blur")
+    fireEvent.load(main)
+    expect(box.className).toContain("is-loaded")
+  })
+
+  it("en el celular la principal se pide de todo el ancho (antes, de la mitad)", () => {
+    render(<SpotImages images={images} name="Cascada" />)
+    expect(screen.getByAltText("Cascada 1").dataset.sizes).toBe("(max-width: 640px) 100vw, 50vw")
   })
 })
