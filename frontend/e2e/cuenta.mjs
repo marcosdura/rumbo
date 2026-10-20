@@ -428,6 +428,30 @@ async function admin(browser, r) {
   const imported = (await apiGet(`/sectors/${norte}/routes`)).find(r => r.name === "Via Importada E2E")
   r.ok("Admin — importar vías desde una planilla", imported?.grade === "6b+" && imported?.bolts === 8, JSON.stringify(imported ?? null))
 
+  // Abrir una vía no corre las filas ni le pone la franja verde a la izquierda.
+  await open(page, "/spots/roca-de-prueba/sectores/sector-norte")
+  const firstVia = page.locator(".via-item").first()
+  const viaTop = () => firstVia.evaluate(el => Math.round(el.getBoundingClientRect().top))
+  const closedTop = await viaTop()
+  await firstVia.locator("button.via-row").click()
+  await page.waitForTimeout(300)
+  const openedVia = { top: await viaTop(), shadow: await firstVia.evaluate(el => getComputedStyle(el).boxShadow) }
+  r.ok("Sector — abrir una vía no mueve la lista", openedVia.top === closedTop && openedVia.shadow === "none", `${closedTop} → ${JSON.stringify(openedVia)}`)
+
+  // La barra lateral del admin queda quieta debajo del Navbar al bajar.
+  await page.setViewportSize({ width: 1280, height: 500 })
+  await open(page, "/admin?tab=lugares")
+  const sideTop = () => page.locator(".admin-sidebar").evaluate(el => Math.round(el.getBoundingClientRect().top))
+  const sideBefore = await sideTop()
+  await page.mouse.wheel(0, 600)
+  await page.waitForTimeout(300)
+  const side = await page.evaluate(() => {
+    const b = document.querySelector(".admin-side-item").getBoundingClientRect()
+    return { scrolled: scrollY, visible: !!document.elementFromPoint(b.left + 10, b.top + 10)?.closest(".admin-sidebar") }
+  })
+  r.ok("Admin — la barra lateral no se mueve con el scroll", side.scrolled > 0 && side.visible && (await sideTop()) === sideBefore, `${sideBefore} → ${await sideTop()} ${JSON.stringify(side)}`)
+  await page.setViewportSize({ width: 1280, height: 900 })
+
   for (const tab of ["nuevos", "lugares", "cambios", "reportes", "fotos", "importar-vias"]) {
     await open(page, `/admin?tab=${tab}`)
     const problems = await a11yProblems(page)
