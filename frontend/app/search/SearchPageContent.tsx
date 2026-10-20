@@ -29,6 +29,7 @@ import { api } from "../../lib/api"
 import { categoryEmoji } from "../../lib/categories"
 import type { SpotListItem } from "../../lib/types"
 import "./search.css"
+import SortMenu from "../../components/ui/SortMenu"
 
 const SpotsMap = dynamic(() => import("../../components/spots/SpotsMap"), { ssr: false })
 
@@ -234,14 +235,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
                     {total ?? spots.length}
                   </Pill>
                 )}
-                <select
-                  aria-label="Ordenar"
-                  className="search-sort"
-                  value={sort}
-                  onChange={e => go(withSort(searchParams, e.target.value))}
-                >
-                  {SORT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
+                <SortMenu label="Ordenar" value={sort} options={SORT_OPTIONS} onChange={v => go(withSort(searchParams, v))} />
                 {canFilter && (
                   <button
                     className={`filter-trigger-btn${panelCount > 0 ? " has-filters" : ""}`}

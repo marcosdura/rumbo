@@ -2,6 +2,15 @@
 
 import Pill from "@/components/ui/Pill"
 import { pill, input } from "@/lib/theme"
+import SortMenu from "@/components/ui/SortMenu"
+
+const SORT_BY_OPTIONS = [
+  { value: "date_desc", label: "Más recientes primero" },
+  { value: "date_asc", label: "Más antiguos primero" },
+  { value: "name", label: "Por nombre" },
+  { value: "category", label: "Por categoría" },
+  { value: "department", label: "Por departamento" },
+] as const
 import { spotStatus, type AdminSpot, type SortBy, type SpotFilter } from "./types"
 
 interface Props {
@@ -61,18 +70,7 @@ export default function SpotsTab({
           onChange={e => setSearchSpots(e.target.value)}
           style={{ ...input, flex: 1, minWidth: 200, width: "auto" }}
         />
-        <select
-          aria-label="Ordenar"
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value as SortBy)}
-          style={{ ...input, width: "auto" }}
-        >
-          <option value="date_desc">Más recientes primero</option>
-          <option value="date_asc">Más antiguos primero</option>
-          <option value="name">Ordenar por nombre</option>
-          <option value="category">Ordenar por categoría</option>
-          <option value="department">Ordenar por departamento</option>
-        </select>
+        <SortMenu label="Ordenar" value={sortBy} options={SORT_BY_OPTIONS} onChange={v => setSortBy(v as SortBy)} />
       </div>
 
       {filter === "pending" && displayed.length > 1 && (

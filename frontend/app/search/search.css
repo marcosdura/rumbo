@@ -149,18 +149,6 @@
 .search-toggle:hover { background: #f0f7f3; border-color: #b7dfc8; }
 .search-toggle.is-on { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-.search-sort {
-  font-family: var(--font-dm-sans), sans-serif;
-  padding: 6px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: #3d3d3a;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .mobile-map-btn-wrap { display: none; }
 .mobile-map-btn {
   width: 100%;

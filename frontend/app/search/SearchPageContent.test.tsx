@@ -95,7 +95,8 @@ describe("Búsqueda: los filtros viven en la URL", () => {
     render(<SearchPage />)
     await flush()
     expect(listRequests[0]).toContain("sort=recommended")
-    fireEvent.change(screen.getByRole("combobox", { name: "Ordenar" }), { target: { value: "name" } })
+    fireEvent.click(screen.getByRole("combobox", { name: "Ordenar" }))
+    fireEvent.mouseDown(screen.getByRole("option", { name: /Nombre/ }))
     expect(lastReplace().get("sort")).toBe("name")
   })
 
