@@ -16,6 +16,7 @@ export type ImportRow = {
 
 export type ParsedRow = { line: number; row: ImportRow; errors: string[]; repeated: boolean }
 
+// Los encabezados de la planilla de ejemplo (public/vias-ejemplo.xlsx).
 export const TEMPLATE_HEADERS = ["Nombre", "Grado", "Tipo", "Largo (m)", "Chapas", "Descripción"] as const
 export const MAX_ROWS = 500
 // Escala francesa: 3 a 9, letra opcional (a, b, c) y "+" opcional: 6a, 7b+, 5+.
@@ -135,15 +136,4 @@ export function parseCsv(content: string): string[][] {
   }
   if (field || row.length) { row.push(field); rows.push(row) }
   return rows
-}
-
-// La planilla de ejemplo, lista para abrir en Excel (con ";" y BOM, así
-// respeta las tildes).
-export function templateCsv(): string {
-  const lines = [
-    TEMPLATE_HEADERS.join(";"),
-    ["La Diagonal", "6a", "deportiva", "25", "9", "Placa con buenos agarres"].join(";"),
-    ["El Techo", "7b+", "deportiva", "18", "7", ""].join(";"),
-  ]
-  return "﻿" + lines.join("\r\n") + "\r\n"
 }

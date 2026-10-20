@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { readSheet } from "read-excel-file/node"
 import { describe, expect, it } from "vitest"
-import { MAX_ROWS, parseCsv, routeKey, rowsFromMatrix, templateCsv, TEMPLATE_HEADERS } from "./routeImport"
+import { MAX_ROWS, parseCsv, routeKey, rowsFromMatrix, TEMPLATE_HEADERS } from "./routeImport"
 
 describe("leer la planilla de vías", () => {
   it("toma las columnas por su encabezado, sin importar mayúsculas, tildes ni orden", () => {
@@ -53,8 +56,8 @@ describe("CSV", () => {
     expect(parseCsv('Nombre,Grado\n"El ""Techo""",7b\n"Dos\nlíneas",6a')).toEqual([["Nombre", "Grado"], ['El "Techo"', "7b"], ["Dos\nlíneas", "6a"]])
   })
 
-  it("la planilla de ejemplo se lee sin errores", () => {
-    const matrix = parseCsv(templateCsv())
+  it("la planilla de ejemplo (public/vias-ejemplo.xlsx) se lee sin errores", async () => {
+    const matrix = (await readSheet(readFileSync(join(process.cwd(), "public", "vias-ejemplo.xlsx")))) as unknown[][]
     expect(matrix[0]).toEqual([...TEMPLATE_HEADERS])
     const { rows, error } = rowsFromMatrix(matrix)
     expect(error).toBeUndefined()

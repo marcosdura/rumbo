@@ -40,6 +40,13 @@ describe("Importar vías (admin)", () => {
     expect((screen.getByLabelText("Subir planilla") as HTMLInputElement).disabled).toBe(true)
   })
 
+  it("la planilla de ejemplo se baja como Excel (.xlsx)", () => {
+    render(<ImportRoutesTab spots={[]} token="t" loading={false} />)
+    const link = screen.getByRole("link", { name: "Descargar planilla de ejemplo" })
+    expect(link.getAttribute("href")).toBe("/vias-ejemplo.xlsx")
+    expect(link.hasAttribute("download")).toBe(true)
+  })
+
   it("con un CSV: muestra qué es nueva y qué se actualiza, e importa al sector", async () => {
     await ready()
     await upload(new File(["Nombre;Grado\nla diagonal;6b\nEl Techo;7b+\n"], "vias.csv", { type: "text/csv" }))

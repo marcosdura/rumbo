@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react"
 import { api, ApiError } from "@/lib/api"
 import { card, input } from "@/lib/theme"
-import { parseCsv, routeKey, rowsFromMatrix, templateCsv, type ParsedRow } from "@/lib/routeImport"
+import { parseCsv, routeKey, rowsFromMatrix, type ParsedRow } from "@/lib/routeImport"
 import type { AdminSpot } from "./types"
 
 type Sector = { id: number; name: string; routes: { name: string }[] }
@@ -83,15 +83,6 @@ export default function ImportRoutesTab({ spots, token, loading }: {
     }
   }
 
-  function downloadTemplate() {
-    const url = URL.createObjectURL(new Blob([templateCsv()], { type: "text/csv;charset=utf-8" }))
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "vias-ejemplo.csv"
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   async function importRows() {
     if (!canImport || !sector) return
     setSaving(true); setError(null)
@@ -116,7 +107,7 @@ export default function ImportRoutesTab({ spots, token, loading }: {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ ...card, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
         <p style={{ fontSize: 13, color: "var(--muted-strong)", margin: 0, lineHeight: 1.6 }}>
-          Subí un Excel o un CSV con las columnas <strong>Nombre</strong> (obligatoria), Grado, Tipo, Largo (m), Chapas y Descripción.
+          Subí un Excel (.xlsx, como lo baja Google Sheets con Archivo → Descargar) o un CSV con las columnas <strong>Nombre</strong> (obligatoria), Grado, Tipo, Largo (m), Chapas y Descripción.
           Si una vía ya está en el sector (mismo nombre), se actualiza con lo que trae la planilla; una celda vacía no borra lo que ya tenía.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -140,7 +131,7 @@ export default function ImportRoutesTab({ spots, token, loading }: {
             📄 Subir planilla
             <input type="file" accept=".xlsx,.csv" onChange={chooseFile} disabled={!sector} style={{ display: "none" }} aria-label="Subir planilla" />
           </label>
-          <button type="button" onClick={downloadTemplate} style={button(false)}>Descargar planilla de ejemplo</button>
+          <a href="/vias-ejemplo.xlsx" download style={{ ...button(false), textDecoration: "none" }}>Descargar planilla de ejemplo</a>
           {fileName && <span style={{ fontSize: 12, color: "var(--muted)" }}>{fileName}</span>}
         </div>
         {error && <p role="alert" style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>{error}</p>}
