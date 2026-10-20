@@ -42,7 +42,12 @@ const buildExtraBadges = (extraCategories) => {
   ]
 }
 
-const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => {
+// El pin va centrado sobre la ubicación: el punto exacto es el centro de la
+// pastilla, sea cual sea su largo (antes era su borde izquierdo y la pastilla
+// crecía hacia la derecha). El globo sale justo arriba de la pastilla.
+export const PIN_POPUP_OFFSET = -16
+
+export const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => {
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
   const label = categoryName || 'Spot'
 
@@ -86,7 +91,7 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
 
   return L.divIcon({
     html: `
-      <div style="position: relative; display: inline-block;">
+      <div class="spot-pin" style="position: absolute; left: 0; top: 0; display: inline-block; transform: translate(-50%, -50%);">
         <div style="
           display: inline-flex;
           align-items: center;
@@ -112,9 +117,9 @@ const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => 
       </div>
     `,
     className: '',
-    iconSize: null,
-    iconAnchor: [0, 20],
-    popupAnchor: [60, -10],
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+    popupAnchor: [0, PIN_POPUP_OFFSET],
   })
 }
 
@@ -298,6 +303,20 @@ export default function SpotsMap({ spots, highlightedSpotId, mapExpanded, active
         .leaflet-popup-tip {
           background: #fff !important;
           box-shadow: none !important;
+        }
+        /* El globo crece desde el pin (antes aparecía con un fundido, como
+           cayendo de arriba). La posición la maneja Leaflet en .leaflet-popup;
+           se anima lo de adentro, con el origen en la punta. */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip-container {
+          transform-origin: 50% 100%;
+          animation: spotPopupIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes spotPopupIn {
+          from { opacity: 0; transform: scale(0.85) translateY(6px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .leaflet-popup-content-wrapper, .leaflet-popup-tip-container { animation: none; }
         }
         .leaflet-popup-close-button {
           color: var(--muted) !important;
