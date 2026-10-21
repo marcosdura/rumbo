@@ -75,7 +75,8 @@ describe("AgregarLugar por link directo", () => {
   it("un lugar que no existe vuelve al inicio con un aviso", async () => {
     openWith("sumar=ruta&spot=999")
     expect(await screen.findByText("No encontramos ese lugar. Podés elegirlo desde el formulario.")).toBeTruthy()
-    expect(screen.queryByRole("link", { name: /Volver a/ })).toBeNull()
+    // Ni "Volver a {lugar}" (el de "Volver a Rumbo" está siempre).
+    expect(screen.queryByRole("link", { name: /Volver a (?!Rumbo)/ })).toBeNull()
   })
 })
 

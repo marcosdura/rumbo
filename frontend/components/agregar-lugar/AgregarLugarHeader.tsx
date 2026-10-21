@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import type { StepProgressItem } from "./flow"
 
 interface Props {
@@ -27,8 +28,10 @@ export default function AgregarLugarHeader({ stepLabel, progress = [], incomplet
       padding: "24px 28px",
       marginBottom: 28,
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+        {/* Salir del formulario a la app (antes no había cómo, salvo el
+            botón Atrás del navegador). El botón es el del hero. */}
+        <Link href="/" className="hero-invite-btn">← Volver a Rumbo</Link>
         {canReset && (
           <button
             type="button"
