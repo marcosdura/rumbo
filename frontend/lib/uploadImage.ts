@@ -37,7 +37,11 @@ export async function uploadImageToCloudinary(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ publicId, spotId: publicIdParams.spotId }),
   })
-  if (!sigRes.ok) throw new Error("No se pudo obtener la firma de upload")
+  if (!sigRes.ok) {
+    // Llegó al tope de fotos (por hora o por día): el motivo, para mostrarlo.
+    if (sigRes.status === 429) throw new Error((await sigRes.json().catch(() => null))?.error ?? "Subiste muchas fotos. Probá de nuevo más tarde.")
+    throw new Error("No se pudo obtener la firma de upload")
+  }
   const { signature, timestamp, folder, apiKey, cloudName, allowedFormats, overwrite } = await sigRes.json()
 
   const formData = new FormData()

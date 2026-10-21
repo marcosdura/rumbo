@@ -41,6 +41,13 @@ describe("uploadImageToCloudinary", () => {
     expect(form.get("public_id")).toMatch(BACKEND_FORMAT)
   })
 
+  it("si llegó al tope de fotos, el error dice el motivo (y no sube nada)", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ error: "Llegaste al máximo de fotos por hoy. Probá de nuevo mañana." }), { status: 429 }))
+    vi.stubGlobal("fetch", fetchMock)
+    await expect(uploadImageToCloudinary(file, { spotId: 42 })).rejects.toThrow("Llegaste al máximo de fotos por hoy")
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it("devuelve el public_id que asignó Cloudinary", async () => {
     mockFetch({ secure_url: "https://x", public_id: "rumbo/spots/42/abc" })
     await expect(uploadImageToCloudinary(file, { spotId: 42 })).resolves.toEqual({

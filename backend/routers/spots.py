@@ -18,6 +18,7 @@ from typing import Optional, List
 from slugs import generate_slug
 import contributions
 import item_photos as item_photos_domain
+import uploads
 from notifications import notify, notify_admin, spot_link
 from spot_changes import unpublish_spot, reject_spot as reject_spot_with_reason, plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, destroy_cloudinary_images, owner_visible_request
 from routers.sectors import _attach_sector_stats
@@ -648,7 +649,8 @@ def get_spot_pins(
 
 
 @router.delete("/spots/{spot_id}")
-def delete_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def delete_spot(request: Request, spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     # include_pending: el cascade del ORM borra lo que carga de las
     # relaciones; sin esto los aportes pendientes no se cargan y quedan
     # huérfanos (en Postgres los borra el ON DELETE CASCADE, pero no sus fotos).
@@ -920,7 +922,8 @@ def get_spot(id: int, db: Session = Depends(get_db)):
     }
 
 @router.post("/spots/{spot_id}/trekking-detail")
-def add_trekking_detail(spot_id: int, data: TrekkingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+@limiter.limit("30/minute")
+def add_trekking_detail(request: Request, spot_id: int, data: TrekkingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     detail = TrekkingDetail(spot_id=spot_id, **data.dict())
     db.add(detail)
     db.commit()
@@ -930,7 +933,8 @@ def add_trekking_detail(spot_id: int, data: TrekkingDetailCreate, db: Session = 
 
 # agrega una amenity al spot
 @router.post("/spots/{spot_id}/amenities/{amenity_id}")
-def add_amenity(spot_id: int, amenity_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+@limiter.limit("30/minute")
+def add_amenity(request: Request, spot_id: int, amenity_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
 
     amenity = db.query(models.Amenity).filter(models.Amenity.id == amenity_id).first()
     if not amenity:
@@ -963,7 +967,8 @@ def _price_from_camping(spot: SpotDB, price):
 
 
 @router.post("/spots/{spot_id}/categories")
-def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def add_spot_category(request: Request, spot_id: int, data: SpotCategoryAddRequest, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     # Una categoría secundaria hace aparecer el spot en otras búsquedas: sobre
     # un spot aprobado es el mismo "publicar algo y después cambiarlo" que
     # cierran los pedidos de cambio. Agregar lugar la usa solo al crear el
@@ -1026,7 +1031,8 @@ def add_spot_category(spot_id: int, data: SpotCategoryAddRequest, db: Session = 
 
 # agrega detalles del camping
 @router.post("/spots/{spot_id}/camping")
-def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+@limiter.limit("30/minute")
+def add_camping_detail(request: Request, spot_id: int, data: CampingDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     
     camping = CampingDetail(
         spot_id=spot_id,
@@ -1042,7 +1048,8 @@ def add_camping_detail(spot_id: int, data: CampingDetailCreate, db: Session = De
 
 
 @router.post("/spots/{spot_id}/motorhome")
-def add_motorhome_detail(spot_id: int, data: MotorhomeDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
+@limiter.limit("30/minute")
+def add_motorhome_detail(request: Request, spot_id: int, data: MotorhomeDetailCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin)):
     detail = MotorhomeDetail(
         spot_id=spot_id,
         capacity=data.capacity,
@@ -1115,7 +1122,8 @@ def get_all_spots_admin(db: Session = Depends(get_db), admin: dict = Depends(get
 
 
 @router.patch("/admin/spots/{spot_id}/reactivate")
-def reactivate_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def reactivate_spot(request: Request, spot_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     # No usa get_owned_spot_or_admin: si el spot está acá es porque su dueño
     # borró la cuenta, ya no hay ningún dueño legítimo que autorizar — es
     # una decisión exclusiva del admin.
@@ -1128,7 +1136,8 @@ def reactivate_spot(spot_id: int, db: Session = Depends(get_db), admin: dict = D
 
 
 @router.patch("/admin/spots/{spot_id}/approve")
-def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def approve_spot(request: Request, spot_id: int, approved: bool, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     spot = db.query(SpotDB).filter(SpotDB.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
@@ -1159,7 +1168,8 @@ def approve_spot(spot_id: int, approved: bool, db: Session = Depends(get_db), ad
 
 
 @router.post("/admin/spots/{spot_id}/reject")
-def reject_spot(spot_id: int, body: SpotReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def reject_spot(request: Request, spot_id: int, body: SpotReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     """Rechazar un spot nuevo, o despublicar uno aprobado, con un motivo que
     el dueño ve en su dashboard. Antes la única salida para un spot que no
     servía era borrarlo, sin explicación; "Eliminar" queda para el spam. El
@@ -1173,7 +1183,8 @@ def reject_spot(spot_id: int, body: SpotReject, db: Session = Depends(get_db), a
 
 
 @router.post("/spots/{spot_id}/resubmit")
-def resubmit_spot(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def resubmit_spot(request: Request, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """El dueño corrigió su spot rechazado y lo vuelve a mandar a revisión."""
     if spot.is_approved or spot.rejected_at is None:
         raise HTTPException(status_code=409, detail="Este lugar no está rechazado.")
@@ -1221,6 +1232,8 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     pending = get_pending_request(db, spot.id)
     if pending and {public_id, f"rumbo/spots/{public_id}"} & set(request_photos(pending)):
         raise HTTPException(status_code=409, detail="Ese public_id ya está en uso")
+    # Tope por usuario y registro para borrar después lo que no se use.
+    uploads.issue_ticket(db, spot.id, public_id, user)
     return {"ok": True}
 
 
@@ -1258,7 +1271,8 @@ def edit_spot_admin(
 
 
 @router.patch("/admin/spots/{spot_id}/main-image")
-def set_main_image(data: dict, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_main_image(request: Request, data: dict, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     public_id = data.get("cloudinary_public_id")
     images = db.query(SpotImage).filter(SpotImage.spot_id == spot.id).all()
     for img in images:
@@ -1268,7 +1282,8 @@ def set_main_image(data: dict, spot: SpotDB = Depends(get_owned_spot_or_admin), 
 
 
 @router.delete("/admin/images/{public_id:path}")
-def delete_image(public_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def delete_image(request: Request, public_id: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     img = db.query(SpotImage).filter(SpotImage.cloudinary_public_id == public_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -1299,7 +1314,8 @@ def delete_image(public_id: str, db: Session = Depends(get_db), user: dict = Dep
 
 
 @router.post("/spots/{spot_id}/experiences", response_model=ExperienceResponse)
-def create_experience(spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def create_experience(request: Request, spot_id: int, data: ExperienceCreate, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     category = db.query(models.Category).filter(models.Category.id == data.category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -1400,7 +1416,8 @@ def get_owner_content(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Sessi
 
 
 @router.delete("/spots/{spot_id}/experiences/{experience_id}")
-def delete_experience(spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def delete_experience(request: Request, spot_id: int, experience_id: int, db: Session = Depends(get_db), spot: SpotDB = Depends(get_owned_spot_or_admin), user: dict = Depends(get_current_user_required)):
     # include_pending: el dueño también puede borrar una experiencia en revisión.
     experience = db.query(Experience).execution_options(include_pending=True).filter(
         Experience.id == experience_id,

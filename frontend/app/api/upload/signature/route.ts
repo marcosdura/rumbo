@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -23,7 +23,11 @@ export async function POST(req: Request) {
       token: session.id_token,
       params: { public_id: publicId },
     });
-  } catch {
+  } catch (e) {
+    // El tope de subidas por usuario (backend/uploads.py): se dice tal cual.
+    if (e instanceof ApiError && e.status === 429) {
+      return NextResponse.json({ error: e.message }, { status: 429 });
+    }
     return NextResponse.json({ error: "No autorizado para subir a este spot" }, { status: 403 });
   }
 

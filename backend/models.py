@@ -165,6 +165,20 @@ class Notification(Base):
     read_at    = Column(DateTime(timezone=True), nullable=True)
 
 
+class UploadTicket(Base):
+    """Un permiso de subida a Cloudinary (uploads.py): quién pidió subir qué
+    archivo y cuándo. Sirve para el tope por usuario y para borrar de
+    Cloudinary lo que se subió y nunca quedó registrado en Rumbo. Sin FK al
+    lugar: si el lugar se borra, el archivo huérfano igual hay que limpiarlo."""
+    __tablename__ = "upload_tickets"
+
+    id         = Column(Integer, primary_key=True)
+    public_id  = Column(String, nullable=False, unique=True)
+    spot_id    = Column(Integer, nullable=False)
+    user_email = Column(String, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+
 class SpotView(Base):
     """Una visita a la página de un lugar: una por persona, por lugar y por
     día (views.py). Sin IPs ni emails: viewer_hash es un hash con sal del

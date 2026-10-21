@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import os
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -9,13 +11,24 @@ from limiter import limiter
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database import get_db
+import uploads
 
 # El esquema lo manejan las migraciones de Alembic (backend/alembic/), no
 # create_all: create_all solo crea tablas que no existen, nunca agrega
 # columnas ni índices a una tabla existente. Correr `alembic upgrade head`
 # antes de levantar el server (el deploy lo hace en el start command).
 
-app = FastAPI()
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Borra de Cloudinary lo que se subió y nunca quedó registrado
+    # (uploads.py). UPLOAD_CLEANUP=off la apaga.
+    task = None if os.getenv("UPLOAD_CLEANUP") == "off" else asyncio.create_task(uploads.cleanup_forever())
+    yield
+    if task:
+        task.cancel()
+
+
+app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
