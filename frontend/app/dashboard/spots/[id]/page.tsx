@@ -1,52 +1,28 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Navbar from "@/components/layout/Navbar"
 import LoginRequired from "@/components/layout/LoginRequired"
-import Link from "next/link"
 import { uploadImageToCloudinary, buildPublicId } from "@/lib/uploadImage"
-import Pill from "@/components/ui/Pill"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import SubmittingOverlay from "@/components/ui/SubmittingOverlay"
 import { api } from "@/lib/api"
 import { s, MAX_PHOTOS } from "./styles"
-import type { Spot, Review, Tab, StagedPhoto } from "./types"
-import { describeFields, checkNewPhotos, errorMessage, isStaySpot, contentTabLabel, priceMode } from "./changes"
+import type { Spot, Review, Tab } from "./types"
+import { describeFields, errorMessage, isStaySpot, contentTabLabel, priceMode } from "./changes"
 import InfoTab from "./InfoTab"
 import PhotosTab from "./PhotosTab"
 import ReviewsTab from "./ReviewsTab"
 import ContentTab from "./ContentTab"
 import ChangeRequestBanner from "./ChangeRequestBanner"
 import RejectionBanner from "./RejectionBanner"
-import type { PracticalKey } from "@/lib/practicalInfo"
+import { DashboardHeader, OwnerStats } from "./DashboardHeader"
+import { useSpotForm } from "./useSpotForm"
+import { useStagedPhotos } from "./useStagedPhotos"
 
 const REVIEWS_PAGE = 50
-
-type PayloadFields = {
-  name: string; description: string; email: string; whatsapp: string; instagram: string; price: string
-  seasonType: "all_year" | "seasonal"; seasonStart: string; seasonEnd: string
-  isPublic: boolean | null; publicTransport: string | null; practical: Record<PracticalKey, boolean | null>
-}
-
-// Lo que se manda a PATCH /admin/spots/{id}. También sirve para saber si hay
-// cambios sin guardar (comparando con lo que se cargó).
-function payloadFrom(f: PayloadFields) {
-  return {
-    name: f.name,
-    description: f.description,
-    email: f.email || null,
-    whatsapp: f.whatsapp || null,
-    instagram: f.instagram || null,
-    price: f.price !== "" ? parseFloat(f.price) : null,
-    season_start: f.seasonType === "seasonal" && f.seasonStart ? parseInt(f.seasonStart) : null,
-    season_end: f.seasonType === "seasonal" && f.seasonEnd ? parseInt(f.seasonEnd) : null,
-    is_public: f.isPublic,
-    public_transport: f.publicTransport,
-    ...f.practical,
-  }
-}
 
 // Respuesta de PATCH /admin/spots/{id}: qué se aplicó ya y qué quedó en
 // revisión (backend/spot_changes.py decide; con dry_run no escribe nada).
@@ -72,14 +48,9 @@ export default function SpotDashboardPage() {
   const [saving, setSaving] = useState(false)
   const [saveOk, setSaveOk] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [photoLoading, setPhotoLoading] = useState(false)
-  const [photoError, setPhotoError] = useState<string | null>(null)
-  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-
-  // Fotos elegidas que todavía no se subieron: se suben a Cloudinary recién
-  // al guardar, así si el dueño se arrepiente no quedan archivos sueltos.
-  const [stagedPhotos, setStagedPhotos] = useState<StagedPhoto[]>([])
+  const form = useSpotForm()
+  const photos = useStagedPhotos(spot, setSpot, token)
+  const stagedPhotos = photos.stagedPhotos
   const [submitting, setSubmitting] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   // Aviso previo cuando algo del guardado va a revisión.
@@ -91,24 +62,6 @@ export default function SpotDashboardPage() {
   const [resubmitting, setResubmitting] = useState(false)
   const [resubmitError, setResubmitError] = useState<string | null>(null)
 
-  // Campos editables
-  const [editName, setEditName] = useState("")
-  const [editDescription, setEditDescription] = useState("")
-  const [editEmail, setEditEmail] = useState("")
-  const [editWhatsapp, setEditWhatsapp] = useState("")
-  const [editInstagram, setEditInstagram] = useState("")
-  const [editPrice, setEditPrice] = useState("")
-  const [editSeasonType, setEditSeasonType] = useState<"all_year" | "seasonal">("all_year")
-  const [editSeasonStart, setEditSeasonStart] = useState("")
-  const [editSeasonEnd, setEditSeasonEnd] = useState("")
-  const [editIsPublic, setEditIsPublic] = useState<boolean | null>(null)
-  const [editPublicTransport, setEditPublicTransport] = useState<string | null>(null)
-  // Ubicación nueva elegida en el mapa (null = no se toca).
-  const [newLocation, setNewLocation] = useState<[number, number] | null>(null)
-  const [editPractical, setEditPractical] = useState<Record<PracticalKey, boolean | null>>({
-    pets_allowed: null, reservation_required: null, cell_signal: null,
-  })
-
 
   useEffect(() => {
     if (!token) return
@@ -119,7 +72,7 @@ export default function SpotDashboardPage() {
       const found = Array.isArray(mine.data) ? mine.data.find((s: Spot) => String(s.id) === spotId) : null
       if (!found) { router.push("/profile"); return }
       setSpot(found)
-      populateFields(found)
+      form.populate(found)
       const list = Array.isArray(reviewsRes.data) ? reviewsRes.data : []
       setReviews(list)
       setReviewsTotal(reviewsRes.totalCount ?? list.length)
@@ -128,7 +81,7 @@ export default function SpotDashboardPage() {
     })
       // Antes no había catch: si fallaba, quedaba en "Cargando..." para siempre.
       .catch(() => { setLoadError(true); setLoading(false) })
-    // router es estable; populateFields solo copia lo que llega a los campos.
+    // router es estable; form.populate solo copia lo que llega a los campos.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, spotId, loadAttempt])
 
@@ -152,8 +105,7 @@ export default function SpotDashboardPage() {
   }
 
   // Cambios sin guardar: el navegador avisa antes de salir de la página.
-  const baseline = useRef<string | null>(null)
-  const dirty = spot !== null && (stagedPhotos.length > 0 || newLocation !== null || (baseline.current !== null && JSON.stringify(formPayload()) !== baseline.current))
+  const dirty = spot !== null && (stagedPhotos.length > 0 || form.changed)
   useEffect(() => {
     if (!dirty) return
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = "" }
@@ -161,57 +113,13 @@ export default function SpotDashboardPage() {
     return () => window.removeEventListener("beforeunload", warn)
   }, [dirty])
 
-  // Liberar las previews (URL.createObjectURL) al salir de la página.
-  const stagedRef = useRef(stagedPhotos)
-  stagedRef.current = stagedPhotos
-  useEffect(() => () => stagedRef.current.forEach(p => URL.revokeObjectURL(p.url)), [])
-
-  function populateFields(s: Spot) {
-    setEditName(s.name ?? "")
-    setEditDescription(s.description ?? "")
-    setEditEmail(s.email ?? "")
-    setEditWhatsapp(s.whatsapp ?? "")
-    setEditInstagram(s.instagram ?? "")
-    setEditPrice(s.price != null ? String(s.price) : "")
-    setEditSeasonType(s.season_start ? "seasonal" : "all_year")
-    setEditSeasonStart(s.season_start ? String(s.season_start) : "")
-    setEditSeasonEnd(s.season_end ? String(s.season_end) : "")
-    setEditIsPublic(s.is_public ?? null)
-    setEditPublicTransport(s.public_transport ?? null)
-    const practical = {
-      pets_allowed: s.pets_allowed ?? null,
-      reservation_required: s.reservation_required ?? null,
-      cell_signal: s.cell_signal ?? null,
-    }
-    setEditPractical(practical)
-    baseline.current = JSON.stringify(payloadFrom({
-      name: s.name ?? "", description: s.description ?? "", email: s.email ?? "", whatsapp: s.whatsapp ?? "",
-      instagram: s.instagram ?? "", price: s.price != null ? String(s.price) : "",
-      seasonType: s.season_start ? "seasonal" : "all_year",
-      seasonStart: s.season_start ? String(s.season_start) : "", seasonEnd: s.season_end ? String(s.season_end) : "",
-      isPublic: s.is_public ?? null, publicTransport: s.public_transport ?? null, practical,
-    }))
-  }
-
   async function refreshSpot() {
     const { data } = await api.get<Spot[]>("/spots/mine", { token })
     const found = Array.isArray(data) ? data.find((s: Spot) => String(s.id) === spotId) : null
     if (found) {
       setSpot(found)
-      populateFields(found)
+      form.populate(found)
     }
-  }
-
-  function buildPayload() {
-    return { ...formPayload(), ...(newLocation ? { lat: newLocation[0], lng: newLocation[1] } : {}) }
-  }
-
-  function formPayload() {
-    return payloadFrom({
-      name: editName, description: editDescription, email: editEmail, whatsapp: editWhatsapp, instagram: editInstagram,
-      price: editPrice, seasonType: editSeasonType, seasonStart: editSeasonStart, seasonEnd: editSeasonEnd,
-      isPublic: editIsPublic, publicTransport: editPublicTransport, practical: editPractical,
-    })
   }
 
   function showSaveOk(message: string) {
@@ -230,7 +138,7 @@ export default function SpotDashboardPage() {
       // Ids de mentira con el formato real: al dry_run solo le importa
       // cuántas fotos son, todavía no se subió ninguna.
       const { data } = await api.patch<EditResult>(`/admin/spots/${spot.id}`, {
-        ...buildPayload(),
+        ...form.buildPayload(),
         photos_added: stagedPhotos.map(() => buildPublicId(spot.id)),
       }, { token, params: { dry_run: true } })
       if (data.pending.length === 0 && data.applied.length === 0) {
@@ -262,12 +170,11 @@ export default function SpotDashboardPage() {
       }
       setUploadProgress("Guardando cambios...")
       const { data } = await api.patch<EditResult>(`/admin/spots/${spot.id}`, {
-        ...buildPayload(),
+        ...form.buildPayload(),
         photos_added: uploaded,
       }, { token })
-      stagedPhotos.forEach(p => URL.revokeObjectURL(p.url))
-      setStagedPhotos([])
-      setNewLocation(null)
+      photos.clearStaged()
+      form.setNewLocation(null)
       await refreshSpot()
       showSaveOk(data.pending.length > 0
         ? `✓ Guardado. En revisión: ${describeFields(data.pending, uploaded.length)}.`
@@ -328,55 +235,6 @@ export default function SpotDashboardPage() {
     }
   }
 
-  function handleAddFiles(files: File[]) {
-    if (!spot) return
-    const { accepted, error } = checkNewPhotos(files, (spot.images?.length ?? 0) + stagedPhotos.length)
-    if (accepted.length) {
-      setStagedPhotos(prev => [...prev, ...accepted.map(file => ({ file, url: URL.createObjectURL(file) }))])
-    }
-    setPhotoError(error)
-  }
-
-  function handleRemoveStaged(index: number) {
-    setStagedPhotos(prev => {
-      URL.revokeObjectURL(prev[index].url)
-      return prev.filter((_, i) => i !== index)
-    })
-    setPhotoError(null)
-  }
-
-  async function handleSetMain(publicId: string) {
-    if (!spot) return
-    setPhotoLoading(true)
-    setPhotoError(null)
-    try {
-      await api.patch(`/admin/spots/${spot.id}/main-image`, { cloudinary_public_id: publicId }, { token })
-      setSpot(prev => prev ? {
-        ...prev,
-        images: prev.images.map(img => ({ ...img, is_main: img.cloudinary_public_id === publicId })),
-      } : null)
-    } catch {
-      setPhotoError("No se pudo cambiar la foto principal. Intentá de nuevo.")
-    } finally {
-      setPhotoLoading(false)
-    }
-  }
-
-  async function handleDeletePhoto(publicId: string) {
-    if (!spot) return
-    setPhotoLoading(true)
-    setDeleteError(null)
-    try {
-      await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token })
-      setSpot(prev => prev ? { ...prev, images: prev.images.filter(img => img.cloudinary_public_id !== publicId) } : null)
-      setPhotoToDelete(null)
-    } catch {
-      setDeleteError("No se pudo eliminar la foto. Intentá de nuevo.")
-    } finally {
-      setPhotoLoading(false)
-    }
-  }
-
   // Sin sesión: pedirla y volver acá (antes mandaba a la home).
   if (status === "unauthenticated") return <LoginRequired page="Panel de tu lugar" />
 
@@ -426,40 +284,7 @@ export default function SpotDashboardPage() {
 
       <main id="contenido" className="form-hover" style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
 
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Link href="/profile" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
-            ← Volver al perfil
-          </Link>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 26, fontWeight: 700, color: "#1b1b19", margin: "0 0 6px" }}>
-                {spot.name}
-              </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Pill variant={spot.is_approved ? "green" : spot.rejected_at ? "red" : "yellow"} size="sm">
-                  {spot.is_approved ? "✓ Publicado" : spot.rejected_at ? "✕ Rechazado" : "⏳ En revisión"}
-                </Pill>
-                {spot.category && (
-                  <span style={{ fontSize: 12, color: "var(--muted)" }}>{spot.category.name} · {spot.department}</span>
-                )}
-              </div>
-            </div>
-            {/* Sin aprobar, la página pública no existe todavía (daba 404). */}
-            {spot.slug && spot.is_approved ? (
-              <a href={`/spots/${spot.slug}`} target="_blank" rel="noopener noreferrer"
-                style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
-                Ver lugar →
-              </a>
-            ) : (
-              // Sin publicar, la página pública da 404: la vista previa la muestra igual.
-              <a href={`/dashboard/spots/${spot.id}/vista-previa`} target="_blank" rel="noopener noreferrer"
-                style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid var(--border)", background: "#fff", color: "#3d3d3a", textDecoration: "none" }}>
-                Vista previa →
-              </a>
-            )}
-          </div>
-        </div>
+        <DashboardHeader spot={spot} />
 
         {!spot.is_approved && spot.rejected_at && spot.rejection_reason && (
           <RejectionBanner
@@ -479,27 +304,7 @@ export default function SpotDashboardPage() {
           />
         )}
 
-        {/* Stats */}
-        <div className="owner-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
-          {[
-            ...(stats ? [
-              { label: "Visitas (30 días)", value: stats.views_30d, emoji: "👀" },
-              { label: "En favoritos", value: stats.favorites, emoji: "❤️" },
-            ] : []),
-            { label: "Reseñas", value: spot.review_count ?? 0, emoji: "💬" },
-            { label: "Calificación", value: spot.average_rating ? `${spot.average_rating} ★` : "—", emoji: "⭐" },
-          ].map(stat => (
-            <div key={stat.label} style={{ ...s.card, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f7f5f0", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-                {stat.emoji}
-              </div>
-              <div>
-                <p style={{ fontSize: 22, fontFamily: "var(--font-dm-sans), sans-serif", fontWeight: 700, color: "#1b1b19", margin: "0 0 2px", lineHeight: 1 }}>{stat.value}</p>
-                <p style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>{stat.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <OwnerStats spot={spot} stats={stats} />
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
@@ -515,26 +320,13 @@ export default function SpotDashboardPage() {
 
         {tab === "info" && (
           <InfoTab
-            editName={editName} setEditName={setEditName}
-            editDescription={editDescription} setEditDescription={setEditDescription}
-            editEmail={editEmail} setEditEmail={setEditEmail}
-            editWhatsapp={editWhatsapp} setEditWhatsapp={setEditWhatsapp}
-            editInstagram={editInstagram} setEditInstagram={setEditInstagram}
-            editPrice={editPrice} setEditPrice={setEditPrice}
-            editSeasonType={editSeasonType} setEditSeasonType={setEditSeasonType}
-            editSeasonStart={editSeasonStart} setEditSeasonStart={setEditSeasonStart}
-            editSeasonEnd={editSeasonEnd} setEditSeasonEnd={setEditSeasonEnd}
-            editIsPublic={editIsPublic} setEditIsPublic={setEditIsPublic}
-            editPublicTransport={editPublicTransport} setEditPublicTransport={setEditPublicTransport}
-            editPractical={editPractical} setEditPractical={(key, v) => setEditPractical(p => ({ ...p, [key]: v }))}
+            {...form.infoProps}
             lockSensitive={pendingRequest !== null}
             pendingName={pendingRequest?.changes.name?.to}
             pendingDescription={pendingRequest?.changes.description?.to}
             sensitiveReviewed={spot.is_approved}
             priceMode={priceMode(spot.activities ?? (spot.category ? [spot.category.name] : []))}
             location={[spot.lat ?? null, spot.lng ?? null]}
-            newLocation={newLocation}
-            setNewLocation={setNewLocation}
             pendingLocation={pendingRequest?.changes.location?.to}
           />
         )}
@@ -548,13 +340,13 @@ export default function SpotDashboardPage() {
             atPhotoLimit={atPhotoLimit}
             lockAdd={pendingRequest !== null}
             sensitiveReviewed={spot.is_approved}
-            photoError={photoError}
-            photoLoading={photoLoading}
-            setPhotoError={setPhotoError}
-            onAddFiles={handleAddFiles}
-            onRemoveStaged={handleRemoveStaged}
-            onSetMain={handleSetMain}
-            onDeletePhoto={id => { setDeleteError(null); setPhotoToDelete(id) }}
+            photoError={photos.photoError}
+            photoLoading={photos.photoLoading}
+            setPhotoError={photos.setPhotoError}
+            onAddFiles={photos.add}
+            onRemoveStaged={photos.removeStaged}
+            onSetMain={photos.setMain}
+            onDeletePhoto={photos.requestDelete}
           />
         )}
 
@@ -641,13 +433,13 @@ export default function SpotDashboardPage() {
       />
 
       <ConfirmModal
-        open={photoToDelete !== null}
+        open={photos.photoToDelete !== null}
         title="¿Eliminar esta foto?"
         message="La foto se borra de Cloudinary y no se puede recuperar."
-        loading={photoLoading}
-        error={deleteError}
-        onCancel={() => setPhotoToDelete(null)}
-        onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete)}
+        loading={photos.photoLoading}
+        error={photos.deleteError}
+        onCancel={() => photos.setPhotoToDelete(null)}
+        onConfirm={() => photos.photoToDelete && photos.deletePhoto(photos.photoToDelete)}
       />
 
       {submitting && <SubmittingOverlay title="Guardando tus cambios..." uploadProgress={uploadProgress} />}
