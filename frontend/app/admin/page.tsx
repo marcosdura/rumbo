@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react"
 import Navbar from "@/components/layout/Navbar"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import { api, ApiError } from "@/lib/api"
-import { label as labelStyle, input as inputStyle } from "@/lib/theme"
 import { spotStatus, ADMIN_MODES, type AdminSpot, type AdminMode, type SortBy, type AdminChangeRequest, type SpotFilter } from "./types"
 import SummaryTab, { type AdminSummary } from "./SummaryTab"
 import SpotsTab from "./SpotsTab"
@@ -17,14 +16,24 @@ import ReportsTab, { groupKey, type ReportGroup } from "./ReportsTab"
 import ClaimsTab, { type AdminClaim } from "./ClaimsTab"
 import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
-import AdminSidebar, { type SidebarGroup } from "./AdminSidebar"
+import AdminSidebar from "./AdminSidebar"
 import ImportRoutesTab from "./ImportRoutesTab"
+import RejectModal, { type RejectType } from "./RejectModal"
+import { TAB_GROUPS, listsFor, sectionTitle, splitByOwner, tabCounts, visibleSpots } from "./adminNav"
+import { FORBIDDEN, useLazyList } from "./useLazyList"
+import { useSpotActions } from "./useSpotActions"
 
-// El título de la página: la sección en la que se está, sin el emoji.
-function sectionTitle(mode: AdminMode, groups: SidebarGroup[]): string {
-  if (mode === "resumen") return "Resumen"
-  const label = groups.flatMap(g => g.tabs).find(t => t.id === mode)?.label ?? "Panel de administración"
-  return label.replace(/^\S+\s/, "")
+function withError(prev: Record<number, string>, id: number, message: string | null) {
+  const next = { ...prev }
+  if (message) next[id] = message
+  else delete next[id]
+  return next
+}
+
+const REJECT_URL: Record<RejectType, (id: number) => string> = {
+  change: id => `/admin/change-requests/${id}/reject`,
+  contribution: id => `/admin/contributions/${id}/reject`,
+  spot: id => `/admin/spots/${id}/reject`,
 }
 
 export default function AdminPage() {
@@ -35,69 +44,52 @@ export default function AdminPage() {
   // pestañas hasta que se abre cada una.
   const [summary, setSummary] = useState<AdminSummary | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
-  // Qué datos ya se pidieron: cada lista se carga recién al abrir su pestaña
-  // (antes eran 6 pedidos al entrar, incluidos todos los lugares con fotos).
+  // Qué datos ya se pidieron: cada lista se carga recién al abrir su pestaña.
   const [opened, setOpened] = useState({ spots: false, cambios: false, reportes: false, reclamos: false })
-  const wants = {
-    spots: mode === "nuevos" || mode === "lugares" || mode === "fotos" || mode === "importar-vias" || mode === "cuentas-eliminadas",
-    cambios: mode === "cambios", reportes: mode === "reportes", reclamos: mode === "reclamos",
-  }
+  const wants = listsFor(mode)
   if ((Object.keys(wants) as (keyof typeof wants)[]).some(k => wants[k] && !opened[k])) {
     setOpened(prev => ({
       spots: prev.spots || wants.spots, cambios: prev.cambios || wants.cambios,
       reportes: prev.reportes || wants.reportes, reclamos: prev.reclamos || wants.reclamos,
     }))
   }
-  const [spots, setSpots] = useState<AdminSpot[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState<string | null>(null)
+
+  const spotList = useLazyList<AdminSpot>("/admin/spots", token, opened.spots, "Error al cargar los spots.")
+  // Pedidos de cambio sobre spots aprobados y aportes nuevos (pestaña
+  // "Cambios y aportes"). Sus ids son de tablas distintas: loading y
+  // errores van aparte.
+  const changeList = useLazyList<AdminChangeRequest>("/admin/change-requests", token, opened.cambios, "Error al cargar los cambios pendientes.")
+  const contributionList = useLazyList<AdminContribution>("/admin/contributions", token, opened.cambios, "Error al cargar los aportes pendientes.")
+  // Reportes abiertos y pedidos para hacerse cargo de un lugar sugerido:
+  // acá solo se cargan (para el contador); las acciones van en sus pestañas.
+  const reportList = useLazyList<ReportGroup>("/admin/reports", token, opened.reportes, "Error al cargar los reportes.")
+  const claimList = useLazyList<AdminClaim>("/admin/claims", token, opened.reclamos, "Error al cargar los pedidos de responsables.")
+  const spots = spotList.items
+  const setSpots = spotList.setItems
+  // Aprobar un cambio, despublicar o resolver un reporte cambian nombre,
+  // descripción o fotos: se recarga la lista para que Lugares y Fotos lo
+  // muestren ya.
+  const refreshSpots = spotList.refresh
+
   const [filter, setFilter] = useState<SpotFilter>("all")
-  const [actionLoading, setActionLoading] = useState<number | null>(null)
-  const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
-  const [photoLoading, setPhotoLoading] = useState(false)
   const [searchSpots, setSearchSpots] = useState("")
   const [searchPhotos, setSearchPhotos] = useState("")
   const [sortBy, setSortBy] = useState<SortBy>("date_desc")
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
-  const [photoToDelete, setPhotoToDelete] = useState<{ spotId: number; publicId: string } | null>(null)
-  const [photoDeleteError, setPhotoDeleteError] = useState<string | null>(null)
-  const [editingSpot, setEditingSpot] = useState<{ id: number; name: string; description: string } | null>(null)
-
-  // Pedidos de cambio sobre spots aprobados (pestaña "Cambios pendientes").
-  const [changeRequests, setChangeRequests] = useState<AdminChangeRequest[]>([])
-  const [changesLoading, setChangesLoading] = useState(true)
-  const [changesError, setChangesError] = useState<string | null>(null)
+  const [photoSpotId, setPhotoSpotId] = useState<number | null>(null)
   const [changeActionLoading, setChangeActionLoading] = useState<number | null>(null)
   const [changeActionErrors, setChangeActionErrors] = useState<Record<number, string>>({})
-  // Aportes nuevos sobre spots aprobados (misma pestaña). Sus ids son de
-  // otra tabla: loading y errores van aparte de los de pedidos de cambio.
-  const [contributions, setContributions] = useState<AdminContribution[]>([])
-  const [contributionsLoading, setContributionsLoading] = useState(true)
-  const [contributionsError, setContributionsError] = useState<string | null>(null)
   const [contributionActionLoading, setContributionActionLoading] = useState<number | null>(null)
   const [contributionActionErrors, setContributionActionErrors] = useState<Record<number, string>>({})
-  // Reportes abiertos (pestaña "Reportes"); acá solo se cargan, para el
-  // contador. Las acciones las maneja ReportsTab.
-  const [reportGroups, setReportGroups] = useState<ReportGroup[]>([])
-  const [reportsLoading, setReportsLoading] = useState(true)
-  const [reportsError, setReportsError] = useState<string | null>(null)
-  // Pedidos para hacerse cargo de un lugar sugerido por un visitante.
-  const [claims, setClaims] = useState<AdminClaim[]>([])
-  const [claimsLoading, setClaimsLoading] = useState(true)
-  const [claimsError, setClaimsError] = useState<string | null>(null)
-  // Qué se está rechazando: un pedido de cambio de spot, un aporte o un
-  // pedido de cambio de escuela.
-  type RejectType = "change" | "contribution" | "spot"
   const [rejecting, setRejecting] = useState<{ type: RejectType; id: number } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectError, setRejectError] = useState<string | null>(null)
-  // Error de una acción (aprobar, reactivar, foto principal). Antes se
-  // ignoraban: la pantalla mostraba el cambio aunque el backend fallara.
+  // Error de una acción (aprobar, reactivar, foto principal).
   const [notice, setNotice] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  // "Aprobar todos": pide confirmación antes.
-  const [approveAll, setApproveAll] = useState<AdminSpot[] | null>(null)
-  const [approvingAll, setApprovingAll] = useState(false)
+
+  const actions = useSpotActions({
+    token, spots, setSpots, refreshSpots, setNotice,
+    onUnpublished: id => changeList.setItems(prev => prev.filter(r => r.spot_id !== id)),
+  })
 
   // La pestaña de la URL (/admin?tab=reportes), al entrar.
   useEffect(() => {
@@ -119,77 +111,15 @@ export default function AdminPage() {
     setSummaryError(null)
     api.get<AdminSummary>("/admin/summary", { token })
       .then(({ data }) => setSummary(data))
-      .catch(e => setSummaryError(e instanceof ApiError && e.status === 403
-        ? "No tenés permisos de administrador con esta cuenta."
-        : "No se pudo cargar el resumen."))
+      .catch(e => setSummaryError(e instanceof ApiError && e.status === 403 ? FORBIDDEN : "No se pudo cargar el resumen."))
   }, [token, onSummary])
-
-  useEffect(() => {
-    if (!token || !opened.spots) return
-    setLoadError(null)
-    api.get<AdminSpot[]>("/admin/spots", { token })
-      .then(({ data }) => { setSpots(Array.isArray(data) ? data : []); setLoading(false) })
-      .catch(e => {
-        setLoadError(e instanceof ApiError && e.status === 403
-          ? "No tenés permisos de administrador con esta cuenta."
-          : "Error al cargar los spots.")
-        setLoading(false)
-      })
-  }, [token, opened.spots])
-
-  useEffect(() => {
-    if (!token || !opened.cambios) return
-    setChangesError(null)
-    api.get<AdminChangeRequest[]>("/admin/change-requests", { token })
-      .then(({ data }) => setChangeRequests(Array.isArray(data) ? data : []))
-      .catch(() => setChangesError("Error al cargar los cambios pendientes."))
-      .finally(() => setChangesLoading(false))
-    api.get<AdminContribution[]>("/admin/contributions", { token })
-      .then(({ data }) => setContributions(Array.isArray(data) ? data : []))
-      .catch(() => setContributionsError("Error al cargar los aportes pendientes."))
-      .finally(() => setContributionsLoading(false))
-  }, [token, opened.cambios])
-
-  useEffect(() => {
-    if (!token || !opened.reportes) return
-    api.get<ReportGroup[]>("/admin/reports", { token })
-      .then(({ data }) => setReportGroups(Array.isArray(data) ? data : []))
-      .catch(() => setReportsError("Error al cargar los reportes."))
-      .finally(() => setReportsLoading(false))
-  }, [token, opened.reportes])
-
-  useEffect(() => {
-    if (!token || !opened.reclamos) return
-    api.get<AdminClaim[]>("/admin/claims", { token })
-      .then(({ data }) => setClaims(Array.isArray(data) ? data : []))
-      .catch(() => setClaimsError("Error al cargar los pedidos de responsables."))
-      .finally(() => setClaimsLoading(false))
-  }, [token, opened.reclamos])
-
-  // Aprobar cambia nombre/descripción/fotos del spot: se recarga la lista de
-  // spots para que Gestión de spots y Gestión de fotos lo muestren ya.
-  async function refreshSpots() {
-    const { data } = await api.get<AdminSpot[]>("/admin/spots", { token })
-    setSpots(Array.isArray(data) ? data : [])
-  }
-
-  function withError(prev: Record<number, string>, id: number, message: string | null) {
-    const next = { ...prev }
-    if (message) next[id] = message
-    else delete next[id]
-    return next
-  }
-
-  function setChangeError(id: number, message: string | null) {
-    setChangeActionErrors(prev => withError(prev, id, message))
-  }
 
   async function handleApproveContribution(id: number) {
     setContributionActionLoading(id)
     setContributionActionErrors(prev => withError(prev, id, null))
     try {
       await api.post(`/admin/contributions/${id}/approve`, undefined, { token })
-      setContributions(prev => prev.filter(c => c.id !== id))
+      contributionList.setItems(prev => prev.filter(c => c.id !== id))
     } catch (e) {
       setContributionActionErrors(prev => withError(prev, id,
         e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo."))
@@ -200,28 +130,22 @@ export default function AdminPage() {
 
   async function handleApproveChange(id: number) {
     setChangeActionLoading(id)
-    setChangeError(id, null)
+    setChangeActionErrors(prev => withError(prev, id, null))
     try {
       await api.post(`/admin/change-requests/${id}/approve`, undefined, { token })
-      setChangeRequests(prev => prev.filter(r => r.id !== id))
+      changeList.setItems(prev => prev.filter(r => r.id !== id))
       await refreshSpots().catch(() => {})
     } catch (e) {
       // 409: el nombre ya lo tomó otro spot, o el pedido ya se resolvió.
       // 400: ya no entran las fotos (alguien sumó mientras esperaba).
-      setChangeError(id, e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo.")
+      setChangeActionErrors(prev => withError(prev, id, e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo aprobar. Intentá de nuevo."))
     } finally {
       setChangeActionLoading(null)
     }
   }
 
-  const REJECT_URL: Record<RejectType, (id: number) => string> = {
-    change: id => `/admin/change-requests/${id}/reject`,
-    contribution: id => `/admin/contributions/${id}/reject`,
-    spot: id => `/admin/spots/${id}/reject`,
-  }
   const LOADING_SETTER: Record<RejectType, (v: number | null) => void> = {
-    change: setChangeActionLoading, contribution: setContributionActionLoading,
-    spot: setActionLoading,
+    change: setChangeActionLoading, contribution: setContributionActionLoading, spot: actions.setActionLoading,
   }
 
   async function handleReject() {
@@ -238,13 +162,13 @@ export default function AdminPage() {
     setRejectError(null)
     try {
       await api.post(REJECT_URL[type](id), { reason: rejectReason.trim() || null }, { token })
-      if (type === "change") setChangeRequests(prev => prev.filter(r => r.id !== id))
-      else if (type === "contribution") setContributions(prev => prev.filter(c => c.id !== id))
+      if (type === "change") changeList.setItems(prev => prev.filter(r => r.id !== id))
+      else if (type === "contribution") contributionList.setItems(prev => prev.filter(c => c.id !== id))
       else if (type === "spot") {
         const now = new Date().toISOString()
         setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: false, rejection_reason: rejectReason.trim(), rejected_at: now } : s))
         // Despublicar vuelca su pedido de cambio pendiente sobre el spot.
-        setChangeRequests(prev => prev.filter(r => r.spot_id !== id))
+        changeList.setItems(prev => prev.filter(r => r.spot_id !== id))
       }
       setRejecting(null)
     } catch (e) {
@@ -260,177 +184,19 @@ export default function AdminPage() {
     setRejectError(null)
   }
 
-  // El motivo del backend sirve si es un 4xx (ej. 409 "ya se resolvió"); un
-  // 500 o un error de red dicen "Error 500": ahí va el texto propio.
-  const errorText = (e: unknown, fallback: string) =>
-    (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 422 ? e.message : fallback)
-  const spotName = (id: number) => spots.find(s => s.id === id)?.name ?? "el lugar"
-
-  // true si se pudo.
-  async function handleApprove(id: number, approved: boolean): Promise<boolean> {
-    setActionLoading(id)
-    setNotice(null)
-    try {
-      await api.patch(`/admin/spots/${id}/approve`, undefined, { token, params: { approved } })
-    } catch (e) {
-      setNotice(errorText(e, `No se pudo ${approved ? "aprobar" : "desaprobar"} «${spotName(id)}». Intentá de nuevo.`))
-      setActionLoading(null)
-      return false
-    }
-    setSpots(prev => prev.map(s => s.id === id ? { ...s, is_approved: approved } : s))
-    // Despublicar un spot vuelca su pedido pendiente sobre el spot (backend,
-    // approve_spot): ya no queda nada que revisar en "Cambios pendientes".
-    if (!approved) {
-      setChangeRequests(prev => prev.filter(r => r.spot_id !== id))
-      await refreshSpots().catch(() => {})
-    }
-    setActionLoading(null)
-    return true
-  }
-
-  // Aprueba uno por uno; si uno falla, se frena ahí (con el aviso de cuál).
-  async function handleApproveAll() {
-    if (!approveAll) return
-    setApprovingAll(true)
-    for (const s of approveAll) {
-      if (!(await handleApprove(s.id, true))) break
-    }
-    setApprovingAll(false)
-    setApproveAll(null)
-  }
-
-  // Si falla, el modal queda abierto con el error.
-  async function handleDelete(id: number) {
-    setActionLoading(id)
-    setDeleteError(null)
-    try {
-      await api.del(`/spots/${id}`, { token })
-    } catch (e) {
-      setDeleteError(errorText(e, "No se pudo eliminar. Intentá de nuevo."))
-      setActionLoading(null)
-      return
-    }
-    setSpots(prev => prev.filter(s => s.id !== id))
-    setActionLoading(null)
-    setDeleteConfirmId(null)
-  }
-
-  async function handleReactivate(id: number) {
-    setActionLoading(id)
-    setNotice(null)
-    try {
-      await api.patch(`/admin/spots/${id}/reactivate`, undefined, { token })
-      setSpots(prev => prev.map(s => s.id === id ? { ...s, owner_deleted_at: null } : s))
-    } catch (e) {
-      setNotice(errorText(e, `No se pudo reactivar «${spotName(id)}». Intentá de nuevo.`))
-    }
-    setActionLoading(null)
-  }
-
-  async function handleSetMainPhoto(spotId: number, publicId: string) {
-    setPhotoLoading(true)
-    setNotice(null)
-    try {
-      await api.patch(`/admin/spots/${spotId}/main-image`, { cloudinary_public_id: publicId }, { token })
-    } catch (e) {
-      setNotice(errorText(e, "No se pudo cambiar la foto principal. Intentá de nuevo."))
-      setPhotoLoading(false)
-      return
-    }
-    setSpots(prev => prev.map(s => {
-      if (s.id !== spotId) return s
-      return {
-        ...s,
-        images: s.images.map(img => ({ ...img, is_main: img.cloudinary_public_id === publicId })),
-      }
-    }))
-    setPhotoLoading(false)
-  }
-
-  async function handleDeletePhoto(spotId: number, publicId: string) {
-    setPhotoLoading(true)
-    setPhotoDeleteError(null)
-    try {
-      await api.del(`/admin/images/${encodeURIComponent(publicId)}`, { token })
-    } catch (e) {
-      // La foto sigue en la lista y el modal abierto con el motivo.
-      setPhotoDeleteError(e instanceof ApiError && e.status !== 422 ? e.message : "No se pudo eliminar la foto. Intentá de nuevo.")
-      setPhotoLoading(false)
-      return
-    }
-    setSpots(prev => prev.map(s => {
-      if (s.id !== spotId) return s
-      return { ...s, images: s.images.filter(img => img.cloudinary_public_id !== publicId) }
-    }))
-    setPhotoLoading(false)
-    setPhotoToDelete(null)
-  }
-
-  // Si falla, el error lo muestra EditSpotModal y el modal queda abierto.
-  async function handleSaveEdit() {
-    if (!editingSpot) return
-    await api.patch(`/admin/spots/${editingSpot.id}`, { name: editingSpot.name, description: editingSpot.description }, { token })
-    setSpots(prev => prev.map(s => s.id === editingSpot.id ? { ...s, name: editingSpot.name } : s))
-    setEditingSpot(null)
-  }
-
-  // Los spots cuyo dueño borró la cuenta se dejan de mostrar en la gestión
-  // normal — viven aparte, en la pestaña "Cuentas eliminadas".
-  const activeSpots = spots.filter(s => !s.owner_deleted_at)
-  const deactivatedSpots = spots
-    .filter(s => s.owner_deleted_at)
-    .sort((a, b) => new Date(a.owner_deleted_at!).getTime() - new Date(b.owner_deleted_at!).getTime())
-
+  const { active: activeSpots, deactivated: deactivatedSpots } = splitByOwner(spots)
   const pending = activeSpots.filter(s => spotStatus(s) === "pending").length
   const rejected = activeSpots.filter(s => spotStatus(s) === "rejected").length
-  const pendingReviews = changeRequests.length + contributions.length
   const rejectingSpot = rejecting?.type === "spot" ? spots.find(s => s.id === rejecting.id) ?? null : null
   // "Lugares nuevos" es la lista fija en pendientes.
   const shownFilter: SpotFilter = mode === "nuevos" ? "pending" : filter
-  const filtered = activeSpots.filter(s =>
-    shownFilter === "all" ? true : spotStatus(s) === shownFilter
-  )
-
-  // Contadores de las pestañas: el de la lista si ya se cargó; si no, el del resumen.
-  const q = summary?.queues
-  const known = (key: keyof typeof opened, isLoading: boolean) => opened[key] && !isLoading
-  const counts: Partial<Record<AdminMode, number | undefined>> = {
-    nuevos: known("spots", loading) ? pending : q?.new_spots.count,
-    cambios: known("cambios", changesLoading || contributionsLoading)
-      ? pendingReviews : q && q.changes.count + q.contributions.count,
-    reportes: known("reportes", reportsLoading) ? reportGroups.length : q?.reports.count,
-    reclamos: known("reclamos", claimsLoading) ? claims.length : q?.claims.count,
-    "cuentas-eliminadas": known("spots", loading) ? deactivatedSpots.length : undefined,
-  }
-  const TAB_GROUPS: { title: string; tabs: { id: AdminMode; label: string }[] }[] = [
-    { title: "Por revisar", tabs: [
-      { id: "nuevos", label: "🆕 Lugares nuevos" },
-      { id: "cambios", label: "📝 Cambios y aportes" },
-      { id: "reportes", label: "⚑ Reportes" },
-      { id: "reclamos", label: "🙋 Responsables" },
-    ] },
-    { title: "Gestión", tabs: [
-      { id: "lugares", label: "🗺️ Lugares" },
-      { id: "fotos", label: "📷 Fotos" },
-      { id: "importar-vias", label: "📥 Importar vías" },
-      { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
-    ] },
-  ]
-  const displayed = filtered
-    .filter(s =>
-      s.name.toLowerCase().includes(searchSpots.toLowerCase()) ||
-      s.department?.toLowerCase().includes(searchSpots.toLowerCase()) ||
-      s.category?.name?.toLowerCase().includes(searchSpots.toLowerCase()) ||
-      s.owner_email?.toLowerCase().includes(searchSpots.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name)
-      if (sortBy === "category") return (a.category?.name ?? "").localeCompare(b.category?.name ?? "")
-      if (sortBy === "department") return (a.department ?? "").localeCompare(b.department ?? "")
-      if (sortBy === "date_desc") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      if (sortBy === "date_asc") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      return 0
-    })
+  const displayed = visibleSpots(activeSpots, shownFilter, searchSpots, sortBy)
+  const counts = tabCounts(summary, {
+    spots: { loaded: opened.spots && !spotList.loading, pending, deactivated: deactivatedSpots.length },
+    cambios: { loaded: opened.cambios && !changeList.loading && !contributionList.loading, count: changeList.items.length + contributionList.items.length },
+    reportes: { loaded: opened.reportes && !reportList.loading, count: reportList.items.length },
+    reclamos: { loaded: opened.reclamos && !claimList.loading, count: claimList.items.length },
+  })
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
@@ -455,7 +221,7 @@ export default function AdminPage() {
       <main id="contenido" className="admin-main">
         {/* El nombre de la sección (antes: "Panel de administración", con
             "Volver al inicio", "modo admin" y "+ Agregar lugar"). */}
-        <h1 className="admin-title">{sectionTitle(mode, TAB_GROUPS)}</h1>
+        <h1 className="admin-title">{sectionTitle(mode)}</h1>
 
         {notice && (
           <div role="alert" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "#fdf0f0", border: "1px solid #fecaca", color: "#7c1d1d", borderRadius: 12, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>
@@ -480,22 +246,22 @@ export default function AdminPage() {
             setSearchSpots={setSearchSpots}
             sortBy={sortBy}
             setSortBy={setSortBy}
-            loadError={loadError}
-            loading={loading}
-            actionLoading={actionLoading}
-            onApprove={handleApprove}
+            loadError={spotList.error}
+            loading={spotList.loading}
+            actionLoading={actions.actionLoading}
+            onApprove={actions.approve}
             onRejectRequest={spot => openReject("spot", spot.id)}
-            onEdit={setEditingSpot}
-            onDeleteRequest={id => { setDeleteError(null); setDeleteConfirmId(id) }}
-            onApproveAllRequest={setApproveAll}
+            onEdit={actions.setEditingSpot}
+            onDeleteRequest={actions.requestDelete}
+            onApproveAllRequest={actions.setApproveAll}
           />
         )}
 
         {mode === "cambios" && (
           <ChangesTab
-            requests={changeRequests}
-            loadError={changesError}
-            loading={changesLoading}
+            requests={changeList.items}
+            loadError={changeList.error}
+            loading={changeList.loading}
             actionLoading={changeActionLoading}
             actionErrors={changeActionErrors}
             onApprove={handleApproveChange}
@@ -505,9 +271,9 @@ export default function AdminPage() {
 
         {mode === "cambios" && (
           <ContributionsList
-            contributions={contributions}
-            loadError={contributionsError}
-            loading={contributionsLoading}
+            contributions={contributionList.items}
+            loadError={contributionList.error}
+            loading={contributionList.loading}
             actionLoading={contributionActionLoading}
             actionErrors={contributionActionErrors}
             onApprove={handleApproveContribution}
@@ -517,12 +283,12 @@ export default function AdminPage() {
 
         {mode === "reportes" && (
           <ReportsTab
-            groups={reportGroups}
-            loadError={reportsError}
-            loading={reportsLoading}
+            groups={reportList.items}
+            loadError={reportList.error}
+            loading={reportList.loading}
             token={token}
             onResolved={(group, action) => {
-              setReportGroups(prev => prev.filter(g => groupKey(g) !== groupKey(group)))
+              reportList.setItems(prev => prev.filter(g => groupKey(g) !== groupKey(group)))
               // Despublicar o borrar cambia la lista de spots (y sus reseñas).
               if (action !== "dismiss") refreshSpots().catch(() => {})
             }}
@@ -531,19 +297,19 @@ export default function AdminPage() {
 
         {mode === "reclamos" && (
           <ClaimsTab
-            claims={claims}
-            loadError={claimsError}
-            loading={claimsLoading}
+            claims={claimList.items}
+            loadError={claimList.error}
+            loading={claimList.loading}
             token={token}
             onResolved={(claim, approved) => {
               // Aprobar rechaza los demás pedidos del lugar y le cambia el dueño.
-              setClaims(prev => prev.filter(c => (approved ? c.spot.id !== claim.spot.id : c.id !== claim.id)))
+              claimList.setItems(prev => prev.filter(c => (approved ? c.spot.id !== claim.spot.id : c.id !== claim.id)))
               if (approved) refreshSpots().catch(() => {})
             }}
           />
         )}
 
-        {mode === "importar-vias" && <ImportRoutesTab spots={spots} token={token} loading={loading} />}
+        {mode === "importar-vias" && <ImportRoutesTab spots={spots} token={token} loading={spotList.loading} />}
 
         {mode === "fotos" && (
           <PhotosTab
@@ -553,9 +319,9 @@ export default function AdminPage() {
             setSearchPhotos={setSearchPhotos}
             photoSpotId={photoSpotId}
             setPhotoSpotId={setPhotoSpotId}
-            photoLoading={photoLoading}
-            onSetMainPhoto={handleSetMainPhoto}
-            onDeletePhotoRequest={(spotId, publicId) => { setPhotoDeleteError(null); setPhotoToDelete({ spotId, publicId }) }}
+            photoLoading={actions.photoLoading}
+            onSetMainPhoto={actions.setMainPhoto}
+            onDeletePhotoRequest={actions.requestPhotoDelete}
             onSpotsRefreshed={setSpots}
           />
         )}
@@ -563,85 +329,66 @@ export default function AdminPage() {
         {mode === "cuentas-eliminadas" && (
           <DeactivatedTab
             deactivatedSpots={deactivatedSpots}
-            loadError={loadError}
-            loading={loading}
-            actionLoading={actionLoading}
-            onReactivate={handleReactivate}
-            onDeleteRequest={id => { setDeleteError(null); setDeleteConfirmId(id) }}
+            loadError={spotList.error}
+            loading={spotList.loading}
+            actionLoading={actions.actionLoading}
+            onReactivate={actions.reactivate}
+            onDeleteRequest={actions.requestDelete}
           />
         )}
       </main>
       </div>
 
       <ConfirmModal
-        open={deleteConfirmId !== null}
+        open={actions.deleteConfirmId !== null}
         title="¿Eliminar este spot?"
         message="Esta acción no se puede deshacer."
         confirmPhrase="CONFIRMAR"
-        loading={actionLoading === deleteConfirmId}
-        error={deleteError}
-        onCancel={() => setDeleteConfirmId(null)}
-        onConfirm={() => deleteConfirmId !== null && handleDelete(deleteConfirmId)}
+        loading={actions.actionLoading === actions.deleteConfirmId}
+        error={actions.deleteError}
+        onCancel={() => actions.setDeleteConfirmId(null)}
+        onConfirm={() => actions.deleteConfirmId !== null && actions.remove(actions.deleteConfirmId)}
       />
 
       <ConfirmModal
-        open={approveAll !== null}
-        title={`¿Aprobar ${approveAll?.length ?? 0} lugares?`}
+        open={actions.approveAll !== null}
+        title={`¿Aprobar ${actions.approveAll?.length ?? 0} lugares?`}
         message="Se publican todos los que estás viendo en la lista. Si alguno falla, se frena ahí."
         confirmLabel="Aprobar todos"
-        loading={approvingAll}
+        loading={actions.approvingAll}
         loadingLabel="Aprobando..."
-        onCancel={() => setApproveAll(null)}
-        onConfirm={handleApproveAll}
+        onCancel={() => actions.setApproveAll(null)}
+        onConfirm={actions.approveAllConfirmed}
       />
 
       <ConfirmModal
-        open={photoToDelete !== null}
+        open={actions.photoToDelete !== null}
         title="¿Eliminar esta foto?"
         message="La foto se borra de Cloudinary y no se puede recuperar."
-        loading={photoLoading}
-        error={photoDeleteError}
-        onCancel={() => { setPhotoToDelete(null); setPhotoDeleteError(null) }}
-        onConfirm={() => photoToDelete && handleDeletePhoto(photoToDelete.spotId, photoToDelete.publicId)}
+        loading={actions.photoLoading}
+        error={actions.photoDeleteError}
+        onCancel={() => { actions.setPhotoToDelete(null); actions.setPhotoDeleteError(null) }}
+        onConfirm={() => actions.photoToDelete && actions.deletePhoto(actions.photoToDelete.spotId, actions.photoToDelete.publicId)}
       />
 
-      <ConfirmModal
-        open={rejecting !== null}
-        title={rejectingSpot
-          ? (rejectingSpot.is_approved ? "¿Despublicar este spot?" : "¿Rechazar este spot?")
-          : rejecting?.type === "contribution" ? "¿Rechazar este aporte?" : "¿Rechazar este cambio?"}
-        message={rejectingSpot
-          ? "No se borra: deja de verse (o no se publica) y el dueño ve el motivo en su panel, corrige y lo vuelve a enviar."
-          : rejecting?.type === "contribution"
-            ? "Se borra, junto con sus fotos. Quien lo propuso ve el rechazo en su perfil, con el motivo si lo escribís."
-            : "El dueño ve el rechazo en su panel, con el motivo si lo escribís. Las fotos nuevas del pedido se borran."}
-        confirmLabel={rejectingSpot?.is_approved ? "Despublicar" : "Rechazar"}
+      <RejectModal
+        rejecting={rejecting}
+        spot={rejectingSpot}
+        reason={rejectReason}
+        setReason={setRejectReason}
         loading={rejecting !== null && {
-          change: changeActionLoading, contribution: contributionActionLoading,
-          spot: actionLoading,
+          change: changeActionLoading, contribution: contributionActionLoading, spot: actions.actionLoading,
         }[rejecting.type] === rejecting.id}
-        loadingLabel="Rechazando..."
         error={rejectError}
         onCancel={() => setRejecting(null)}
         onConfirm={handleReject}
-      >
-        <label htmlFor="reject-reason" style={{ ...labelStyle, margin: "16px 0 6px" }}>{rejectingSpot ? "Motivo (obligatorio)" : "Motivo (opcional)"}</label>
-        <textarea
-          id="reject-reason"
-          value={rejectReason}
-          onChange={e => setRejectReason(e.target.value)}
-          maxLength={500}
-          rows={3}
-          placeholder="Ej: la foto nueva no es del lugar."
-          style={{ ...inputStyle, resize: "vertical" }}
-        />
-      </ConfirmModal>
+      />
 
       <EditSpotModal
-        editingSpot={editingSpot}
-        setEditingSpot={setEditingSpot}
-        onCancel={() => setEditingSpot(null)}
-        onSave={handleSaveEdit}
+        editingSpot={actions.editingSpot}
+        setEditingSpot={actions.setEditingSpot}
+        onCancel={() => actions.setEditingSpot(null)}
+        onSave={actions.saveEdit}
       />
     </div>
   )
