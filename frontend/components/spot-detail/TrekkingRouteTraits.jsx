@@ -21,19 +21,19 @@ export default function TrekkingRouteTraits({ route }) {
   if (route.difficulty) {
     const conf = DIFFICULTY_CONFIG[route.difficulty]
     const label = route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1)
-    items.push({ variant: conf?.variant || "neutral", label: conf ? `${conf.dot} ${label}` : label })
+    items.push({ variant: conf?.variant || "white", label: conf ? `${conf.dot} ${label}` : label })
   }
 
   if (route.route_type) {
-    items.push({ variant: "neutral", label: `${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}` })
+    items.push({ variant: "white", label: `${route.route_type === "circular" ? "🔁" : "↩️"} ${route.route_type}` })
   }
 
   if (route.technical_level) {
-    items.push({ variant: LEVEL_VARIANT[route.technical_level] || "neutral", label: `🧗 Técnico: ${route.technical_level}` })
+    items.push({ variant: LEVEL_VARIANT[route.technical_level] || "white", label: `🧗 Técnico: ${route.technical_level}` })
   }
 
   if (route.physical_demand) {
-    items.push({ variant: LEVEL_VARIANT[route.physical_demand] || "neutral", label: `💪 Físico: ${route.physical_demand}` })
+    items.push({ variant: LEVEL_VARIANT[route.physical_demand] || "white", label: `💪 Físico: ${route.physical_demand}` })
   }
 
   if (items.length === 0) return null

@@ -93,6 +93,10 @@ describe("página de la ruta", () => {
     expect(pills.map(p => p.textContent)).toEqual(expect.arrayContaining(["📏4 kmDistancia", "⏱️1,5 hDuración", "🟡 Moderado", "🔁 circular"]))
     expect(pills.length).toBe(facts.querySelectorAll("li").length + 2)
     expect(pills.every(p => p.style.userSelect === "none")).toBe(true)
+    // Blancas como las cards (contrastan con el fondo); las de color, con su color.
+    const bg = (text: string) => pills.find(p => p.textContent!.includes(text))!.style.background
+    for (const text of ["4 km", "1,5 h", "300 m", "circular"]) expect(bg(text)).toBe("rgb(255, 255, 255)")
+    expect(bg("Moderado")).not.toBe("rgb(255, 255, 255)")
   })
 
   it("las características del lugar dicen de qué lugar son", async () => {

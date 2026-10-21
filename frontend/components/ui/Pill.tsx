@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react"
 
 export type PillVariant =
   | "neutral" | "beige" | "green" | "dark-green" | "subtle-green"
-  | "yellow" | "red" | "orange" | "muted"
+  | "yellow" | "red" | "orange" | "muted" | "white"
 export type PillSize = "sm" | "md" | "lg"
 
 const VARIANTS: Record<PillVariant, { bg: string; color: string; border: string }> = {
@@ -17,6 +17,9 @@ const VARIANTS: Record<PillVariant, { bg: string; color: string; border: string 
   red:            { bg: "#fdf0f0", color: "#7c1d1d", border: "#f5c0c0" },
   orange:         { bg: "#fff4e6", color: "#7c4a03", border: "#f5c97a" },
   muted:          { bg: "#f7f5f0", color: "var(--muted)", border: "var(--border)" },
+  // Blanca como las cards: para pills sueltas sobre el fondo de la página
+  // (neutral es casi del mismo color que el fondo y no se distingue).
+  white:          { bg: "#fff", color: "#1b1b19", border: "var(--border)" },
 }
 
 // Tinte de hover por variant. green/red son pixel-idénticos a los
@@ -31,6 +34,7 @@ const HOVER: Record<PillVariant, { bg: string; border: string; shadow: string }>
   red:            { bg: "#fdeaea", border: "#f0a3a3", shadow: "rgba(220,38,38,0.1)" },
   orange:         { bg: "#fdeed6", border: "#eeb45c", shadow: "rgba(0,0,0,0.07)" },
   muted:          { bg: "#f4f1ec", border: "#d3cfc5", shadow: "rgba(0,0,0,0.07)" },
+  white:          { bg: "#f7fbf8", border: "#b7dfc8", shadow: "rgba(0,0,0,0.07)" },
 }
 
 const SIZES: Record<PillSize, { padding: string; fontSize: number; gap: number }> = {

@@ -52,7 +52,7 @@ export function StatGrid({ stats, compact = false }: { stats: Stat[]; compact?: 
         {stats.map(s => (
           <li key={s.label}>
             {/* La misma pill que el resto de la app (con su hover). */}
-            <Pill variant="neutral" size="lg" hover>
+            <Pill variant="white" size="lg" hover>
               <span aria-hidden="true">{s.icon}</span>
               <strong>{s.value}</strong>
               {/* "2 vías" ya dice qué es: sin repetir "Vías" al lado. */}
