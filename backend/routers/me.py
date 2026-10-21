@@ -3,7 +3,8 @@ pedidos (cambios en sus lugares, y pedidos para hacerse cargo de
 un lugar) y los lugares que sugirió como visitante."""
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from limiter import limiter
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session, joinedload
 
 from auth import get_current_user_required, is_admin
@@ -125,7 +126,8 @@ def requests(db: Session = Depends(get_db), user: dict = Depends(get_current_use
 
 
 @router.post("/claims/{claim_id}/dismiss")
-def dismiss_claim(claim_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def dismiss_claim(request: Request, claim_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     claim = db.get(SpotClaim, claim_id)
     # 404 también si es ajeno: no confirmar que existe.
     if not claim or claim.user_email != user.get("email"):

@@ -64,7 +64,8 @@ def list_open_reports(db: Session = Depends(get_db), admin: dict = Depends(get_c
 
 
 @router.post("/admin/reports/resolve")
-def resolve_reports(body: ReportResolve, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def resolve_reports(request: Request, body: ReportResolve, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     photos = reports.resolve(db, admin, body.target_kind, body.target_id, body.action, body.reason)
     db.commit()
     destroy_cloudinary_images(photos)
@@ -72,7 +73,8 @@ def resolve_reports(body: ReportResolve, db: Session = Depends(get_db), admin: d
 
 
 @router.delete("/admin/reviews/{kind}/{review_id}")
-def admin_delete_review(kind: str, review_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def admin_delete_review(request: Request, kind: str, review_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     """El admin borra cualquier reseña (antes solo podía su autor: una
     reseña ofensiva quedaba para siempre). Cierra sus reportes abiertos."""
     model = reports.REVIEW_KINDS.get(kind)

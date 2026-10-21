@@ -124,7 +124,8 @@ def edit_glamping_unit(request: Request, unit_id: int, body: GlampingDetailCreat
 # -------- Características y servicios del lugar --------
 
 @router.put("/spots/{spot_id}/trekking-detail")
-def set_trekking_detail(body: TrekkingDetailCreate, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_trekking_detail(request: Request, body: TrekkingDetailCreate, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """Las características de un trekking (baños, agua, fogones...).
     null = no sé."""
     detail = spot.trekking_detail or TrekkingDetail(spot_id=spot.id)
@@ -136,7 +137,8 @@ def set_trekking_detail(body: TrekkingDetailCreate, spot: SpotDB = Depends(get_o
 
 
 @router.put("/spots/{spot_id}/motorhome-detail", response_model=MotorhomeDetailResponse)
-def set_motorhome_detail(body: MotorhomeDetailCreate, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_motorhome_detail(request: Request, body: MotorhomeDetailCreate, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     detail = db.query(MotorhomeDetail).filter(MotorhomeDetail.spot_id == spot.id).first() or MotorhomeDetail(spot_id=spot.id)
     _apply(detail, body.model_dump(exclude_unset=True))
     db.add(detail)
@@ -162,13 +164,15 @@ def _set_detail(db: Session, spot: SpotDB, model, schema, body: BaseModel, categ
 
 
 @router.put("/spots/{spot_id}/surf-detail", response_model=SurfDetailIn)
-def set_surf_detail(body: SurfDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_surf_detail(request: Request, body: SurfDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """Lo propio de una escuela de surf (clases, niveles, idiomas, dónde opera)."""
     return _set_detail(db, spot, SurfDetail, SurfDetailIn, body, "Surf")
 
 
 @router.put("/spots/{spot_id}/kayak-detail", response_model=KayakServiceDetailIn)
-def set_kayak_detail(body: KayakServiceDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_kayak_detail(request: Request, body: KayakServiceDetailIn, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """Lo propio de un servicio de kayak (agua, dificultad, alquiler, dónde opera)."""
     return _set_detail(db, spot, KayakServiceDetail, KayakServiceDetailIn, body, "Kayak")
 
@@ -178,7 +182,8 @@ class AmenitiesSet(BaseModel):
 
 
 @router.put("/spots/{spot_id}/camping-amenities")
-def set_camping_amenities(body: AmenitiesSet, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def set_camping_amenities(request: Request, body: AmenitiesSet, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """Los servicios del camping: queda exactamente esta lista."""
     wanted = set(body.amenity_ids)
     known = {a.id for a in db.query(Amenity).filter(Amenity.id.in_(wanted))} if wanted else set()

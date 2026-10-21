@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from limiter import limiter
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 import notifications
@@ -42,7 +43,8 @@ def unread_count(db: Session = Depends(get_db), user: dict = Depends(get_current
 
 
 @router.post("/{notification_id}/read")
-def mark_read(notification_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def mark_read(request: Request, notification_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     n = db.query(Notification).filter(Notification.id == notification_id).first()
     # 404 también si es de otro: no confirmar que existe.
     if not n or n.user_email != user.get("email"):
@@ -54,7 +56,8 @@ def mark_read(notification_id: int, db: Session = Depends(get_db), user: dict = 
 
 
 @router.post("/read-all")
-def mark_all_read(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def mark_all_read(request: Request, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     (
         db.query(Notification)
         .filter(Notification.user_email == user.get("email"), Notification.read_at.is_(None))

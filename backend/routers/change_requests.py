@@ -37,7 +37,8 @@ def cancel_change_request(request: Request, spot: SpotDB = Depends(get_owned_spo
 
 
 @router.post("/spots/{spot_id}/change-request/dismiss")
-def dismiss_change_request(spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def dismiss_change_request(request: Request, spot: SpotDB = Depends(get_owned_spot_or_admin), db: Session = Depends(get_db)):
     """El dueño cierra el aviso de "tu cambio fue aprobado/rechazado"."""
     now = datetime.now(timezone.utc)
     (
@@ -120,7 +121,8 @@ def _get_pending_or_404(db: Session, request_id: int) -> SpotChangeRequest:
 
 
 @router.post("/admin/change-requests/{request_id}/approve")
-def approve_change_request(request_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def approve_change_request(request: Request, request_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     change = _get_pending_or_404(db, request_id)
     # Se revalida al aprobar: mientras el pedido esperaba, otro spot pudo
     # tomar el nombre o el admin pudo sumar fotos.
@@ -138,7 +140,8 @@ def approve_change_request(request_id: int, db: Session = Depends(get_db), admin
 
 
 @router.post("/admin/change-requests/{request_id}/reject")
-def reject_change_request(request_id: int, body: ChangeRequestReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def reject_change_request(request: Request, request_id: int, body: ChangeRequestReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     change = _get_pending_or_404(db, request_id)
     photos = request_photos(change)
     reason = (body.reason or "").strip() or None

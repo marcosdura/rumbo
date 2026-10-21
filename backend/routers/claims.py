@@ -49,14 +49,16 @@ def list_pending_claims(db: Session = Depends(get_db), admin: dict = Depends(get
 
 
 @router.post("/admin/claims/{claim_id}/approve")
-def approve_claim(claim_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def approve_claim(request: Request, claim_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     claim = claims.approve(db, claim_id)
     db.commit()
     return {"id": claim.id, "status": claim.status}
 
 
 @router.post("/admin/claims/{claim_id}/reject")
-def reject_claim(claim_id: int, body: ClaimReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def reject_claim(request: Request, claim_id: int, body: ClaimReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     claim = claims.reject(db, claim_id, body.reason)
     db.commit()
     return {"id": claim.id, "status": claim.status}

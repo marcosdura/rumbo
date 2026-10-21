@@ -96,7 +96,8 @@ def withdraw_contribution(request: Request, contribution_id: int, db: Session = 
 
 
 @router.post("/contributions/{contribution_id}/dismiss")
-def dismiss_contribution(contribution_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+@limiter.limit("30/minute")
+def dismiss_contribution(request: Request, contribution_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
     contribution = _own_contribution(db, contribution_id, user)
     if contribution.status == "pending":
         raise HTTPException(status_code=409, detail="Este aporte todavía está en revisión.")
@@ -132,7 +133,8 @@ def _pending_or_404(db: Session, contribution_id: int) -> Contribution:
 
 
 @router.post("/admin/contributions/{contribution_id}/approve")
-def approve_contribution(contribution_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def approve_contribution(request: Request, contribution_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     contribution = _pending_or_404(db, contribution_id)
     contributions.approve(db, contribution, by=admin.get("email"))
     db.commit()
@@ -140,7 +142,8 @@ def approve_contribution(contribution_id: int, db: Session = Depends(get_db), ad
 
 
 @router.post("/admin/contributions/{contribution_id}/reject")
-def reject_contribution(contribution_id: int, body: ContributionReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
+@limiter.limit("60/minute")
+def reject_contribution(request: Request, contribution_id: int, body: ContributionReject, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
     contribution = _pending_or_404(db, contribution_id)
     reason = (body.reason or "").strip() or None
     photos = contributions.discard(db, contribution, "rejected", by=admin.get("email"), reason=reason)
