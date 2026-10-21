@@ -14,7 +14,8 @@ from sqlalchemy import func
 
 from models import Category, ClimbingSector, KayakServiceDetail, Route, SpotCategory, SpotDB, SurfDetail
 from ownership import get_owned_spot_or_admin
-from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
+from spot_payloads import SPOT_LIST_OPTIONS, serialize_spot_list
+from spot_search import distance_km
 
 router = APIRouter(tags=["home"])
 

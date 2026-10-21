@@ -17,7 +17,7 @@ def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_curren
     búsqueda y la home), del último guardado al primero, solo los
     publicados. Antes devolvía el lugar entero: con el email y el teléfono
     de su dueño, sin el puntaje de reseñas y también los despublicados."""
-    from routers.spots import SPOT_LIST_OPTIONS, serialize_spot_list  # spots importa este módulo
+    from spot_payloads import SPOT_LIST_OPTIONS, serialize_spot_list
     spots = (
         home.visible(db.query(SpotDB).options(*SPOT_LIST_OPTIONS))
         .join(Favorite, Favorite.spot_id == SpotDB.id)

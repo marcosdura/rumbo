@@ -1,4 +1,4 @@
-// Réplica en JS de generate_slug() en backend/routers/spots.py — usada acá
+// Réplica en JS de generate_slug() en backend/slugs.py — usada acá
 // solo como prefijo cosmético para URLs de surf/kayak (/surf/nombre-id), no
 // se persiste en ningún lado. La unicidad real la da el id, no este texto.
 export function slugify(name: string): string {

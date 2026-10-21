@@ -1,5 +1,5 @@
 """Los listados públicos de lugares no muestran datos de personas ni de la
-moderación (routers/spots.PRIVATE_SPOT_FIELDS)."""
+moderación (spot_payloads.PRIVATE_SPOT_FIELDS)."""
 from conftest import OTHER, as_user
 
 # Escrita acá y no importada del código: si alguien saca un campo de la

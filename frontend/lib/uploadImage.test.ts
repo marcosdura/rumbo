@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { buildPublicId, uploadImageToCloudinary } from "./uploadImage"
 
-// Mismo formato que exige el backend en can-upload (routers/spots.py).
+// Mismo formato que exige el backend en can-upload (routers/spot_owner.py).
 const BACKEND_FORMAT = /^42\/[0-9a-f]{16}$/
 
 describe("buildPublicId", () => {

@@ -1,6 +1,6 @@
 """GET /spots/nearby: lugares publicados cerca de un punto (agregar-lugar
 avisa de posibles duplicados al marcar la ubicación)."""
-from routers.spots import distance_km
+from spot_search import distance_km
 
 
 def test_distancia_haversine():

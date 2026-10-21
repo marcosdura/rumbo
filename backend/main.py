@@ -3,7 +3,7 @@ import contextlib
 import os
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
-from routers import admin_summary, spots, categories, amenities, routes, sectors, upsert, images, favorites, reviews, users, glamping, climbingroutes, change_requests, contributions, reports, notifications, claims, home, me, item_photos, owner_edits
+from routers import admin_summary, spots, spot_owner, spot_admin, categories, amenities, routes, sectors, upsert, images, favorites, reviews, users, glamping, climbingroutes, change_requests, contributions, reports, notifications, claims, home, me, item_photos, owner_edits
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -77,6 +77,9 @@ def health(db: Session = Depends(get_db)):
     return {"status": "ok"}
 
 
+# spot_owner antes que spots: /spots/mine tiene que ganarle a /spots/{id}.
+app.include_router(spot_owner.router)
+app.include_router(spot_admin.router)
 app.include_router(spots.router)
 app.include_router(categories.router)
 app.include_router(routes.router)
