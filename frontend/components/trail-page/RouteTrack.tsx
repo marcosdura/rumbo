@@ -93,7 +93,7 @@ export default function RouteTrack({ routeId, routeName, routeSlug, track, pendi
         <TrackMap points={track.points} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13, color: "var(--muted-strong)" }}>{facts.join(" · ")}</span>
-          <button type="button" style={button} onClick={download}>⬇ Descargar GPX</button>
+          <button type="button" className="btn-hover" style={button} onClick={download}>⬇ Descargar GPX</button>
         </div>
       </div>
     )
@@ -113,7 +113,7 @@ export default function RouteTrack({ routeId, routeName, routeSlug, track, pendi
         <p style={{ fontSize: 14, color: "var(--muted-strong)", margin: 0, lineHeight: 1.5, flex: "1 1 260px" }}>
           Todavía no está el recorrido en el mapa. ¿Lo tenés grabado? Subí el GPX (lo exportan Wikiloc, Strava, Garmin y las apps de celular).
         </p>
-        <button type="button" style={button} onClick={start}>＋ Subir el recorrido (GPX)</button>
+        <button type="button" className="btn-hover" style={button} onClick={start}>＋ Subir el recorrido (GPX)</button>
       </div>
 
       <ConfirmModal

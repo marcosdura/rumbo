@@ -135,12 +135,12 @@ export default function PlacesPage({ activity, department, counts, spots, total 
               <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.6 }}>
                 ¿Conocés uno? Sumalo y ayudá a que otros lo encuentren.
               </p>
-              <Link href="/agregar-lugar" className="places-search" style={{ margin: 0 }}>＋ Sumá un lugar</Link>
+              <Link href="/agregar-lugar" className="places-search btn-hover" style={{ margin: 0 }}>＋ Sumá un lugar</Link>
             </div>
           )}
 
           {spots.length > 0 && (
-            <Link href={searchPath(activity, department)} className="places-search">
+            <Link href={searchPath(activity, department)} className="places-search btn-hover">
               {total > spots.length ? `Ver los ${total} en el buscador →` : "Filtrar y ver en el mapa →"}
             </Link>
           )}

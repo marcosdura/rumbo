@@ -1,6 +1,6 @@
 // Lo público, en PC y en celular: la barra (que no salte entre páginas), el
 // menú, la 404, legal, el footer y que no haya errores de JavaScript.
-import { FRONT, apiGet, shot, offlineMaps, a11yProblems, fakeCloudinary, cspViolations } from "./lib.mjs"
+import { FRONT, apiGet, shot, offlineMaps, a11yProblems, fakeCloudinary, cspViolations, hoverChanges } from "./lib.mjs"
 
 const VIEWPORTS = [["pc", { width: 1280, height: 800 }], ["celular", { width: 390, height: 844 }]]
 
@@ -98,8 +98,42 @@ export async function run(browser, r) {
       const covered = overlaps.filter(b => !document.elementFromPoint(Math.max(b.left, list.left) + 4, Math.max(b.top, list.top) + 4)?.closest(".search-dropdown"))
       return { overlaps: overlaps.length, covered: covered.length }
     })
+    // La lista, del ancho de la pill de su campo.
+    const widths = await page.evaluate(() => ["#hero-section .search-dropdown", "#hero-section .search-field.is-open"]
+      .map(sel => Math.round(document.querySelector(sel).getBoundingClientRect().width)))
     await page.keyboard.press("Escape")
+    r.ok(`[${label}] la lista del buscador tiene el ancho de su campo`, Math.abs(widths[0] - widths[1]) <= 1, `lista ${widths[0]}px, campo ${widths[1]}px`)
     r.ok(`[${label}] la lista del buscador del hero tapa la invitación de abajo`, invite.covered === 0 && (label !== "pc" || invite.overlaps > 0), JSON.stringify(invite))
+
+    // Ordenar, en la búsqueda: la lista queda por encima de los resultados y
+    // la flecha es la › de las vías (antes ▼).
+    await page.goto(`${FRONT}/search`, { waitUntil: "networkidle" })
+    const sortBtn = page.getByRole("combobox", { name: "Ordenar" })
+    const chevron = await sortBtn.locator(".sort-menu-chevron").textContent()
+    await sortBtn.click()
+    await page.waitForTimeout(400)
+    const sortOnTop = await page.evaluate(() => {
+      const items = [...document.querySelectorAll(".sort-menu-list [role=option]")]
+      return items.length > 0 && items.every(li => { const b = li.getBoundingClientRect(); return !!document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)?.closest(".sort-menu-list") })
+    })
+    await page.keyboard.press("Escape")
+    r.ok(`[${label}] Ordenar: la lista se ve entera, por encima de los resultados`, sortOnTop && chevron === "›", `encima ${sortOnTop}, flecha «${chevron}»`)
+
+    if (label === "pc") {
+      // El hover común en los botones que no tenían (globals.css .btn-hover).
+      await page.goto(`${FRONT}/spots/cerro-de-prueba/rutas/sendero-uno`, { waitUntil: "networkidle" })
+      const noHover = []
+      for (const name of ["🔗 Compartir", "＋ Subir fotos", "＋ Subir el recorrido (GPX)"]) {
+        if (!(await hoverChanges(page, page.getByRole("button", { name, exact: true })))) noHover.push(name)
+      }
+      await page.goto(`${FRONT}/spots/cerro-de-prueba`, { waitUntil: "networkidle" })
+      for (const name of ["⚑ Reportar este lugar", "¡Sé el primero en reseñar!"]) {
+        if (!(await hoverChanges(page, page.getByRole("button", { name, exact: true })))) noHover.push(name)
+      }
+      await page.goto(`${FRONT}/lugares/surf`, { waitUntil: "networkidle" })
+      if (!(await hoverChanges(page, page.locator(".places-search").last()))) noHover.push("Filtrar y ver en el mapa")
+      r.ok("Botones sueltos con hover (Compartir, Subir fotos, Reportar...)", noHover.length === 0, noHover.join(", "))
+    }
 
     await page.goto(`${FRONT}/lugares/surf`, { waitUntil: "networkidle" })
     const cards = await page.locator(".places-grid .spot-card").count()

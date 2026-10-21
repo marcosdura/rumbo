@@ -77,7 +77,7 @@ export default function ItemPhotos({ photos, slots, target, targetId, spotId, na
   }
 
   const uploadButton = free > 0 && (
-    <button type="button" style={addButton} onClick={start}>＋ {photos.length ? "Sumar fotos" : "Subir fotos"}</button>
+    <button type="button" className="btn-hover" style={addButton} onClick={start}>＋ {photos.length ? "Sumar fotos" : "Subir fotos"}</button>
   )
 
   return (

@@ -133,3 +133,19 @@ export async function shot(page, name) {
   fs.mkdirSync(SHOTS, { recursive: true })
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: false })
 }
+
+// ¿Cambia algo al pasar el mouse? (el hover común: globals.css .btn-hover,
+// .form-hover). Compara el estilo calculado antes y con el mouse encima.
+const HOVER_PROPS = ["transform", "boxShadow", "filter", "borderTopColor", "color", "backgroundColor", "textDecorationLine"]
+export async function hoverChanges(page, locator) {
+  await locator.scrollIntoViewIfNeeded()
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(250)
+  const style = () => locator.evaluate((el, props) => { const c = getComputedStyle(el); return props.map(p => c[p]).join("|") }, HOVER_PROPS)
+  const before = await style()
+  await locator.hover()
+  await page.waitForTimeout(350)
+  const after = await style()
+  await page.mouse.move(0, 0)
+  return before !== after
+}

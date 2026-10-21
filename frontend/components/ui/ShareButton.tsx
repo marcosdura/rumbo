@@ -13,6 +13,7 @@ export default function ShareButton({ name }: { name: string }) {
     <>
       <button
         type="button"
+        className="btn-hover"
         onClick={() => setOpen(true)}
         style={{
           display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 12,

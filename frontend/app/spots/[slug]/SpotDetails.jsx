@@ -132,7 +132,9 @@ function SpotDetail({ spot, preview = false }) {
           text-underline-offset: 2px;
           cursor: pointer;
           font-weight: 400;
+          transition: color 0.15s;
         }
+        .rating-badge .reviews-link:hover { color: var(--primary-dark); }
 
         .action-btn {
           display: flex;
@@ -455,7 +457,7 @@ function SpotDetail({ spot, preview = false }) {
               {!viewer.is_owner && (
                 <div style={{ textAlign: "right" }}>
                   <ReportButton targetKind="spot" targetId={spot.id} what="este lugar" label="⚑ Reportar este lugar"
-                    style={{ fontSize: 12, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }} />
+                    className="text-btn" style={{ fontSize: 12 }} />
                 </div>
               )}
             </div>

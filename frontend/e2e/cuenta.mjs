@@ -1,7 +1,7 @@
 // Con sesión iniciada: el formulario de agregar lugar entero (cada flujo, de
 // punta a punta) y después el perfil, que tiene que mostrar lo cargado.
 // Verifica en el backend que cada envío haya quedado guardado.
-import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps, a11yProblems, cspViolations } from "./lib.mjs"
+import { ADMIN, FRONT, PHOTO, USER, apiGet, apiPost, fakeCloudinary, loggedIn, shot, offlineMaps, a11yProblems, cspViolations, hoverChanges } from "./lib.mjs"
 
 // Sufijo por corrida: los nombres no se repiten si la base ya tiene datos.
 const RUN = Date.now().toString(36).slice(-4)
@@ -350,8 +350,20 @@ async function profile(page, r) {
     r.ok(`Accesibilidad — ${path}`, problems.length === 0, problems.slice(0, 3).join(" | "))
   }
   await open(page, "/agregar-lugar")
+  const discardDraft = page.getByText("Empezar de cero")
+  if (await discardDraft.count()) await discardDraft.first().click()
+  // El hover común también en el formulario: categorías, opciones y campos.
+  const formNoHover = []
+  if (!(await hoverChanges(page, page.getByRole("button", { name: /Camping/ }).first()))) formNoHover.push("categoría")
   await page.getByRole("button", { name: /Camping/ }).first().click()
   await page.waitForTimeout(500)
+  for (const [what, locator] of [
+    ["Sí, soy el responsable", page.getByRole("button", { name: /Sí, soy el responsable/ })],
+    ["Siguiente", page.getByRole("button", { name: "Siguiente", exact: true })],
+    ["campo Nombre", page.getByLabel("Nombre del lugar")],
+    ["Departamento", page.getByLabel("Departamento")],
+  ]) if (!(await hoverChanges(page, locator))) formNoHover.push(what)
+  r.ok("Formulario — botones y campos con hover", formNoHover.length === 0, formNoHover.join(", "))
   problems = await a11yProblems(page)
   r.ok("Accesibilidad — el formulario de agregar lugar", problems.length === 0, problems.slice(0, 3).join(" | "))
   await shot(page, "perfil-panel-lugar")

@@ -422,7 +422,7 @@ export default function SpotDashboardPage() {
     <div style={{ minHeight: "100vh", background: "#f5f4f0", fontFamily: "var(--font-dm-sans), sans-serif" }}>
       <Navbar />
 
-      <main id="contenido" style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
+      <main id="contenido" className="form-hover" style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px 60px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 24 }}>

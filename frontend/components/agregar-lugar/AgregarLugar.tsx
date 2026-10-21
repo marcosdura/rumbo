@@ -384,7 +384,7 @@ export default function AgregarLugar() {
 
   if (!session) {
     return (
-      <main id="contenido" style={s.page}>
+      <main id="contenido" className="form-hover" style={s.page}>
         <style>{mediaQuery}</style>
         <div style={{ ...s.container, textAlign: "center", paddingTop: 48 }}>
           {pageHeader}
@@ -424,7 +424,7 @@ export default function AgregarLugar() {
 
   if (success) {
     return (
-      <main id="contenido" style={s.page}>
+      <main id="contenido" className="form-hover" style={s.page}>
         <style>{mediaQuery}</style>
         <div style={{ ...s.container, textAlign: "center", paddingTop: 32 }}>
           {pageHeader}
@@ -451,7 +451,7 @@ export default function AgregarLugar() {
   const trekkingSpotName   = availableTrekkingSpots.find(sp => sp.id === trekkingSpotId)?.name
 
   return (
-    <main id="contenido" style={s.page}>
+    <main id="contenido" className="form-hover" style={s.page}>
       <style>{mediaQuery}</style>
       <div style={s.container}>
         {pageHeader}

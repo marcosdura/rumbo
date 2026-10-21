@@ -336,6 +336,36 @@ input[type="number"] {
   }
 }
 
+/* Hover común de los botones (el de las pills: sube 1px con sombra suave y
+   se oscurece apenas, así sirve igual en botones blancos, verdes o rojos).
+   .btn-hover: un botón suelto. .form-hover: todos los botones y campos de un
+   formulario (agregar lugar, editar un lugar), que tienen estilos inline. */
+.btn-hover, .form-hover button,
+.form-hover :is(input, select, textarea) {
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s, border-color 0.2s;
+}
+@media (hover: hover) {
+  .btn-hover:not(:disabled):hover,
+  .form-hover button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    filter: brightness(0.97);
+  }
+  /* Los campos no se mueven: el borde pasa a verde claro (el inline fija
+     el borde, por eso el !important). */
+  .form-hover :is(input:not([type=checkbox], [type=radio], [type=file]), select, textarea):not(:disabled, :focus):hover {
+    border-color: #b7dfc8 !important;
+  }
+}
+
+/* Un botón que se ve como texto (ej. "⚑ Reportar este lugar"): el hover es
+   el de los links de texto, verde y subrayado. */
+.text-btn {
+  background: none; border: none; padding: 0; font-family: inherit; cursor: pointer;
+  color: var(--muted); text-underline-offset: 2px; transition: color 0.15s;
+}
+.text-btn:hover { color: var(--primary-dark); text-decoration: underline; }
+
 /* Hover compartido para Pill (una sola clase, tinte via CSS custom properties) */
 .pill-hover {
   transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;

@@ -59,7 +59,8 @@ export default function LegalPage() {
         .legal-list { font-size: 14px; color: #4a443b; line-height: 1.7; margin: 0 0 10px; padding-left: 18px; }
         .legal-list li { margin-bottom: 4px; }
         .legal-list strong { color: #1b1b19; font-weight: 600; }
-        .legal-link { color: var(--primary); font-weight: 600; }
+        .legal-link { color: var(--primary); font-weight: 600; text-underline-offset: 2px; }
+        .legal-link:hover { color: var(--primary-dark); text-decoration: underline; }
 
         @media (max-width: 640px) {
           .legal-wrapper { padding: 24px 16px 48px; }
