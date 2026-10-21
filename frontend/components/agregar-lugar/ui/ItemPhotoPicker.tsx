@@ -2,18 +2,20 @@
 
 // Hasta 3 fotos opcionales de una ruta, un sector o una vía, en agregar
 // lugar. Se suben después de crearla (submit.ts, itemPhotosTask) y pasan por
-// revisión como las que se suben desde su página.
+// revisión como las que se suben desde su página. También la foto de una
+// reseña (max 1, ReviewsSection).
 import { useEffect, useMemo, useRef, useState } from "react"
 import { s } from "../styles"
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/uploadImage"
 
 export const MAX_ITEM_PHOTOS = 3
 
-export default function ItemPhotoPicker({ files, onChange, label }: {
+export default function ItemPhotoPicker({ files, onChange, label, max = MAX_ITEM_PHOTOS }: {
   files: File[]
   onChange: (files: File[]) => void
   // "Fotos de la ruta"
   label: string
+  max?: number
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,8 +29,8 @@ export default function ItemPhotoPicker({ files, onChange, label }: {
       setError("Solo fotos (JPG, PNG, WEBP o HEIC) de hasta 15 MB.")
       return
     }
-    const room = MAX_ITEM_PHOTOS - files.length
-    setError(chosen.length > room ? `Hasta ${MAX_ITEM_PHOTOS} fotos.` : null)
+    const room = max - files.length
+    setError(chosen.length > room ? (max === 1 ? "Una sola foto." : `Hasta ${max} fotos.`) : null)
     onChange([...files, ...chosen.slice(0, room)])
     if (inputRef.current) inputRef.current.value = ""
   }
@@ -36,7 +38,9 @@ export default function ItemPhotoPicker({ files, onChange, label }: {
   return (
     <div>
       <p style={{ fontSize: 13, fontWeight: 500, color: "#1b1b19", margin: "0 0 2px" }}>{label}</p>
-      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>Opcional, hasta {MAX_ITEM_PHOTOS}. Pasan por revisión antes de publicarse.</p>
+      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
+        {max === 1 ? "Opcional. Pasa por revisión antes de publicarse." : `Opcional, hasta ${max}. Pasan por revisión antes de publicarse.`}
+      </p>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         {files.map((f, i) => (
           <div key={`${f.name}-${i}`} style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden" }}>
@@ -49,9 +53,9 @@ export default function ItemPhotoPicker({ files, onChange, label }: {
             >×</button>
           </div>
         ))}
-        {files.length < MAX_ITEM_PHOTOS && (
+        {files.length < max && (
           <>
-            <input ref={inputRef} type="file" accept="image/*" multiple aria-label={label} style={{ display: "none" }} onChange={e => add(e.target.files)} />
+            <input ref={inputRef} type="file" accept="image/*" multiple={max > 1} aria-label={label} style={{ display: "none" }} onChange={e => add(e.target.files)} />
             <button type="button" onClick={() => inputRef.current?.click()} style={{ ...s.btnAdd, padding: "6px 12px", fontSize: 12 }}>
               ＋ Agregar foto
             </button>

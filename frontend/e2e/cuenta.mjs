@@ -375,8 +375,14 @@ async function profile(page, r) {
   await page.getByRole("button", { name: /Escribir una reseña/ }).click()
   await page.getByLabel("5 estrellas").check({ force: true })
   await page.getByPlaceholder("Contá tu experiencia (opcional)...").fill("Muy lindo, prueba e2e.")
+  // Con una foto: sube a Cloudinary (simulado) y queda en revisión.
+  await page.getByLabel("Una foto (opcional)").setInputFiles(PHOTO)
   await page.getByRole("button", { name: "Publicar reseña" }).click()
-  await page.waitForTimeout(1000)
+  // La marca aparece cuando la lista se recarga, después del aviso.
+  await page.getByText("⏳ En revisión: solo vos la ves.").waitFor({ timeout: 15000 }).catch(() => {})
+  const reviewPhoto = await page.getByText("⏳ En revisión: solo vos la ves.").count()
+  const reviewContribution = (await apiGet("/admin/contributions", ADMIN)).find(c => c.kind === "photo" && c.title?.includes("reseña de Cerro de Prueba"))
+  r.ok("Reseña — con foto: queda en revisión y el autor la ve", reviewPhoto === 1 && !!reviewContribution, `${reviewPhoto} visibles, aporte ${reviewContribution ? "sí" : "no"}`)
   await open(page, "/favorites")
   r.ok("Perfil — el favorito aparece en Favoritos", (await text(page)).includes("Cerro de Prueba"))
   await shot(page, "perfil-favoritos")

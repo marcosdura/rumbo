@@ -6,10 +6,14 @@ import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
 import ReportButton from "@/components/ui/ReportButton"
+import ItemPhotoPicker from "@/components/agregar-lugar/ui/ItemPhotoPicker"
+import ImageGallery from "@/components/spot-detail/ImageGallery"
+import { CldImage } from "next-cloudinary"
 
 import { trackEvent } from "@/lib/analytics"
 import { timeAgo } from "@/lib/notifications"
 import { api } from "@/lib/api"
+import { uploadImageToCloudinary } from "@/lib/uploadImage"
 
 function Avatar({ user, size = 36 }) {
   const initials = user?.name
@@ -63,6 +67,13 @@ export default function ReviewsSection({ spotId }) {
   const [moreError, setMoreError] = useState(false)
   const [submitError, setSubmitError] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  // La foto de la reseña (una, opcional): se sube después de guardarla y
+  // pasa por revisión (backend/item_photos.py).
+  const [photoFiles, setPhotoFiles] = useState([])
+  // Qué pasó con la foto, para avisar arriba de la lista.
+  const [photoNotice, setPhotoNotice] = useState(null)
+  const [galleryPhoto, setGalleryPhoto] = useState(null)
+  const [removingPhoto, setRemovingPhoto] = useState(false)
 
   const token = session?.id_token
 
@@ -124,7 +135,30 @@ export default function ReviewsSection({ spotId }) {
     setEditingId(null)
     setRating(0)
     setComment("")
+    setPhotoFiles([])
     setSubmitError(false)
+  }
+
+  // La foto que ya tiene la reseña que se está editando (publicada o en revisión).
+  const editingPhoto = editingId && summary?.my_review?.id === editingId ? summary.my_review.photo : null
+
+  const uploadPhoto = async (reviewId) => {
+    const { publicId } = await uploadImageToCloudinary(photoFiles[0], { spotId })
+    await api.post("/photos", { target: "review", target_id: reviewId, public_ids: [publicId] }, { token })
+  }
+
+  const removePhoto = async () => {
+    if (!editingPhoto) return
+    setRemovingPhoto(true)
+    try {
+      await api.del(`/photos/${editingPhoto.id}`, { token })
+      setPhotoNotice({ ok: true, text: "Sacaste la foto de tu reseña." })
+      closeForm()
+      loadReviews()
+    } catch {
+      setPhotoNotice({ ok: false, text: "No se pudo sacar la foto. Intentá de nuevo." })
+    }
+    setRemovingPhoto(false)
   }
 
   const handleSubmit = async () => {
@@ -132,11 +166,24 @@ export default function ReviewsSection({ spotId }) {
     setSubmitting(true)
     setSubmitError(false)
     try {
+      let reviewId = editingId
       if (editingId) {
         await api.patch(`${deleteBasePath}/${editingId}`, { rating, comment }, { token })
       } else {
-        await api.post(basePath, { rating, comment }, { token })
+        const { data } = await api.post(basePath, { rating, comment }, { token })
+        reviewId = data.id
         trackEvent("post_review", { entity_type: "spot", rating, spot_id: spotId })
+      }
+      // La reseña ya quedó: si la foto falla, se avisa sin perderla.
+      if (photoFiles.length > 0) {
+        try {
+          await uploadPhoto(reviewId)
+          setPhotoNotice({ ok: true, text: "⏳ ¡Gracias! Tu foto queda en revisión y se publica cuando el equipo de Rumbo la apruebe." })
+        } catch (e) {
+          setPhotoNotice({ ok: false, text: `Tu reseña quedó guardada, pero la foto no se pudo subir${e instanceof Error && e.message ? `: ${e.message}` : "."}` })
+        }
+      } else {
+        setPhotoNotice(null)
       }
       closeForm()
       loadReviews()
@@ -337,6 +384,21 @@ export default function ReviewsSection({ spotId }) {
               onFocus={e => e.target.style.borderColor = "var(--primary)"}
               onBlur={e => e.target.style.borderColor = "var(--border)"}
             />
+            <div style={{ marginTop: 14 }}>
+              {editingPhoto ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden" }}>
+                    <CldImage src={editingPhoto.cloudinary_public_id} alt="La foto de tu reseña" fill sizes="88px" crop="fill" className="object-cover" />
+                  </div>
+                  <span style={{ fontSize: 12, color: "var(--muted-strong)" }}>{editingPhoto.pending ? "Tu foto está en revisión." : "Tu foto está publicada."}</span>
+                  <button type="button" className="text-btn" style={{ fontSize: 12 }} onClick={removePhoto} disabled={removingPhoto}>
+                    {removingPhoto ? "Sacando..." : "Sacar la foto"}
+                  </button>
+                </div>
+              ) : (
+                <ItemPhotoPicker label="Una foto (opcional)" files={photoFiles} onChange={setPhotoFiles} max={1} />
+              )}
+            </div>
             {submitError && (
               <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>
                 {editingId
@@ -373,6 +435,12 @@ export default function ReviewsSection({ spotId }) {
               </button>
             </div>
           </div>
+        )}
+
+        {photoNotice && (
+          <p role="status" style={{ fontSize: 13, margin: "0 0 16px", color: photoNotice.ok ? "#78590a" : "var(--danger)" }}>
+            {photoNotice.text}
+          </p>
         )}
 
         {/* Lista */}
@@ -450,6 +518,19 @@ export default function ReviewsSection({ spotId }) {
                     {review.comment}
                   </p>
                 )}
+                {review.photo && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setGalleryPhoto(review.photo)}
+                      aria-label={`Ver la foto de la reseña de ${review.user?.name || "Usuario"}`}
+                      style={{ position: "relative", width: 120, height: 90, borderRadius: 12, overflow: "hidden", border: "none", padding: 0, cursor: "pointer" }}
+                    >
+                      <CldImage src={review.photo.cloudinary_public_id} alt={`Foto de la reseña de ${review.user?.name || "Usuario"}`} fill sizes="120px" crop="fill" gravity="auto" className="object-cover" loading="lazy" />
+                    </button>
+                    {review.photo.pending && <span style={{ fontSize: 12, color: "#78590a" }}>⏳ En revisión: solo vos la ves.</span>}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -478,6 +559,8 @@ export default function ReviewsSection({ spotId }) {
       </div>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="dejar tu reseña" />}
+
+      {galleryPhoto && <ImageGallery images={[galleryPhoto]} name="Foto de la reseña" startIndex={0} onClose={() => setGalleryPhoto(null)} />}
 
       <ConfirmModal
         open={deleteTargetId !== null}
