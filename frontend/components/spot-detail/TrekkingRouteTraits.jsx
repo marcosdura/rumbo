@@ -1,5 +1,8 @@
 "use client"
 
+// Las características de una ruta (dificultad, circular, nivel técnico y
+// físico) como pills sueltas: van en la misma fila que sus datos (distancia,
+// duración...). Antes eran una tarjeta aparte, lejos de los datos.
 import Pill from "@/components/ui/Pill"
 
 const DIFFICULTY_CONFIG = {
@@ -10,7 +13,7 @@ const DIFFICULTY_CONFIG = {
 
 const LEVEL_VARIANT = { "bajo": "green", "medio": "yellow", "alto": "red" }
 
-export default function TrekkingRouteCard({ route }) {
+export default function TrekkingRouteTraits({ route }) {
   if (!route) return null
 
   const items = []
@@ -35,17 +38,7 @@ export default function TrekkingRouteCard({ route }) {
 
   if (items.length === 0) return null
 
-  return (
-    <div className="amenities-card">
-      <div className="amenities-label">
-        <div className="amenities-dot" />
-        <p className="amenities-title">Características de la ruta</p>
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {items.map((item, i) => (
-          <Pill key={i} variant={item.variant} size="lg" hover>{item.label}</Pill>
-        ))}
-      </div>
-    </div>
-  )
+  return items.map((item, i) => (
+    <Pill key={i} variant={item.variant} size="lg" hover>{item.label}</Pill>
+  ))
 }

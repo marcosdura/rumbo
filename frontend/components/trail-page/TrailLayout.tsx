@@ -94,7 +94,15 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
           background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
           font-size: 13px; color: #1b1b19;
         }
+        /* Hover: el de las pills (.pill-hover, globals.css), en verde. */
+        .trail-stats-compact li { transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
+        @media (hover: hover) {
+          .trail-stats-compact li:hover { background: #f0f7f3; border-color: #b7dfc8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
+        }
         .trail-stats-compact strong { font-weight: 700; }
+        /* Los datos de una ruta o un sector, juntos en una fila de pills. */
+        .trail-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .trail-facts:empty { display: none; }
         .trail-stats-compact-label { font-size: 11px; font-weight: 600; color: var(--muted-strong); text-transform: uppercase; letter-spacing: 0.06em; }
         .trail-stat { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
         .trail-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }

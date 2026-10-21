@@ -13,7 +13,9 @@ const AMENITIES = [
   { key: "accessible",    label: "Accesible",         emoji: "♿" },
 ]
 
-export default function TrekkingAmenitiesCard({ trekkingDetail }) {
+// title: en la página de una ruta dice de qué lugar son ("Características
+// de Cerro Arequita"); en la del lugar, "Características del lugar".
+export default function TrekkingAmenitiesCard({ trekkingDetail, title = "Características del lugar" }) {
   if (!trekkingDetail) return null
 
   const badges = AMENITIES.filter(a => trekkingDetail[a.key] !== null && trekkingDetail[a.key] !== undefined)
@@ -23,7 +25,7 @@ export default function TrekkingAmenitiesCard({ trekkingDetail }) {
     <div className="amenities-card">
       <div className="amenities-label">
         <div className="amenities-dot" />
-        <p className="amenities-title">Características del lugar</p>
+        <p className="amenities-title">{title}</p>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {badges.map(({ key, label, emoji }) => {

@@ -67,8 +67,8 @@ export default async function SectorPage({ params }: Props) {
         />
       </SectionCard>
       {(sector.type || sectorStats(sector).length > 0) && (
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-          {sector.type && <Pill variant="green">🧗 {sector.type}</Pill>}
+        <div className="trail-facts">
+          {sector.type && <Pill variant="green" size="lg" hover>🧗 {sector.type}</Pill>}
           <StatGrid stats={sectorStats(sector)} compact />
         </div>
       )}

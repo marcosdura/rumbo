@@ -75,6 +75,28 @@ describe("página de la ruta", () => {
     expect(screen.queryByText("—")).toBeNull()
   })
 
+  it("fotos arriba de todo; debajo, los datos y las características juntos en pills", async () => {
+    page = { route, spot, others: [] }
+    const { container } = render(await TrekkingRoutePage({ params }))
+    const body = container.querySelector(".trail-body")!
+    expect(body.firstElementChild!.textContent).toContain("Fotos")
+    const facts = body.children[1]
+    expect(facts.className).toBe("trail-facts")
+    // Distancia y duración (datos) en la misma fila que dificultad y circular.
+    for (const text of ["4 km", "1,5 h", "🟡 Moderado", "🔁 circular"]) expect(facts.textContent).toContain(text)
+    expect(screen.queryByText("Características de la ruta")).toBeNull()
+    // Los datos, como las pills del sector (no recuadros grandes).
+    expect(facts.querySelector(".trail-stats-compact")).toBeTruthy()
+    expect(container.querySelector(".trail-stats")).toBeNull()
+  })
+
+  it("las características del lugar dicen de qué lugar son", async () => {
+    page = { route, spot, others: [] }
+    render(await TrekkingRoutePage({ params }))
+    expect(screen.getByText("Características de Cerro Arequita")).toBeTruthy()
+    expect(screen.queryByText("Características del lugar")).toBeNull()
+  })
+
   it("muestra la descripción con sus párrafos", async () => {
     page = { route: { ...route, description: "Sube por el bosque.\n\nOjo con la bajada." }, spot, others: [] }
     render(await TrekkingRoutePage({ params }))
