@@ -19,13 +19,16 @@ from routers.spots import SPOT_LIST_OPTIONS, distance_km, serialize_spot_list
 router = APIRouter(tags=["home"])
 
 
-def _spots_by_ids(db: Session, ids: list[int]) -> list[dict]:
-    """Los lugares en el orden de ids, como los muestra SpotCard."""
+def _spots_by_id_lists(db: Session, id_lists: list[list[int]]) -> list[list[dict]]:
+    """Los lugares de cada lista, en su orden, como los muestra SpotCard.
+    Todas las secciones en una sola carga: antes cada una repetía las mismas
+    consultas (lugares, fotos, detalles, reseñas)."""
+    ids = list(dict.fromkeys(i for lst in id_lists for i in lst))
     if not ids:
-        return []
+        return [[] for _ in id_lists]
     spots = db.query(SpotDB).options(*SPOT_LIST_OPTIONS).filter(SpotDB.id.in_(ids)).all()
-    by_id = {s.id: s for s in spots}
-    return serialize_spot_list(db, [by_id[i] for i in ids if i in by_id])
+    by_id = {item["id"]: item for item in serialize_spot_list(db, spots)}
+    return [[by_id[i] for i in lst if i in by_id] for lst in id_lists]
 
 
 @router.get("/home")
@@ -38,19 +41,21 @@ def get_home(db: Session = Depends(get_db)):
         {
             "key": "popular", "label": "Lo que más gusta", "title": "Populares",
             "href": "/search", "total": 0,
-            "spots": _spots_by_ids(db, home.popular_ids(db, home.daily_rng(today, "populares"))),
+            "ids": home.popular_ids(db, home.daily_rng(today, "populares")),
         },
         {
             "key": "recent", "label": "Novedades", "title": "Recién agregados",
             "href": "/search", "total": stats["spots"],
-            "spots": _spots_by_ids(db, home.recent_ids(db)),
+            "ids": home.recent_ids(db),
         },
     ]
     for c in home.pick_collections(db, today):
         sections.append({
             "key": c["key"], "label": c["label"], "title": c["title"], "href": c["href"],
-            "total": c["total"], "spots": _spots_by_ids(db, c["spot_ids"]),
+            "total": c["total"], "ids": c["spot_ids"],
         })
+    for section, spots in zip(sections, _spots_by_id_lists(db, [s.pop("ids") for s in sections])):
+        section["spots"] = spots
     return {"stats": stats, "sections": [s for s in sections if s["spots"]]}
 
 

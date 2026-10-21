@@ -521,6 +521,9 @@ SPOT_LIST_OPTIONS = (
     selectinload(SpotDB.glamping_amenities),
     selectinload(SpotDB.surf_detail),
     selectinload(SpotDB.kayak_service_detail),
+    # serialize_spot_list lee las categorías de cada lugar: sin esto eran una
+    # consulta por lugar (24 de más en una página de la búsqueda).
+    selectinload(SpotDB.spot_categories).selectinload(SpotCategory.category),
 )
 
 
