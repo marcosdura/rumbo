@@ -15,6 +15,14 @@ def get_client_ip(request: Request) -> str:
     # esa config — funciona sin importar cómo esté armado uvicorn del otro
     # lado. Convención estándar: "cliente, proxy1, proxy2..." — el primer
     # valor es la IP real del cliente.
+    #
+    # ¿Puede el cliente mandar su propio X-Forwarded-For y elegir su IP?
+    # Contra este servidor, sí; contra Railway, no: probado el 21/10/2026
+    # contra producción, 25 pedidos a /spots/check-name (20/min) con un
+    # X-Forwarded-For inventado distinto cada uno se cortaron en el 21, igual
+    # que sin el header: el borde de Railway reemplaza el que manda el
+    # cliente. Si algún día el backend se sirve detrás de otro proxy, hay que
+    # volver a probarlo antes de confiar en el primer valor.
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
         return forwarded.split(",")[0].strip()
