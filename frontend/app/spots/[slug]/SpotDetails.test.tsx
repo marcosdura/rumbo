@@ -190,9 +190,9 @@ describe("Página del lugar: contacto y orden en el celular", () => {
   })
 
   it("en el celular el panel de detalles va antes que la descripción", async () => {
-    const { container } = render(<SpotDetail spot={spot("Camping")} />)
-    await screen.findByText("Cerro Arequita")
-    const css = Array.from(container.querySelectorAll("style")).map(s => s.textContent).join("")
+    // Los estilos de la página están en spot-page.css.
+    const { readFileSync } = await import("node:fs")
+    const css = readFileSync("app/spots/[slug]/spot-page.css", "utf-8")
     const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
     expect(mobile).toMatch(/\.spot-right-panel \{[^}]*order: -1;/)
   })

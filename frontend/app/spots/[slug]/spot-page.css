@@ -1,0 +1,147 @@
+/* La página de un lugar (SpotDetails.tsx). Antes era un <style> dentro del componente. */
+
+.spot-page { font-family: var(--font-dm-sans), sans-serif; }
+
+/* Sin zoom al pasar el mouse (el mismo "ajuste" de las cards al
+   terminar la animación): se oscurece apenas para invitar a abrirla. */
+.img-zoom::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.2s; pointer-events: none; }
+.img-zoom:hover::after { background: rgba(0,0,0,0.08); }
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #3d3d3a;
+}
+.rating-badge .star { color: var(--primary); font-size: 20px; }
+.rating-badge strong { font-weight: 600; }
+.rating-badge .reviews-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: color 0.15s;
+}
+.rating-badge .reviews-link:hover { color: var(--primary-dark); }
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-dm-sans), sans-serif;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #3d3d3a;
+}
+.action-btn:hover {
+  background: #f7f5f0;
+  transform: translateY(-1px);
+}
+
+.spot-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0 0 28px 0;
+}
+
+.spot-page-inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 36px 24px 48px;
+}
+
+.spot-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.spot-title {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: #1b1b19;
+  line-height: 1.15;
+  margin: 0;
+  max-width: 680px;
+}
+
+.spot-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.spot-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: start;
+}
+
+.spot-right-panel {
+  position: sticky;
+  top: 24px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.mobile-back-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 24px 0;
+  font-family: var(--font-dm-sans), sans-serif;
+}
+
+@media (max-width: 768px) {
+  .mobile-back-btn { display: flex; }
+  .spot-page-inner {
+    padding: 20px 16px 40px;
+  }
+  .spot-header-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .spot-title {
+    font-size: 26px;
+    max-width: 100%;
+  }
+  .spot-actions {
+    margin-top: 0;
+  }
+  .spot-main-grid {
+    grid-template-columns: 1fr;
+  }
+  .spot-right-panel {
+    position: static;
+    padding: 20px 16px;
+    /* En el celular, precio y contacto antes que la descripción y el
+       mapa: es lo que se busca para ir. */
+    order: -1;
+  }
+}

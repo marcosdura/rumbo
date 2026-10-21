@@ -6,26 +6,23 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { useSession } from "next-auth/react"
-import SpotDetails from "@/app/spots/[slug]/SpotDetails"
+import SpotDetails, { type SpotPageData } from "@/app/spots/[slug]/SpotDetails"
 import LoginRequired from "@/components/layout/LoginRequired"
 import StatusPage, { secondaryButton } from "@/components/layout/StatusPage"
 import LoadingScreen from "@/components/ui/LoadingScreen"
 import { api, ApiError } from "@/lib/api"
-import type { PublicSpot } from "@/lib/types"
 
-// SpotDetails es .jsx.
-const Details = SpotDetails as unknown as (p: { spot: PublicSpot; preview?: boolean }) => React.ReactElement
 
 export default function SpotPreviewPage() {
   const { id } = useParams<{ id: string }>()
   const { data: session, status } = useSession()
   const token = session?.id_token
-  const [spot, setSpot] = useState<PublicSpot | null>(null)
+  const [spot, setSpot] = useState<SpotPageData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!token) return
-    api.get<PublicSpot>(`/spots/${id}/preview`, { token })
+    api.get<SpotPageData>(`/spots/${id}/preview`, { token })
       .then(({ data }) => setSpot(data))
       .catch(e => setError(e instanceof ApiError && (e.status === 403 || e.status === 404)
         ? "No encontramos este lugar, o no tenés permiso para verlo."
@@ -41,5 +38,5 @@ export default function SpotPreviewPage() {
     )
   }
   if (!spot) return <LoadingScreen />
-  return <Details spot={spot} preview />
+  return <SpotDetails spot={spot} preview />
 }

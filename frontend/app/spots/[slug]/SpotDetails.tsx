@@ -1,20 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { api } from "@/lib/api"
-
-const CATEGORY_EMOJIS = {
-  "Camping":   "⛺",
-  "Glamping":  "🛖",
-  "Trekking":  "🥾",
-  "Escalada":  "🧗",
-  "Surf":      "🏄",
-  "Kayak":     "🛶",
-  "Motorhome": "🚐",
-}
+import { useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import Navbar from "../../../components/layout/Navbar"
 import dynamic from "next/dynamic"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
+import { api } from "@/lib/api"
+import "./spot-page.css"
+
+import Navbar from "../../../components/layout/Navbar"
 import SpotDescription from "../../../components/spot-detail/SpotDescription"
 import SpotDetails from "../../../components/spot-detail/SpotDetails"
 import TrekkingRoutes from "../../../components/spot-detail/TrekkingRoutes"
@@ -31,7 +25,6 @@ import CampingCard from "../../../components/spot-detail/CampingCard"
 import GlampingCard from "../../../components/spot-detail/GlampingCard"
 import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
 import Pill from "@/components/ui/Pill"
-import { useSession } from "next-auth/react"
 import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
@@ -39,7 +32,47 @@ import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
 import { cameFromRumbo, lastUpdatedLabel, offSeasonNotice } from "@/lib/spotDetail"
 import { activityHref, departmentHref } from "@/lib/places"
 import NearbySpots from "@/components/spot-detail/NearbySpots"
-import Link from "next/link"
+import type { Experience } from "@/components/spot-detail/ExperienciasSection"
+import type { PendingContribution } from "@/components/spot-detail/AddToSpot"
+import type { DetailSpot } from "@/lib/spotDetail"
+import type { Amenity } from "@/components/spot-detail/CampingCard"
+import type { GlampingAmenities } from "@/components/spot-detail/GlampingAmenitiesList"
+import type { SpotPhoto } from "@/components/spot-detail/SpotImages"
+
+// Lo que trae GET /spots/by-slug/{slug} (y la vista previa). Los paneles de
+// cada categoría (.jsx) leen más campos de los que se listan acá.
+export type SpotPageData = DetailSpot & {
+  id: number
+  name: string
+  slug?: string | null
+  description?: string | null
+  department?: string | null
+  lat?: number | null
+  lng?: number | null
+  is_approved?: boolean
+  is_public?: boolean | null
+  suggested_by_visitor?: boolean
+  info_updated_at?: string | null
+  images?: SpotPhoto[]
+  routes?: unknown[]
+  climbing_sectors?: unknown[]
+  amenities?: Amenity[]
+  experiences?: Experience[]
+  camping_detail?: unknown
+  glamping_amenities?: GlampingAmenities | null
+  motorhome_detail?: unknown
+  trekking_detail?: unknown
+}
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  "Camping":   "⛺",
+  "Glamping":  "🛖",
+  "Trekking":  "🥾",
+  "Escalada":  "🧗",
+  "Surf":      "🏄",
+  "Kayak":     "🛶",
+  "Motorhome": "🚐",
+}
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
 
@@ -47,7 +80,7 @@ const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr
 
 // preview: la vista previa del admin o del dueño (/dashboard/spots/[id]/vista-previa):
 // avisa que no está publicado y no cuenta como visita.
-function SpotDetail({ spot, preview = false }) {
+function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: boolean }) {
   const routes = spot.routes ?? []
   const sectors = spot.climbing_sectors ?? []
   // Playa (Surf) o laguna (Kayak): sin datos de escuela ni de servicio.
@@ -58,11 +91,11 @@ function SpotDetail({ spot, preview = false }) {
   const { data: session, status } = useSession()
   // Quién mira: si es el dueño y qué aportes suyos están en revisión acá.
   // La página se genera en el servidor sin sesión; esto lo pide el navegador.
-  const [viewer, setViewer] = useState({ is_owner: false, pending: [] })
+  const [viewer, setViewer] = useState<{ is_owner: boolean; pending: PendingContribution[] }>({ is_owner: false, pending: [] })
 
   useEffect(() => {
     if (!spot?.id || !session?.id_token) return
-    api.get(`/spots/${spot.id}/viewer`, { token: session.id_token })
+    api.get<{ is_owner: boolean; pending: PendingContribution[] }>(`/spots/${spot.id}/viewer`, { token: session.id_token })
       .then(({ data }) => setViewer(data))
       .catch(() => {})  // sin esto la página funciona igual, solo sin los accesos
   }, [spot?.id, session?.id_token])
@@ -81,7 +114,7 @@ function SpotDetail({ spot, preview = false }) {
   const reviewCount = spot.review_count ?? 0
   const offSeason = offSeasonNotice(spot)
 
-  const stayCards = {
+  const stayCards: Record<string, ReactNode> = {
     Camping: spot.camping_detail ? (
       <CampingCard key="camping" amenities={spot.amenities} />
     ) : null,
@@ -93,164 +126,13 @@ function SpotDetail({ spot, preview = false }) {
     ) : null,
   }
   const primaryStayType = spot.category?.name
-  const orderedStayTypes = STAY_TYPE_ORDER.includes(primaryStayType)
+  const orderedStayTypes = primaryStayType && STAY_TYPE_ORDER.includes(primaryStayType)
     ? [primaryStayType, ...STAY_TYPE_ORDER.filter((t) => t !== primaryStayType)]
     : STAY_TYPE_ORDER
   const orderedStayCards = orderedStayTypes.map((t) => stayCards[t]).filter(Boolean)
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f5f4f0" }}>
-
-      <style>{`
-
-        .spot-page { font-family: var(--font-dm-sans), sans-serif; }
-
-
-        /* Sin zoom al pasar el mouse (el mismo "ajuste" de las cards al
-           terminar la animación): se oscurece apenas para invitar a abrirla. */
-        .img-zoom::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.2s; pointer-events: none; }
-        .img-zoom:hover::after { background: rgba(0,0,0,0.08); }
-
-        .rating-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 16px;
-          font-weight: 500;
-          color: #3d3d3a;
-        }
-        .rating-badge .star { color: var(--primary); font-size: 20px; }
-        .rating-badge strong { font-weight: 600; }
-        .rating-badge .reviews-link {
-          background: none;
-          border: none;
-          padding: 0;
-          font: inherit;
-          color: var(--muted);
-          text-decoration: underline;
-          text-underline-offset: 2px;
-          cursor: pointer;
-          font-weight: 400;
-          transition: color 0.15s;
-        }
-        .rating-badge .reviews-link:hover { color: var(--primary-dark); }
-
-        .action-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 9px 16px;
-          border-radius: 12px;
-          font-size: 13px;
-          font-weight: 500;
-          font-family: var(--font-dm-sans), sans-serif;
-          cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-          border: 1px solid var(--border);
-          background: #fff;
-          color: #3d3d3a;
-        }
-        .action-btn:hover {
-          background: #f7f5f0;
-          transform: translateY(-1px);
-        }
-
-        .spot-divider {
-          border: none;
-          border-top: 1px solid var(--border);
-          margin: 0 0 28px 0;
-        }
-
-        .spot-page-inner {
-          max-width: 1152px;
-          margin: 0 auto;
-          padding: 36px 24px 48px;
-        }
-
-        .spot-header-row {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 14px;
-        }
-
-        .spot-title {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 38px;
-          font-weight: 700;
-          color: #1b1b19;
-          line-height: 1.15;
-          margin: 0;
-          max-width: 680px;
-        }
-
-        .spot-actions {
-          display: flex;
-          gap: 8px;
-          flex-shrink: 0;
-          margin-top: 4px;
-        }
-
-        .spot-main-grid {
-          display: grid;
-          grid-template-columns: 1fr 420px;
-          gap: 24px;
-          align-items: start;
-        }
-
-        .spot-right-panel {
-          position: sticky;
-          top: 24px;
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 24px 28px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-        }
-
-        .mobile-back-btn {
-          display: none;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--muted);
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0 0 24px 0;
-          font-family: var(--font-dm-sans), sans-serif;
-        }
-
-        @media (max-width: 768px) {
-          .mobile-back-btn { display: flex; }
-          .spot-page-inner {
-            padding: 20px 16px 40px;
-          }
-          .spot-header-row {
-            flex-direction: column;
-            gap: 12px;
-          }
-          .spot-title {
-            font-size: 26px;
-            max-width: 100%;
-          }
-          .spot-actions {
-            margin-top: 0;
-          }
-          .spot-main-grid {
-            grid-template-columns: 1fr;
-          }
-          .spot-right-panel {
-            position: static;
-            padding: 20px 16px;
-            /* En el celular, precio y contacto antes que la descripción y el
-               mapa: es lo que se busca para ir. */
-            order: -1;
-          }
-        }
-      `}</style>
-
       <Navbar />
 
       {showShare && <ShareModal name={spot.name} onClose={() => setShowShare(false)} />}
@@ -305,7 +187,7 @@ function SpotDetail({ spot, preview = false }) {
                 <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
                 {/* Las pills llevan a esa actividad en el departamento ("Camping en
                     Rocha") y a los lugares del departamento (lib/places.ts). */}
-                {(spot.categories?.length > 0 ? spot.categories : spot.category ? [spot.category] : []).map((cat) => (
+                {(spot.categories && spot.categories.length > 0 ? spot.categories : spot.category ? [spot.category] : []).map((cat) => (
                   <Link key={cat.name} href={activityHref(cat.name, spot.department)} style={{ textDecoration: "none" }}>
                     <Pill variant="beige" hover>
                       {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}

@@ -2,7 +2,7 @@
 
 import AmenitiesList from "./AmenitiesList"
 
-interface Amenity {
+export interface Amenity {
   id: number
   name: string
 }

@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { CldImage } from "next-cloudinary"
 import ImageGallery from "./ImageGallery"
 
+
+export type SpotPhoto = { cloudinary_public_id: string; is_main: boolean }
 
 const sharedProps = {
   fill: true,
@@ -12,15 +14,15 @@ const sharedProps = {
   className: "object-cover",
   quality: "auto",
   format: "auto",
-}
+} as const
 
 // Solo la foto principal se carga con prioridad: es lo primero que se ve.
 // Antes las cinco competían con ella (y con el resto de la página).
-export const loadingFor = (index) => (index === 0 ? { priority: true } : { loading: "lazy" })
+export const loadingFor = (index: number) => (index === 0 ? { priority: true } : { loading: "lazy" as const })
 
 // Una versión mínima y borrosa de la foto (unos pocos KB): se ve mientras
 // baja la de verdad, así la principal nunca es un hueco vacío.
-export function blurUrl(publicId) {
+export function blurUrl(publicId: string) {
   return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_32,e_blur:300,q_30,f_auto/${publicId}`
 }
 
@@ -30,7 +32,18 @@ export const THUMBS_WAIT_MS = 2500
 // Una foto de la galería: aparece cuando terminó de cargar (antes aparecía
 // por tiempo, y la principal, que es la más pesada, quedaba última).
 // deferred: todavía no se pide (las miniaturas esperan a la principal).
-function Photo({ img, index, sizes, borderRadius = 14, name, onOpen, deferred = false, onLoaded, className = "", children }) {
+function Photo({ img, index, sizes, borderRadius = 14, name, onOpen, deferred = false, onLoaded, className = "", children }: {
+  img: SpotPhoto
+  index: number
+  sizes: string
+  borderRadius?: number
+  name: string
+  onOpen: (index: number) => void
+  deferred?: boolean
+  onLoaded?: () => void
+  className?: string
+  children?: ReactNode
+}) {
   const [loaded, setLoaded] = useState(false)
   const done = () => { setLoaded(true); onLoaded?.() }
   return (
@@ -64,8 +77,8 @@ function Photo({ img, index, sizes, borderRadius = 14, name, onOpen, deferred = 
 const MAIN_SIZES = "(max-width: 640px) 100vw, 50vw"
 const THUMB_SIZES = "(max-width: 640px) 50vw, 25vw"
 
-function SpotImages({ images = [], name }) {
-  const [galleryIndex, setGalleryIndex] = useState(null)
+function SpotImages({ images = [], name }: { images?: SpotPhoto[]; name: string }) {
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
   // Las miniaturas se piden cuando terminó la principal (antes competían con
   // ella y llegaban antes: la principal aparecía última).
   const [mainReady, setMainReady] = useState(false)
@@ -78,9 +91,9 @@ function SpotImages({ images = [], name }) {
   const count = images.length
   if (count === 0) return null
 
-  const open = (i) => setGalleryIndex(i)
+  const open = (i: number) => setGalleryIndex(i)
   const close = () => setGalleryIndex(null)
-  const photo = (img, index, sizes, borderRadius, extra = {}) => (
+  const photo = (img: SpotPhoto, index: number, sizes: string, borderRadius?: number, extra: { className?: string; children?: ReactNode } = {}) => (
     <Photo
       key={index} img={img} index={index} sizes={sizes} borderRadius={borderRadius} name={name} onOpen={open}
       deferred={index > 0 && !mainReady}
