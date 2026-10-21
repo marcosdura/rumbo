@@ -1,7 +1,13 @@
 // Respuestas públicas del backend que usan las páginas del servidor
 // (metadata, JSON-LD y la página en sí). Solo los campos que se leen.
 
-// GET /spots/by-slug/{slug}. SpotDetails (.jsx) usa muchos más campos.
+// Los datos de un lugar de trekking (null = no se sabe).
+export type TrekkingDetail = Partial<Record<
+  "bathrooms" | "potable_water" | "kids_friendly" | "camping" | "parking" | "fire_pits" | "shelter" | "accessible",
+  boolean | null
+>>
+
+// GET /spots/by-slug/{slug}. SpotDetails usa muchos más campos (SpotPageData).
 export type PublicSpot = {
   id: number
   name: string
@@ -10,7 +16,7 @@ export type PublicSpot = {
   lat: number | null; lng: number | null
   average_rating: number | null; review_count: number
   images?: { cloudinary_public_id: string; is_main: boolean }[]
-  trekking_detail?: unknown
+  trekking_detail?: TrekkingDetail | null
   [key: string]: unknown
 }
 

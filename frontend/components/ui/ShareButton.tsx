@@ -5,7 +5,6 @@
 import { useState } from "react"
 import ShareModal from "@/components/spot-detail/ShareModal"
 
-const Modal = ShareModal as unknown as (props: { name: string; onClose: () => void }) => React.ReactElement
 
 export default function ShareButton({ name }: { name: string }) {
   const [open, setOpen] = useState(false)
@@ -23,7 +22,7 @@ export default function ShareButton({ name }: { name: string }) {
       >
         🔗 Compartir
       </button>
-      {open && <Modal name={name} onClose={() => setOpen(false)} />}
+      {open && <ShareModal name={name} onClose={() => setOpen(false)} />}
     </>
   )
 }

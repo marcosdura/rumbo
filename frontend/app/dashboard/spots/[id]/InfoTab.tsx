@@ -7,8 +7,7 @@ import type { PriceMode } from "./changes"
 import dynamic from "next/dynamic"
 
 // El mismo mapa (con "pegar link de Google Maps") que agregar lugar.
-const LocationPicker = dynamic(() => import("@/components/forms/LocationPicker"), { ssr: false }) as unknown as
-  (p: { lat: number | null; lng: number | null; onLocationSelect: (lat: number, lng: number) => void }) => React.ReactElement
+const LocationPicker = dynamic(() => import("@/components/forms/LocationPicker"), { ssr: false })
 
 interface Props {
   editName: string; setEditName: (v: string) => void

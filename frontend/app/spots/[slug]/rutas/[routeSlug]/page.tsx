@@ -36,9 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title, description, ...socialMetadata({ title, description, path: `/spots/${slug}/rutas/${routeSlug}`, image }) }
 }
 
-// Las características de la ruta y del lugar son componentes .jsx.
-const RouteTraits = TrekkingRouteTraits as unknown as (p: { route: unknown }) => React.ReactNode
-const AmenitiesCard = TrekkingAmenitiesCard as unknown as (p: { trekkingDetail: unknown; title?: string }) => React.ReactElement | null
 
 export default async function TrekkingRoutePage({ params }: Props) {
   const { slug, routeSlug } = await params
@@ -74,7 +71,7 @@ export default async function TrekkingRoutePage({ params }: Props) {
       </SectionCard>
       <div className="trail-facts">
         <StatGrid stats={routeStats(route)} compact />
-        <RouteTraits route={route} />
+        <TrekkingRouteTraits route={route} />
       </div>
       <SectionCard title="Recorrido">
         <RouteTrack routeId={route.id} routeName={route.name} routeSlug={route.slug} track={route.track} pending={route.track_pending} />
@@ -84,7 +81,7 @@ export default async function TrekkingRoutePage({ params }: Props) {
           <p style={{ fontSize: 15, color: "#2c2c2a", lineHeight: 1.75, margin: 0, whiteSpace: "pre-line" }}>{description}</p>
         </SectionCard>
       )}
-      <AmenitiesCard trekkingDetail={spot.trekking_detail} title={`Características de ${spot.name}`} />
+      <TrekkingAmenitiesCard trekkingDetail={spot.trekking_detail} title={`Características de ${spot.name}`} />
       <OtherLinks
         title={`Otras rutas en ${spot.name}`}
         items={others.map(o => ({ href: `/spots/${spot.slug}/rutas/${o.slug}`, name: o.name, facts: otherRouteFacts(o) }))}

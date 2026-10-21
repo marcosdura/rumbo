@@ -8,17 +8,11 @@ import Link from "next/link"
 import SpotCard from "@/components/spots/SpotCard"
 import ProfileSubpage from "@/app/profile/ProfileSubpage"
 import { useFavoritesStore } from "@/store/favoritesStore"
-import type { SpotListItem } from "@/lib/types"
-
-// SpotCard y el store son .js/.jsx.
-const Card = SpotCard as unknown as (p: { spot: SpotListItem }) => React.ReactElement
-type FavoritesState = { favorites: SpotListItem[]; loading: boolean; loadFavorites: (t: string) => Promise<void> }
-const useFavorites = useFavoritesStore as unknown as <T>(selector: (s: FavoritesState) => T) => T
 
 function Favorites({ token }: { token: string }) {
-  const favorites = useFavorites(s => s.favorites)
-  const loading = useFavorites(s => s.loading)
-  const loadFavorites = useFavorites(s => s.loadFavorites)
+  const favorites = useFavoritesStore(s => s.favorites)
+  const loading = useFavoritesStore(s => s.loading)
+  const loadFavorites = useFavoritesStore(s => s.loadFavorites)
 
   useEffect(() => { loadFavorites(token) }, [token, loadFavorites])
 
@@ -47,13 +41,13 @@ function Favorites({ token }: { token: string }) {
         .favs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         @media (max-width: 640px) { .favs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
       `}</style>
-      {favorites.map(spot => <Card key={spot.id} spot={spot} />)}
+      {favorites.map(spot => <SpotCard key={spot.id} spot={spot} />)}
     </div>
   )
 }
 
 export default function FavoritesPage() {
-  const count = useFavorites(s => s.favorites.length)
+  const count = useFavoritesStore(s => s.favorites.length)
   return (
     <ProfileSubpage title="Favoritos" count={count}>
       {token => <Favorites token={token} />}

@@ -1,11 +1,20 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, type CSSProperties } from "react"
 import { createPortal } from "react-dom"
 import { CldImage } from "next-cloudinary"
 import { useModalA11y } from "@/lib/useModalA11y"
 
-function ImageGallery({ images, name, startIndex = 0, onClose }) {
+// Las fotos en grande, una por vez, con flechas (también del teclado) y
+// miniaturas abajo.
+export type GalleryImage = { cloudinary_public_id: string }
+
+function ImageGallery({ images, name, startIndex = 0, onClose }: {
+  images: GalleryImage[]
+  name: string
+  startIndex?: number
+  onClose: () => void
+}) {
   const [current, setCurrent] = useState(startIndex)
   // Escape, focus trap, restauración de foco y scroll lock salen del hook.
   const panelRef = useModalA11y(true, onClose)
@@ -18,7 +27,7 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
 
   // Las flechas sí son propias de la galería.
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") prev()
       if (e.key === "ArrowRight") next()
     }
@@ -155,7 +164,7 @@ function ImageGallery({ images, name, startIndex = 0, onClose }) {
   )
 }
 
-const arrowStyle = (side) => ({
+const arrowStyle = (side: "left" | "right"): CSSProperties => ({
   position: "absolute",
   top: "50%",
   [side]: 16,

@@ -3,20 +3,27 @@
 // Las características de una ruta (dificultad, circular, nivel técnico y
 // físico) como pills sueltas: van en la misma fila que sus datos (distancia,
 // duración...). Antes eran una tarjeta aparte, lejos de los datos.
-import Pill from "@/components/ui/Pill"
+import Pill, { type PillVariant } from "@/components/ui/Pill"
 
-const DIFFICULTY_CONFIG = {
+const DIFFICULTY_CONFIG: Record<string, { variant: PillVariant; dot: string }> = {
   "fácil":    { variant: "green",  dot: "🟢" },
   "moderado": { variant: "yellow", dot: "🟡" },
   "difícil":  { variant: "red",    dot: "🔴" },
 }
 
-const LEVEL_VARIANT = { "bajo": "green", "medio": "yellow", "alto": "red" }
+const LEVEL_VARIANT: Record<string, PillVariant> = { "bajo": "green", "medio": "yellow", "alto": "red" }
 
-export default function TrekkingRouteTraits({ route }) {
+export type RouteTraitsData = {
+  difficulty?: string | null
+  route_type?: string | null
+  technical_level?: string | null
+  physical_demand?: string | null
+}
+
+export default function TrekkingRouteTraits({ route }: { route: RouteTraitsData | null }) {
   if (!route) return null
 
-  const items = []
+  const items: { variant: PillVariant; label: string }[] = []
 
   if (route.difficulty) {
     const conf = DIFFICULTY_CONFIG[route.difficulty]

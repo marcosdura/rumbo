@@ -1,6 +1,7 @@
 "use client"
 
 import Pill from "@/components/ui/Pill"
+import type { TrekkingDetail } from "@/lib/types"
 
 const AMENITIES = [
   { key: "bathrooms",     label: "Baños",            emoji: "🚽" },
@@ -11,11 +12,14 @@ const AMENITIES = [
   { key: "fire_pits",     label: "Fogones",           emoji: "🔥" },
   { key: "shelter",       label: "Refugio",           emoji: "🏠" },
   { key: "accessible",    label: "Accesible",         emoji: "♿" },
-]
+] as const
 
 // title: en la página de una ruta dice de qué lugar son ("Características
 // de Cerro Arequita"); en la del lugar, "Características del lugar".
-export default function TrekkingAmenitiesCard({ trekkingDetail, title = "Características del lugar" }) {
+export default function TrekkingAmenitiesCard({ trekkingDetail, title = "Características del lugar" }: {
+  trekkingDetail?: TrekkingDetail | null
+  title?: string
+}) {
   if (!trekkingDetail) return null
 
   const badges = AMENITIES.filter(a => trekkingDetail[a.key] !== null && trekkingDetail[a.key] !== undefined)

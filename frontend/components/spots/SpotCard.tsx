@@ -6,17 +6,31 @@ import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import Pill from "@/components/ui/Pill"
 import { CldImage } from 'next-cloudinary'
-import { PETS_EMOJI, factsLine, ratingLabel } from "@/lib/spotCard"
+import { PETS_EMOJI, factsLine, ratingLabel, type CardSpot } from "@/lib/spotCard"
+import type { SpotListItem } from "@/lib/types"
 import "./SpotCard.css"
 
-const CATEGORY_EMOJI = {
+const CATEGORY_EMOJI: Record<string, string> = {
   Camping: "🏕️", Glamping: "🛖", Trekking: "🥾",
   Escalada: "🧗", Surf: "🏄", Kayak: "🛶", Motorhome: "🚐",
 }
 
-function SpotCard({ spot, isHighlighted = false, activeCategory, priority = false }) {
+// Lo que muestra una card: los datos del listado (GET /spots, home, cercanos, favoritos).
+export type SpotCardData = SpotListItem & CardSpot & {
+  department?: string | null
+  images?: { cloudinary_public_id: string; is_main?: boolean }[]
+}
+
+function SpotCard({ spot, isHighlighted = false, activeCategory, priority = false }: {
+  spot: SpotCardData
+  isHighlighted?: boolean
+  // La actividad buscada: si no es la principal del lugar, la card la dice igual.
+  activeCategory?: string
+  // La primera fila de la home: sin lazy (se ve apenas carga).
+  priority?: boolean
+}) {
   const [showExtraCategories, setShowExtraCategories] = useState(false)
-  const [extraCategoriesPos, setExtraCategoriesPos] = useState(null)
+  const [extraCategoriesPos, setExtraCategoriesPos] = useState<{ left: number; bottom: number } | null>(null)
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
   // Con mouse, las categorías extra se ven al pasar por encima; en pantallas
@@ -132,7 +146,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
                       }}
                     >
                       {extraCategories.map(c => (
-                        <span key={c.id ?? c.name}>{`${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()}</span>
+                        <span key={c.name}>{`${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()}</span>
                       ))}
                     </div>,
                     document.body

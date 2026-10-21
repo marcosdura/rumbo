@@ -13,7 +13,6 @@ import { api, ApiError } from "@/lib/api"
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, uploadImageToCloudinary } from "@/lib/uploadImage"
 import type { ItemPhoto, PhotoTarget } from "@/lib/trailPage"
 
-const Gallery = ImageGallery as unknown as (p: { images: ItemPhoto[]; name: string; startIndex: number; onClose: () => void }) => React.ReactElement
 
 const addButton = {
   padding: "7px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, fontFamily: "inherit",
@@ -140,7 +139,7 @@ export default function ItemPhotos({ photos, slots, target, targetId, spotId, na
         )}
       </ConfirmModal>
 
-      {galleryIndex !== null && <Gallery images={photos} name={name} startIndex={galleryIndex} onClose={() => setGalleryIndex(null)} />}
+      {galleryIndex !== null && <ImageGallery images={photos} name={name} startIndex={galleryIndex} onClose={() => setGalleryIndex(null)} />}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="subir fotos" />}
     </div>
   )

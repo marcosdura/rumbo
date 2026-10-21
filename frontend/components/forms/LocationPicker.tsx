@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import dynamic from "next/dynamic"
 
 const LocationPickerMap = dynamic(
@@ -17,7 +17,7 @@ const LocationPickerMap = dynamic(
   }
 )
 
-function parseGoogleMapsUrl(url) {
+function parseGoogleMapsUrl(url: string) {
   // @lat,lng,Xz  —  most Google Maps share URLs
   const atMatch = url.match(/@(-?\d+\.?\d+),(-?\d+\.?\d+)/)
   if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) }
@@ -27,20 +27,26 @@ function parseGoogleMapsUrl(url) {
   return null
 }
 
-export default function LocationPicker({ lat, lng, onLocationSelect }) {
+// Elegir la ubicación de un lugar: tocando el mapa o pegando un link de
+// Google Maps (también los cortos, que se resuelven en /api/resolve-url).
+export default function LocationPicker({ lat, lng, onLocationSelect }: {
+  lat: number | null
+  lng: number | null
+  onLocationSelect: (lat: number, lng: number) => void
+}) {
   const [linkInput, setLinkInput]     = useState("")
-  const [linkError, setLinkError]     = useState(null)
+  const [linkError, setLinkError]     = useState<string | null>(null)
   const [linkSuccess, setLinkSuccess] = useState(false)
   const [flyTrigger, setFlyTrigger]   = useState(0)
   const [resolving, setResolving]     = useState(false)
 
-  function handleMapSelect(newLat, newLng) {
+  function handleMapSelect(newLat: number, newLng: number) {
     setLinkError(null)
     setLinkSuccess(false)
     onLocationSelect(newLat, newLng)
   }
 
-  async function handleLinkChange(e) {
+  async function handleLinkChange(e: ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
     setLinkInput(val)
     setLinkError(null)

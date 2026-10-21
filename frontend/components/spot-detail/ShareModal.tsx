@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useModalA11y } from "@/lib/useModalA11y"
 
-function ShareModal({ name, onClose }) {
+function ShareModal({ name, onClose }: { name: string; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const panelRef = useModalA11y(true, onClose)
 

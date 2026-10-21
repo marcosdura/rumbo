@@ -1,19 +1,30 @@
-// store/favoritesStore.js
-// Instalá zustand si no lo tenés: npm install zustand
-
+// Los favoritos de quien tiene sesión, con una copia en localStorage por si
+// el servidor no responde. Agregar y quitar son optimistas: se ven al
+// instante y se revierten si el backend falla.
 import { create } from "zustand"
 import { signOut, getSession } from "next-auth/react"
 import { trackEvent } from "@/lib/analytics"
 import { api, ApiError } from "@/lib/api"
+import type { SpotListItem } from "@/lib/types"
+
+export type FavoritesState = {
+  favorites: SpotListItem[]
+  loading: boolean
+  error: string | null
+  loadFavorites: (token: string) => Promise<void>
+  addFavorite: (spot: SpotListItem, token: string) => Promise<void>
+  removeFavorite: (spotId: number, token: string) => Promise<void>
+  isFavorite: (spotId: number) => boolean
+}
 
 const CACHE_KEY = "rumbo_favorites"
 
 // ─── Helpers localStorage ─────────────────────────────────────────────────────
-const saveCache = (favorites) => {
+const saveCache = (favorites: SpotListItem[]) => {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(favorites)) } catch {}
 }
 
-const readCache = () => {
+const readCache = (): SpotListItem[] => {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     return raw ? JSON.parse(raw) : []
@@ -24,8 +35,8 @@ const readCache = () => {
 // el refresh silencioso de NextAuth todavía no corrió (el poll de sesión es
 // cada 5 min). Antes de desloguear, forzamos un refresh de sesión y
 // reintentamos una vez con el token fresco.
-const requestWithRefresh = async (method, path, token) => {
-  const call = (t) => (method === "post" ? api.post(path, undefined, { token: t }) : api.del(path, { token: t }))
+const requestWithRefresh = async (method: "post" | "del", path: string, token: string) => {
+  const call = (t: string) => (method === "post" ? api.post(path, undefined, { token: t }) : api.del(path, { token: t }))
   try {
     return await call(token)
   } catch (e) {
@@ -40,7 +51,7 @@ const requestWithRefresh = async (method, path, token) => {
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export const useFavoritesStore = create((set, get) => ({
+export const useFavoritesStore = create<FavoritesState>((set, get) => ({
   favorites: [],
   loading: false,
   error: null,
@@ -49,12 +60,12 @@ export const useFavoritesStore = create((set, get) => ({
   loadFavorites: async (token) => {
     set({ loading: true, error: null })
     try {
-      const { data } = await api.get("/favorites", { token })
+      const { data } = await api.get<SpotListItem[]>("/favorites", { token })
       saveCache(data)
       set({ favorites: data, loading: false })
     } catch (err) {
       // Si falla el servidor, usa el cache local
-      set({ favorites: readCache(), loading: false, error: err.message })
+      set({ favorites: readCache(), loading: false, error: err instanceof Error ? err.message : "Error" })
     }
   },
 

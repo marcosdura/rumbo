@@ -38,6 +38,7 @@ import type { DetailSpot } from "@/lib/spotDetail"
 import type { Amenity } from "@/components/spot-detail/CampingCard"
 import type { GlampingAmenities } from "@/components/spot-detail/GlampingAmenitiesList"
 import type { SpotPhoto } from "@/components/spot-detail/SpotImages"
+import type { TrekkingDetail } from "@/lib/types"
 
 // Lo que trae GET /spots/by-slug/{slug} (y la vista previa). Los paneles de
 // cada categoría (.jsx) leen más campos de los que se listan acá.
@@ -61,7 +62,7 @@ export type SpotPageData = DetailSpot & {
   camping_detail?: unknown
   glamping_amenities?: GlampingAmenities | null
   motorhome_detail?: unknown
-  trekking_detail?: unknown
+  trekking_detail?: TrekkingDetail | null
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
