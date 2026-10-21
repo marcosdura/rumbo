@@ -425,7 +425,7 @@ function SpotDetail({ spot, preview = false }) {
               {orderedStayCards}
 
               {(spot.category?.name === "Camping" || spot.category?.name === "Glamping" || spot.category?.name === "Motorhome") && (
-                <ExperienciasSection spotId={spot.id} />
+                <ExperienciasSection experiences={spot.experiences} />
               )}
 
               {/* Escuela de surf o servicio de kayak: sus datos propios. */}

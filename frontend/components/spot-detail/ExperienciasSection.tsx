@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { api } from "@/lib/api"
-
-interface Experience {
+// Las experiencias vienen con el lugar (GET /spots/by-slug): antes este
+// componente las volvía a pedir al backend desde el navegador.
+export interface Experience {
   id: number
   title: string
   description: string | null
@@ -12,6 +11,8 @@ interface Experience {
   schedule: string | null
   contact: string | null
   category: { id: number; name: string } | null
+  // Las pausadas por el dueño no se muestran.
+  is_active?: boolean
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
@@ -23,15 +24,8 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   Pesca:     "🎣",
 }
 
-export default function ExperienciasSection({ spotId }: { spotId: number }) {
-  const [experiences, setExperiences] = useState<Experience[]>([])
-
-  useEffect(() => {
-    api.get<Experience[]>(`/spots/${spotId}/experiences`)
-      .then(({ data }) => setExperiences(Array.isArray(data) ? data : []))
-      .catch(() => {})
-  }, [spotId])
-
+export default function ExperienciasSection({ experiences: all = [] }: { experiences?: Experience[] }) {
+  const experiences = all.filter(e => e.is_active !== false)
   if (experiences.length === 0) return null
 
   return (
