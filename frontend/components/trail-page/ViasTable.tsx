@@ -3,7 +3,8 @@
 // Las vías de un sector. Tocar una fila la abre ahí mismo: descripción
 // completa y sus fotos, con el botón para subir (antes la descripción se
 // cortaba y en el celular no se veía). En escalada se dice "vía" (antes la
-// tabla decía "rutas" y el botón "Sugerir una vía").
+// tabla decía "rutas" y el botón "Sugerir una vía"). Se pueden abrir
+// varias a la vez; con dos o más abiertas aparece "Cerrar todas".
 import { useState } from "react"
 import Pill from "@/components/ui/Pill"
 import ItemPhotos from "./ItemPhotos"
@@ -12,7 +13,12 @@ import { gradeVariant, type Via } from "@/lib/trailPage"
 const head = { fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", margin: 0 } as const
 
 export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: number }) {
-  const [openId, setOpenId] = useState<number | null>(null)
+  const [openIds, setOpenIds] = useState<ReadonlySet<number>>(new Set())
+  const toggle = (id: number) => setOpenIds(prev => {
+    const next = new Set(prev)
+    if (!next.delete(id)) next.add(id)
+    return next
+  })
 
   if (vias.length === 0) {
     return <p style={{ fontSize: 14, color: "var(--muted)", textAlign: "center", padding: "24px 0", margin: 0 }}>Todavía no hay vías cargadas en este sector.</p>
@@ -31,6 +37,10 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
         .via-item.is-open button.via-row { background: #eef7f1; border-radius: 11px 11px 0 0; }
         .via-chevron { color: var(--muted); font-size: 14px; line-height: 1; transition: transform 0.2s; display: inline-block; }
         .via-item.is-open .via-chevron { transform: rotate(90deg); color: var(--primary); }
+        .via-close-all {
+          font-family: inherit; font-size: 12px; font-weight: 600; color: #3d3d3a; cursor: pointer;
+          background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px;
+        }
         .via-detail { padding: 12px 16px 18px 48px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid #dcefe3; }
         @media (max-width: 640px) {
           .via-row { grid-template-columns: 16px 2fr 1fr 1fr; }
@@ -38,6 +48,11 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
           .via-detail { padding: 10px 12px 16px; }
         }
       `}</style>
+      {openIds.size >= 2 && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <button type="button" className="via-close-all btn-hover" onClick={() => setOpenIds(new Set())}>Cerrar todas ({openIds.size})</button>
+        </div>
+      )}
       <div className="via-row" style={{ borderBottom: "1px solid #ede9e1", borderRadius: 0, paddingTop: 0 }}>
         <span />
         <p style={head}>Nombre</p>
@@ -47,7 +62,7 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
         <p className="via-col-desc" style={head}>Descripción</p>
       </div>
       {vias.map((v, i) => {
-        const open = openId === v.id
+        const open = openIds.has(v.id)
         return (
           <div key={v.id} className={`via-item${open ? " is-open" : ""}`}>
             <button
@@ -55,7 +70,7 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
               className="via-row"
               aria-expanded={open}
               aria-controls={`via-${v.id}`}
-              onClick={() => setOpenId(open ? null : v.id)}
+              onClick={() => toggle(v.id)}
             >
               {/* La flecha, a la izquierda: indica que la fila se abre. */}
               <span aria-hidden="true" className="via-chevron">›</span>

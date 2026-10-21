@@ -31,6 +31,21 @@ describe("ViasTable", () => {
     expect(card.className).not.toContain("is-open")
   })
 
+  it("se abren varias a la vez; con dos o más abiertas, «Cerrar todas» las cierra", () => {
+    render(<ViasTable vias={[via(1, "La Diagonal"), via(2, "El Techo"), via(3, "La Fisura")]} spotId={3} />)
+    const row = (name: string) => screen.getByRole("button", { name: new RegExp(name) })
+    fireEvent.click(row("La Diagonal"))
+    expect(screen.queryByRole("button", { name: /Cerrar todas/ })).toBeNull()
+    fireEvent.click(row("El Techo"))
+    expect(row("La Diagonal").getAttribute("aria-expanded")).toBe("true")
+    expect(row("El Techo").getAttribute("aria-expanded")).toBe("true")
+    expect(screen.getByText("fotos de La Diagonal")).toBeTruthy()
+    expect(screen.getByText("fotos de El Techo")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar todas (2)" }))
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0)
+    expect(screen.queryByRole("button", { name: /Cerrar todas/ })).toBeNull()
+  })
+
   it("sin vías, lo dice", () => {
     render(<ViasTable vias={[]} spotId={3} />)
     expect(screen.getByText("Todavía no hay vías cargadas en este sector.")).toBeTruthy()
