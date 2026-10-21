@@ -33,6 +33,8 @@ export default function ViasTable({ vias, spotId }: { vias: Via[]; spotId: numbe
            quedaba suelto debajo y no se veía de qué vía era. Abrir solo cambia
            colores (sin margen ni borde nuevo), así las filas no se corren. */
         .via-item { border: 1px solid transparent; border-radius: 12px; transition: background 0.15s, border-color 0.15s; }
+        /* Aire entre una vía y la siguiente (siempre igual: abrir no lo cambia). */
+        .via-item + .via-item { margin-top: 6px; }
         .via-item.is-open { background: #fff; border-color: #b7dfc8; }
         .via-item.is-open button.via-row { background: #eef7f1; border-radius: 11px 11px 0 0; }
         .via-chevron { color: var(--muted); font-size: 14px; line-height: 1; transition: transform 0.2s; display: inline-block; }

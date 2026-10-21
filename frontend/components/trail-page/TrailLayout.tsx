@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import ShareButton from "@/components/ui/ShareButton"
+import Pill from "@/components/ui/Pill"
 import type { Stat, TrailSpot } from "@/lib/trailPage"
 
 export function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
@@ -50,12 +51,15 @@ export function StatGrid({ stats, compact = false }: { stats: Stat[]; compact?: 
       <ul className="trail-stats-compact">
         {stats.map(s => (
           <li key={s.label}>
-            <span aria-hidden="true">{s.icon}</span>
-            <strong>{s.value}</strong>
-            {/* "2 vías" ya dice qué es: sin repetir "Vías" al lado. */}
-            {!String(s.value).toLowerCase().includes(s.label.toLowerCase()) && (
-              <span className="trail-stats-compact-label">{s.label}</span>
-            )}
+            {/* La misma pill que el resto de la app (con su hover). */}
+            <Pill variant="neutral" size="lg" hover>
+              <span aria-hidden="true">{s.icon}</span>
+              <strong>{s.value}</strong>
+              {/* "2 vías" ya dice qué es: sin repetir "Vías" al lado. */}
+              {!String(s.value).toLowerCase().includes(s.label.toLowerCase()) && (
+                <span className="trail-stats-compact-label">{s.label}</span>
+              )}
+            </Pill>
           </li>
         ))}
       </ul>
@@ -89,16 +93,7 @@ export default function TrailLayout({ spot, eyebrow, title, children }: {
         .trail-back:hover { color: #1b1b19; }
         .trail-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
         .trail-stats-compact { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
-        .trail-stats-compact li {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
-          font-size: 13px; color: #1b1b19;
-        }
-        /* Hover: el de las pills (.pill-hover, globals.css), en verde. */
-        .trail-stats-compact li { transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
-        @media (hover: hover) {
-          .trail-stats-compact li:hover { background: #f0f7f3; border-color: #b7dfc8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
-        }
+        .trail-stats-compact li { display: inline-flex; }
         .trail-stats-compact strong { font-weight: 700; }
         /* Los datos de una ruta o un sector, juntos en una fila de pills. */
         .trail-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

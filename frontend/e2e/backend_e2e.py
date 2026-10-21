@@ -97,7 +97,8 @@ def seed():
         return s
 
     cerro = spot("Cerro de Prueba", 2)
-    db.add(Route(spot_id=cerro.id, name="Sendero Uno", slug="sendero-uno"))
+    # Con datos, para que la página de la ruta muestre sus pills.
+    db.add(Route(spot_id=cerro.id, name="Sendero Uno", slug="sendero-uno", distance_km=8.5, duration_hours=3, difficulty="moderado", route_type="circular"))
     roca = spot("Roca de Prueba", 3)
     db.add(ClimbingSector(spot_id=roca.id, name="Sector Norte", slug="sector-norte"))
     playa = spot("Playa de Prueba", 4, department="Rocha")

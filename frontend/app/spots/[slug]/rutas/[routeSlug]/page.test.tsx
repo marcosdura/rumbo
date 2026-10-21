@@ -88,6 +88,11 @@ describe("página de la ruta", () => {
     // Los datos, como las pills del sector (no recuadros grandes).
     expect(facts.querySelector(".trail-stats-compact")).toBeTruthy()
     expect(container.querySelector(".trail-stats")).toBeNull()
+    // Todas son la Pill de la app (con su hover y sin seleccionar el texto).
+    const pills = [...facts.querySelectorAll(".pill-hover")] as HTMLElement[]
+    expect(pills.map(p => p.textContent)).toEqual(expect.arrayContaining(["📏4 kmDistancia", "⏱️1,5 hDuración", "🟡 Moderado", "🔁 circular"]))
+    expect(pills.length).toBe(facts.querySelectorAll("li").length + 2)
+    expect(pills.every(p => p.style.userSelect === "none")).toBe(true)
   })
 
   it("las características del lugar dicen de qué lugar son", async () => {
