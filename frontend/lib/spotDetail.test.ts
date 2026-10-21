@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { cameFromRumbo, detailRows, directionsUrl, offSeasonNotice, seasonLabel, shareImageUrl, whatsappUrl } from "./spotDetail"
+import { cameFromRumbo, detailRows, directionsUrl, lastUpdatedLabel, offSeasonNotice, seasonLabel, shareImageUrl, whatsappUrl } from "./spotDetail"
 
 const labels = (rows: { label: string; value: string }[]) => rows.map(r => `${r.label}: ${r.value}`)
 
@@ -61,5 +61,18 @@ describe("Al compartir", () => {
   it("la foto va recortada a 1200×630, no la original", () => {
     expect(shareImageUrl("rumbo", "rumbo/spots/1/foto"))
       .toBe("https://res.cloudinary.com/rumbo/image/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/rumbo/spots/1/foto")
+  })
+})
+
+describe("Última actualización", () => {
+  it("la fecha larga, en hora de Uruguay", () => {
+    expect(lastUpdatedLabel("2026-10-21T15:00:00+00:00")).toBe("Última actualización: 21 de octubre de 2026")
+    // Pasada la medianoche en UTC, en Uruguay todavía es el día anterior.
+    expect(lastUpdatedLabel("2026-10-22T01:30:00+00:00")).toBe("Última actualización: 21 de octubre de 2026")
+  })
+
+  it("sin fecha (o inválida), nada", () => {
+    expect(lastUpdatedLabel(null)).toBeNull()
+    expect(lastUpdatedLabel("cualquier cosa")).toBeNull()
   })
 })

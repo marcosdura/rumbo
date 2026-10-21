@@ -44,6 +44,14 @@ afterEach(() => {
   viewer = { is_owner: false, is_admin: false, pending: [] }
 })
 
+describe("Página del lugar: está al día", () => {
+  it("dice cuándo se actualizó y al lado deja reportar", async () => {
+    render(<SpotDetail spot={spot("Camping", { info_updated_at: "2026-10-21T15:00:00+00:00" })} />)
+    const label = await screen.findByText("Última actualización: 21 de octubre de 2026")
+    expect(label.parentElement!.textContent).toContain("Reportar este lugar")
+  })
+})
+
 describe("Página del lugar: accesos para sumar contenido", () => {
   it("escalada sin sectores invita a sugerir uno, aun sin sesión", async () => {
     render(<SpotDetail spot={spot("Escalada")} />)

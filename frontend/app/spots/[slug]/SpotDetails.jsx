@@ -37,7 +37,7 @@ import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/s
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
 import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
-import { cameFromRumbo, offSeasonNotice } from "@/lib/spotDetail"
+import { cameFromRumbo, lastUpdatedLabel, offSeasonNotice } from "@/lib/spotDetail"
 import { activityHref, departmentHref } from "@/lib/places"
 import NearbySpots from "@/components/spot-detail/NearbySpots"
 import Link from "next/link"
@@ -453,13 +453,16 @@ function SpotDetail({ spot, preview = false }) {
 
               <NearbySpots spotId={spot.id} />
 
-              {/* El dueño no reporta su propio lugar (el backend tampoco lo deja). */}
-              {!viewer.is_owner && (
-                <div style={{ textAlign: "right" }}>
+              {/* Cuándo cambió por última vez la información, y al lado cómo
+                  avisar si algo ya no es así. El dueño no reporta su propio
+                  lugar (el backend tampoco lo deja). */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>{lastUpdatedLabel(spot.info_updated_at)}</p>
+                {!viewer.is_owner && (
                   <ReportButton targetKind="spot" targetId={spot.id} what="este lugar" label="⚑ Reportar este lugar"
                     className="text-btn" style={{ fontSize: 12 }} />
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
           </main>

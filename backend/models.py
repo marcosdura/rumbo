@@ -2,7 +2,7 @@ from sqlalchemy import CheckConstraint, Column, Integer, String, ForeignKey, Flo
 from database import Base
 from sqlalchemy import event
 from sqlalchemy.orm import Session, relationship, with_loader_criteria
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.sql import func
 
 
@@ -48,6 +48,11 @@ class SpotDB(Base):
     # Índice: es la columna de ORDER BY de get_spots — ordenar + LIMIT/OFFSET
     # sin índice acá es el peor caso posible para paginar.
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    # Última vez que cambió la información pública del lugar: sus datos, fotos,
+    # detalles, rutas, sectores, vías o experiencias, o se aprobó un aporte.
+    # La mantiene sola touch_spot_info (abajo); la página muestra "Última
+    # actualización". Las reseñas y las visitas no cuentan.
+    info_updated_at = Column(DateTime(timezone=True), nullable=True)
 
     # None = abierto todo el año
     season_start = Column(Integer, nullable=True)  # 1–12
@@ -703,3 +708,57 @@ def hide_pending_contributions(state):
         state.statement = state.statement.options(
             with_loader_criteria(ReviewedContent, lambda cls: cls.is_approved == True, include_aliases=True)
         )
+
+
+
+# Lo que cambia del lugar sin cambiar su información pública: moderación,
+# baja del dueño y la propia fecha.
+SPOT_META_FIELDS = {"owner_deleted_at", "rejection_reason", "rejected_at", "info_updated_at", "owner_email", "owner_phone"}
+
+
+def _changed(obj) -> bool:
+    from sqlalchemy import inspect
+    return any(attr.history.has_changes() for attr in inspect(obj).attrs if attr.key not in SPOT_META_FIELDS)
+
+
+def _spot_id_of(session: Session, obj):
+    if isinstance(obj, ClimbingRoute):
+        sector = session.get(ClimbingSector, obj.sector_id) if obj.sector_id else None
+        return sector.spot_id if sector else None
+    return getattr(obj, "spot_id", None)
+
+
+@event.listens_for(Session, "before_flush")
+def touch_spot_info(session, flush_context, instances):
+    """Pone la fecha de "Última actualización" del lugar cuando cambia algo de
+    su información pública (SpotDB.info_updated_at). Lo que está en revisión
+    no cuenta hasta que se aprueba: aprobarlo es el cambio."""
+    now = datetime.now(timezone.utc)
+    touched: set[int] = set()
+    with session.no_autoflush:
+        for obj in list(session.new) + list(session.dirty) + list(session.deleted):
+            if isinstance(obj, SpotDB):
+                if obj in session.new or (obj in session.dirty and _changed(obj)):
+                    obj.info_updated_at = now
+                continue
+            if not isinstance(obj, SPOT_INFO_MODELS):
+                continue
+            if obj in session.dirty and not _changed(obj):
+                continue
+            # Un aporte en revisión no cambia lo que se ve.
+            if getattr(obj, "is_approved", True) is False:
+                continue
+            spot_id = _spot_id_of(session, obj)
+            if spot_id:
+                touched.add(spot_id)
+        for spot_id in touched:
+            spot = session.get(SpotDB, spot_id)
+            if spot is not None:
+                spot.info_updated_at = now
+
+
+SPOT_INFO_MODELS = (
+    SpotCategory, SpotAmenity, SpotImage, CampingDetail, GlampingDetail, GlampingAmenity, MotorhomeDetail,
+    SurfDetail, KayakServiceDetail, TrekkingDetail, Route, ClimbingSector, ClimbingRoute, ItemPhoto,
+    RouteTrack, Experience,
+)

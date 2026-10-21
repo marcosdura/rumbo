@@ -404,6 +404,8 @@ class SpotResponse(BaseModel):
     season_end:   Optional[int] = None  # 1–12
     slug: str | None = None
     created_at: datetime
+    # "Última actualización" de la página del lugar (models.touch_spot_info).
+    info_updated_at: datetime | None = None
     suggested_by_visitor: bool = False
     pets_allowed: bool | None = None
     reservation_required: bool | None = None

@@ -739,6 +739,8 @@ def spot_detail(db: Session, spot: SpotDB) -> dict:
         # Para la vista previa (en la página pública siempre es True).
         "is_approved": bool(spot.is_approved),
         "created_at": spot.created_at,
+        # "Última actualización" (models.touch_spot_info).
+        "info_updated_at": spot.info_updated_at or spot.created_at,
         "category": spot.category,
         "categories": [sc.category for sc in spot.spot_categories],
         "camping_detail": spot.camping_detail,

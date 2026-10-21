@@ -67,3 +67,14 @@ export function whatsappUrl(phone: string, spotName: string): string {
   const text = `Hola, te escribo por ${spotName}, que vi en Rumbo.`
   return `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`
 }
+
+// "Última actualización: 21 de octubre de 2026" (info_updated_at, que el
+// backend mueve cuando cambia la información del lugar). En hora de
+// Uruguay, así el servidor y el navegador muestran el mismo día.
+export function lastUpdatedLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  const day = new Intl.DateTimeFormat("es-UY", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Montevideo" }).format(date)
+  return `Última actualización: ${day}`
+}
