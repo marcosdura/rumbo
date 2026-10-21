@@ -1,84 +1,58 @@
 "use client"
 
+// Las reseñas de un lugar: el promedio, escribir o editar la propia (con una
+// foto opcional que pasa por revisión), la lista paginada y borrar la propia.
+// La tarjeta y el formulario están en ReviewCard y ReviewForm.
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { StarDisplay, StarPicker } from "@/components/ui/StarRating"
+import { StarDisplay } from "@/components/ui/StarRating"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
-import ReportButton from "@/components/ui/ReportButton"
-import ItemPhotoPicker from "@/components/agregar-lugar/ui/ItemPhotoPicker"
 import ImageGallery from "@/components/spot-detail/ImageGallery"
-import { CldImage } from "next-cloudinary"
-
 import { trackEvent } from "@/lib/analytics"
-import { timeAgo } from "@/lib/notifications"
 import { api } from "@/lib/api"
 import { uploadImageToCloudinary } from "@/lib/uploadImage"
+import ReviewCard, { type Review, type ReviewPhoto } from "./ReviewCard"
+import ReviewForm from "./ReviewForm"
 
-function Avatar({ user, size = 36 }) {
-  const initials = user?.name
-    ? user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
-    : "?"
-
-  if (user?.image) {
-    return (
-      <img
-        src={user.image}
-        alt={user.name}
-        referrerPolicy="no-referrer"
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-      />
-    )
-  }
-
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: "linear-gradient(135deg, #52b788, var(--primary-dark))",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.38, fontWeight: 600, color: "#fff",
-    }}>
-      {initials}
-    </div>
-  )
-}
+type MyReview = { id: number; rating: number; comment: string | null; photo?: ReviewPhoto | null }
+type Summary = { average: number | null; total: number; my_review: MyReview | null }
 
 const REVIEWS_PAGE_SIZE = 10
 
-export default function ReviewsSection({ spotId }) {
+export default function ReviewsSection({ spotId }: { spotId: number }) {
   const { data: session } = useSession()
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsTotal, setReviewsTotal] = useState(0)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [summary, setSummary] = useState(null)
+  const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   // null = el form está creando. Con id = está editando esa reseña.
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [showAuth, setShowAuth] = useState(false)
-  const [deleteTargetId, setDeleteTargetId] = useState(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
   // Un error por operación: cargar la lista no es lo mismo que paginarla,
   // publicar o borrar — cada uno se muestra donde el usuario está mirando.
   const [loadError, setLoadError] = useState(false)
   const [moreError, setMoreError] = useState(false)
   const [submitError, setSubmitError] = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   // La foto de la reseña (una, opcional): se sube después de guardarla y
   // pasa por revisión (backend/item_photos.py).
-  const [photoFiles, setPhotoFiles] = useState([])
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
   // Qué pasó con la foto, para avisar arriba de la lista.
-  const [photoNotice, setPhotoNotice] = useState(null)
-  const [galleryPhoto, setGalleryPhoto] = useState(null)
+  const [photoNotice, setPhotoNotice] = useState<{ ok: boolean; text: string } | null>(null)
+  const [galleryPhoto, setGalleryPhoto] = useState<ReviewPhoto | null>(null)
   const [removingPhoto, setRemovingPhoto] = useState(false)
 
   const token = session?.id_token
 
   const basePath = `/reviews/${spotId}`
-  const deleteBasePath = "/reviews"
 
   // El error se limpia recién al cargar bien: mientras reintenta, "Cargando..."
   // tiene prioridad sobre el aviso de error.
@@ -86,11 +60,11 @@ export default function ReviewsSection({ spotId }) {
   // asíncrono el setState que va dentro de un callback.
   const loadReviews = () =>
     Promise.all([
-      api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
+      api.get<Review[]>(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: 0 } }),
       // Con token el summary devuelve además my_review: es la única forma de
       // saber si el usuario ya reseñó, porque su reseña puede estar en una
       // página que todavía no se cargó.
-      api.get(`${basePath}/summary`, { token }),
+      api.get<Summary>(`${basePath}/summary`, { token }),
     ])
       .then(([revResult, sumResult]) => {
         setReviews(Array.isArray(revResult.data) ? revResult.data : [])
@@ -110,7 +84,7 @@ export default function ReviewsSection({ spotId }) {
     setLoadingMore(true)
     setMoreError(false)
     try {
-      const { data, totalCount } = await api.get(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: reviews.length } })
+      const { data, totalCount } = await api.get<Review[]>(basePath, { token, params: { limit: REVIEWS_PAGE_SIZE, offset: reviews.length } })
       if (totalCount != null) setReviewsTotal(totalCount)
       setReviews(prev => [...prev, ...(Array.isArray(data) ? data : [])])
     } catch {
@@ -126,7 +100,7 @@ export default function ReviewsSection({ spotId }) {
   useEffect(() => { loadReviews() }, [spotId, token])
 
   // Abre el form en modo edición, precargado con lo que la reseña ya tiene.
-  const startEditing = (review) => {
+  const startEditing = (review: { id: number; rating: number; comment?: string | null }) => {
     setEditingId(review.id)
     setRating(review.rating)
     setComment(review.comment ?? "")
@@ -144,9 +118,9 @@ export default function ReviewsSection({ spotId }) {
   }
 
   // La foto que ya tiene la reseña que se está editando (publicada o en revisión).
-  const editingPhoto = editingId && summary?.my_review?.id === editingId ? summary.my_review.photo : null
+  const editingPhoto = editingId && summary?.my_review?.id === editingId ? summary.my_review.photo ?? null : null
 
-  const uploadPhoto = async (reviewId) => {
+  const uploadPhoto = async (reviewId: number) => {
     const { publicId } = await uploadImageToCloudinary(photoFiles[0], { spotId })
     await api.post("/photos", { target: "review", target_id: reviewId, public_ids: [publicId] }, { token })
   }
@@ -172,14 +146,14 @@ export default function ReviewsSection({ spotId }) {
     try {
       let reviewId = editingId
       if (editingId) {
-        await api.patch(`${deleteBasePath}/${editingId}`, { rating, comment }, { token })
+        await api.patch(`/reviews/${editingId}`, { rating, comment }, { token })
       } else {
-        const { data } = await api.post(basePath, { rating, comment }, { token })
+        const { data } = await api.post<{ id: number }>(basePath, { rating, comment }, { token })
         reviewId = data.id
         trackEvent("post_review", { entity_type: "spot", rating, spot_id: spotId })
       }
       // La reseña ya quedó: si la foto falla, se avisa sin perderla.
-      if (photoFiles.length > 0) {
+      if (photoFiles.length > 0 && reviewId) {
         try {
           await uploadPhoto(reviewId)
           setPhotoNotice({ ok: true, text: "⏳ ¡Gracias! Tu foto queda en revisión y se publica cuando el equipo de Rumbo la apruebe." })
@@ -204,7 +178,7 @@ export default function ReviewsSection({ spotId }) {
     setDeleting(true)
     setDeleteError(null)
     try {
-      await api.del(`${deleteBasePath}/${deleteTargetId}`, { token })
+      await api.del(`/reviews/${deleteTargetId}`, { token })
       loadReviews()
       setDeleteTargetId(null)
     } catch {
@@ -336,7 +310,7 @@ export default function ReviewsSection({ spotId }) {
             <p style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 22, fontWeight: 700, color: "#1b1b19", margin: 0 }}>
               Reseñas
             </p>
-            {summary?.total > 0 && (
+            {summary && summary.total > 0 && summary.average != null && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                 <span style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 36, fontWeight: 700, color: "#1b1b19", lineHeight: 1 }}>
                   {summary.average}
@@ -367,78 +341,20 @@ export default function ReviewsSection({ spotId }) {
           )}
         </div>
 
-        {/* Formulario */}
         {showForm && (
-          <div style={{ background: "#f7f5f0", border: "1px solid var(--border)", borderRadius: 16, padding: 20, marginBottom: 20 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--primary)", marginBottom: 10 }}>
-              {editingId ? "Editar tu reseña" : "Tu calificación"}
-            </p>
-            <StarPicker value={rating} onChange={setRating} />
-            <textarea
-              style={{
-                width: "100%", border: "1px solid var(--border)", borderRadius: 12,
-                padding: "12px 14px", fontSize: 14, fontFamily: "var(--font-dm-sans), sans-serif",
-                color: "#1b1b19", background: "#fff", resize: "none", outline: "none",
-                transition: "border-color 0.2s", marginTop: 14, boxSizing: "border-box",
-              }}
-              rows={3}
-              placeholder="Contá tu experiencia (opcional)..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              onFocus={e => e.target.style.borderColor = "var(--primary)"}
-              onBlur={e => e.target.style.borderColor = "var(--border)"}
-            />
-            <div style={{ marginTop: 14 }}>
-              {editingPhoto ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ position: "relative", width: 88, height: 64, borderRadius: 10, overflow: "hidden" }}>
-                    <CldImage src={editingPhoto.cloudinary_public_id} alt="La foto de tu reseña" fill sizes="88px" crop="fill" className="object-cover" />
-                  </div>
-                  <span style={{ fontSize: 12, color: "var(--muted-strong)" }}>{editingPhoto.pending ? "Tu foto está en revisión." : "Tu foto está publicada."}</span>
-                  <button type="button" className="text-btn" style={{ fontSize: 12 }} onClick={removePhoto} disabled={removingPhoto}>
-                    {removingPhoto ? "Sacando..." : "Sacar la foto"}
-                  </button>
-                </div>
-              ) : (
-                <ItemPhotoPicker label="Una foto (opcional)" files={photoFiles} onChange={setPhotoFiles} max={1} />
-              )}
-            </div>
-            {submitError && (
-              <p style={{ fontSize: 13, color: "var(--danger)", margin: "12px 0 0" }}>
-                {editingId
-                  ? "No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo."
-                  : "No se pudo publicar la reseña. Revisá tu conexión y probá de nuevo."}
-              </p>
-            )}
-            <div className="reviews-form-actions">
-              <button
-                style={{
-                  padding: "9px 16px", borderRadius: 12, fontSize: 14,
-                  fontFamily: "var(--font-dm-sans), sans-serif", fontWeight: 400,
-                  background: "none", color: "var(--muted)", border: "1px solid var(--border)", cursor: "pointer",
-                }}
-                onClick={closeForm}
-              >
-                Cancelar
-              </button>
-              <button
-                style={{
-                  padding: "9px 20px", borderRadius: 12, fontSize: 14,
-                  fontWeight: 600, fontFamily: "var(--font-dm-sans), sans-serif",
-                  background: "var(--primary-dark)", color: "#fff", border: "none",
-                  cursor: !rating || submitting ? "not-allowed" : "pointer",
-                  opacity: !rating || submitting ? 0.45 : 1,
-                  transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-                onClick={handleSubmit}
-                disabled={!rating || submitting}
-              >
-                {submitting
-                  ? "Enviando..."
-                  : editingId ? "Guardar cambios" : "Publicar reseña"}
-              </button>
-            </div>
-          </div>
+          <ReviewForm
+            editing={editingId !== null}
+            rating={rating} setRating={setRating}
+            comment={comment} setComment={setComment}
+            photoFiles={photoFiles} setPhotoFiles={setPhotoFiles}
+            editingPhoto={editingPhoto}
+            removingPhoto={removingPhoto}
+            onRemovePhoto={removePhoto}
+            submitError={submitError}
+            submitting={submitting}
+            onCancel={closeForm}
+            onSubmit={handleSubmit}
+          />
         )}
 
         {photoNotice && (
@@ -474,73 +390,13 @@ export default function ReviewsSection({ spotId }) {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {reviews.map((review) => (
-              <div key={review.id} className="review-card">
-                <div className="review-card-top">
-                  <div className="review-card-user">
-                    <Avatar user={review.user} />
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: "#1b1b19", margin: 0 }}>
-                        {review.user?.name || "Usuario"}
-                      </p>
-                      <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                        {timeAgo(review.created_at)}
-                        {review.updated_at && " · editado"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="review-card-actions">
-                    <StarDisplay rating={review.rating} size={14} />
-                    {!review.is_mine && (
-                      <ReportButton
-                        targetKind="review"
-                        targetId={review.id}
-                        what="esta reseña"
-                        className="reviews-edit-btn"
-                      />
-                    )}
-                    {review.is_mine && (
-                      <>
-                        <button
-                          className="reviews-edit-btn"
-                          onClick={() => startEditing(review)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="reviews-delete-btn"
-                          onClick={() => setDeleteTargetId(review.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {review.comment && (
-                  <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>
-                    {review.comment}
-                  </p>
-                )}
-                {review.photo && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-                    <button
-                      type="button"
-                      onClick={() => setGalleryPhoto(review.photo)}
-                      aria-label={`Ver la foto de la reseña de ${review.user?.name || "Usuario"}`}
-                      style={{ position: "relative", width: 120, height: 90, borderRadius: 12, overflow: "hidden", border: "none", padding: 0, cursor: "pointer" }}
-                    >
-                      <CldImage src={review.photo.cloudinary_public_id} alt={`Foto de la reseña de ${review.user?.name || "Usuario"}`} fill sizes="120px" crop="fill" gravity="auto" className="object-cover" loading="lazy" />
-                    </button>
-                    {review.photo.pending && <span style={{ fontSize: 12, color: "#78590a" }}>⏳ En revisión: solo vos la ves.</span>}
-                  </div>
-                )}
-              </div>
+            {reviews.map(review => (
+              <ReviewCard key={review.id} review={review} onEdit={startEditing} onDelete={setDeleteTargetId} onOpenPhoto={setGalleryPhoto} />
             ))}
 
             {moreError && (
               <p style={{ fontSize: 13, color: "var(--danger)", margin: "6px 0 0", textAlign: "center" }}>
-                No se pudieron cargar más reviews. Probá de nuevo.
+                No se pudieron cargar más reseñas. Probá de nuevo.
               </p>
             )}
 
@@ -555,7 +411,7 @@ export default function ReviewsSection({ spotId }) {
                   opacity: loadingMore ? 0.6 : 1,
                 }}
               >
-                {loadingMore ? "Cargando..." : `Ver más reviews (${reviewsTotal - reviews.length})`}
+                {loadingMore ? "Cargando..." : `Ver más reseñas (${reviewsTotal - reviews.length})`}
               </button>
             )}
           </div>
