@@ -73,186 +73,25 @@ def build_spots_filter_query(
             .distinct()
         )
 
-    is_trekking = activity == "Trekking"
-    routes_joined = False
-
-    if is_trekking and difficulty:
-        query = query.join(SpotDB.routes).filter(Route.difficulty.in_(difficulty))
-        routes_joined = True
-
-    if is_trekking and duration:
-        if not routes_joined:
-            query = query.join(SpotDB.routes)
-            routes_joined = True
-        dur_conds = []
-        for d in duration:
-            if d == "corta":   dur_conds.append(Route.duration_hours < 2)
-            elif d == "media": dur_conds.append(and_(Route.duration_hours >= 2, Route.duration_hours <= 5))
-            elif d == "larga": dur_conds.append(Route.duration_hours > 5)
-        if dur_conds:
-            query = query.filter(or_(*dur_conds))
-
-    if is_trekking and distance:
-        if not routes_joined:
-            query = query.join(SpotDB.routes)
-            routes_joined = True
-        dist_conds = []
-        for d in distance:
-            if d == "corta":   dist_conds.append(Route.distance_km < 5)
-            elif d == "media": dist_conds.append(and_(Route.distance_km >= 5, Route.distance_km <= 15))
-            elif d == "larga": dist_conds.append(Route.distance_km > 15)
-        if dist_conds:
-            query = query.filter(or_(*dist_conds))
-
-    if routes_joined:
-        query = query.distinct()
-
-    # Mascotas: dato del lugar, para cualquier actividad (antes era solo de
-    # trekking, y en camping un amenity aparte).
-    if pet_friendly is not None:
-        query = query.filter(SpotDB.pets_allowed == pet_friendly)
-    # Reserva y señal, como mascotas: datos del lugar, para cualquier actividad.
-    if reservation_required is not None:
-        query = query.filter(SpotDB.reservation_required == reservation_required)
-    if cell_signal is not None:
-        query = query.filter(SpotDB.cell_signal == cell_signal)
-
-    amenity_filters = {
-        "parking": parking,
-        "potable_water": potable_water,
-        "kids_friendly": kids_friendly,
-        "bathrooms": bathrooms,
-        "fire_pits": camping_amenity,
-    }
-    active_amenity = {k: v for k, v in amenity_filters.items() if v is not None}
-    if is_trekking and active_amenity:
-        query = query.outerjoin(SpotDB.trekking_detail)
-        for field, val in active_amenity.items():
-            query = query.filter(getattr(TrekkingDetail, field) == val)
-
-    # Surf y kayak: los filtros son de las escuelas y los servicios (lugares
-    # con surf_detail / kayak_service_detail); las playas y lagunas no los
-    # tienen, así que con un filtro puesto quedan afuera.
-    def ranges(column, values):
-        conds = []
-        for d in values or []:
-            if d == "corta":   conds.append(column < 2)
-            elif d == "media": conds.append(and_(column >= 2, column <= 5))
-            elif d == "larga": conds.append(column > 5)
-        return conds
-
+    if activity == "Trekking":
+        query = _trekking_filters(query, difficulty, duration, distance, {
+            "parking": parking, "potable_water": potable_water, "kids_friendly": kids_friendly,
+            "bathrooms": bathrooms, "fire_pits": camping_amenity,
+        }, place_flags=(pet_friendly, reservation_required, cell_signal))
+    else:
+        query = _place_flags(query, pet_friendly, reservation_required, cell_signal)
     if activity == "Kayak":
-        kayak_conds = []
-        if water_type:
-            kayak_conds.append(KayakServiceDetail.water_type.in_(water_type))
-        if kayak_difficulty:
-            kayak_conds.append(KayakServiceDetail.difficulty.in_(kayak_difficulty))
-        if ranges(KayakServiceDetail.duration, kayak_duration):
-            kayak_conds.append(or_(*ranges(KayakServiceDetail.duration, kayak_duration)))
-        if rental_available is not None:
-            kayak_conds.append(KayakServiceDetail.rental_available == rental_available)
-        if kayak_conds:
-            query = query.join(SpotDB.kayak_service_detail).filter(*kayak_conds)
-
+        query = _kayak_filters(query, water_type, kayak_difficulty, kayak_duration, rental_available)
     if activity == "Surf":
-        surf_conds = []
-        if class_type:
-            surf_conds.append(SurfDetail.class_type.in_(class_type))
-        if ranges(SurfDetail.duration, surf_duration):
-            surf_conds.append(or_(*ranges(SurfDetail.duration, surf_duration)))
-        if equipment_included is not None:
-            surf_conds.append(SurfDetail.equipment_include == equipment_included)
-        # "Solo escuelas": sin las playas.
-        if surf_conds or has_surf_school:
-            query = query.join(SpotDB.surf_detail).filter(*surf_conds)
-
-    is_climbing = activity == "Escalada"
-    climbing_joined = False
-
-    if is_climbing and climbing_type:
-        query = query.outerjoin(SpotDB.climbing_sectors).filter(ClimbingSector.type.in_(climbing_type))
-        climbing_joined = True
-
-    if is_climbing and grade_range:
-        if not climbing_joined:
-            query = query.outerjoin(SpotDB.climbing_sectors)
-            climbing_joined = True
-        query = query.outerjoin(ClimbingSector.routes)
-        gr_conds = []
-        for g in grade_range:
-            if g == "principiante": gr_conds.append(ClimbingRoute.grade <= "5c")
-            elif g == "intermedio": gr_conds.append(and_(ClimbingRoute.grade >= "6a", ClimbingRoute.grade <= "6c+"))
-            elif g == "avanzado":   gr_conds.append(and_(ClimbingRoute.grade >= "7a", ClimbingRoute.grade <= "7c+"))
-            elif g == "experto":    gr_conds.append(ClimbingRoute.grade >= "8a")
-        if gr_conds:
-            query = query.filter(or_(*gr_conds))
-
-    if is_climbing and no_restrictions:
-        if not climbing_joined:
-            query = query.outerjoin(SpotDB.climbing_sectors)
-            climbing_joined = True
-        query = query.filter(
-            or_(ClimbingSector.restrictions == None, ClimbingSector.restrictions == "")
-        )
-
-    if climbing_joined:
-        query = query.distinct()
-
-    is_camping = activity == "Camping"
-
-    if is_camping and amenity_ids:
-        for amenity_id in amenity_ids:
-            query = query.filter(
-                SpotDB.id.in_(
-                    db.query(SpotAmenity.spot_id)
-                    .filter(SpotAmenity.amenity_id == amenity_id)
-                    .scalar_subquery()
-                )
-            )
-
-    if is_camping and price_range:
-        # El precio del lugar: el que edita el dueño y muestra la card.
-        pr_conds = []
-        for p in price_range:
-            if p == "gratis":
-                pr_conds.append(or_(SpotDB.price == 0, SpotDB.price == None))
-            elif p == "bajo":
-                pr_conds.append(and_(SpotDB.price > 0, SpotDB.price < 300))
-            elif p == "medio":
-                pr_conds.append(and_(SpotDB.price >= 300, SpotDB.price <= 800))
-            elif p == "alto":
-                pr_conds.append(SpotDB.price > 800)
-        if pr_conds:
-            query = query.filter(or_(*pr_conds))
-
-    if activity == "Glamping" and glamping_price:
-        # Por el alojamiento más barato del lugar (lo que muestra la card).
-        cheapest = (
-            db.query(GlampingDetail.spot_id, func.min(GlampingDetail.price_per_night).label("p"))
-            .filter(GlampingDetail.price_per_night > 0)
-            .group_by(GlampingDetail.spot_id).subquery()
-        )
-        ranges = {
-            "bajo": cheapest.c.p < GLAMPING_PRICE_LOW,
-            "medio": and_(cheapest.c.p >= GLAMPING_PRICE_LOW, cheapest.c.p <= GLAMPING_PRICE_HIGH),
-            "alto": cheapest.c.p > GLAMPING_PRICE_HIGH,
-        }
-        conds = [ranges[r] for r in glamping_price if r in ranges]
-        if conds:
-            query = query.filter(SpotDB.id.in_(select(cheapest.c.spot_id).where(or_(*conds))))
-
-    if activity == "Glamping" and glamping_amenity:
-        for key in glamping_amenity:
-            if key in GLAMPING_AMENITY_FILTERS:
-                query = query.filter(SpotDB.id.in_(
-                    select(GlampingAmenity.spot_id).where(getattr(GlampingAmenity, key) == True)  # noqa: E712
-                ))
-
+        query = _surf_filters(query, class_type, surf_duration, equipment_included, has_surf_school)
+    if activity == "Escalada":
+        query = _climbing_filters(query, climbing_type, grade_range, no_restrictions)
+    if activity == "Camping":
+        query = _camping_filters(db, query, amenity_ids, price_range)
+    if activity == "Glamping":
+        query = _glamping_filters(db, query, glamping_price, glamping_amenity)
     if activity == "Motorhome" and motorhome_service:
-        for service in motorhome_service:
-            column = MOTORHOME_SERVICE_FILTERS.get(service)
-            if column is not None:
-                query = query.filter(SpotDB.id.in_(select(MotorhomeDetail.spot_id).where(column == True)))  # noqa: E712
+        query = _motorhome_filters(query, motorhome_service)
 
     return sort_spots(db, query, sort, services_first=activity in ("Surf", "Kayak"))
 
@@ -268,6 +107,190 @@ MOTORHOME_SERVICE_FILTERS = {
     "electricity": MotorhomeDetail.has_electricity,
     "dump": MotorhomeDetail.has_dump_station,
 }
+
+
+# Cada grupo de filtros de build_spots_filter_query (antes era una sola
+# función de 234 líneas).
+
+def _hours_ranges(column, values):
+    """corta (< 2), media (2 a 5) y larga (> 5): duración en horas."""
+    conds = []
+    for d in values or []:
+        if d == "corta":   conds.append(column < 2)
+        elif d == "media": conds.append(and_(column >= 2, column <= 5))
+        elif d == "larga": conds.append(column > 5)
+    return conds
+
+
+def _place_flags(query, pet_friendly, reservation_required, cell_signal):
+    """Mascotas, reserva y señal: datos del lugar, para cualquier actividad
+    (mascotas antes era solo de trekking, y en camping un amenity aparte)."""
+    if pet_friendly is not None:
+        query = query.filter(SpotDB.pets_allowed == pet_friendly)
+    if reservation_required is not None:
+        query = query.filter(SpotDB.reservation_required == reservation_required)
+    if cell_signal is not None:
+        query = query.filter(SpotDB.cell_signal == cell_signal)
+    return query
+
+
+def _trekking_filters(query, difficulty, duration, distance, amenities, place_flags):
+    """Por sus rutas (dificultad, duración, distancia) y por los datos del
+    lugar de trekking (estacionamiento, agua, baños...)."""
+    routes_joined = False
+    if difficulty:
+        query = query.join(SpotDB.routes).filter(Route.difficulty.in_(difficulty))
+        routes_joined = True
+    if duration:
+        if not routes_joined:
+            query = query.join(SpotDB.routes)
+            routes_joined = True
+        dur_conds = _hours_ranges(Route.duration_hours, duration)
+        if dur_conds:
+            query = query.filter(or_(*dur_conds))
+    if distance:
+        if not routes_joined:
+            query = query.join(SpotDB.routes)
+            routes_joined = True
+        dist_conds = []
+        for d in distance:
+            if d == "corta":   dist_conds.append(Route.distance_km < 5)
+            elif d == "media": dist_conds.append(and_(Route.distance_km >= 5, Route.distance_km <= 15))
+            elif d == "larga": dist_conds.append(Route.distance_km > 15)
+        if dist_conds:
+            query = query.filter(or_(*dist_conds))
+    if routes_joined:
+        query = query.distinct()
+    query = _place_flags(query, *place_flags)
+    active = {k: v for k, v in amenities.items() if v is not None}
+    if active:
+        query = query.outerjoin(SpotDB.trekking_detail)
+        for field, val in active.items():
+            query = query.filter(getattr(TrekkingDetail, field) == val)
+    return query
+
+
+# Surf y kayak: los filtros son de las escuelas y los servicios (lugares
+# con surf_detail / kayak_service_detail); las playas y lagunas no los
+# tienen, así que con un filtro puesto quedan afuera.
+
+def _kayak_filters(query, water_type, difficulty, duration, rental_available):
+    conds = []
+    if water_type:
+        conds.append(KayakServiceDetail.water_type.in_(water_type))
+    if difficulty:
+        conds.append(KayakServiceDetail.difficulty.in_(difficulty))
+    if _hours_ranges(KayakServiceDetail.duration, duration):
+        conds.append(or_(*_hours_ranges(KayakServiceDetail.duration, duration)))
+    if rental_available is not None:
+        conds.append(KayakServiceDetail.rental_available == rental_available)
+    if conds:
+        query = query.join(SpotDB.kayak_service_detail).filter(*conds)
+    return query
+
+
+def _surf_filters(query, class_type, duration, equipment_included, has_surf_school):
+    conds = []
+    if class_type:
+        conds.append(SurfDetail.class_type.in_(class_type))
+    if _hours_ranges(SurfDetail.duration, duration):
+        conds.append(or_(*_hours_ranges(SurfDetail.duration, duration)))
+    if equipment_included is not None:
+        conds.append(SurfDetail.equipment_include == equipment_included)
+    # "Solo escuelas": sin las playas.
+    if conds or has_surf_school:
+        query = query.join(SpotDB.surf_detail).filter(*conds)
+    return query
+
+
+def _climbing_filters(query, climbing_type, grade_range, no_restrictions):
+    """Por sus sectores (tipo, sin restricciones) y sus vías (graduación)."""
+    joined = False
+    if climbing_type:
+        query = query.outerjoin(SpotDB.climbing_sectors).filter(ClimbingSector.type.in_(climbing_type))
+        joined = True
+    if grade_range:
+        if not joined:
+            query = query.outerjoin(SpotDB.climbing_sectors)
+            joined = True
+        query = query.outerjoin(ClimbingSector.routes)
+        gr_conds = []
+        for g in grade_range:
+            if g == "principiante": gr_conds.append(ClimbingRoute.grade <= "5c")
+            elif g == "intermedio": gr_conds.append(and_(ClimbingRoute.grade >= "6a", ClimbingRoute.grade <= "6c+"))
+            elif g == "avanzado":   gr_conds.append(and_(ClimbingRoute.grade >= "7a", ClimbingRoute.grade <= "7c+"))
+            elif g == "experto":    gr_conds.append(ClimbingRoute.grade >= "8a")
+        if gr_conds:
+            query = query.filter(or_(*gr_conds))
+    if no_restrictions:
+        if not joined:
+            query = query.outerjoin(SpotDB.climbing_sectors)
+            joined = True
+        query = query.filter(
+            or_(ClimbingSector.restrictions == None, ClimbingSector.restrictions == "")
+        )
+    if joined:
+        query = query.distinct()
+    return query
+
+
+def _camping_filters(db: Session, query, amenity_ids, price_range):
+    """Por sus comodidades (todas las elegidas) y por el precio del lugar
+    (el que edita el dueño y muestra la card)."""
+    for amenity_id in amenity_ids or []:
+        query = query.filter(
+            SpotDB.id.in_(
+                db.query(SpotAmenity.spot_id)
+                .filter(SpotAmenity.amenity_id == amenity_id)
+                .scalar_subquery()
+            )
+        )
+    if price_range:
+        pr_conds = []
+        for p in price_range:
+            if p == "gratis":
+                pr_conds.append(or_(SpotDB.price == 0, SpotDB.price == None))
+            elif p == "bajo":
+                pr_conds.append(and_(SpotDB.price > 0, SpotDB.price < 300))
+            elif p == "medio":
+                pr_conds.append(and_(SpotDB.price >= 300, SpotDB.price <= 800))
+            elif p == "alto":
+                pr_conds.append(SpotDB.price > 800)
+        if pr_conds:
+            query = query.filter(or_(*pr_conds))
+    return query
+
+
+def _glamping_filters(db: Session, query, glamping_price, glamping_amenity):
+    if glamping_price:
+        # Por el alojamiento más barato del lugar (lo que muestra la card).
+        cheapest = (
+            db.query(GlampingDetail.spot_id, func.min(GlampingDetail.price_per_night).label("p"))
+            .filter(GlampingDetail.price_per_night > 0)
+            .group_by(GlampingDetail.spot_id).subquery()
+        )
+        ranges = {
+            "bajo": cheapest.c.p < GLAMPING_PRICE_LOW,
+            "medio": and_(cheapest.c.p >= GLAMPING_PRICE_LOW, cheapest.c.p <= GLAMPING_PRICE_HIGH),
+            "alto": cheapest.c.p > GLAMPING_PRICE_HIGH,
+        }
+        conds = [ranges[r] for r in glamping_price if r in ranges]
+        if conds:
+            query = query.filter(SpotDB.id.in_(select(cheapest.c.spot_id).where(or_(*conds))))
+    for key in glamping_amenity or []:
+        if key in GLAMPING_AMENITY_FILTERS:
+            query = query.filter(SpotDB.id.in_(
+                select(GlampingAmenity.spot_id).where(getattr(GlampingAmenity, key) == True)  # noqa: E712
+            ))
+    return query
+
+
+def _motorhome_filters(query, motorhome_service):
+    for service in motorhome_service:
+        column = MOTORHOME_SERVICE_FILTERS.get(service)
+        if column is not None:
+            query = query.filter(SpotDB.id.in_(select(MotorhomeDetail.spot_id).where(column == True)))  # noqa: E712
+    return query
 
 
 def sort_spots(db: Session, query, sort: Optional[str], services_first: bool = False):
