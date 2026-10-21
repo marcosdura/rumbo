@@ -246,11 +246,12 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
           font-weight: 400;
         }
 
+        /* Del ancho de la pill de su campo (antes, un ancho fijo). */
         .search-dropdown {
           position: absolute;
           left: 0;
+          right: 0;
           top: calc(100% + 10px);
-          min-width: 200px;
           background: #fff;
           border: 1px solid var(--border);
           border-radius: 16px;

@@ -60,8 +60,9 @@ export default function SortMenu({ label, value, options, onChange }: {
           padding: 6px 12px 6px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
         }
         .sort-menu-btn:hover, .sort-menu-btn[aria-expanded="true"] { border-color: #b7dfc8; background: #f7fbf8; }
-        .sort-menu-chevron { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
-        .sort-menu-btn[aria-expanded="true"] .sort-menu-chevron { transform: rotate(180deg); }
+        /* La flecha de las vías (ViasTable): mira abajo y, abierto, arriba. */
+        .sort-menu-chevron { display: inline-block; font-size: 14px; line-height: 1; color: var(--muted); transform: rotate(90deg); transition: transform 0.2s; }
+        .sort-menu-btn[aria-expanded="true"] .sort-menu-chevron { transform: rotate(-90deg); color: var(--primary); }
         .sort-menu-list {
           position: absolute; right: 0; top: calc(100% + 8px); min-width: 200px; margin: 0; padding: 6px 0; list-style: none;
           background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 28px rgba(0,0,0,0.09);
@@ -89,7 +90,7 @@ export default function SortMenu({ label, value, options, onChange }: {
         onKeyDown={onKeyDown}
       >
         {current.label}
-        <span aria-hidden="true" className="sort-menu-chevron">▼</span>
+        <span aria-hidden="true" className="sort-menu-chevron">›</span>
       </button>
       {open && (
         <ul id={listId} role="listbox" aria-label={label} className="sort-menu-list">

@@ -37,7 +37,9 @@
   width: 700px; flex-shrink: 0; padding: 20px;
   position: relative; z-index: 0;
 }
-.search-header { padding: 36px 24px 0; flex-shrink: 0; }
+/* Por encima de la lista: las dos animan (fade-up) y la lista, que viene
+   después, tapaba el menú de Ordenar. */
+.search-header { padding: 36px 24px 0; flex-shrink: 0; position: relative; z-index: 5; }
 .search-cards-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .search-skeleton-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
