@@ -1,16 +1,17 @@
 "use client"
-import { Suspense, useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import "./search-bar.css"
 
 export const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf", "Motorhome"]
-const ACTIVITY_EMOJI = { Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶", Motorhome:"🚐" }
+const ACTIVITY_EMOJI: Record<string, string> = { Camping:"🏕️", Glamping:"🛖", Trekking:"🥾", Escalada:"🧗", Surf:"🏄", Kayak:"🛶", Motorhome:"🚐" }
 const departments = [
   "Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores",
   "Florida","Lavalleja","Maldonado","Montevideo","Paysandú","Río Negro",
   "Rivera","Rocha","Salto","San José","Soriano","Tacuarembó","Treinta y Tres"
 ]
 
-function normalize(str) {
+function normalize(str: string) {
   return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 }
 
@@ -19,8 +20,11 @@ function normalize(str) {
 // se muestra la misma barra vacía: no salta nada.
 const NO_PARAMS = new URLSearchParams()
 
-/** @param {{ onSearch?: () => void, hero?: boolean, compact?: boolean }} props */
-export default function SearchBar(props) {
+type SearchBarProps = { onSearch?: () => void; hero?: boolean; compact?: boolean }
+// Lo que se lee de la URL (useSearchParams o, mientras carga, nada).
+type Params = { get(name: string): string | null; toString(): string }
+
+export default function SearchBar(props: SearchBarProps) {
   return (
     <Suspense fallback={<SearchBarFields {...props} searchParams={NO_PARAMS} />}>
       <SearchBarFromUrl {...props} />
@@ -28,17 +32,17 @@ export default function SearchBar(props) {
   )
 }
 
-function SearchBarFromUrl(props) {
+function SearchBarFromUrl(props: SearchBarProps) {
   return <SearchBarFields {...props} searchParams={useSearchParams()} />
 }
 
-function SearchBarFields({ onSearch, hero = false, searchParams }) {
+function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProps & { searchParams: Params }) {
   // Arranca con lo que diga la URL (por ejemplo, en /search?activity=Surf).
   const [activity, setActivity] = useState(() => searchParams.get("activity") ?? "")
   const [activityInput, setActivityInput] = useState(activity)
   const [department, setDepartment] = useState(() => searchParams.get("department") ?? "")
   const [departmentInput, setDepartmentInput] = useState(department)
-  const [openField, setOpenField] = useState(null)
+  const [openField, setOpenField] = useState<"activity" | "department" | null>(null)
   // highlighted index in dropdown (0 = best match / first item)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
 
@@ -67,9 +71,9 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
     setHighlightedIndex(0)
   }
   const router = useRouter()
-  const barRef = useRef(null)
-  const activityInputRef = useRef(null)
-  const departmentInputRef = useRef(null)
+  const barRef = useRef<HTMLDivElement>(null)
+  const activityInputRef = useRef<HTMLInputElement>(null)
+  const departmentInputRef = useRef<HTMLInputElement>(null)
 
   const filteredActivities = activities.filter((a) =>
     normalize(a).includes(normalize(activityInput))
@@ -108,7 +112,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
     }, 0)
   }
 
-  const selectActivity = (a) => {
+  const selectActivity = (a: string) => {
     setActivity(a)
     setActivityInput(a)
     setOpenField(null)
@@ -116,7 +120,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
 
   // La X: borra lo elegido y lo escrito. Si el campo estaba abierto, sigue
   // abierto y con el cursor adentro para escribir otra cosa.
-  const clearActivity = (e) => {
+  const clearActivity = (e: ReactMouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setActivity("")
@@ -124,13 +128,13 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
     if (openField === "activity") activityInputRef.current?.focus()
   }
 
-  const selectDepartment = (d) => {
+  const selectDepartment = (d: string) => {
     setDepartment(d)
     setDepartmentInput(d)
     setOpenField(null)
   }
 
-  const clearDepartment = (e) => {
+  const clearDepartment = (e: ReactMouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDepartment("")
@@ -139,7 +143,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
   }
 
   // Keyboard handler shared by both inputs
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     const isActivity = openField === "activity"
     const isDepart  = openField === "department"
     if (!isActivity && !isDepart) return
@@ -165,8 +169,8 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
 
   useEffect(() => {
     if (!openField) return
-    const handler = (e) => {
-      if (!barRef.current?.contains(e.target)) setOpenField(null)
+    const handler = (e: MouseEvent) => {
+      if (!barRef.current?.contains(e.target as Node)) setOpenField(null)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -174,234 +178,6 @@ function SearchBarFields({ onSearch, hero = false, searchParams }) {
 
   return (
     <>
-      <style>{`
-
-        .search-bar {
-          font-family: var(--font-dm-sans), sans-serif;
-          display: inline-flex;
-          align-items: center;
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 999px;
-          padding: 5px 6px;
-          gap: 4px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        }
-
-        .search-divider {
-          width: 1px;
-          height: 24px;
-          background: var(--border);
-          flex-shrink: 0;
-        }
-
-        .search-field {
-          position: relative;
-          padding: 6px 18px;
-          border-radius: 999px;
-          cursor: pointer;
-          min-width: 170px;
-          transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-          user-select: none;
-        }
-        .search-field:hover { background: #f7f5f0; }
-        .search-field.is-open { background: #f0f7f3; }
-        /* Dónde está el foco (el campo no tiene borde propio): antes, con el
-           teclado, no se veía en qué campo se estaba escribiendo. */
-        .search-field:focus-within { box-shadow: inset 0 0 0 2px var(--primary); }
-
-        .search-field-label {
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--primary);
-          margin-bottom: 2px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          line-height: 1.3;
-        }
-
-        .search-field-row {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          position: relative;
-        }
-
-        .search-field-input {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          color: #1b1b19;
-          background: transparent;
-          border: none;
-          outline: none;
-          width: 100%;
-          min-width: 0;
-          line-height: 1.4;
-          cursor: pointer;
-          padding-right: 26px;
-        }
-        .search-field-input::placeholder {
-          color: var(--muted);
-          font-weight: 400;
-        }
-
-        /* Del ancho de la pill de su campo (antes, un ancho fijo). */
-        .search-dropdown {
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: calc(100% + 10px);
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          box-shadow: 0 8px 28px rgba(0,0,0,0.09);
-          z-index: 9999;
-          transform-origin: top center;
-          animation: dropdownIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-          overflow: hidden;
-        }
-
-        @keyframes dropdownIn {
-          from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .search-dropdown-content {
-          max-height: 260px;
-          overflow-y: auto;
-        }
-
-        .search-dropdown-item {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 13px;
-          font-weight: 400;
-          color: #3d3d3a;
-          padding: 10px 16px;
-          cursor: pointer;
-          transition: background 0.13s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .search-dropdown-item:hover {
-          background: #f0f7f3;
-          color: var(--primary-dark);
-        }
-        /* keyboard highlight (best match / arrow navigation) */
-        .search-dropdown-item.highlighted {
-          background: #dff0e8;
-          color: var(--primary-dark);
-        }
-        .search-dropdown-item.selected {
-          background: #e8f5ee;
-          color: var(--primary-dark);
-          font-weight: 600;
-        }
-
-        .search-dropdown-empty {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 13px;
-          color: var(--muted);
-          padding: 14px 16px;
-          text-align: center;
-          font-style: italic;
-        }
-
-        .search-btn {
-          font-family: var(--font-dm-sans), sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          margin-left: 2px;
-          background: var(--primary-dark);
-          border: none;
-          color: #fff;
-          font-size: 13px;
-          font-weight: 600;
-          padding: 10px 20px;
-          border-radius: 999px;
-          cursor: pointer;
-          letter-spacing: 0.03em;
-          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .search-btn:hover {
-          background: var(--primary);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
-        }
-        .search-btn:active { transform: translateY(0); }
-
-        .clear-btn {
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #d0cdc7;
-          color: #fff;
-          font-size: 13px;
-          border: none;
-          padding: 0;
-          font-family: inherit;
-          line-height: 1;
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.15s;
-          line-height: 1;
-        }
-        .clear-btn:hover { background: var(--muted); }
-
-        /* Hero variant */
-        .search-bar.hero {
-          width: 100%;
-          max-width: 700px;
-          padding: 6px 8px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-          border-color: rgba(255,255,255,0.25);
-          text-align: left;
-        }
-        .search-bar.hero .search-field {
-          min-width: 200px;
-          padding: 10px 22px;
-          flex: 1;
-        }
-        .search-bar.hero .search-field-input {
-          font-size: 15px;
-        }
-        .search-bar.hero .search-btn {
-          font-size: 14px;
-          padding: 14px 28px;
-        }
-        @media (max-width: 640px) {
-          .search-bar.hero {
-            flex-direction: column;
-            border-radius: 18px;
-            padding: 8px;
-            align-items: stretch;
-            width: 100%;
-            max-width: 100%;
-          }
-          .search-bar.hero .search-field {
-            min-width: 0;
-            width: 100%;
-            border-radius: 12px;
-          }
-          .search-bar.hero .search-divider { display: none; }
-          .search-bar.hero .search-btn {
-            border-radius: 12px;
-            width: 100%;
-          }
-        }
-
-      `}</style>
-
       <div className={`search-bar${hero ? " hero" : ""}`} ref={barRef}>
 
         {/* ── Actividad ── */}
