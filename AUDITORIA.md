@@ -155,4 +155,55 @@ como registro de qué se decidió atacar y qué no.
 
 ## 06 — Pendientes fuera del código
 
-- [ ] **Google Search Console** — registrar rumboapp.uy (verificación por DNS o por archivo), mandar `https://rumboapp.uy/sitemap.xml` y revisar la cobertura de indexación. Lo hace Marcos desde su cuenta.
+- [x] **Google Search Console** — registrar rumboapp.uy (verificación por DNS o por archivo), mandar `https://rumboapp.uy/sitemap.xml` y revisar la cobertura de indexación. Lo hace Marcos desde su cuenta.
+      → hecho: el sitemap se procesó con 81 páginas.
+- [ ] **`ADMIN_SUB` en Railway** — el admin se reconoce por email y, si está esta variable, también por su `sub` de Google (`select id from users where email='<admin>'`). Sin ella, alcanza con el email.
+- [ ] **Healthcheck de Railway** — poner `/health` como Healthcheck Path, para que un deploy que arranca pero no responde no reemplace al que anda.
+
+---
+
+# Segunda auditoría — 21/10/2026
+
+Con todo lo de arriba resuelto. Cada hallazgo dice cómo se comprobó. Nada de
+esto está implementado todavía: se decide qué se ataca y en qué orden.
+
+## 07 — Seguridad
+
+- [ ] **[Alta, a confirmar en producción] El límite de pedidos se saltea cambiando `X-Forwarded-For`** — `limiter.get_client_ip` toma el *primer* valor del header, que lo escribe el cliente. Probado con el backend local: 25 pedidos a `/spots/check-name` (límite 20/min) desde la misma IP → 5 cortados; los mismos 25 con un `X-Forwarded-For` distinto cada uno → 0 cortados. En producción depende de si el borde de Railway borra el header que manda el cliente: en su foro hay respuestas de su equipo que se contradicen ([1](https://station.railway.com/questions/which-header-should-i-rely-on-for-real-c-d78a6f96), [2](https://station.railway.com/questions/does-the-edge-strip-client-x-forwarded-f-613e5cb6), [3](https://station.railway.com/questions/security-critical-questions-on-edge-prox-8fddd775)). Se confirma con la misma prueba contra producción (25 lecturas, nada se escribe). Si es real, todos los límites (reseñas, reportes, subidas, crear lugares) quedan sin efecto, y también se inflan las visitas de las estadísticas del dueño (`views.py` usa la misma IP). Arreglo: tomar la IP que agrega el propio proxy (el último valor, o `X-Real-IP` si Railway lo garantiza), con un test.
+- [ ] **[Media] Cualquier usuario logueado puede subir archivos a Cloudinary sin que queden registrados** — `/spots/{id}/can-upload` da permiso a cualquiera en un lugar publicado con rutas o sectores (para las fotos de la comunidad), y el archivo queda público en Cloudinary apenas se sube, aunque nunca se registre con `POST /photos`. Solo lo frena el límite de 30/min por IP (que depende del punto anterior). Riesgo: gasto de la cuota gratuita y archivos ajenos servidos desde la cuenta de Rumbo. Propuesta: límite por usuario (no por IP), tamaño máximo en la firma y una limpieza periódica de archivos subidos que no quedaron registrados.
+- [ ] **[Media-baja] `certifi` 2026.2.25 con una vulnerabilidad conocida** (PYSEC-2026-4320, `pip-audit`): trae una raíz de eMudhra cuyas intermedias tienen claves comprometidas. Afecta a las conexiones salientes del backend (certificados de Google, Cloudinary) si alguien está en el medio. Arreglo: `certifi>=2026.10.19`.
+- [ ] **[Baja] Dependencias de desarrollo con vulnerabilidades** — `npm audit`: 5 "high" en la cadena de `eslint-config-next` (`braces`/`micromatch`, denegación de servicio con patrones de archivo). Solo corre al hacer lint; producción: 0 vulnerabilidades.
+- [ ] **[Baja, conocida] La CSP permite scripts en línea** (`'unsafe-inline'`), así que no frena un XSS, y el `id_token` de Google es legible desde el navegador (`session.id_token`, lo usa el cliente para hablarle al backend). Pasar a nonces vuelve dinámicas todas las páginas (choca con el punto E1). No se encontró ningún punto de entrada de XSS: el único `dangerouslySetInnerHTML` es el JSON-LD (escapado con `safeJson`) y los links que vienen del usuario se arman con prefijo fijo (`https://instagram.com/`, `wa.me`).
+- [ ] **[Baja] ~25 endpoints de escritura sin límite de pedidos** — todos piden ser el dueño o el admin (`/spots/{id}/trekking-detail`, `camping-amenities`, aprobar/rechazar del admin, marcar notificaciones como leídas…). Poco riesgo; se puede poner un límite general por usuario.
+- *Revisado y bien:* los 22 endpoints de escritura que solo piden "logueado" verifican el dueño adentro (`assert_owns_spot`, `assert_owns_glamping`, `owner_remove`, borrar foto); el login valida audiencia, `email_verified` y cachea los certificados; el atajo de login del e2e (`e2e:<email>`) solo existe en `frontend/e2e/backend_e2e.py`; cabeceras de seguridad, `frame-ancestors 'none'` y `Permissions-Policy` en todas las páginas.
+
+## 08 — Eficiencia
+
+- [ ] **[Alta] Las páginas de lugares, sectores, rutas y `/lugares` se arman de cero en cada visita** — medido en producción: la home sale de la cache de Vercel (`X-Vercel-Cache: HIT`, ~0,25 s); `/spots/…`, `/sectores/…`, `/lugares/trekking` y `/search` salen `MISS` con `Cache-Control: no-store` (~0,5–0,7 s), y cada visita le pega al backend. El build las marca `ƒ` (dinámicas). `/lugares/[slug]` declara `revalidate = 3600`, pero según la documentación de Next 16 (`generate-static-params.md`) sin `generateStaticParams` (aunque devuelva `[]`) el `revalidate` de una ruta con parámetros no tiene efecto. Propuesta: `generateStaticParams` vacío + `revalidate` en esas páginas, y revalidación a demanda (una ruta `/api/revalidate` con secreto que el backend llama al aprobar, editar o reseñar) para que los cambios se vean al instante.
+- [ ] **[Media] N+1 en los listados: las categorías de cada lugar se piden de a una** — contado con el backend de pruebas (5 y 20 lugares): `/spots?limit=24` pasa de 12 a 27 consultas (una `spot_categories` por lugar) y `/home` hace 24 consultas `spot_categories`. Arreglo: `selectinload(SpotDB.spot_categories)` en las consultas de listados, con un test que cuente consultas.
+- [ ] **[Baja] `/home` hace 42 consultas de base** — trae los detalles de todas las categorías (glamping, surf, kayak, motorhome…) para cards que no los muestran. La cache de 10 minutos de la home lo amortigua.
+- [ ] **[Baja] La página de un lugar hace 4–6 pedidos desde el navegador** (reseñas, resumen de reseñas, experiencias, cercanos, visita y, logueado, el estado del visitante). El resumen y los cercanos podrían venir con la página.
+- *Revisado y bien:* el JavaScript propio de cada página es de 53–131 KB comprimido (más el núcleo de React); lo que baja de más en páginas simples es la precarga de las páginas enlazadas, que hace Next a propósito. Leaflet y el lector de Excel se cargan solo donde se usan.
+
+## 09 — Utilidad
+
+- [ ] **No se puede buscar un lugar por su nombre** — el buscador filtra solo por actividad y departamento; quien busca "Arequita" no lo encuentra desde la app (sí desde Google). Es lo primero que se intenta en un buscador.
+- [ ] **Las reseñas no tienen fotos** — la foto de alguien que fue hace poco es lo que más dice cómo está un lugar; el sistema de fotos con revisión ya existe (`item_photos`).
+- [ ] **No hay forma de saber si la información está al día** — ningún lugar muestra cuándo se revisó por última vez, y "Reportar" está pensado para contenido inapropiado, no para "esto cambió" (horario, precio, acceso cerrado).
+
+## 10 — Ideas nuevas
+
+- **Cerca mío** — ordenar por distancia con la ubicación del dispositivo, pidiendo permiso. Hoy está bloqueada a propósito (`Permissions-Policy: geolocation=()`) y la política de privacidad dice "No usamos la ubicación de tu dispositivo": habría que cambiar las dos cosas.
+- **Pronóstico en el lugar** — clima de los próximos días (y olas y viento en surf y kayak) con Open-Meteo, que es gratis y sin clave.
+- **Condiciones recientes** — "¿cómo estaba?": un comentario corto con fecha (barro, agua, camino cortado), separado de las reseñas.
+- **Listas propias** — armar y compartir una lista de lugares ("finde en Rocha"), sobre los favoritos que ya existen.
+- **Avisos push de la PWA** — ya evaluado en la auditoría anterior como viable sin servicios pagos (service worker propio + VAPID).
+- **Importar rutas de trekking desde una planilla** — como el importador de vías, para cargar un lugar con muchas rutas de una vez.
+
+## 11 — Código
+
+- [ ] **Componentes grandes, y dos que volvieron a crecer** — `admin/page.tsx` 648 líneas (había bajado a 238), `dashboard/spots/[id]/page.tsx` 654 (había bajado a 302), `AgregarLugar.tsx` 725, `agregar-lugar/submit.ts` 539, `SearchPageContent.tsx` 522, `SearchBar.jsx` 521, `ContentTab.tsx` 503, `ReviewsSection.jsx` 493, `SpotDetails.jsx` 473. En el backend, `routers/spots.py` tiene 1430 líneas y 32 endpoints (la búsqueda, `build_spots_filter_query`, sola son 234).
+- [ ] **37 archivos `.jsx` sin tipos**, entre ellos algunos de los más usados (`SearchBar`, `ReviewsSection`, `SpotDetails`, `SpotsMap`, `Navbar`, `AuthModal`), y 9 `as unknown as` para poder usarlos desde TypeScript. Pasarlos a `.tsx` de a poco, empezando por los que tocan datos del backend.
+- [ ] **10 avisos de dependencias de `useEffect`** (`react-hooks/exhaustive-deps`): `ContentTab.tsx:90`, `dashboard/spots/[id]/page.tsx:131`, `AgregarLugar.tsx:179`, `LocationPickerMap.jsx:26`, `SpotPickerMap.jsx:25`, `Providers.jsx:76`, `ReviewsSection.jsx:111`, `SpotsMap.jsx:149` y `:164`, `Toast.jsx:12`. Cada uno puede ser un dato viejo en pantalla; revisarlos uno por uno.
+- [ ] **Código muerto** — `components/ui/Toast.jsx` sigue en el repo sin ningún uso (ya señalado en `12c91bd`), y 7 variables sin usar (`StepResumen.tsx`, `StepExperiencias.tsx`, `SpotDetails.jsx`, `linkControl.ts`…).
+- *Bien:* 712 tests en el frontend y 359 en el backend, e2e de 103 pasos; 0 errores de lint; sin `console.log` olvidados.
