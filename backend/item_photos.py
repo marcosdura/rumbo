@@ -1,4 +1,5 @@
-"""Fotos de rutas de trekking, sectores y vías de escalada (models.ItemPhoto).
+"""Fotos de rutas de trekking, sectores y vías de escalada, y la foto de una
+reseña (models.ItemPhoto).
 
 - Las sube cualquier usuario logueado, a una ruta, sector o vía publicada de
   un lugar publicado. Todas pasan por revisión del admin (salvo las del
@@ -7,6 +8,8 @@
   estar todavía en revisión: a esa la puede sumar fotos quien la propuso, y
   el dueño a las de su lugar todavía sin aprobar.
 - Hasta 3 por ruta, sector o vía, contando las que están en revisión.
+- Una por reseña: la sube solo su autor, y también pasa por revisión (la
+  reseña se publica al instante; la foto, cuando la aprueba el admin).
 - Se suben a Cloudinary con el formato de la carpeta del lugar
   ("{spot_id}/{16 hex}", el que firma can-upload) y se guarda el public_id,
   como las fotos de los lugares.
@@ -18,17 +21,24 @@ from sqlalchemy.orm import Session
 
 from auth import is_admin
 import contributions
-from models import ClimbingRoute, ClimbingSector, Contribution, ItemPhoto, Route, SpotImage
+from models import ClimbingRoute, ClimbingSector, Contribution, ItemPhoto, Review, Route, SpotImage
 from ownership import can_manage_spot
 
 MAX_PHOTOS = 3
+# Cuántas fotos admite cada tipo (por defecto MAX_PHOTOS).
+MAX_BY_TARGET = {"review": 1}
 
 # target -> (modelo, columna de item_photos)
 TARGETS = {
     "trekking_route": (Route, "trekking_route_id"),
     "climbing_sector": (ClimbingSector, "climbing_sector_id"),
     "climbing_route": (ClimbingRoute, "climbing_route_id"),
+    "review": (Review, "review_id"),
 }
+
+
+def max_photos(target: str) -> int:
+    return MAX_BY_TARGET.get(target, MAX_PHOTOS)
 
 
 def target_spot(target: str, item):
@@ -61,6 +71,11 @@ def get_target(db: Session, target: str, target_id: int, user: dict):
     spot = target_spot(target, item) if item else None
     if not item or not spot or spot.owner_deleted_at is not None:
         raise HTTPException(status_code=404, detail="No encontrado")
+    # La foto de una reseña la sube solo quien la escribió.
+    if target == "review":
+        if spot.is_approved and item.user_id == user.get("sub"):
+            return item, spot
+        raise HTTPException(status_code=404, detail="No encontrado")
     if _is_public(target, item, spot) or is_admin(user):
         return item, spot
     if not spot.is_approved and can_manage_spot(spot, user):
@@ -81,7 +96,7 @@ def count_photos(db: Session, target: str, target_id: int) -> int:
 
 
 def free_slots(db: Session, target: str, target_id: int) -> int:
-    return max(0, MAX_PHOTOS - count_photos(db, target, target_id))
+    return max(0, max_photos(target) - count_photos(db, target, target_id))
 
 
 def normalize_public_id(spot_id: int, public_id: str):
@@ -107,7 +122,8 @@ def add_photos(db: Session, target: str, target_id: int, public_ids: list[str], 
     if not public_ids:
         raise HTTPException(status_code=422, detail="Elegí al menos una foto.")
     if len(public_ids) > free_slots(db, target, target_id):
-        raise HTTPException(status_code=409, detail=f"Ya tiene el máximo de {MAX_PHOTOS} fotos (contando las que están en revisión).")
+        limit = max_photos(target)
+        raise HTTPException(status_code=409, detail="Ya tiene su foto (puede estar en revisión)." if limit == 1 else f"Ya tiene el máximo de {limit} fotos (contando las que están en revisión).")
     normalized = []
     for raw in public_ids:
         public_id = normalize_public_id(spot.id, raw)
@@ -151,7 +167,7 @@ def slots_of(db: Session, target: str, target_ids: list[int]) -> dict[int, int]:
     counts = {i: 0 for i in target_ids}
     for (tid,) in db.query(col).execution_options(include_pending=True).filter(col.in_(target_ids)).all():
         counts[tid] += 1
-    return {i: max(0, MAX_PHOTOS - n) for i, n in counts.items()}
+    return {i: max(0, max_photos(target) - n) for i, n in counts.items()}
 
 
 def owner_view(db: Session, target: str, target_ids: list[int]) -> dict[int, list[dict]]:
@@ -177,6 +193,15 @@ def owner_remove(db: Session, photo_id: int, user: dict) -> str:
     photo = db.query(ItemPhoto).execution_options(include_pending=True).filter(ItemPhoto.id == photo_id).first()
     if not photo:
         raise HTTPException(status_code=404, detail="No encontrado")
+    # La foto de una reseña es de quien la escribió: la saca él (o el admin),
+    # no el dueño del lugar.
+    if photo.review_id is not None:
+        if not is_admin(user) and photo.review.user_id != user.get("sub"):
+            raise HTTPException(status_code=403, detail="No autorizado")
+        contributions.withdraw_for_deleted_item(db, "photo", photo.id, user.get("email"))
+        public_id = photo.cloudinary_public_id
+        db.delete(photo)
+        return public_id
     spot = assert_owns_spot(db, photo.spot_id, user)
     contributions.withdraw_for_deleted_item(db, "photo", photo.id, user.get("email"))
     if not is_admin(user):
@@ -197,3 +222,19 @@ def photos_for_deleted(db: Session, column: str, ids: list[int], by: str) -> lis
         contributions.withdraw_for_deleted_item(db, "photo", photo.id, by)
         db.delete(photo)
     return [p.cloudinary_public_id for p in rows]
+
+
+def review_photos(db: Session, review_ids: list[int], mine: set[int] = frozenset()) -> dict[int, dict]:
+    """La foto de cada reseña: la publicada, y para las del que pregunta
+    (`mine`) también la que está en revisión, marcada pending."""
+    if not review_ids:
+        return {}
+    rows = (
+        db.query(ItemPhoto).execution_options(include_pending=True)
+        .filter(ItemPhoto.review_id.in_(review_ids)).order_by(ItemPhoto.id).all()
+    )
+    result: dict[int, dict] = {}
+    for p in rows:
+        if p.is_approved or p.review_id in mine:
+            result[p.review_id] = {"id": p.id, "cloudinary_public_id": p.cloudinary_public_id, "pending": not p.is_approved}
+    return result

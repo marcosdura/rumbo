@@ -14,7 +14,7 @@ router = APIRouter(tags=["photos"])
 
 
 class PhotosCreate(BaseModel):
-    target: Literal["trekking_route", "climbing_sector", "climbing_route"]
+    target: Literal["trekking_route", "climbing_sector", "climbing_route", "review"]
     target_id: int
     # Los public_id que devolvió Cloudinary ("rumbo/spots/{spot_id}/{16 hex}").
     public_ids: list[str] = Field(min_length=1, max_length=item_photos.MAX_PHOTOS)

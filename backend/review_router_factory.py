@@ -10,6 +10,8 @@ from schemas import ReviewCreate, ReviewResponse
 from auth import get_current_user_required, get_current_user
 from limiter import limiter
 from notifications import notify
+import item_photos
+from spot_changes import destroy_cloudinary_images
 
 
 def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, parent_not_found_detail, owner_of=None,
@@ -53,6 +55,8 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
                     "id": mine.id,
                     "rating": mine.rating,
                     "comment": mine.comment,
+                    # Su foto, también si está en revisión.
+                    "photo": item_photos.review_photos(db, [mine.id], {mine.id}).get(mine.id),
                 }
 
         return {
@@ -80,6 +84,9 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
         current_sub = user["sub"] if user else None
         for r in reviews:
             r.is_mine = (r.user_id == current_sub)
+        photos = item_photos.review_photos(db, [r.id for r in reviews], {r.id for r in reviews if r.is_mine})
+        for r in reviews:
+            r.photo = photos.get(r.id)
         return reviews
 
     @router.post("/{parent_id}", status_code=status.HTTP_201_CREATED, response_model=ReviewResponse)
@@ -168,6 +175,7 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
         db.commit()
         db.refresh(review)
         review.is_mine = True
+        review.photo = item_photos.review_photos(db, [review.id], {review.id}).get(review.id)
         return review
 
     @router.delete("/{review_id}")
@@ -185,8 +193,11 @@ def build_review_router(*, prefix, tags, review_model, fk_field, parent_model, p
         if review.user_id != user_id:
             raise HTTPException(status_code=403, detail="No podés borrar esta review")
 
+        # Su foto se va con ella (también de Cloudinary).
+        photos = item_photos.photos_for_deleted(db, "review_id", [review.id], user.get("email"))
         db.delete(review)
         db.commit()
+        destroy_cloudinary_images(photos)
         return {"message": "Review eliminada"}
 
     return router

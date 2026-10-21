@@ -11,6 +11,7 @@ from models import Report
 from schemas import ReportCreate, ReportResolve
 from spot_changes import destroy_cloudinary_images
 
+import item_photos
 router = APIRouter(tags=["reports"])
 
 
@@ -84,7 +85,10 @@ def admin_delete_review(request: Request, kind: str, review_id: int, db: Session
     if not review:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
     reports.notify_review_deleted(db, review)
+    # Su foto se va con ella (también de Cloudinary).
+    photos = item_photos.photos_for_deleted(db, "review_id", [review.id], admin.get("email"))
     db.delete(review)
     reports.close_reports(db, kind, review_id, "actioned", "deleted", by=admin.get("email"))
     db.commit()
+    destroy_cloudinary_images(photos)
     return {"ok": True}

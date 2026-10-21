@@ -490,6 +490,9 @@ class ReviewResponse(BaseModel):
     updated_at: datetime | None = None
     user: ReviewUserResponse
     is_mine: bool = False
+    # Su foto publicada; la del autor también mientras está en revisión
+    # ({"id", "cloudinary_public_id", "pending"}). item_photos.review_photos.
+    photo: dict | None = None
 
     class Config:
         from_attributes = True

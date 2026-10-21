@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
+import item_photos
 from models import User, Favorite, Review, SpotDB, SpotChangeRequest
 from database import get_db
 from auth import get_current_user_required
@@ -36,6 +37,9 @@ async def delete_account(
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Las fotos de sus reseñas (publicadas o en revisión) se van con ellas.
+    review_ids = [r.id for r in db.query(Review.id).filter(Review.user_id == user_id)]
+    orphan_photos = item_photos.photos_for_deleted(db, "review_id", review_ids, db_user.email)
     db.query(Review).filter(Review.user_id == user_id).delete()
     db.query(Favorite).filter(Favorite.user_id == user_id).delete()
 
@@ -56,7 +60,6 @@ async def delete_account(
         .filter(SpotDB.owner_email == db_user.email, SpotChangeRequest.status == "pending")
         .all()
     )
-    orphan_photos = []
     for change in pending:
         orphan_photos += request_photos(change)
         close_request(change, "cancelled", by=db_user.email)

@@ -535,18 +535,19 @@ class ClimbingRoute(ReviewedContent, Base):
 
 class ItemPhoto(ReviewedContent, Base):
     """Hasta 3 fotos de una ruta de trekking, un sector o una vía de
-    escalada (item_photos.py). Las sube cualquier usuario logueado y pasan
+    escalada, y una de cada reseña (item_photos.py). Las sube cualquier usuario logueado y pasan
     por revisión (salvo el admin): cada una es un aporte.
 
     Una sola tabla para los tres: subir, revisar, borrar y el tope de 3 son
     el mismo código; las FK mantienen el borrado en cascada. Exactamente una
-    de las tres FK va cargada."""
+    de las cuatro FK va cargada."""
     __tablename__ = "item_photos"
     __table_args__ = (
         CheckConstraint(
             "(CASE WHEN trekking_route_id IS NULL THEN 0 ELSE 1 END)"
             " + (CASE WHEN climbing_sector_id IS NULL THEN 0 ELSE 1 END)"
-            " + (CASE WHEN climbing_route_id IS NULL THEN 0 ELSE 1 END) = 1",
+            " + (CASE WHEN climbing_route_id IS NULL THEN 0 ELSE 1 END)"
+            " + (CASE WHEN review_id IS NULL THEN 0 ELSE 1 END) = 1",
             name="item_photos_one_target",
         ),
     )
@@ -558,6 +559,8 @@ class ItemPhoto(ReviewedContent, Base):
     trekking_route_id = Column(Integer, ForeignKey("routes.id", ondelete="CASCADE"), index=True, nullable=True)
     climbing_sector_id = Column(Integer, ForeignKey("climbingsectors.id", ondelete="CASCADE"), index=True, nullable=True)
     climbing_route_id = Column(Integer, ForeignKey("climbingroutes.id", ondelete="CASCADE"), index=True, nullable=True)
+    # La foto de una reseña (una por reseña; la sube su autor).
+    review_id = Column(Integer, ForeignKey("reviews.id", ondelete="CASCADE"), index=True, nullable=True)
     cloudinary_public_id = Column(String, nullable=False)
     uploaded_by = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -565,9 +568,12 @@ class ItemPhoto(ReviewedContent, Base):
     trekking_route = relationship("Route")
     climbing_sector = relationship("ClimbingSector")
     climbing_route = relationship("ClimbingRoute")
+    review = relationship("Review")
 
     @property
     def target_name(self):
+        if self.review is not None:
+            return f"la reseña de {self.review.spot.name}" if self.review.spot else "una reseña"
         target = self.trekking_route or self.climbing_sector or self.climbing_route
         return target.name if target else None
 
@@ -742,6 +748,9 @@ def touch_spot_info(session, flush_context, instances):
                     obj.info_updated_at = now
                 continue
             if not isinstance(obj, SPOT_INFO_MODELS):
+                continue
+            # La foto de una reseña es parte de la reseña, no del lugar.
+            if isinstance(obj, ItemPhoto) and obj.review_id is not None:
                 continue
             if obj in session.dirty and not _changed(obj):
                 continue

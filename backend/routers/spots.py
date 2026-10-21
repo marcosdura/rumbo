@@ -1213,6 +1213,8 @@ def can_upload_image(request: Request, spot_id: int, public_id: str, db: Session
     community_photos = spot.is_approved and (
         db.query(Route).execution_options(include_pending=True).filter(Route.spot_id == spot.id).first() is not None
         or db.query(ClimbingSector).execution_options(include_pending=True).filter(ClimbingSector.spot_id == spot.id).first() is not None
+        # La foto de su reseña (item_photos valida que sea suya).
+        or db.query(models.Review).filter(models.Review.spot_id == spot.id, models.Review.user_id == user.get("sub")).first() is not None
     )
     if not can_manage_spot(spot, user) and not community_photos:
         raise HTTPException(status_code=403, detail="No autorizado")
