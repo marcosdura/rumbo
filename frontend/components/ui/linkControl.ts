@@ -25,4 +25,8 @@ export function linkFirstControl(children: ReactNode, extra: ControlProps): [Rea
   return [out, linked]
 }
 
-const withoutId = ({ id: _id, ...rest }: ControlProps) => rest
+const withoutId = (props: ControlProps) => {
+  const rest = { ...props }
+  delete rest.id
+  return rest
+}

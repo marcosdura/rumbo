@@ -5,7 +5,7 @@ import { s, errorHintText, sanitizeNum } from "../styles"
 import NavRow from "../ui/NavRow"
 import Field from "../ui/Field"
 import { EXPERIENCE_SCHEDULE_OPTIONS, defaultExperience } from "../constants"
-import type { ExperienceItem, ExperienceScheduleType } from "../types"
+import type { ExperienceItem } from "../types"
 
 const EXPERIENCE_CATEGORIES = [
   { id: 2, emoji: "🥾", label: "Trekking" },

@@ -22,7 +22,6 @@ import TrekkingAmenitiesCard from "../../../components/spot-detail/TrekkingAmeni
 import ClimbingSectorsCards from "../../../components/spot-detail/ClimbingSectorsCards"
 import ServiceSection from "@/components/spot-detail/ServiceSection"
 import Footer from "../../../components/layout/Footer"
-import { CldImage } from 'next-cloudinary'
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import SpotImages from "../../../components/spot-detail/SpotImages"
