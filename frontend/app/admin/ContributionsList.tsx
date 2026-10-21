@@ -115,8 +115,9 @@ export default function ContributionsList({ contributions, loadError, loading, a
                     {trackPoints && trackPoints.length >= 2 && <TrackMap points={trackPoints} />}
                     {photos.length > 0 && (
                       <div className="photo-grid" style={{ marginTop: 0 }}>
-                        {photos.map(url => (
-                          <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="photo-card" style={{ display: "block" }}>
+                        {photos.map((url, i) => (
+                          // Con nombre: el link solo tiene la foto adentro.
+                          <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="photo-card" style={{ display: "block" }} aria-label={`Abrir la foto ${i + 1} entera`}>
                             <img src={url} alt="" />
                           </a>
                         ))}

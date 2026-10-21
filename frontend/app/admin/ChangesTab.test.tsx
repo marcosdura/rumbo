@@ -43,6 +43,7 @@ describe("ChangesTab", () => {
     renderTab({ requests: [changeRequest({ name: undefined, photos_added: ["rumbo/spots/3/a", "rumbo/spots/3/b"] })] })
     expect(screen.getByText("2 fotos nuevas · hoy tiene 1")).toBeTruthy()
     expect(document.querySelectorAll(".photo-grid a")).toHaveLength(2)
+    expect(screen.getByRole("link", { name: "Abrir la foto nueva 2 entera" })).toBeTruthy()
   })
 
   it("aprobar y rechazar avisan al padre con el id del pedido", () => {

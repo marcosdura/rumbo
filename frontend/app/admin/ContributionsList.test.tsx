@@ -52,6 +52,8 @@ describe("ContributionsList", () => {
       item: { cloudinary_public_id: "rumbo/spots/3/abc", target_name: "Cumbre" },
     })] })
     expect(document.querySelectorAll(".photo-grid img")).toHaveLength(1)
+    // El link de la foto tiene nombre (antes era un link vacío para el lector de pantalla).
+    expect(screen.getByRole("link", { name: "Abrir la foto 1 entera" })).toBeTruthy()
     expect(screen.getByText("dueño del lugar")).toBeTruthy()
     vi.unstubAllEnvs()
   })

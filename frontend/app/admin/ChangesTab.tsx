@@ -160,10 +160,10 @@ export default function ChangesTab({ requests, loadError, loading, actionLoading
                         {photos.length} foto{photos.length !== 1 ? "s" : ""} nueva{photos.length !== 1 ? "s" : ""} · hoy tiene {spot.images.length}
                       </span>
                       <div className="photo-grid" style={{ marginTop: 6 }}>
-                        {photos.map(publicId => (
+                        {photos.map((publicId, i) => (
                           // Click abre la foto entera: en miniatura no se ve
                           // si tiene algo que no corresponde.
-                          <a key={publicId} href={cloudinaryUrl(publicId, "w_1600,c_limit")} target="_blank" rel="noopener noreferrer" className="photo-card" style={{ display: "block" }}>
+                          <a key={publicId} href={cloudinaryUrl(publicId, "w_1600,c_limit")} target="_blank" rel="noopener noreferrer" className="photo-card" style={{ display: "block" }} aria-label={`Abrir la foto nueva ${i + 1} entera`}>
                             <img src={cloudinaryUrl(publicId, "w_280,h_220,c_fill")} alt="" />
                           </a>
                         ))}
