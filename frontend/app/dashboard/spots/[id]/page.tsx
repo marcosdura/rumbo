@@ -128,6 +128,8 @@ export default function SpotDashboardPage() {
     })
       // Antes no había catch: si fallaba, quedaba en "Cargando..." para siempre.
       .catch(() => { setLoadError(true); setLoading(false) })
+    // router es estable; populateFields solo copia lo que llega a los campos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, spotId, loadAttempt])
 
   useEffect(() => {

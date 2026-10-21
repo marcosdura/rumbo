@@ -23,6 +23,8 @@ function FlyTo({ lat, lng, trigger }) {
     if (trigger > 0 && lat != null && lng != null) {
       map.flyTo([lat, lng], 13, { animate: true, duration: 0.8 })
     }
+    // Vuela solo cuando se pide (trigger), no cada vez que cambia el punto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger])
   return null
 }

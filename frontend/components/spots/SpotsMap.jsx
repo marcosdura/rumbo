@@ -146,6 +146,8 @@ function FitBounds({ spots, mapExpanded }) {
     if (spots.length === 1) { map.setView([spots[0].lat, spots[0].lng], 11); return }
     const bounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]))
     map.fitBounds(bounds, { padding: [80, 80], maxZoom: 11 })
+    // spotIds y no spots: la lista llega como un array nuevo en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotIds, map])
 
   // Mobile fullscreen: re-fit after CSS transition and invalidateSize complete
@@ -161,6 +163,7 @@ function FitBounds({ spots, mapExpanded }) {
       map.fitBounds(bounds, { padding: [60, 60] })
     }, 100)
     return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- spotIds, como arriba
   }, [mapExpanded, spotIds, map])
 
   return null

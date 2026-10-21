@@ -22,6 +22,8 @@ function FlyToSelected({ spot }) {
   const map = useMap()
   useEffect(() => {
     if (spot) map.flyTo([spot.lat, spot.lng], Math.max(map.getZoom(), 11), { duration: 0.6 })
+    // Vuela cuando se elige otro lugar, no cuando el mismo llega de nuevo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, spot?.id])
   return null
 }

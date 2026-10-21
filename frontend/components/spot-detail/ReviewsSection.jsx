@@ -119,7 +119,11 @@ export default function ReviewsSection({ spotId }) {
     setLoadingMore(false)
   }
 
-  useEffect(() => { loadReviews() }, [spotId])
+  // También cuando llega la sesión (llega un momento después de abrir la
+  // página): con ella se sabe cuál es tu reseña. Antes solo dependía del
+  // lugar y la primera carga, sin sesión, quedaba para siempre.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadReviews se arma en cada render con spotId y token
+  useEffect(() => { loadReviews() }, [spotId, token])
 
   // Abre el form en modo edición, precargado con lo que la reseña ya tiene.
   const startEditing = (review) => {

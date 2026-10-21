@@ -87,6 +87,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
 
   useEffect(() => {
     if (token) load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load solo depende de spotId y token
   }, [token, spotId])
 
   async function saveExperiences() {

@@ -73,7 +73,7 @@ function FavoritesLoader() {
       return
     }
     loadFavorites(token)
-  }, [session?.id_token])
+  }, [session?.id_token, loadFavorites])
 
   return null
 }

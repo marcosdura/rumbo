@@ -176,6 +176,9 @@ export default function AgregarLugar() {
 
     api.patch("/users/me/terms", undefined, { token: session.id_token })
       .then(() => update({ termsAcceptedAt: new Date().toISOString() }))
+    // Una vez por sesión: con termsAcceptedAt o update en las dependencias
+    // podía mandarse dos veces mientras la sesión se actualiza.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.id_token])
 
   const isTrekking = selectedCat?.name === "Trekking"
