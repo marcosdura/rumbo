@@ -27,7 +27,8 @@ export default function AccountActions({ onDeleteRequest }: Props) {
         {/* Zona peligrosa — desplegable */}
         <div style={{ borderTop: "1px solid #ede9e1", marginTop: 4, paddingTop: 6 }}>
           <button
-            style={{ ...s.actionBtn, color: "var(--muted)", background: "transparent", border: "none", padding: "8px 6px", fontSize: 12, gap: 6 }}
+            className="text-btn"
+            style={{ ...s.actionBtn, color: undefined, background: undefined, border: undefined, padding: "8px 6px", fontSize: 12, gap: 6 }}
             onClick={() => setShowDangerZone(v => !v)}
           >
             <span style={{ fontSize: 10, transition: "transform 0.2s", display: "inline-block", transform: showDangerZone ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>

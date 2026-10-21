@@ -18,8 +18,8 @@ export default function NotFound() {
         <SearchBar />
       </div>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-        <Link href="/" style={primaryButton}>Ir al inicio</Link>
-        <Link href="/search" style={secondaryButton}>Ver todos los lugares</Link>
+        <Link href="/" className="btn-hover" style={primaryButton}>Ir al inicio</Link>
+        <Link href="/search" className="btn-hover" style={secondaryButton}>Ver todos los lugares</Link>
       </div>
     </StatusPage>
   )

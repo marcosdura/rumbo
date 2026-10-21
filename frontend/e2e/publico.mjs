@@ -126,6 +126,20 @@ export async function run(browser, r) {
       for (const name of ["🔗 Compartir", "＋ Subir fotos", "＋ Subir el recorrido (GPX)"]) {
         if (!(await hoverChanges(page, page.getByRole("button", { name, exact: true })))) noHover.push(name)
       }
+      // Los datos de la ruta son la Pill de la app: hover y sin cursor de texto.
+      const statPill = page.locator(".trail-stats-compact .pill-hover").first()
+      const hasStatPill = (await statPill.count()) > 0
+      if (!hasStatPill || !(await hoverChanges(page, statPill))) noHover.push("pill de datos")
+      const pillCursor = hasStatPill ? await statPill.evaluate(el => [getComputedStyle(el).userSelect, getComputedStyle(el).cursor].join(",")) : "no es una Pill"
+      r.ok("Ruta — las pills de datos no se seleccionan como texto", !pillCursor.startsWith("text") && pillCursor.startsWith("none"), pillCursor)
+      await page.goto(`${FRONT}/spots/roca-de-prueba/sectores/sector-norte`, { waitUntil: "networkidle" })
+      if (!(await hoverChanges(page, page.getByRole("link", { name: "＋ Sugerir una vía" })))) noHover.push("Sugerir una vía")
+      await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
+      if (!(await hoverChanges(page, page.locator("main").getByRole("link", { name: "＋ Agregar lugar" })))) noHover.push("Agregar lugar (entre las colecciones)")
+      await page.goto(`${FRONT}/esto-no-existe`, { waitUntil: "networkidle" })
+      for (const name of ["Ir al inicio", "Ver todos los lugares"]) {
+        if (!(await hoverChanges(page, page.getByRole("link", { name, exact: true })))) noHover.push(`404: ${name}`)
+      }
       await page.goto(`${FRONT}/spots/cerro-de-prueba`, { waitUntil: "networkidle" })
       for (const name of ["⚑ Reportar este lugar", "¡Sé el primero en reseñar!"]) {
         if (!(await hoverChanges(page, page.getByRole("button", { name, exact: true })))) noHover.push(name)

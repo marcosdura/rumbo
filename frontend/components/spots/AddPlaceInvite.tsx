@@ -18,7 +18,7 @@ export default function AddPlaceInvite() {
             Sumalo a Rumbo, seas el responsable o lo conozcas como visitante. Lo revisamos antes de publicarlo.
           </p>
         </div>
-        <Link href="/agregar-lugar" style={{
+        <Link href="/agregar-lugar" className="btn-hover" style={{
           background: "var(--primary)", color: "#fff", borderRadius: 12, padding: "11px 22px",
           fontSize: 14, fontWeight: 600, textDecoration: "none", flexShrink: 0,
         }}>

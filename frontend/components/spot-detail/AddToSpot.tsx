@@ -14,7 +14,7 @@ const font = "var(--font-dm-sans), sans-serif"
 // Mismo botón que "Ver spot →" del dashboard, en verde.
 export function AddButton({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} style={{
+    <Link href={href} className="btn-hover" style={{
       padding: "7px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, fontFamily: font,
       border: "1px solid var(--border)", background: "#fff", color: "var(--primary)",
       textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0,

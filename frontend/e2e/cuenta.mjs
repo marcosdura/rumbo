@@ -364,6 +364,7 @@ async function profile(page, r) {
     ["Departamento", page.getByLabel("Departamento")],
   ]) if (!(await hoverChanges(page, locator))) formNoHover.push(what)
   r.ok("Formulario — botones y campos con hover", formNoHover.length === 0, formNoHover.join(", "))
+  r.ok("Formulario — se puede volver a la app", (await page.getByRole("link", { name: "← Volver a Rumbo" }).count()) === 1 && (await page.getByRole("link", { name: "← Volver a Rumbo" }).getAttribute("href")) === "/")
   problems = await a11yProblems(page)
   r.ok("Accesibilidad — el formulario de agregar lugar", problems.length === 0, problems.slice(0, 3).join(" | "))
   await shot(page, "perfil-panel-lugar")
@@ -393,6 +394,7 @@ async function profile(page, r) {
 
   await open(page, "/profile")
   r.ok("Perfil — la portada abre con el nombre", await page.getByText(USER).count() > 0)
+  r.ok("Perfil — «Zona peligrosa» tiene hover", await hoverChanges(page, page.getByRole("button", { name: /Zona peligrosa/ })))
   await shot(page, "perfil")
 }
 
@@ -433,9 +435,9 @@ async function admin(browser, r) {
   await page.getByLabel("Sector").selectOption(norte)
   await page.getByLabel("Subir planilla").setInputFiles({
     name: "vias.csv", mimeType: "text/csv",
-    buffer: Buffer.from(["Nombre;Grado;Tipo;Chapas", "Via Importada E2E;6b+;deportiva;8", ""].join("\n"), "utf-8"),
+    buffer: Buffer.from(["Nombre;Grado;Tipo;Chapas", "Via Importada E2E;6b+;deportiva;8", "Otra Via E2E;5+;deportiva;6", ""].join("\n"), "utf-8"),
   })
-  await page.getByRole("button", { name: "Importar 1 vías" }).click()
+  await page.getByRole("button", { name: "Importar 2 vías" }).click()
   await page.waitForTimeout(800)
   const imported = (await apiGet(`/sectors/${norte}/routes`)).find(r => r.name === "Via Importada E2E")
   r.ok("Admin — importar vías desde una planilla", imported?.grade === "6b+" && imported?.bolts === 8, JSON.stringify(imported ?? null))
@@ -448,6 +450,8 @@ async function admin(browser, r) {
   await firstVia.locator("button.via-row").click()
   await page.waitForTimeout(300)
   const openedVia = { top: await viaTop(), shadow: await firstVia.evaluate(el => getComputedStyle(el).boxShadow) }
+  const viaGap = await page.locator(".via-item").evaluateAll(els => Math.round(els[1].getBoundingClientRect().top - els[0].getBoundingClientRect().bottom))
+  r.ok("Sector — hay aire entre una vía y la siguiente", viaGap >= 6, `${viaGap}px`)
   r.ok("Sector — abrir una vía no mueve la lista", openedVia.top === closedTop && openedVia.shadow === "none", `${closedTop} → ${JSON.stringify(openedVia)}`)
 
   // La barra lateral del admin queda quieta debajo del Navbar al bajar.
