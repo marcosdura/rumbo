@@ -243,25 +243,41 @@ va al final de cada sección.
 
 ## 12 — Seguridad
 
-- [ ] **[Media] Se puede leer el contenido de lugares no publicados** — `GET /spots/{id}` da 404 para un lugar sin aprobar, rechazado o de una cuenta borrada, pero sus partes no: `/spots/{id}/routes`, `/spots/{id}/sectors`, `/spots/{id}/experiences`, `/routes/{id}`, `/sectors/{id}` y `/sectors/{id}/routes` devuelven 200 con todo (probado con un lugar sin aprobar y otro de una cuenta borrada). Los ids son correlativos, así que se pueden recorrer; las experiencias traen el campo de contacto. La app solo usa `/sectors/{id}` (agregar lugar desde un sector) y `/routes/{id}` (las direcciones viejas de rutas); los otros cuatro no los usa nadie. Arreglo: que esas lecturas pidan el lugar publicado, y borrar las que no se usan.
-- [ ] **[Media, ya mitigada] Next 16.4.0 con avisos críticos** — `npm audit` (y `next build` en local, que ahora frena para avisarlo): ejecución remota en el optimizador de imágenes con SVG, y dos más que no aplican (la app no usa server actions ni `use cache`). La causa de la primera está en `sharp`, y el proyecto ya tiene `sharp` 0.35.5, la versión corregida (fijada en `package-lock.json`); el último deploy de Vercel salió bien. Igual conviene pasar a **16.4.2** (y `eslint-config-next` 16.4.2): es una versión de parche y cierra el aviso.
+- [x] **[Media] Se puede leer el contenido de lugares no publicados** — `GET /spots/{id}` da 404 para un lugar sin aprobar, rechazado o de una cuenta borrada, pero sus partes no: `/spots/{id}/routes`, `/spots/{id}/sectors`, `/spots/{id}/experiences`, `/routes/{id}`, `/sectors/{id}` y `/sectors/{id}/routes` devuelven 200 con todo (probado con un lugar sin aprobar y otro de una cuenta borrada). Los ids son correlativos, así que se pueden recorrer; las experiencias traen el campo de contacto. La app solo usa `/sectors/{id}` (agregar lugar desde un sector) y `/routes/{id}` (las direcciones viejas de rutas); los otros cuatro no los usa nadie. Arreglo: que esas lecturas pidan el lugar publicado, y borrar las que no se usan.
+      `/routes/{id}`, `/sectors/{id}` y `/sectors/` ahora solo devuelven lo de lugares aprobados y de cuentas activas (404 si no). Las lecturas sin uso se borraron.
+      → `af3cf05`
+- [x] **[Media, ya mitigada] Next 16.4.0 con avisos críticos** — `npm audit` (y `next build` en local, que ahora frena para avisarlo): ejecución remota en el optimizador de imágenes con SVG, y dos más que no aplican (la app no usa server actions ni `use cache`). La causa de la primera está en `sharp`, y el proyecto ya tiene `sharp` 0.35.5, la versión corregida (fijada en `package-lock.json`); el último deploy de Vercel salió bien. Igual conviene pasar a **16.4.2** (y `eslint-config-next` 16.4.2): es una versión de parche y cierra el aviso.
+      Next y `eslint-config-next` en 16.4.2: `npm audit` ya no marca nada crítico. Lo que queda son herramientas de desarrollo (`braces`, `@vitest/mocker`), que no llegan al sitio.
+      → `7b859d7`
 - *Revisado y bien:* `alembic check` (los modelos coinciden con las migraciones); la cadena de migraciones sube y baja entera; borrar un lugar borra todas sus fotos de Cloudinary, también las de reseñas.
 
 ## 13 — Datos
 
-- [ ] **[Media] Borrar una reseña desde Reportes deja su foto** — el admin borra reseñas con `POST /admin/reports/resolve` (acción "delete"), y el borrado de la foto de la reseña se puso solo en `DELETE /admin/reviews/...`, que la interfaz no usa. Probado: después de borrarla por Reportes, Cloudinary no recibe nada para borrar (la foto queda para siempre: su permiso de subida ya no está, así que la limpieza automática no la ve) y el aporte de la foto sigue pendiente en la cola del admin, apuntando a una reseña que ya no existe. Arreglo: que `reports.resolve` borre la foto como los otros caminos, y un solo camino para borrar reseñas del admin.
+- [x] **[Media] Borrar una reseña desde Reportes deja su foto** — el admin borra reseñas con `POST /admin/reports/resolve` (acción "delete"), y el borrado de la foto de la reseña se puso solo en `DELETE /admin/reviews/...`, que la interfaz no usa. Probado: después de borrarla por Reportes, Cloudinary no recibe nada para borrar (la foto queda para siempre: su permiso de subida ya no está, así que la limpieza automática no la ve) y el aporte de la foto sigue pendiente en la cola del admin, apuntando a una reseña que ya no existe. Arreglo: que `reports.resolve` borre la foto como los otros caminos, y un solo camino para borrar reseñas del admin.
+      Ahora Reportes borra la foto (también de Cloudinary) y retira su aporte de la cola. `DELETE /admin/reviews/...` se borró: queda un solo camino.
+      → `af3cf05`
 
 ## 14 — Eficiencia
 
-- [ ] **[Media] En la compu se baja una foto de 1920 px que no se ve** — la página del lugar tiene las dos galerías (compu y celular) y oculta una con CSS. Medido con Chromium: en la compu, la galería del celular (oculta) pide igual su foto principal con `sizes="100vw"` y prioridad, a 1920 px de ancho (la imagen más pesada de la página), además de la de la grilla (640 px). En el celular no pasa (las dos piden la misma URL). Arreglo: que la del celular pida un tamaño mínimo fuera del celular (`sizes`) o que solo se dibuje la galería que corresponde.
-- [ ] **[Baja] El perfil hace 2 consultas por cada lugar del dueño** — `/spots/mine`, `/me/summary` y `/me/requests` buscan el pedido de cambio de cada lugar de a uno (contado: de 10 a 34 consultas pasando de 3 a 15 lugares). Solo se nota con muchos lugares.
+- [x] **[Media] En la compu se baja una foto de 1920 px que no se ve** — la página del lugar tiene las dos galerías (compu y celular) y oculta una con CSS. Medido con Chromium: en la compu, la galería del celular (oculta) pide igual su foto principal con `sizes="100vw"` y prioridad, a 1920 px de ancho (la imagen más pesada de la página), además de la de la grilla (640 px). En el celular no pasa (las dos piden la misma URL). Arreglo: que la del celular pida un tamaño mínimo fuera del celular (`sizes`) o que solo se dibuje la galería que corresponde.
+      La galería del celular usa `sizes="(max-width: 768px) 100vw, 1px"`: en la compu su foto principal se pide a 640 px y no a 1920. Lo controla el e2e.
+      → `58091fa`, `624c2bd`
+- [x] **[Baja] El perfil hace 2 consultas por cada lugar del dueño** — `/spots/mine`, `/me/summary` y `/me/requests` buscan el pedido de cambio de cada lugar de a uno (contado: de 10 a 34 consultas pasando de 3 a 15 lugares). Solo se nota con muchos lugares.
+      Los pedidos de todos sus lugares se buscan juntos, en dos consultas: la cantidad ya no crece con los lugares (lo controla `test_query_counts.py`).
+      → `b8e0d0f`
 - *Revisado y bien:* las páginas de sector y de ruta, favoritos, notificaciones, los paneles del admin y los sitemaps hacen la misma cantidad de consultas con 3 o con 15 lugares.
 
 ## 15 — Código y detalles
 
-- [ ] **[Baja] Endpoints sin uso, y dos caminos para lo mismo** — además de los cuatro GET de la sección 12, `DELETE /admin/reviews/{kind}/{id}` no lo usa la interfaz (el admin borra por Reportes). Tener dos caminos para borrar una reseña ya hizo que divergieran (sección 13).
-- [ ] **[Baja] Cinco SVG de la plantilla de Next en `public/`** — `file.svg`, `globe.svg`, `next.svg`, `vercel.svg` y `window.svg`, sin ningún uso desde el primer commit; se sirven públicamente.
-- [ ] **[Baja] El "+n" de las actividades no tiene hover** — las demás pills de actividades sí (`hover`); el +n (`ExtraCategories`, en la card y en la página del lugar) no.
+- [x] **[Baja] Endpoints sin uso, y dos caminos para lo mismo** — además de los cuatro GET de la sección 12, `DELETE /admin/reviews/{kind}/{id}` no lo usa la interfaz (el admin borra por Reportes). Tener dos caminos para borrar una reseña ya hizo que divergieran (sección 13).
+      Se borraron todos.
+      → `af3cf05`
+- [x] **[Baja] Cinco SVG de la plantilla de Next en `public/`** — `file.svg`, `globe.svg`, `next.svg`, `vercel.svg` y `window.svg`, sin ningún uso desde el primer commit; se sirven públicamente.
+      Borrados.
+      → `a19efbc`
+- [x] **[Baja] El "+n" de las actividades no tiene hover** — las demás pills de actividades sí (`hover`); el +n (`ExtraCategories`, en la card y en la página del lugar) no.
+      Ahora tiene el mismo hover.
+      → `a19efbc`
 
 ## Utilidad
 
