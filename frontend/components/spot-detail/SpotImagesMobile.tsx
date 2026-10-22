@@ -9,6 +9,11 @@ import { CldImage } from "next-cloudinary"
 import ImageGallery from "./ImageGallery"
 import type { SpotPhoto } from "./SpotImages"
 
+// En la compu esta galería está oculta (spot-page.css), pero la principal
+// lleva priority y el navegador la bajaba igual, a 1920px. Con este sizes en
+// la compu pide la versión más chica.
+export const MOBILE_PHOTO_SIZES = "(max-width: 768px) 100vw, 1px"
+
 export default function SpotImagesMobile({ images = [], name, actions }: { images?: SpotPhoto[]; name: string; actions?: ReactNode }) {
   const [current, setCurrent] = useState(0)
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
@@ -41,7 +46,7 @@ export default function SpotImagesMobile({ images = [], name, actions }: { image
               gravity="auto"
               quality="auto"
               format="auto"
-              sizes="100vw"
+              sizes={MOBILE_PHOTO_SIZES}
               className="object-cover"
               {...(i === 0 ? { priority: true } : { loading: "lazy" as const })}
             />

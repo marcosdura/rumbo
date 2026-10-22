@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-vi.mock("next-cloudinary", () => ({ CldImage: ({ alt, priority }: { alt: string; priority?: boolean }) => <span role="img" aria-label={alt} data-priority={priority ? "si" : "no"} /> }))
+vi.mock("next-cloudinary", () => ({ CldImage: ({ alt, priority, sizes }: { alt: string; priority?: boolean; sizes?: string }) => <span role="img" aria-label={alt} data-priority={priority ? "si" : "no"} data-sizes={sizes} /> }))
 vi.mock("./ImageGallery", () => ({ default: ({ startIndex }: { startIndex: number }) => <div role="dialog">foto {startIndex + 1}</div> }))
 
 const { default: SpotImagesMobile } = await import("./SpotImagesMobile")
@@ -25,6 +25,12 @@ describe("fotos del lugar en el celular", () => {
     expect(screen.getByText("3/3")).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Ver foto 2 de Cerro" }))
     expect(screen.getByRole("dialog").textContent).toBe("foto 2")
+  })
+
+  it("a todo el ancho en el celular, y en la compu (donde está oculta) la versión más chica", () => {
+    render(<SpotImagesMobile images={photos} name="Cerro" />)
+    const sizes = new Set(screen.getAllByRole("img").map(i => i.getAttribute("data-sizes")))
+    expect([...sizes]).toEqual(["(max-width: 768px) 100vw, 1px"])
   })
 
   it("sin fotos no muestra nada", () => {
