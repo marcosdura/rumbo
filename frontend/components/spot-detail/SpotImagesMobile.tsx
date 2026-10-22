@@ -1,14 +1,15 @@
 "use client"
 
 // Las fotos del lugar en el celular: arriba de todo, a todo el ancho, una por
-// vez y deslizando con el dedo (la principal primero), con "1/n" encima. Al
-// tocar una se abre en grande. En la compu se ven en grilla (SpotImages).
-import { useRef, useState } from "react"
+// vez y deslizando con el dedo (la principal primero), con "1/n" encima y
+// guardar y compartir arriba a la derecha (actions). Al tocar una se abre en
+// grande. En la compu se ven en grilla (SpotImages).
+import { useRef, useState, type ReactNode } from "react"
 import { CldImage } from "next-cloudinary"
 import ImageGallery from "./ImageGallery"
 import type { SpotPhoto } from "./SpotImages"
 
-export default function SpotImagesMobile({ images = [], name }: { images?: SpotPhoto[]; name: string }) {
+export default function SpotImagesMobile({ images = [], name, actions }: { images?: SpotPhoto[]; name: string; actions?: ReactNode }) {
   const [current, setCurrent] = useState(0)
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -47,6 +48,7 @@ export default function SpotImagesMobile({ images = [], name }: { images?: SpotP
           </button>
         ))}
       </div>
+      {actions && <div className="spot-mobile-photos-actions">{actions}</div>}
       <span className="spot-mobile-photos-count" aria-live="polite">{current + 1}/{images.length}</span>
       {galleryIndex !== null && (
         <ImageGallery images={images} name={name} startIndex={galleryIndex} onClose={() => setGalleryIndex(null)} />

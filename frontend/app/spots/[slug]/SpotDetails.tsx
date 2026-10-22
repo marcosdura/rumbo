@@ -26,6 +26,7 @@ import CampingCard from "../../../components/spot-detail/CampingCard"
 import GlampingCard from "../../../components/spot-detail/GlampingCard"
 import ExperienciasSection from "../../../components/spot-detail/ExperienciasSection"
 import Pill from "@/components/ui/Pill"
+import ExtraCategories from "@/components/ui/ExtraCategories"
 import { AddButton, EmptySection, OwnerBar, PendingNotice } from "@/components/spot-detail/AddToSpot"
 import { addToSpotUrl } from "@/components/agregar-lugar/prefill"
 import ReportButton from "@/components/ui/ReportButton"
@@ -77,6 +78,8 @@ const CATEGORY_EMOJIS: Record<string, string> = {
 }
 
 const STAY_TYPE_ORDER = ["Camping", "Glamping", "Motorhome"]
+// Cuántas actividades se ven en el celular antes del +n (una sola línea).
+const MOBILE_ACTIVITIES = 2
 
 const MapCard = dynamic(() => import("../../../components/spots/MapCard"), { ssr: false })
 
@@ -114,6 +117,14 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
   // El puntaje del encabezado viene con el lugar (el servidor ya lo calcula):
   // antes se pedía aparte y se veía "★ —" hasta que llegaba.
   const reviewCount = spot.review_count ?? 0
+  const activities = spot.categories && spot.categories.length > 0 ? spot.categories : spot.category ? [spot.category] : []
+  const hasPhotos = (spot.images?.length ?? 0) > 0
+  const mobileActions = (
+    <div className="spot-mobile-actions">
+      <FavoriteButton spot={spot} variant="icon" />
+      <button className="action-btn is-icon" onClick={() => setShowShare(true)} aria-label="Compartir">🔗</button>
+    </div>
+  )
   const offSeason = offSeasonNotice(spot)
 
   const stayCards: Record<string, ReactNode> = {
@@ -147,8 +158,9 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
               </p>
             )}
 
-            {/* Celular: volver, y guardar y compartir solo con el ícono; debajo
-                las fotos, y después el nombre y lo demás. */}
+            {/* Celular: volver; debajo las fotos, con guardar y compartir (solo el
+                ícono) encima; y después el nombre y lo demás. Sin fotos, los
+                botones van al lado de volver. */}
             <div className="spot-mobile-bar">
               <button
                 onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}
@@ -156,21 +168,26 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
               >
                 ← Volver
               </button>
-              <div className="spot-mobile-actions">
-                <FavoriteButton spot={spot} variant="icon" />
-                <button className="action-btn is-icon" onClick={() => setShowShare(true)} aria-label="Compartir">🔗</button>
-              </div>
+              {!hasPhotos && mobileActions}
             </div>
             <div className="spot-mobile-only">
-              <SpotImagesMobile images={spot.images} name={spot.name} />
+              <SpotImagesMobile images={spot.images} name={spot.name} actions={mobileActions} />
             </div>
 
             {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>
               <div className="spot-header-row">
-                <h1 className="spot-title">
-                  {spot.name}
-                </h1>
+                {/* El nombre, con la pill del departamento en la misma fila. */}
+                <div className="spot-title-row">
+                  <h1 className="spot-title">
+                    {spot.name}
+                  </h1>
+                  {spot.department && (
+                    <Link href={departmentHref(spot.department)} style={{ textDecoration: "none", flexShrink: 0 }}>
+                      <Pill variant="dark-green" hover>{spot.department}</Pill>
+                    </Link>
+                  )}
+                </div>
 
                 <div className="spot-actions">
                   <FavoriteButton spot={spot} variant="detail" />
@@ -197,26 +214,28 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                       : "¡Sé el primero en reseñar!"}
                   </button>
                 </span>
-                <span style={{ color: "#d0cdc7", fontSize: 14 }}>·</span>
-                {/* Las pills llevan a esa actividad en el departamento ("Camping en
-                    Rocha") y a los lugares del departamento (lib/places.ts). */}
-                {(spot.categories && spot.categories.length > 0 ? spot.categories : spot.category ? [spot.category] : []).map((cat) => (
-                  <Link key={cat.name} href={activityHref(cat.name, spot.department)} style={{ textDecoration: "none" }}>
+                {offSeason && (
+                  <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
+                    ⚠️ {offSeason}
+                  </span>
+                )}
+              </div>
+
+              {/* Las actividades, en su propia fila: llevan a esa actividad en el
+                  departamento ("Camping en Rocha", lib/places.ts). En el celular
+                  entra una sola línea: las primeras y el +n de la card. */}
+              <div className="spot-activities">
+                {activities.map((cat, i) => (
+                  <Link key={cat.name} href={activityHref(cat.name, spot.department)} style={{ textDecoration: "none" }}
+                    className={i >= MOBILE_ACTIVITIES ? "spot-activity-extra" : undefined}>
                     <Pill variant="beige" hover>
                       {CATEGORY_EMOJIS[cat.name] && `${CATEGORY_EMOJIS[cat.name]} `}
                       {cat.name}
                     </Pill>
                   </Link>
                 ))}
-                {spot.department && (
-                  <Link href={departmentHref(spot.department)} style={{ textDecoration: "none" }}>
-                    <Pill variant="dark-green" hover>{spot.department}</Pill>
-                  </Link>
-                )}
-                {offSeason && (
-                  <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
-                    ⚠️ {offSeason}
-                  </span>
+                {activities.length > MOBILE_ACTIVITIES && (
+                  <ExtraCategories categories={activities.slice(MOBILE_ACTIVITIES)} emoji={CATEGORY_EMOJIS} className="spot-activities-more" />
                 )}
               </div>
             </div>

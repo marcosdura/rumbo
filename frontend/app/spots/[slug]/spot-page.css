@@ -63,6 +63,13 @@
   padding: 36px 24px 48px;
 }
 
+.spot-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+
+/* Las actividades del lugar, en su propia fila. En la compu entran todas;
+   el +n es para el celular. */
+.spot-activities { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.spot-activities-more { display: none; }
+
 .spot-header-row {
   display: flex;
   align-items: flex-start;
@@ -109,7 +116,10 @@
 .spot-mobile-bar { display: none; }
 .spot-mobile-only { display: none; }
 .action-btn.is-icon { padding: 9px 11px; }
-.spot-mobile-photos { position: relative; margin: 0 -16px 20px; }
+.spot-mobile-photos { position: relative; margin: 0 0 18px; border-radius: 16px; overflow: hidden; }
+.spot-mobile-photos-actions { position: absolute; top: 10px; right: 10px; }
+.spot-mobile-photos-actions .fav-btn-detail,
+.spot-mobile-photos-actions .action-btn { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 .spot-mobile-photos-track {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
 }
@@ -139,7 +149,10 @@
 
 @media (max-width: 768px) {
   .mobile-back-btn { display: flex; padding: 0; }
-  .spot-mobile-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .spot-mobile-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; min-height: 24px; }
+  .spot-activities { flex-wrap: nowrap; overflow: hidden; }
+  .spot-activity-extra { display: none; }
+  .spot-activities-more { display: block; }
   .spot-mobile-actions { display: flex; gap: 8px; }
   .spot-mobile-only { display: block; }
   .spot-desktop-only { display: none; }

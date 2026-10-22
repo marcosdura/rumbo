@@ -26,7 +26,7 @@ vi.mock("../../../components/layout/Footer", () => ({ default: () => null }))
 vi.mock("../../../components/spot-detail/SpotImages", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: ({ variant }: { variant: string }) => <button aria-label={`guardar (${variant})`}>{variant === "icon" ? "❤️" : "❤️ Guardar"}</button> }))
-vi.mock("@/components/spot-detail/SpotImagesMobile", () => ({ default: () => <div>fotos del celular</div> }))
+vi.mock("@/components/spot-detail/SpotImagesMobile", () => ({ default: ({ images, actions }: { images?: unknown[]; actions?: React.ReactNode }) => images?.length ? <div className="fotos-celular">fotos del celular{actions}</div> : null }))
 vi.mock("../../../components/spot-detail/ExperienciasSection", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/NearbySpots", () => ({ default: ({ spotId, services, title }: { spotId: number; services?: string; title?: string }) => <p>cercanos de {spotId}{services ? ` (${services}: ${title})` : ""}</p> }))
 
@@ -46,20 +46,40 @@ afterEach(() => {
 })
 
 describe("Página del lugar en el celular", () => {
-  it("arriba: volver, y guardar y compartir solo con el ícono; después las fotos y el nombre", async () => {
-    const { container } = render(<SpotDetail spot={spot("Camping")} />)
+  const photos = [{ cloudinary_public_id: "a", is_main: true }]
+
+  it("con fotos: volver solo arriba, y guardar y compartir sobre la foto; después el nombre", async () => {
+    const { container } = render(<SpotDetail spot={spot("Camping", { images: photos })} />)
     await screen.findByText("Cerro Arequita")
-    const bar = container.querySelector(".spot-mobile-bar")!
-    expect(bar.textContent).toBe("← Volver❤️🔗")
-    expect(bar.querySelector('[aria-label="Compartir"]')).toBeTruthy()
-    // Las fotos del celular van entre la barra y el nombre.
+    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver")
+    const onPhoto = container.querySelector(".fotos-celular")!
+    expect(onPhoto.querySelector('[aria-label="Compartir"]')).toBeTruthy()
+    expect(onPhoto.textContent).toContain("❤️")
     const order = [...container.querySelectorAll(".spot-mobile-bar, .spot-mobile-only, h1")].map(el => el.tagName === "H1" ? "nombre" : el.className)
     expect(order).toEqual(["spot-mobile-bar", "spot-mobile-only", "nombre"])
+  })
+
+  it("sin fotos, guardar y compartir quedan al lado de volver", async () => {
+    const { container } = render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver❤️🔗")
+  })
+
+  it("el departamento va al lado del nombre y las actividades en su fila, con +n después de dos", async () => {
+    const cats = [{ name: "Camping" }, { name: "Trekking" }, { name: "Kayak" }, { name: "Surf" }]
+    const { container } = render(<SpotDetail spot={spot("Camping", { categories: cats })} />)
+    await screen.findByText("Cerro Arequita")
+    expect(container.querySelector(".spot-title-row")!.textContent).toBe("Cerro ArequitaLavalleja")
+    const row = container.querySelector(".spot-activities")!
+    expect([...row.querySelectorAll("a")].map(a => a.className)).toEqual(["", "", "spot-activity-extra", "spot-activity-extra"])
+    expect(row.querySelector(".spot-activities-more")!.textContent).toBe("+2")
     const { readFileSync } = await import("node:fs")
     const css = readFileSync("app/spots/[slug]/spot-page.css", "utf-8")
     const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
-    expect(mobile).toMatch(/\.spot-desktop-only \{ display: none; \}/)
-    expect(mobile).toMatch(/\.spot-actions \{ display: none; \}/)
+    for (const rule of [".spot-desktop-only { display: none; }", ".spot-actions { display: none; }", ".spot-activity-extra { display: none; }", ".spot-activities-more { display: block; }"]) {
+      expect(mobile).toContain(rule)
+    }
+    expect(css.slice(0, css.indexOf("@media (max-width: 768px)"))).toContain(".spot-activities-more { display: none; }")
   })
 })
 
