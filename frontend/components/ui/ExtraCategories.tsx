@@ -56,7 +56,8 @@ export default function ExtraCategories({ categories, emoji, variant = "beige", 
         else show(e.currentTarget)
       }}
     >
-      <Pill variant={variant}>+{categories.length}</Pill>
+      {/* Con hover como las otras pills: también se puede pasar por encima. */}
+      <Pill variant={variant} hover>+{categories.length}</Pill>
       {open && pos && createPortal(
         <div
           onClick={(e) => e.stopPropagation()}
