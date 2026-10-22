@@ -101,15 +101,19 @@
   align-items: start;
 }
 
-.spot-right-panel {
-  position: sticky;
-  top: 24px;
+/* Detalles · Información práctica · Contacto (components/spot-detail/SpotDetails). */
+.spot-info-card {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 24px 28px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
+
+/* Puntaje a la izquierda, actividades a la derecha. */
+.spot-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.spot-rating-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spot-meta-row .spot-activities { margin-top: 0; justify-content: flex-end; }
 
 /* Celular: la barra de arriba (volver, guardar, compartir) y las fotos
    deslizables (SpotImagesMobile). En la compu no se ven. */
@@ -159,7 +163,7 @@
   /* Guardar y compartir ya están en la barra de arriba. */
   .spot-actions { display: none; }
   .spot-page-inner {
-    padding: 20px 16px 40px;
+    padding: 10px 16px 40px;
   }
   .spot-header-row {
     flex-direction: column;
@@ -175,11 +179,14 @@
   .spot-main-grid {
     grid-template-columns: 1fr;
   }
-  .spot-right-panel {
-    position: static;
+  .spot-info-card {
     padding: 20px 16px;
-    /* En el celular, precio y contacto antes que la descripción y el
-       mapa: es lo que se busca para ir. */
+    /* En el celular, precio y contacto antes que la descripción: es lo
+       que se busca para ir. */
     order: -1;
   }
+  .spot-meta-row { display: block; }
+  /* El puntaje está en la barra de volver. */
+  .spot-rating-wrap .rating-badge { display: none; }
+  .spot-meta-row .spot-activities { margin-top: 10px; justify-content: flex-start; }
 }

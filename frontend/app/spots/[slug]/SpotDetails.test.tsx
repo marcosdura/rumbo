@@ -19,7 +19,8 @@ vi.mock("@/lib/api", () => ({
   },
 }))
 // Lo pesado de la página (mapa, galería, navbar, reseñas) no importa acá.
-vi.mock("next/dynamic", () => ({ default: () => () => null }))
+// El mapa (MapCard, con next/dynamic): un marcador para saber dónde queda.
+vi.mock("next/dynamic", () => ({ default: () => () => <div data-testid="mapa" /> }))
 vi.mock("next-cloudinary", () => ({ CldImage: () => null }))
 vi.mock("../../../components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("../../../components/layout/Footer", () => ({ default: () => null }))
@@ -51,7 +52,8 @@ describe("Página del lugar en el celular", () => {
   it("con fotos: volver solo arriba, y guardar y compartir sobre la foto; después el nombre", async () => {
     const { container } = render(<SpotDetail spot={spot("Camping", { images: photos })} />)
     await screen.findByText("Cerro Arequita")
-    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver")
+    // El puntaje también va en la barra (en el celular no se ve abajo del nombre).
+    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver★—¡Sé el primero en reseñar!")
     const onPhoto = container.querySelector(".fotos-celular")!
     expect(onPhoto.querySelector('[aria-label="Compartir"]')).toBeTruthy()
     expect(onPhoto.textContent).toContain("❤️")
@@ -62,7 +64,7 @@ describe("Página del lugar en el celular", () => {
   it("sin fotos, guardar y compartir quedan al lado de volver", async () => {
     const { container } = render(<SpotDetail spot={spot("Camping")} />)
     await screen.findByText("Cerro Arequita")
-    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver❤️🔗")
+    expect(container.querySelector(".spot-mobile-bar")!.textContent).toBe("← Volver★—¡Sé el primero en reseñar!❤️🔗")
   })
 
   it("el departamento va al lado del nombre y las actividades en su fila, con +n después de dos", async () => {
@@ -80,6 +82,23 @@ describe("Página del lugar en el celular", () => {
       expect(mobile).toContain(rule)
     }
     expect(css.slice(0, css.indexOf("@media (max-width: 768px)"))).toContain(".spot-activities-more { display: none; }")
+  })
+})
+
+describe("Página del lugar: el orden del contenido", () => {
+  it("descripción, la card de detalles, y el mapa al final justo antes de las reseñas", async () => {
+    const { container } = render(<SpotDetail spot={spot("Camping", { description: "Un lugar lindo", lat: -34, lng: -55 })} />)
+    await screen.findByText("Cerro Arequita")
+    const description = screen.getByText("Un lugar lindo")
+    const info = container.querySelector(".spot-info-card")!
+    const map = screen.getByTestId("mapa")
+    const reviews = container.querySelector("#reviews")!
+    const before = (a: Element, b: Element) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(before(description, info)).toBe(true)
+    expect(before(info, map)).toBe(true)
+    expect(map.nextElementSibling).toBe(reviews)
+    // Detalles, información práctica y contacto en columnas.
+    expect(info.querySelector(".detail-columns")).toBeTruthy()
   })
 })
 
@@ -193,9 +212,12 @@ describe("Página del lugar sugerido por un visitante", () => {
 describe("Página del lugar: encabezado y panel", () => {
   it("el puntaje viene con el lugar, sin pedirlo aparte", async () => {
     gets = []
-    render(<SpotDetail spot={spot("Camping", { average_rating: 4.6, review_count: 12 })} />)
-    expect(await screen.findByText("4.6")).toBeTruthy()
-    expect(screen.getByText("12 reseñas")).toBeTruthy()
+    const { container } = render(<SpotDetail spot={spot("Camping", { average_rating: 4.6, review_count: 12 })} />)
+    await screen.findByText("Cerro Arequita")
+    // En la barra del celular y en el encabezado (cada tamaño muestra uno).
+    for (const where of [".spot-mobile-bar .rating-badge", ".spot-rating-wrap .rating-badge"]) {
+      expect(container.querySelector(where)!.textContent).toBe("★4.612 reseñas")
+    }
     expect(gets.filter(u => u.includes("/reviews/"))).toEqual([])
   })
 
@@ -233,7 +255,7 @@ describe("Página del lugar: contacto y orden en el celular", () => {
     const { readFileSync } = await import("node:fs")
     const css = readFileSync("app/spots/[slug]/spot-page.css", "utf-8")
     const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
-    expect(mobile).toMatch(/\.spot-right-panel \{[^}]*order: -1;/)
+    expect(mobile).toMatch(/\.spot-info-card \{[^}]*order: -1;/)
   })
 })
 
@@ -262,7 +284,7 @@ describe("Página del lugar: para seguir navegando", () => {
 describe("Página del lugar: accesibilidad", () => {
   it("ir a las reseñas es un botón (se puede usar con teclado)", async () => {
     render(<SpotDetail spot={spot("Camping", { average_rating: 4.6, review_count: 12 })} />)
-    expect((await screen.findByText("12 reseñas")).tagName).toBe("BUTTON")
+    expect((await screen.findAllByText("12 reseñas")).map(el => el.tagName)).toEqual(["BUTTON", "BUTTON"])
   })
 })
 

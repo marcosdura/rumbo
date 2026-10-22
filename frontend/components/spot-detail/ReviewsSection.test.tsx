@@ -36,7 +36,7 @@ describe("ReviewsSection", () => {
     expect(screen.getByText("Cargando...")).toBeTruthy()
     await flush()
     expect(screen.queryByText("No se pudieron cargar las reseñas.")).toBeNull()
-    expect(screen.getByText("Todavía no hay reseñas. ¡Escribí la primera!")).toBeTruthy()
+    expect(screen.getByText("💬 Todavía no hay reseñas. ¡Escribí la primera!")).toBeTruthy()
   })
 
   it("si el reintento también falla, el aviso sigue", async () => {

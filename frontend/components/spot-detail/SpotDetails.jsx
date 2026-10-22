@@ -3,8 +3,8 @@ import { knownPractical } from "@/lib/practicalInfo"
 import PracticalInfoCard from "./PracticalInfoCard"
 import EmailContact from "@/components/ui/EmailContact"
 
-// Panel derecho de la página del lugar: Detalles (precio, temporada,
-// transporte), Información práctica y Contacto, en ese orden. Solo lo que se
+// La card de la página del lugar con Detalles (precio, temporada,
+// transporte), Información práctica y Contacto, en tres columnas. Solo lo que se
 // sabe; departamento, categoría y acceso ya están en el encabezado y el banner.
 export function SectionLabel({ children, first = false }) {
   return (
@@ -120,16 +120,25 @@ function SpotDetails({ spot }) {
           word-break: break-all;
         }
 
+        /* Detalles · Información práctica · Contacto, una al lado de la otra
+           (en el celular, una debajo de la otra). */
+        .detail-columns {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 28px 40px;
+          align-items: start;
+        }
+
         @media (max-width: 480px) {
           .detail-label { font-size: 13px; }
           .detail-value, .detail-value-dim, .detail-link { font-size: 13px; }
         }
       `}</style>
 
-      <div style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
+      <div className="detail-columns" style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
 
         {rows.length > 0 && (
-          <>
+          <div>
             <SectionLabel first>Detalles</SectionLabel>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {rows.map((row, i) => (
@@ -143,17 +152,18 @@ function SpotDetails({ spot }) {
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {hasPractical && (
-          <>
-            <SectionLabel first={rows.length === 0}>Información práctica</SectionLabel>
+          <div>
+            <SectionLabel first>Información práctica</SectionLabel>
             <PracticalInfoCard info={spot} />
-          </>
+          </div>
         )}
 
-        <SectionLabel first={rows.length === 0 && !hasPractical}>Contacto</SectionLabel>
+        <div>
+        <SectionLabel first>Contacto</SectionLabel>
 
         {hasContact ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -173,6 +183,7 @@ function SpotDetails({ spot }) {
             <span className="detail-value-dim">No hay información de contacto disponible.</span>
           </div>
         )}
+        </div>
 
       </div>
     </>

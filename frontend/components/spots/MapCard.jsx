@@ -63,10 +63,25 @@ function MapCard({ lat, lng, name }) {
             box-shadow: 0 4px 16px rgba(27, 67, 50, 0.28);
           }
         }
-        .mapcard-map-wrap { height: 260px; }
+        /* A todo el ancho de la página: más alto, y "Cómo llegar" encima del
+           mapa (sobre las capas de Leaflet). En el celular va debajo: encima
+           taparía buena parte de un mapa chico. */
+        .mapcard-area { position: relative; }
+        .mapcard-map-wrap { height: 380px; }
+        @media (min-width: 769px) {
+          .mapcard-area .mapcard-btn {
+            position: absolute; left: 50%; bottom: 16px; margin: 0; z-index: 500;
+            transform: translateX(-50%); box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+          }
+        }
+        @media (min-width: 769px) and (hover: hover) {
+          .mapcard-area .mapcard-btn:hover { transform: translateX(-50%) translateY(-1px); }
+        }
+        @media (max-width: 768px) {
+          .mapcard-map-wrap { height: 240px; }
+        }
         @media (max-width: 640px) {
           .mapcard-btn { width: 100%; margin: 12px 0 0; padding: 12px 20px; font-size: 14px; }
-          .mapcard-map-wrap { height: 200px; }
         }
       `}</style>
 
@@ -81,6 +96,7 @@ function MapCard({ lat, lng, name }) {
         </h3>
       </div>
 
+      <div className="mapcard-area">
       {/* key on the wrapper div forces a full DOM teardown when lat/lng or instance changes */}
       <div
         key={mapKey}
@@ -114,6 +130,7 @@ function MapCard({ lat, lng, name }) {
         <span>📍</span>
         <span>Cómo llegar</span>
       </a>
+      </div>
     </div>
   )
 }

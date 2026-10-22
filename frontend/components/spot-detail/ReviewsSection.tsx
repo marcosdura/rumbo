@@ -384,10 +384,10 @@ export default function ReviewsSection({ spotId }: { spotId: number }) {
             </button>
           </div>
         ) : reviews.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--muted)", fontSize: 14 }}>
-            <p style={{ fontSize: 28, marginBottom: 10, opacity: 0.25 }}>💬</p>
-            Todavía no hay reseñas. ¡Escribí la primera!
-          </div>
+          // Sin reseñas: una línea, sin el bloque alto de antes.
+          <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>
+            💬 Todavía no hay reseñas. ¡Escribí la primera!
+          </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {reviews.map(review => (

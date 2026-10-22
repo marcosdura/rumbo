@@ -105,11 +105,11 @@ function SpotImages({ images = [], name }: { images?: SpotPhoto[]; name: string 
   return (
     <>
       <style>{`
-        .spot-img-single { height: 350px; }
-        .spot-img-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
-        .spot-img-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
-        .spot-img-grid-4 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 350px; }
-        .spot-img-grid-5 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 350px; }
+        .spot-img-single { height: 470px; }
+        .spot-img-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 470px; }
+        .spot-img-grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 470px; }
+        .spot-img-grid-4 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 470px; }
+        .spot-img-grid-5 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 470px; }
         .spot-img-sub-3 { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; }
         .spot-img-sub-5 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; }
         .spot-photo img { opacity: 0; transition: opacity 0.35s ease; }

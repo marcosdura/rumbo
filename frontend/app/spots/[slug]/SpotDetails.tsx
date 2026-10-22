@@ -119,6 +119,26 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
   const reviewCount = spot.review_count ?? 0
   const activities = spot.categories && spot.categories.length > 0 ? spot.categories : spot.category ? [spot.category] : []
   const hasPhotos = (spot.images?.length ?? 0) > 0
+  const rating = (
+  <span className="rating-badge">
+    <span className="star">★</span>
+    <strong>{reviewCount > 0 ? spot.average_rating : "—"}</strong>
+    <button
+      type="button"
+      className="reviews-link"
+      onClick={() => {
+        const el = document.getElementById("reviews")
+        if (!el) return
+        const y = el.getBoundingClientRect().top + window.scrollY - 140
+        window.scrollTo({ top: y, behavior: "smooth" })
+      }}
+    >
+      {reviewCount > 0
+        ? `${reviewCount} reseña${reviewCount !== 1 ? "s" : ""}`
+        : "¡Sé el primero en reseñar!"}
+    </button>
+  </span>
+  )
   const mobileActions = (
     <div className="spot-mobile-actions">
       <FavoriteButton spot={spot} variant="icon" />
@@ -168,6 +188,7 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
               >
                 ← Volver
               </button>
+              {rating}
               {!hasPhotos && mobileActions}
             </div>
             <div className="spot-mobile-only">
@@ -195,25 +216,11 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span className="rating-badge">
-                  <span className="star">★</span>
-                  <strong>{reviewCount > 0 ? spot.average_rating : "—"}</strong>
-                  <button
-                    type="button"
-                    className="reviews-link"
-                    onClick={() => {
-                      const el = document.getElementById("reviews")
-                      if (!el) return
-                      const y = el.getBoundingClientRect().top + window.scrollY - 140
-                      window.scrollTo({ top: y, behavior: "smooth" })
-                    }}
-                  >
-                    {reviewCount > 0
-                      ? `${reviewCount} reseña${reviewCount !== 1 ? "s" : ""}`
-                      : "¡Sé el primero en reseñar!"}
-                  </button>
-                </span>
+              {/* Puntaje a la izquierda y actividades a la derecha (en el celular
+                  el puntaje va en la barra de volver). */}
+              <div className="spot-meta-row">
+              <div className="spot-rating-wrap">
+                {rating}
                 {offSeason && (
                   <span style={{ fontSize: 13, color: "#78590a", background: "#fef9e7", border: "1px solid #f0d98a", borderRadius: 999, padding: "3px 10px" }}>
                     ⚠️ {offSeason}
@@ -237,6 +244,7 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                 {activities.length > MOBILE_ACTIVITIES && (
                   <ExtraCategories categories={activities.slice(MOBILE_ACTIVITIES)} emoji={CATEGORY_EMOJIS} className="spot-activities-more" />
                 )}
+              </div>
               </div>
             </div>
 
@@ -276,23 +284,14 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
             {/* Layout principal */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-              {/* Fila superior: descripción + mapa | detalles y contacto */}
-              <div className="spot-main-grid">
-
-                {/* Izquierda: descripción + mapa */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                  <div className="fade-up fade-up-3">
-                    <SpotDescription description={spot.description} />
-                  </div>
-                  <div className="fade-up fade-up-4">
-                    <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />
-                  </div>
-                </div>
-
-                {/* Derecha: detalles y contacto */}
-                <div className="fade-up fade-up-4 spot-right-panel">
-                  <SpotDetails spot={spot} />
-                </div>
+              {/* La descripción a todo el ancho; debajo, una card con Detalles,
+                  Información práctica y Contacto en tres columnas (en el
+                  celular va antes que la descripción: es lo que se busca para ir). */}
+              <div className="fade-up fade-up-3">
+                <SpotDescription description={spot.description} />
+              </div>
+              <div className="fade-up fade-up-4 spot-info-card">
+                <SpotDetails spot={spot} />
               </div>
 
               {/* Contenido dinámico por categoría */}
@@ -358,6 +357,9 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                   </div>
                 </>
               )}
+
+              {/* El mapa, a todo el ancho, justo antes de las reseñas. */}
+              <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />
 
               {/* Reviews */}
               <div id="reviews">

@@ -125,12 +125,17 @@ function AmenitiesList({ amenities: all }) {
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
+        /* Cada grupo (esenciales, comida, actividades...) en dos columnas. */
+        .amenity-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; align-items: start; }
+        @media (max-width: 640px) {
+          .amenity-cats { grid-template-columns: 1fr; }
+        }
         @media (max-width: 480px) {
           .amenity-cat-label { font-size: 12px; }
         }
       `}</style>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="amenity-cats">
         {categorized.map((cat) => (
           <div key={cat.id}>
             <p className="amenity-cat-label">{cat.label}</p>
