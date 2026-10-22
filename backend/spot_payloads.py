@@ -130,7 +130,8 @@ def spot_detail(db: Session, spot: SpotDB) -> dict:
         # "Última actualización" (models.touch_spot_info).
         "info_updated_at": spot.info_updated_at or spot.created_at,
         "category": spot.category,
-        "categories": [sc.category for sc in spot.spot_categories],
+        # La principal primero (como en las cards): es la que se ve primero.
+        "categories": [sc.category for sc in sorted(spot.spot_categories, key=lambda sc: not sc.is_primary)],
         "camping_detail": spot.camping_detail,
         "glamping_detail": spot.glamping_detail,
         "glamping_amenities": spot.glamping_amenities,

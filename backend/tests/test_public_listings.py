@@ -46,3 +46,18 @@ def test_favoritos_con_puntaje_solo_publicados_y_del_ultimo_al_primero(client, d
     assert (favs[1]["average_rating"], favs[1]["review_count"]) == (4.0, 1)
     # Lo que usa la card.
     assert favs[0]["images"] and favs[0]["category"]["name"] == "Camping"
+
+
+def test_la_pagina_del_lugar_trae_la_actividad_principal_primero(client, db, make_spot):
+    from models import Category, SpotCategory
+    # La secundaria con el id más bajo: el orden no tiene que salir de la base.
+    camping = Category(name="Camping")
+    db.add(camping)
+    db.commit()
+    spot = make_spot(name="Cerro Mixto", slug="cerro-mixto", category="Trekking")
+    trekking = db.query(Category).filter_by(name="Trekking").one()
+    db.add(SpotCategory(spot_id=spot.id, category_id=camping.id, is_primary=False))
+    db.add(SpotCategory(spot_id=spot.id, category_id=trekking.id, is_primary=True))
+    db.commit()
+    names = [c["name"] for c in client.get("/spots/by-slug/cerro-mixto").json()["categories"]]
+    assert names == ["Trekking", "Camping"]
