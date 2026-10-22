@@ -1,6 +1,7 @@
 """La búsqueda de lugares: filtros, orden y distancia (GET /spots, /spots/nearby y
 la home). Antes vivía en routers/spots.py."""
 import math
+from text_search import words
 from sqlalchemy.orm import Session
 from models import SpotDB, SpotAmenity, ClimbingSector, ClimbingRoute, TrekkingDetail, Route, SurfDetail, KayakServiceDetail, GlampingDetail, SpotCategory, MotorhomeDetail, GlampingAmenity
 import models
@@ -25,6 +26,7 @@ def build_spots_filter_query(
     db: Session,
     activity: Optional[str] = None,
     department: Optional[str] = None,
+    q: Optional[str] = None,
     difficulty: Optional[List[str]] = None,
     duration: Optional[List[str]] = None,
     distance: Optional[List[str]] = None,
@@ -63,6 +65,10 @@ def build_spots_filter_query(
 
     if department:
         query = query.filter(SpotDB.department == department)
+
+    # Por nombre: todas las palabras, sin importar tildes ni mayúsculas.
+    for word in words(q):
+        query = query.filter(SpotDB.name_search.contains(word, autoescape=True))
 
     if activity:
         activity_list = [a.strip() for a in activity.split(",") if a.strip()]

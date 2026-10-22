@@ -22,6 +22,9 @@ class SpotDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+    # El nombre en minúsculas y sin tildes, para buscar (text_search.py). Lo
+    # mantiene keep_name_search, abajo.
+    name_search = Column(String, nullable=True, index=True)
     description = Column(String)
     department = Column(String, index=True)
     lat = Column(Float, nullable=True)
@@ -771,3 +774,14 @@ SPOT_INFO_MODELS = (
     SurfDetail, KayakServiceDetail, TrekkingDetail, Route, ClimbingSector, ClimbingRoute, ItemPhoto,
     RouteTrack, Experience,
 )
+
+
+@event.listens_for(Session, "before_flush")
+def keep_name_search(session, flush_context, instances):
+    """spots.name_search sigue al nombre: al crear el lugar y al cambiarle el
+    nombre (también cuando lo aprueba un pedido de cambio)."""
+    from sqlalchemy import inspect
+    from text_search import normalize
+    for obj in list(session.new) + list(session.dirty):
+        if isinstance(obj, SpotDB) and (obj in session.new or inspect(obj).attrs.name.history.has_changes()):
+            obj.name_search = normalize(obj.name)

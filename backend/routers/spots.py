@@ -9,10 +9,11 @@ from models import SpotDB, SpotAmenity, ClimbingSector, Route, SpotCategory, Exp
 from schemas import SpotResponse, ClimbingSectorResponse, RouteResponse, ExperienceResponse
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func
+from sqlalchemy import case, func
 from typing import Optional, List
 from routers.sectors import _attach_sector_stats
 from spot_payloads import SPOT_DETAIL_OPTIONS, SPOT_LIST_OPTIONS, serialize_spot_list, spot_detail
+from text_search import words
 from spot_search import NEARBY_RADIUS_KM, build_spots_filter_query, distance_km
 
 
@@ -35,6 +36,35 @@ def get_spot_ids(db: Session = Depends(get_db)):
 async def check_spot_name(request: Request, name: str, db: Session = Depends(get_db)):
     existing = db.query(SpotDB).filter(func.lower(SpotDB.name) == func.lower(name)).first()
     return {"exists": existing is not None}
+
+
+SUGGEST_LIMIT = 5
+
+
+@router.get("/spots/suggest")
+@limiter.limit("60/minute")
+def suggest_spots(request: Request, q: str = Query(min_length=2, max_length=80), db: Session = Depends(get_db)):
+    """Lugares cuyo nombre coincide con lo que se va escribiendo en el campo
+    "Dónde" del buscador (hasta 5). Primero los que empiezan así; sin
+    importar tildes ni mayúsculas. Va antes que /spots/{id}: si no,
+    "suggest" se tomaría como un id."""
+    terms = words(q)
+    if not terms:
+        return []
+    query = (
+        db.query(SpotDB)
+        .options(joinedload(SpotDB.category))
+        .filter(SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None), SpotDB.slug != None)
+    )
+    for word in terms:
+        query = query.filter(SpotDB.name_search.contains(word, autoescape=True))
+    starts = case((SpotDB.name_search.startswith(" ".join(terms), autoescape=True), 0), else_=1)
+    spots = query.order_by(starts, func.lower(SpotDB.name), SpotDB.id).limit(SUGGEST_LIMIT).all()
+    return [
+        {"id": s.id, "name": s.name, "slug": s.slug, "department": s.department,
+         "category": s.category.name if s.category else None}
+        for s in spots
+    ]
 
 
 @router.get("/spots/nearby")
@@ -73,6 +103,8 @@ def get_spots(
     db: Session = Depends(get_db),
     activity: Optional[str] = None,
     department: Optional[str] = None,
+    # Por nombre (el campo "Dónde" del buscador, con texto libre).
+    q: Optional[str] = Query(default=None, max_length=80),
     difficulty: Optional[List[str]] = Query(default=None),
     duration: Optional[List[str]] = Query(default=None),
     distance: Optional[List[str]] = Query(default=None),
@@ -105,7 +137,7 @@ def get_spots(
     offset: int = Query(default=0, ge=0),
 ):
     query = build_spots_filter_query(
-        db, activity=activity, department=department, difficulty=difficulty,
+        db, activity=activity, department=department, q=q, difficulty=difficulty,
         duration=duration, distance=distance, parking=parking, potable_water=potable_water,
         pet_friendly=pet_friendly, kids_friendly=kids_friendly, bathrooms=bathrooms,
         camping_amenity=camping_amenity, water_type=water_type, kayak_difficulty=kayak_difficulty,
@@ -137,6 +169,8 @@ def get_spot_pins(
     db: Session = Depends(get_db),
     activity: Optional[str] = None,
     department: Optional[str] = None,
+    # Por nombre (el campo "Dónde" del buscador, con texto libre).
+    q: Optional[str] = Query(default=None, max_length=80),
     difficulty: Optional[List[str]] = Query(default=None),
     duration: Optional[List[str]] = Query(default=None),
     distance: Optional[List[str]] = Query(default=None),
@@ -171,7 +205,7 @@ def get_spot_pins(
     mínimo que usa SpotsMap.jsx — nada de imágenes/amenities/rutas/reviews,
     que es lo que hace pesado a GET /spots."""
     query = build_spots_filter_query(
-        db, activity=activity, department=department, difficulty=difficulty,
+        db, activity=activity, department=department, q=q, difficulty=difficulty,
         duration=duration, distance=distance, parking=parking, potable_water=potable_water,
         pet_friendly=pet_friendly, kids_friendly=kids_friendly, bathrooms=bathrooms,
         camping_amenity=camping_amenity, water_type=water_type, kayak_difficulty=kayak_difficulty,
