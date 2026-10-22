@@ -60,15 +60,10 @@ def lists(world):
     return [
         "/spots/by-slug/playa-brava",
         f"/spots/{sid}",
-        f"/spots/{sid}/routes",
-        f"/spots/{sid}/sectors",
-        f"/spots/{sid}/experiences",
-        f"/glamping/spots/{sid}/glamping",
-        "/routes/",
         f"/sectors/?spot_id={sid}",
         f"/sectors/{world['sector_ok']}",
-        f"/sectors/{world['sector_ok']}/routes",
-        "/sectors/by-slug/sector-visible",
+        "/sectors/page/playa-brava/sector-visible",
+        "/routes/page/playa-brava/ruta-visible",
         "/spots",
         "/spots/pins",
     ]
@@ -95,10 +90,9 @@ def test_una_via_pendiente_no_cambia_las_stats_del_sector(client, world):
 
 @pytest.mark.parametrize("path", [
     "/routes/{route_pending}",
-    "/routes/by-slug/ruta-pendiente",
+    "/routes/page/playa-brava/ruta-pendiente",
     "/sectors/{sector_pending}",
-    "/sectors/{sector_pending}/routes",
-    "/sectors/by-slug/sector-pendiente",
+    "/sectors/page/playa-brava/sector-pendiente",
 ])
 def test_el_detalle_de_un_pendiente_da_404(client, world, path):
     assert client.get(path.format(**world)).status_code == 404

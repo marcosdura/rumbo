@@ -83,12 +83,32 @@ def test_borrar_la_resena_borra_su_foto_tambien_de_cloudinary(client, db, make_s
     assert every(db, ItemPhoto).count() == 0
 
 
+def report_and_delete(client, review):
+    """El admin borra la reseña desde Reportes."""
+    r = client.post("/reports", json={"target_kind": "review", "target_id": review["id"], "reason": "offensive"}, headers=as_user(OTHER))
+    assert r.status_code == 201, r.text
+    body = {"target_kind": "review", "target_id": review["id"], "action": "delete"}
+    return client.post("/admin/reports/resolve", json=body, headers=as_user(ADMIN))
+
+
 def test_si_el_admin_borra_la_resena_tambien_se_va_la_foto(client, db, make_spot, destroyed):
     spot, review = setup(client, db, make_spot)
     add_photo(client, spot, review)
     approve_all(client)
-    assert client.delete(f"/admin/reviews/review/{review['id']}", headers=as_user(ADMIN)).status_code == 200
+    assert report_and_delete(client, review).status_code == 200
     assert destroyed == [pid(spot)]
+    assert every(db, ItemPhoto).count() == 0
+
+
+def test_si_el_admin_borra_la_resena_con_la_foto_en_revision_se_retira_el_aporte(client, db, make_spot, destroyed):
+    # Antes la foto quedaba para siempre y su aporte seguía en la cola.
+    spot, review = setup(client, db, make_spot)
+    add_photo(client, spot, review)
+    assert report_and_delete(client, review).status_code == 200
+    assert destroyed == [pid(spot)]
+    assert every(db, ItemPhoto).count() == 0
+    assert every(db, Contribution).one().status == "withdrawn"
+    assert client.get("/admin/contributions", headers=as_user(ADMIN)).json() == []
 
 
 def test_borrar_la_cuenta_borra_las_fotos_de_sus_resenas(client, db, make_spot, destroyed):

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 import reports
@@ -11,7 +11,6 @@ from models import Report
 from schemas import ReportCreate, ReportResolve
 from spot_changes import destroy_cloudinary_images
 
-import item_photos
 router = APIRouter(tags=["reports"])
 
 
@@ -73,22 +72,3 @@ def resolve_reports(request: Request, body: ReportResolve, db: Session = Depends
     return {"ok": True}
 
 
-@router.delete("/admin/reviews/{kind}/{review_id}")
-@limiter.limit("60/minute")
-def admin_delete_review(request: Request, kind: str, review_id: int, db: Session = Depends(get_db), admin: dict = Depends(get_current_admin_user)):
-    """El admin borra cualquier reseña (antes solo podía su autor: una
-    reseña ofensiva quedaba para siempre). Cierra sus reportes abiertos."""
-    model = reports.REVIEW_KINDS.get(kind)
-    if not model:
-        raise HTTPException(status_code=404, detail="Tipo de reseña desconocido")
-    review = db.query(model).filter(model.id == review_id).first()
-    if not review:
-        raise HTTPException(status_code=404, detail="Reseña no encontrada")
-    reports.notify_review_deleted(db, review)
-    # Su foto se va con ella (también de Cloudinary).
-    photos = item_photos.photos_for_deleted(db, "review_id", [review.id], admin.get("email"))
-    db.delete(review)
-    reports.close_reports(db, kind, review_id, "actioned", "deleted", by=admin.get("email"))
-    db.commit()
-    destroy_cloudinary_images(photos)
-    return {"ok": True}

@@ -12,6 +12,7 @@ contenido ofensivo, spam, fotos que no corresponden, un lugar que cerró).
   borra una reseña. La acción cierra todos los reportes abiertos
   de esa cosa.
 """
+import item_photos
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -167,6 +168,9 @@ def resolve(db: Session, admin: dict, kind: str, target_id: int, action: str, re
         close_reports(db, kind, target_id, "actioned", "unpublished", by)
     else:  # delete
         notify_review_deleted(db, target)
+        # Su foto se va con ella (también de Cloudinary, después del commit):
+        # antes quedaba para siempre y su aporte seguía pendiente.
+        photos += item_photos.photos_for_deleted(db, "review_id", [target.id], by)
         db.delete(target)
         close_reports(db, kind, target_id, "actioned", "deleted", by)
     return photos

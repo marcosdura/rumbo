@@ -445,7 +445,7 @@ async function admin(browser, r) {
   })
   await page.getByRole("button", { name: "Importar 2 vías" }).click()
   await page.waitForTimeout(800)
-  const imported = (await apiGet(`/sectors/${norte}/routes`)).find(r => r.name === "Via Importada E2E")
+  const imported = (await apiGet("/sectors/page/roca-de-prueba/sector-norte")).routes.find(r => r.name === "Via Importada E2E")
   r.ok("Admin — importar vías desde una planilla", imported?.grade === "6b+" && imported?.bolts === 8, JSON.stringify(imported ?? null))
 
   // Abrir una vía no corre las filas ni le pone la franja verde a la izquierda.

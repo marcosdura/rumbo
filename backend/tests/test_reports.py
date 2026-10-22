@@ -180,11 +180,12 @@ def test_solo_el_admin_resuelve(client, make_spot):
 
 def test_el_admin_borra_una_resenia_ajena(client, db, review):
     report(client, "review", review.id, "offensive")
-    assert client.delete(f"/admin/reviews/review/{review.id}", headers=as_user(ADMIN)).status_code == 200
+    assert resolve(client, "review", review.id, "delete").status_code == 200
     assert db.query(Review).count() == 0
     assert db.query(Report).one().status == "actioned"
 
 
-def test_solo_el_admin(client, review):
-    assert client.delete(f"/admin/reviews/review/{review.id}", headers=as_user(OWNER)).status_code == 403
-    assert client.delete("/admin/reviews/hotel/1", headers=as_user(ADMIN)).status_code == 404
+def test_el_borrado_de_reseñas_va_solo_por_reportes(client, review):
+    # El segundo camino (DELETE /admin/reviews) no lo usaba la interfaz y no
+    # borraba la foto de la reseña: ya no existe.
+    assert client.delete(f"/admin/reviews/review/{review.id}", headers=as_user(ADMIN)).status_code in (404, 405)

@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import ClimbingSector
 from schemas import ClimbingSectorCreate, ClimbingSectorResponse
-from models import ClimbingRoute
 from schemas import ClimbingRouteResponse
 from auth import get_current_user_required, get_current_admin_user
 import route_import
@@ -81,17 +80,14 @@ def delete_sector(request: Request, sector_id: int, db: Session = Depends(get_db
 
 @router.get("/", response_model=list[ClimbingSectorResponse])
 def get_sectors(spot_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
-    q = db.query(ClimbingSector)
+    """Los sectores de lugares publicados (agregar lugar: elegir el sector de
+    un lugar para sumarle vías)."""
+    q = db.query(ClimbingSector).join(SpotDB, SpotDB.id == ClimbingSector.spot_id).filter(
+        SpotDB.is_approved == True, SpotDB.owner_deleted_at.is_(None))  # noqa: E712
     if spot_id is not None:
         q = q.filter(ClimbingSector.spot_id == spot_id)
     return q.all()
 
-@router.get("/by-slug/{slug}", response_model=ClimbingSectorResponse)
-def get_sector_by_slug(slug: str, db: Session = Depends(get_db)):
-    sector = db.query(ClimbingSector).filter(ClimbingSector.slug == slug).first()
-    if not sector:
-        raise HTTPException(status_code=404, detail="Sector not found")
-    return _attach_sector_stats(sector)
 
 @router.get("/page/{spot_slug}/{sector_slug}")
 def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_db)):
@@ -138,17 +134,13 @@ def get_sector_page(spot_slug: str, sector_slug: str, db: Session = Depends(get_
 
 @router.get("/{sector_id}", response_model=ClimbingSectorResponse)
 def get_sector(sector_id: int, db: Session = Depends(get_db)):
+    """Un sector de un lugar publicado (agregar lugar llega con el sector
+    elegido)."""
+    from routers.routes import is_published
     sector = db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()
-    if not sector:
+    if not sector or not is_published(sector.spot):
         raise HTTPException(status_code=404, detail="Sector not found")
     return _attach_sector_stats(sector)
-
-@router.get("/{sector_id}/routes", response_model=list[ClimbingRouteResponse])
-def get_sector_routes(sector_id: int, db: Session = Depends(get_db)):
-    sector = db.query(ClimbingSector).filter(ClimbingSector.id == sector_id).first()
-    if not sector:
-        raise HTTPException(status_code=404, detail="Sector not found")
-    return db.query(ClimbingRoute).filter(ClimbingRoute.sector_id == sector_id).all()
 
 
 @router.post("/{sector_id}/routes/import")

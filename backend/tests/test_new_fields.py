@@ -12,7 +12,7 @@ def test_un_sector_guarda_aproximacion_sol_y_roca(client, make_spot):
         "approach_minutes": 25, "sun_exposure": "sombra", "rock_type": "granito",
     }, headers=as_user(ADMIN))
     assert r.status_code == 200, r.text
-    sector = client.get(f"/sectors/by-slug/{r.json()['slug']}").json()
+    sector = client.get(f"/sectors/{r.json()['id']}").json()
     assert (sector["approach_minutes"], sector["sun_exposure"], sector["rock_type"]) == (25, "sombra", "granito")
 
 

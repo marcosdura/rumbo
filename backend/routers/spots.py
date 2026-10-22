@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from limiter import limiter
-from models import SpotDB, SpotAmenity, ClimbingSector, Route, SpotCategory, Experience
-from schemas import SpotResponse, ClimbingSectorResponse, RouteResponse, ExperienceResponse
+from models import SpotDB, SpotAmenity, ClimbingSector, SpotCategory, Experience
+from schemas import SpotResponse
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import selectinload
 from sqlalchemy import case, func
@@ -321,24 +321,3 @@ def get_spot(id: int, db: Session = Depends(get_db)):
     }
 
 
-# devuelve las rutas de trekking segun el spot
-@router.get("/spots/{spot_id}/routes", response_model=list[RouteResponse])
-def get_routes_by_spot(spot_id: int, db: Session = Depends(get_db)):
-    return db.query(Route).filter(Route.spot_id == spot_id).all()
-
-
-#devuelve los sectores de escalada segun el spot
-@router.get("/spots/{spot_id}/sectors", response_model=list[ClimbingSectorResponse])
-def get_sectors_by_spot(spot_id: int, db: Session = Depends(get_db)):
-    sectors = db.query(ClimbingSector).filter(ClimbingSector.spot_id == spot_id).all()
-    return sectors
-
-
-@router.get("/spots/{spot_id}/experiences", response_model=list[ExperienceResponse])
-def get_experiences(spot_id: int, db: Session = Depends(get_db)):
-    return (
-        db.query(Experience)
-        .options(selectinload(Experience.category))
-        .filter(Experience.spot_id == spot_id, Experience.is_active == True)
-        .all()
-    )

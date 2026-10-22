@@ -295,7 +295,7 @@ def test_el_duenio_ve_sus_pendientes_en_el_dashboard(client, db, make_spot, surf
     assert [e["is_approved"] for e in body["experiences"]] == [False]
     assert [g["is_approved"] for g in body["glamping_units"]] == [True, False]
     # La lectura pública sigue sin mostrarlas.
-    assert client.get(f"/spots/{spot.id}/experiences").json() == []
+    assert client.get(f"/spots/{spot.id}").json()["experiences"] == []
 
 
 def test_owner_content_solo_para_el_duenio(client, make_spot):

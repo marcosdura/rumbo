@@ -44,16 +44,10 @@ def delete_route(request: Request, route_id: int, db: Session = Depends(get_db),
     return {"ok": True}
 
 
-@router.get("/", response_model=list[RouteResponse])
-def get_routes(db: Session = Depends(get_db)):
-    return db.query(Route).all()
+def is_published(spot: SpotDB | None) -> bool:
+    """Lo que se ve en público: aprobado y de una cuenta que sigue activa."""
+    return spot is not None and bool(spot.is_approved) and spot.owner_deleted_at is None
 
-@router.get("/by-slug/{slug}", response_model=RouteResponse)
-def get_route_by_slug(slug: str, db: Session = Depends(get_db)):
-    route = db.query(Route).filter(Route.slug == slug).first()
-    if not route:
-        raise HTTPException(status_code=404, detail="Route not found")
-    return route
 
 def spot_main_image(spot: SpotDB):
     """La foto principal del lugar (para compartir una ruta o sector sin fotos)."""
@@ -131,8 +125,11 @@ def remove_route_track(request: Request, route_id: int, db: Session = Depends(ge
 
 @router.get("/{route_id}", response_model=RouteResponse)
 def get_route(route_id: int, db: Session = Depends(get_db)):
+    """Una ruta por id (las direcciones viejas /trekkingRoute/{id} redirigen
+    con esto). Solo de un lugar publicado: antes mostraba también las de
+    lugares en revisión, rechazados o de cuentas borradas."""
     route = db.query(Route).filter(Route.id == route_id).first()
     # Antes devolvía None, que con response_model terminaba en un 500.
-    if not route:
+    if not route or not is_published(route.spot):
         raise HTTPException(status_code=404, detail="Route not found")
     return route
