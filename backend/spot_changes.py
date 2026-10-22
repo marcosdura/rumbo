@@ -290,18 +290,38 @@ def owner_visible_request(db: Session, spot_id: int):
     """Lo que el dueño tiene que ver en su dashboard: el pedido pendiente, o
     si no hay, el último resuelto por el admin que todavía no cerró. Los
     cancelados por él mismo no se muestran."""
-    pending = get_pending_request(db, spot_id)
-    if pending:
-        return pending
-    # Solo el más reciente: si ese ya se cerró, un aviso más viejo que quedó
-    # sin cerrar no tiene que reaparecer.
-    latest = (
+    return owner_visible_requests(db, [spot_id]).get(spot_id)
+
+
+def owner_visible_requests(db: Session, spot_ids: list[int]) -> dict:
+    """owner_visible_request de varios lugares en dos consultas (antes /profile
+    hacía dos por cada lugar del dueño)."""
+    if not spot_ids:
+        return {}
+    out = {}
+    pending = (
         db.query(SpotChangeRequest)
-        .filter(
-            SpotChangeRequest.spot_id == spot_id,
-            SpotChangeRequest.status.in_(["approved", "rejected"]),
-        )
-        .order_by(SpotChangeRequest.resolved_at.desc())
-        .first()
+        .filter(SpotChangeRequest.spot_id.in_(spot_ids), SpotChangeRequest.status == "pending")
+        .order_by(SpotChangeRequest.id)
+        .all()
     )
-    return latest if latest and latest.owner_dismissed_at is None else None
+    for r in pending:
+        out.setdefault(r.spot_id, r)
+    rest = [i for i in spot_ids if i not in out]
+    if rest:
+        resolved = (
+            db.query(SpotChangeRequest)
+            .filter(
+                SpotChangeRequest.spot_id.in_(rest),
+                SpotChangeRequest.status.in_(["approved", "rejected"]),
+            )
+            .order_by(SpotChangeRequest.resolved_at.desc())
+            .all()
+        )
+        # Solo el más reciente de cada lugar: si ese ya se cerró, un aviso más
+        # viejo que quedó sin cerrar no tiene que reaparecer.
+        latest = {}
+        for r in resolved:
+            latest.setdefault(r.spot_id, r)
+        out.update({sid: r for sid, r in latest.items() if r.owner_dismissed_at is None})
+    return out

@@ -119,3 +119,25 @@ def test_migracion_copia_quien_sugirio_los_que_estan_en_revision():
         assert [tuple(r) for r in got] == [(1, "visitante@test.com"), (2, None), (3, None)]
     finally:
         os.environ["DATABASE_URL"] = DB_URL
+
+
+def test_de_cada_lugar_solo_cuenta_el_ultimo_pedido_resuelto(client, db, make_spot):
+    # Si el último ya se cerró, uno más viejo sin cerrar no reaparece; y con
+    # varios lugares cada uno se mira por separado (se buscan todos juntos).
+    from datetime import datetime, timezone
+    from models import SpotChangeRequest
+    old, new = datetime(2026, 1, 1, tzinfo=timezone.utc), datetime(2026, 2, 1, tzinfo=timezone.utc)
+    closed = make_spot(name="Cerrado", owner=OWNER)
+    open_ = make_spot(name="Abierto", owner=OWNER)
+    db.add_all([
+        SpotChangeRequest(spot_id=closed.id, requested_by=OWNER, status="rejected", changes={"name": "x"}, resolved_at=old),
+        SpotChangeRequest(spot_id=closed.id, requested_by=OWNER, status="approved", changes={"price": 1}, resolved_at=new, owner_dismissed_at=new),
+        SpotChangeRequest(spot_id=open_.id, requested_by=OWNER, status="approved", changes={"name": "x"}, resolved_at=old, owner_dismissed_at=old),
+        SpotChangeRequest(spot_id=open_.id, requested_by=OWNER, status="rejected", changes={"price": 1}, resolved_at=new),
+    ])
+    db.commit()
+    requests = client.get("/me/requests", headers=as_user(OWNER)).json()
+    assert [(r["target"]["name"], r["status"], r["fields"]) for r in requests] == [("Abierto", "rejected", ["price"])]
+    mine = {s["name"]: s["change_request"] for s in client.get("/spots/mine", headers=as_user(OWNER)).json()}
+    assert mine["Cerrado"] is None
+    assert mine["Abierto"]["status"] == "rejected"

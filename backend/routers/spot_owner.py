@@ -17,7 +17,7 @@ import contributions
 import item_photos as item_photos_domain
 import uploads
 from notifications import notify_admin
-from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, owner_visible_request
+from spot_changes import plan_spot_edit, execute_spot_edit, serialize_request, get_pending_request, request_photos, owner_visible_requests
 import cloudinary
 import cloudinary.uploader
 import os
@@ -132,6 +132,7 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
         .all()
     ) if spot_ids else []
     agg_by_id = {r.spot_id: r for r in review_aggs}
+    visible = owner_visible_requests(db, spot_ids)
     return [
         {
             "id": s.id,
@@ -164,7 +165,7 @@ def get_my_spots(db: Session = Depends(get_db), user: dict = Depends(get_current
             # Pedido pendiente, o el último aprobado/rechazado que el dueño
             # todavía no cerró. Lo usan el aviso del dashboard y la etiqueta
             # "cambio en revisión" de /profile.
-            "change_request": serialize_request(r) if (r := owner_visible_request(db, s.id)) else None,
+            "change_request": serialize_request(r) if (r := visible.get(s.id)) else None,
         }
         for s in spots
     ]

@@ -11,7 +11,7 @@ from auth import get_current_user_required, is_admin
 from database import get_db
 from models import Contribution, Favorite, SpotClaim, SpotDB, User
 from ownership import is_admin_managed
-from spot_changes import owner_visible_request
+from spot_changes import owner_visible_requests
 from routers.reviews import my_reviews_count
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -33,8 +33,10 @@ def my_requests(db: Session, user: dict) -> list[dict]:
     Cada uno dice cómo se cierra su aviso (dismiss_url)."""
     email = user.get("email")
     items = []
-    for spot in managed_spots(db, user):
-        r = owner_visible_request(db, spot.id)
+    spots = managed_spots(db, user)
+    visible = owner_visible_requests(db, [s.id for s in spots])
+    for spot in spots:
+        r = visible.get(spot.id)
         if r:
             items.append({
                 "kind": "spot_change", "id": r.id, "status": r.status,
