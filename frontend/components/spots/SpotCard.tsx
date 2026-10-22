@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
@@ -31,6 +31,23 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
 }) {
   const [showExtraCategories, setShowExtraCategories] = useState(false)
   const [extraCategoriesPos, setExtraCategoriesPos] = useState<{ left: number; bottom: number } | null>(null)
+  const extraRef = useRef<HTMLDivElement>(null)
+
+  // Abierta con un toque (celular): se cierra al tocar en cualquier otro lado
+  // o al scrollear (antes quedaba colgada hasta volver a tocar el +n).
+  useEffect(() => {
+    if (!showExtraCategories) return
+    const close = (e: Event) => {
+      if (e.type === "pointerdown" && extraRef.current?.contains(e.target as Node)) return
+      setShowExtraCategories(false)
+    }
+    document.addEventListener("pointerdown", close, true)
+    window.addEventListener("scroll", close, true)
+    return () => {
+      document.removeEventListener("pointerdown", close, true)
+      window.removeEventListener("scroll", close, true)
+    }
+  }, [showExtraCategories])
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
   // Con mouse, las categorías extra se ven al pasar por encima; en pantallas
@@ -112,6 +129,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
               </Pill>
               {extraCategories.length > 0 && (
                 <div
+                  ref={extraRef}
                   style={{ position: "relative", flexShrink: 0 }}
                   onMouseEnter={(e) => {
                     if (!canHover()) return

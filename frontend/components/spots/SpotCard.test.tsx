@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { readFileSync } from "node:fs"
 
 let imageProps: Record<string, unknown> = {}
@@ -88,6 +88,28 @@ describe("SpotCard", () => {
     expect(badges.textContent).toBe("🏕️ Camping+2")
     expect(css).toMatch(/\.spot-card-badges \{[^}]*flex-wrap: nowrap;/)
     expect(badges.querySelector(".spot-card-pill-text")).toBeTruthy()
+  })
+
+  it("celular: el +n abre las otras actividades y un toque en otro lado (o un scroll) las cierra", () => {
+    const matchMedia = window.matchMedia
+    window.matchMedia = ((q: string) => ({ matches: false, media: q })) as unknown as typeof window.matchMedia
+    try {
+      render(<SpotCard spot={{ ...base, categories: [{ name: "Camping" }, { name: "Glamping" }, { name: "Trekking" }] }} />)
+      const plus = screen.getByText("+2")
+      fireEvent.click(plus)
+      expect(screen.getByText("🛖 Glamping")).toBeTruthy()
+      // Tocar el mismo +n no la cierra por el lado de afuera (lo hace su click).
+      fireEvent.pointerDown(plus)
+      expect(screen.getByText("🛖 Glamping")).toBeTruthy()
+      fireEvent.pointerDown(document.body)
+      expect(screen.queryByText("🛖 Glamping")).toBeNull()
+
+      fireEvent.click(plus)
+      fireEvent.scroll(window)
+      expect(screen.queryByText("🛖 Glamping")).toBeNull()
+    } finally {
+      window.matchMedia = matchMedia
+    }
   })
 
   it("el nombre: la letra del texto de la portada, en negrita y sin la flecha", () => {
