@@ -71,6 +71,22 @@ export async function run(browser, r) {
     r.ok(`[${label}] lupa del buscador ${label === "pc" ? "oculta" : "visible"}`, lupa === (label === "celular"))
     const detail = await barBoxes(page)
     await shot(page, `${label}-detalle`)
+    // Al scrollear, el mapa pasa por debajo del navbar fijo (antes las capas de
+    // Leaflet quedaban encima y el mapa "seguía" la pantalla).
+    const underNavbar = await page.evaluate(async () => {
+      // El control de zoom (+/−) es lo que Leaflet pone más arriba (z-index
+      // 1000): se lo lleva debajo del navbar y se mira qué queda encima.
+      const zoom = document.querySelector(".mapcard-map-wrap .leaflet-control-zoom")
+      const nav = document.querySelector(".navbar-root")
+      if (!zoom || !nav) return "sin mapa o navbar"
+      const bar = nav.getBoundingClientRect()
+      window.scrollTo(0, zoom.getBoundingClientRect().top + window.scrollY - bar.height / 2)
+      await new Promise(r => setTimeout(r, 300))
+      const z = zoom.getBoundingClientRect()
+      const hit = document.elementFromPoint(z.left + z.width / 2, z.top + z.height / 2)
+      return hit?.closest(".navbar-root") ? "navbar" : hit?.className?.toString() ?? "nada"
+    })
+    r.ok(`[${label}] el mapa pasa por debajo del navbar al scrollear`, underNavbar === "navbar", underNavbar)
     await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
     const home = await barBoxes(page)
     // La navbar fija arranca oculta en la home: una sola barra a la vista.

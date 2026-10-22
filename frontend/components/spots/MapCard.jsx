@@ -66,7 +66,10 @@ function MapCard({ lat, lng, name }) {
         /* A todo el ancho de la página: más alto, y "Cómo llegar" encima del
            mapa (sobre las capas de Leaflet). En el celular va debajo: encima
            taparía buena parte de un mapa chico. */
-        .mapcard-area { position: relative; }
+        /* isolation: las capas de Leaflet (z-index 400 y más) quedan adentro
+           del mapa; sin esto, al scrollear el mapa pasaba por encima del
+           navbar fijo (z-index 100). */
+        .mapcard-area { position: relative; isolation: isolate; }
         .mapcard-map-wrap { height: 380px; }
         @media (min-width: 769px) {
           .mapcard-area .mapcard-btn {

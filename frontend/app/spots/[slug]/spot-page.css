@@ -129,7 +129,7 @@
 }
 .spot-mobile-photos-track::-webkit-scrollbar { display: none; }
 .spot-mobile-photo {
-  position: relative; flex: 0 0 100%; aspect-ratio: 4 / 3; scroll-snap-align: start;
+  position: relative; flex: 0 0 100%; aspect-ratio: 10 / 9; scroll-snap-align: start;
   border: none; padding: 0; margin: 0; background: #e6e1d8; cursor: pointer;
 }
 .spot-mobile-photos-count {
@@ -158,6 +158,14 @@
   .spot-activity-extra { display: none; }
   .spot-activities-more { display: block; }
   .spot-mobile-actions { display: flex; gap: 8px; }
+  /* El puntaje al lado de volver, más chico que en el encabezado. */
+  .spot-mobile-bar .rating-badge { font-size: 13px; gap: 5px; white-space: nowrap; min-width: 0; overflow: hidden; }
+  /* Sin fotos también van guardar y compartir: sin partirse en dos renglones;
+     si no entra, las reseñas se cortan con "…". */
+  .spot-mobile-bar .mobile-back-btn { white-space: nowrap; flex-shrink: 0; }
+  .spot-mobile-bar .rating-badge .reviews-link { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .spot-mobile-bar .spot-mobile-actions { flex-shrink: 0; }
+  .spot-mobile-bar .rating-badge .star { font-size: 15px; }
   .spot-mobile-only { display: block; }
   .spot-desktop-only { display: none; }
   /* Guardar y compartir ya están en la barra de arriba. */

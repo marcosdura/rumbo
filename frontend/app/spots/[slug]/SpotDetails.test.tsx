@@ -82,6 +82,9 @@ describe("Página del lugar en el celular", () => {
       expect(mobile).toContain(rule)
     }
     expect(css.slice(0, css.indexOf("@media (max-width: 768px)"))).toContain(".spot-activities-more { display: none; }")
+    // El puntaje de la barra, más chico; la foto, más alta que 4:3.
+    expect(mobile).toContain(".spot-mobile-bar .rating-badge { font-size: 13px;")
+    expect(css).toContain("aspect-ratio: 10 / 9;")
   })
 })
 
