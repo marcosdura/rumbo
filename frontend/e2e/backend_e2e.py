@@ -104,6 +104,9 @@ def seed():
     playa = spot("Playa de Prueba", 4, department="Rocha")
     # Con foto: las páginas /lugares precargan la de las primeras cards.
     db.add(SpotImage(spot_id=playa.id, cloudinary_public_id="rumbo/spots/e2e/playa", is_main=True, order=0))
+    # Dos fotos: en la compu van en grilla (a 640px), así se nota si algo la
+    # pide más grande (la galería oculta del celular).
+    db.add(SpotImage(spot_id=playa.id, cloudinary_public_id="rumbo/spots/e2e/playa-2", is_main=False, order=1))
     spot("Laguna de Prueba", 5, department="Rocha")
     # Una escuela que vino del sistema viejo (su dirección era /surf/<nombre>-7).
     escuela = spot("Escuela de Prueba", 4, department="Rocha")

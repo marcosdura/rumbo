@@ -224,6 +224,19 @@ export async function run(browser, r) {
         inHidden ||= await page.evaluate(() => !!document.activeElement?.closest(".navbar-home-fixed:not(.navbar-visible)"))
       }
       r.ok("[pc] en la home el teclado no entra en la barra oculta", !inHidden)
+      // La galería del celular está oculta en la compu, pero su principal
+      // lleva priority y se baja igual: antes a 1920px, ahora la más chica.
+      // Con dos fotos la grilla de la compu las pide a 640px, así que algo
+      // más grande solo puede venir de la galería oculta.
+      const widths = []
+      const onRequest = req => {
+        const url = decodeURIComponent(req.url())
+        if (url.includes("e2e/playa") && !url.includes("e_blur")) widths.push(Number(url.match(/w_(\d+)/)?.[1] ?? 0))
+      }
+      page.on("request", onRequest)
+      await page.goto(`${FRONT}/spots/playa-de-prueba`, { waitUntil: "networkidle" })
+      page.off("request", onRequest)
+      r.ok("[pc] la galería oculta del celular no baja la foto grande", widths.length > 0 && Math.max(...widths) <= 640, widths.join(", "))
     }
 
     r.ok(`[${label}] sin errores de JavaScript`, errors.length === 0, errors.slice(0, 2).join(" | "))
