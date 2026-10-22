@@ -203,8 +203,9 @@ esto está implementado todavía: se decide qué se ataca y en qué orden.
 
 ## 09 — Utilidad
 
-- [ ] **No se puede buscar un lugar por su nombre** — el buscador filtra solo por actividad y departamento; quien busca "Arequita" no lo encuentra desde la app (sí desde Google). Es lo primero que se intenta en un buscador.
-      **Pendiente de decidir cómo** (propuesta en la conversación del 21/10/2026).
+- [x] **No se puede buscar un lugar por su nombre** — el buscador filtra solo por actividad y departamento; quien busca "Arequita" no lo encuentra desde la app (sí desde Google). Es lo primero que se intenta en un buscador.
+      **Resuelto así:** el campo Departamento del buscador pasó a "Dónde": sugiere los departamentos que coinciden y, debajo, hasta 5 lugares por su nombre (sin importar tildes ni mayúsculas, `GET /spots/suggest`); un lugar lleva directo a su página y "Buscar «texto»" busca por nombre (`q`). `spots.name_search`, migración 0026.
+      → `9333145` (backend), `06b9caf` (frontend)
 - [x] **Las reseñas no tienen fotos** — la foto de alguien que fue hace poco es lo que más dice cómo está un lugar; el sistema de fotos con revisión ya existe (`item_photos`).
       **Resuelto así:** una foto por reseña, que sube solo su autor y pasa por revisión como las de la comunidad (la reseña se publica al instante; la foto, cuando la aprueba el admin, y el autor la ve "en revisión"). Borrar la reseña (autor, admin o baja de cuenta) borra la foto también de Cloudinary. `item_photos` suma el destino `review` (migración 0025).
       → `853b44a` (backend), `9ed2b97` (frontend)
