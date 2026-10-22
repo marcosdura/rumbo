@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 import Link from "next/link"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import Pill from "@/components/ui/Pill"
+import ExtraCategories from "@/components/ui/ExtraCategories"
 import { CldImage } from 'next-cloudinary'
 import { PETS_EMOJI, factsLine, ratingLabel, type CardSpot } from "@/lib/spotCard"
 import type { SpotListItem } from "@/lib/types"
@@ -29,31 +28,8 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
   // La primera fila de la home: sin lazy (se ve apenas carga).
   priority?: boolean
 }) {
-  const [showExtraCategories, setShowExtraCategories] = useState(false)
-  const [extraCategoriesPos, setExtraCategoriesPos] = useState<{ left: number; bottom: number } | null>(null)
-  const extraRef = useRef<HTMLDivElement>(null)
-
-  // Abierta con un toque (celular): se cierra al tocar en cualquier otro lado
-  // o al scrollear (antes quedaba colgada hasta volver a tocar el +n).
-  useEffect(() => {
-    if (!showExtraCategories) return
-    const close = (e: Event) => {
-      if (e.type === "pointerdown" && extraRef.current?.contains(e.target as Node)) return
-      setShowExtraCategories(false)
-    }
-    document.addEventListener("pointerdown", close, true)
-    window.addEventListener("scroll", close, true)
-    return () => {
-      document.removeEventListener("pointerdown", close, true)
-      window.removeEventListener("scroll", close, true)
-    }
-  }, [showExtraCategories])
   const mainImage = spot.images?.find(img => img.is_main) ?? spot.images?.[0]
 
-  // Con mouse, las categorías extra se ven al pasar por encima; en pantallas
-  // táctiles, con un toque. Se pregunta en el momento (antes cada card
-  // escuchaba el resize de la ventana).
-  const canHover = () => typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches
   const rating = ratingLabel(spot)
   const facts = factsLine(spot)
 
@@ -128,48 +104,7 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
                 </span>
               </Pill>
               {extraCategories.length > 0 && (
-                <div
-                  ref={extraRef}
-                  style={{ position: "relative", flexShrink: 0 }}
-                  onMouseEnter={(e) => {
-                    if (!canHover()) return
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    setExtraCategoriesPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 })
-                    setShowExtraCategories(true)
-                  }}
-                  onMouseLeave={() => canHover() && setShowExtraCategories(false)}
-                  onClick={(e) => {
-                    if (canHover()) return
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (showExtraCategories) {
-                      setShowExtraCategories(false)
-                      return
-                    }
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    setExtraCategoriesPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 })
-                    setShowExtraCategories(true)
-                  }}
-                >
-                  <Pill variant="beige">+{extraCategories.length}</Pill>
-                  {showExtraCategories && extraCategoriesPos && createPortal(
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        position: "fixed", left: extraCategoriesPos.left, bottom: extraCategoriesPos.bottom,
-                        background: "#1b1b19", color: "#fff", borderRadius: 10,
-                        padding: "8px 10px", fontSize: 12, whiteSpace: "nowrap",
-                        display: "flex", flexDirection: "column", gap: 4,
-                        zIndex: 1000, boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
-                      }}
-                    >
-                      {extraCategories.map(c => (
-                        <span key={c.name}>{`${CATEGORY_EMOJI[c.name] ?? ""} ${c.name}`.trim()}</span>
-                      ))}
-                    </div>,
-                    document.body
-                  )}
-                </div>
+                <ExtraCategories categories={extraCategories} emoji={CATEGORY_EMOJI} />
               )}
           </div>
         </div>
