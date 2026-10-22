@@ -70,6 +70,16 @@ describe("Búsqueda: los filtros viven en la URL", () => {
     expect(url.get("cell_signal")).toBe("true")
   })
 
+  it("el texto buscado se manda al backend, va en el título y se puede quitar", async () => {
+    params = new URLSearchParams("department=Rocha&q=cascada")
+    render(<SearchPage />)
+    await flush()
+    expect(new URLSearchParams(listRequests[0].split("?")[1]).get("q")).toBe("cascada")
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Lugares en Rocha: «cascada»")
+    fireEvent.click(screen.getByRole("button", { name: "Quitar «cascada»" }))
+    expect(lastReplace().toString()).toBe("department=Rocha")
+  })
+
   it("quitar un chip lo saca de la URL", async () => {
     params = new URLSearchParams("activity=Trekking&difficulty=fácil&difficulty=difícil")
     render(<SearchPage />)

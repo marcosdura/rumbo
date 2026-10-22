@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   CAMPING_CODEC, CLIMBING_CODEC, KAYAK_CODEC, SURF_CODEC, TREKKING_CODEC,
-  filterChips, listQuery, sortOf, toSearchParams, withPanelFilters, withPractical, withSort,
+  filterChips, listQuery, sortOf, toSearchParams, withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters,
 } from "./searchFilters"
 import { CAMPING_AMENITY_GROUPS } from "./camping-filters"
 import { TREKKING_FILTERS } from "./trekking-filters"
@@ -41,6 +41,16 @@ describe("cambios a la URL", () => {
     // Recomendados es el orden por defecto: no ensucia la URL.
     expect(withSort(new URLSearchParams("sort=name"), "recommended").has("sort")).toBe(false)
     expect(sortOf(new URLSearchParams("sort=cualquiera"))).toBe("recommended")
+  })
+})
+
+describe("el texto buscado (q, campo Dónde)", () => {
+  it("queda al aplicar el panel, al limpiar filtros y al quitar la actividad, y no es un chip más", () => {
+    const p = new URLSearchParams("activity=Trekking&q=cascada&difficulty=fácil")
+    expect(withPanelFilters(p, "Trekking", { difficulties: [], durations: [], distances: [], amenities: {} }).get("q")).toBe("cascada")
+    expect(withoutFilters(p).toString()).toBe("activity=Trekking&q=cascada")
+    expect(withoutActivity(p).toString()).toBe("q=cascada")
+    expect(filterChips(p).map(c => c.key)).toEqual(["difficulty"])
   })
 })
 

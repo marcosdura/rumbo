@@ -119,6 +119,27 @@ export async function run(browser, r) {
     await page.keyboard.press("Escape")
     r.ok(`[${label}] Ordenar: la lista se ve entera, por encima de los resultados`, sortOnTop && chevron === "›", `encima ${sortOnTop}, flecha «${chevron}»`)
 
+    // "Dónde": sugiere lugares por su nombre y lleva directo a su página;
+    // un texto que no es departamento busca por nombre (q).
+    await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
+    const where = page.locator("#hero-section").getByPlaceholder("Departamento o lugar")
+    await where.click()
+    await where.fill("roca")
+    const suggestion = page.locator("#hero-section .search-dropdown-item", { hasText: "Roca de Prueba" })
+    await suggestion.waitFor({ timeout: 5000 }).catch(() => {})
+    const suggested = await suggestion.count()
+    if (suggested) await suggestion.dispatchEvent("mousedown")
+    await page.waitForURL("**/spots/roca-de-prueba", { timeout: 10000 }).catch(() => {})
+    r.ok(`[${label}] Dónde: sugiere un lugar por su nombre y lleva a su página`, suggested === 1 && page.url().endsWith("/spots/roca-de-prueba"), page.url())
+    await page.goto(`${FRONT}/`, { waitUntil: "networkidle" })
+    await where.click()
+    await where.fill("cascada")
+    // La lista abierta tapa "Buscar" en el celular: se elige la opción de texto.
+    await page.locator("#hero-section .search-dropdown-item", { hasText: "Buscar «cascada»" }).dispatchEvent("mousedown")
+    await page.locator("#hero-section").getByRole("button", { name: "Buscar", exact: true }).click()
+    await page.waitForURL("**/search?**", { timeout: 10000 }).catch(() => {})
+    r.ok(`[${label}] Dónde: un texto busca por nombre`, new URL(page.url()).searchParams.get("q") === "cascada", page.url())
+
     if (label === "pc") {
       // El hover común en los botones que no tenían (globals.css .btn-hover).
       await page.goto(`${FRONT}/spots/cerro-de-prueba/rutas/sendero-uno`, { waitUntil: "networkidle" })

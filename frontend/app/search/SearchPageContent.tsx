@@ -43,6 +43,8 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
   const router = useRouter()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
+  // El texto buscado en los nombres (campo "Dónde").
+  const q = searchParams.get("q") || ""
   const sort = sortOf(searchParams)
   // Si el servidor ya trajo los lugares de esta URL, no se vuelven a pedir.
   const fromServer = initial !== null && initial.query === searchParams.toString()
@@ -124,7 +126,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
   }
 
   const track = (count: number | undefined) => trackEvent("search", {
-    search_term: activity || department || "todos",
+    search_term: q || activity || department || "todos",
     activity: activity || undefined,
     department: department || undefined,
     filter_count: activeFilterCount,
@@ -199,11 +201,12 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
     go(withoutFilters(searchParams))
   }
 
-  const title = activity && department
+  const baseTitle = activity && department
     ? `${activity} en ${department}`
     : activity   ? activity
     : department ? `Lugares en ${department}`
     : "Todos los lugares"
+  const title = q ? (activity || department ? `${baseTitle}: «${q}»` : `«${q}»`) : baseTitle
 
   const canFilter = !!panelActivity
 
@@ -262,7 +265,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
             </div>
 
             {/* Lo aplicado, cada uno con ✕ para quitarlo. */}
-            {(activity || department || panelChips.length > 0) && (
+            {(activity || department || q || panelChips.length > 0) && (
               <div className="search-chips" aria-label="Filtros aplicados">
                 {activity && (
                   <span className="search-chip">
@@ -274,6 +277,12 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
                   <span className="search-chip is-dark">
                     📍 {department}
                     <button aria-label={`Quitar ${department}`} onClick={() => go(withoutPair(searchParams, "department", department))}>✕</button>
+                  </span>
+                )}
+                {q && (
+                  <span className="search-chip is-dark">
+                    🔎 «{q}»
+                    <button aria-label={`Quitar «${q}»`} onClick={() => go(withoutPair(searchParams, "q", q))}>✕</button>
                   </span>
                 )}
                 {panelChips.map(chip => (

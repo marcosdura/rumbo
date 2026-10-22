@@ -84,5 +84,6 @@ describe("páginas /lugares", () => {
     expect(searchMetadata({ department: ["Rocha"] }).title).toBe("Buscar: Lugares en Rocha | Rumbo")
     expect(searchMetadata({ activity: "<script>" }).title).toBe("Buscar lugares | Rumbo")
     expect(searchMetadata({}).robots).toEqual({ index: false, follow: true })
+    expect(searchMetadata({ q: " cascada ", department: "Rocha" }).title).toBe("Buscar «cascada» | Rumbo")
   })
 })

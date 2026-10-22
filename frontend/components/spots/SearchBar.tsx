@@ -1,6 +1,7 @@
 "use client"
 import { Suspense, useState, useEffect, useRef, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { api } from "@/lib/api"
 import "./search-bar.css"
 
 export const activities = ["Camping", "Glamping", "Escalada", "Kayak", "Trekking", "Surf", "Motorhome"]
@@ -12,8 +13,22 @@ const departments = [
 ]
 
 function normalize(str: string) {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim()
 }
+
+// Un lugar sugerido mientras se escribe en "Dónde" (GET /spots/suggest).
+type PlaceSuggestion = { id: number; name: string; slug: string; department: string | null; category: string | null }
+// Lo que se puede elegir en "Dónde": un departamento, un lugar (lleva a su
+// página) o buscar el texto escrito en los nombres.
+type WhereOption =
+  | { kind: "department"; value: string }
+  | { kind: "place"; place: PlaceSuggestion }
+  | { kind: "text"; value: string }
+
+// Desde cuántas letras se piden lugares, y cuánto se espera a que termine de
+// escribir (no un pedido por tecla).
+const SUGGEST_MIN = 2
+const SUGGEST_DELAY_MS = 200
 
 // useSearchParams obliga a un <Suspense> para que las páginas se puedan
 // armar estáticas (el buscador está en el navbar de todas). Mientras tanto
@@ -41,7 +56,9 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
   const [activity, setActivity] = useState(() => searchParams.get("activity") ?? "")
   const [activityInput, setActivityInput] = useState(activity)
   const [department, setDepartment] = useState(() => searchParams.get("department") ?? "")
-  const [departmentInput, setDepartmentInput] = useState(department)
+  // Texto libre de "Dónde" (buscar por nombre): ?q= en la búsqueda.
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "")
+  const [departmentInput, setDepartmentInput] = useState(department || query)
   const [openField, setOpenField] = useState<"activity" | "department" | null>(null)
   // highlighted index in dropdown (0 = best match / first item)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
@@ -54,11 +71,13 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
   if (paramsKey !== shownParams) {
     const a = searchParams.get("activity") ?? ""
     const d = searchParams.get("department") ?? ""
+    const q = searchParams.get("q") ?? ""
     setShownParams(paramsKey)
     setActivity(a)
     setActivityInput(a)
     setDepartment(d)
-    setDepartmentInput(d)
+    setQuery(q)
+    setDepartmentInput(d || q)
     setOpenField(null)
   }
 
@@ -82,10 +101,43 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
     normalize(d).includes(normalize(departmentInput))
   )
 
+  // Los lugares cuyo nombre coincide con lo escrito. Se guardan con el texto
+  // que los pidió: si ya se escribió otra cosa, no se muestran (así no hace
+  // falta vaciarlos a mano).
+  const typed = normalize(departmentInput)
+  const [places, setPlaces] = useState<{ for: string; items: PlaceSuggestion[] }>({ for: "", items: [] })
+  const wantsPlaces = openField === "department" && typed.length >= SUGGEST_MIN
+  useEffect(() => {
+    if (!wantsPlaces) return
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      api.get<PlaceSuggestion[]>("/spots/suggest", { params: { q: typed }, signal: controller.signal })
+        .then(({ data }) => setPlaces({ for: typed, items: Array.isArray(data) ? data : [] }))
+        .catch(() => {})  // sin sugerencias se puede buscar igual por el texto
+    }, SUGGEST_DELAY_MS)
+    return () => { clearTimeout(timer); controller.abort() }
+  }, [wantsPlaces, typed])
+  const placeSuggestions = wantsPlaces && places.for === typed ? places.items : []
+  const exactDepartment = departments.find(d => normalize(d) === typed)
+  const whereOptions: WhereOption[] = [
+    ...filteredDepartments.map(d => ({ kind: "department" as const, value: d })),
+    ...placeSuggestions.map(place => ({ kind: "place" as const, place })),
+    ...(typed.length >= SUGGEST_MIN && !exactDepartment ? [{ kind: "text" as const, value: departmentInput.trim() }] : []),
+  ]
+
   const handleSearch = () => {
+    // Lo escrito en "Dónde" sin elegir de la lista: un departamento si es
+    // uno, si no se busca ese texto en los nombres.
+    let dept = department
+    let q = query
+    if (openField === "department" && typed !== normalize(department || query)) {
+      dept = exactDepartment ?? ""
+      q = exactDepartment ? "" : departmentInput.trim()
+    }
     setOpenField(null)
     onSearch?.()
-    const params = new URLSearchParams({ activity, department })
+    const params = new URLSearchParams({ activity, department: dept })
+    if (q) params.set("q", q)
     router.push(`/search?${params.toString()}`)
   }
 
@@ -104,7 +156,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
 
   const openDepartment = () => {
     if (openField === "department") return
-    setDepartmentInput(department)
+    setDepartmentInput(department || query)
     setOpenField("department")
     setTimeout(() => {
       departmentInputRef.current?.focus()
@@ -128,9 +180,17 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
     if (openField === "activity") activityInputRef.current?.focus()
   }
 
-  const selectDepartment = (d: string) => {
-    setDepartment(d)
-    setDepartmentInput(d)
+  const selectWhere = (option: WhereOption) => {
+    if (option.kind === "place") {
+      // Directo a su página: no hace falta pasar por la búsqueda.
+      setOpenField(null)
+      onSearch?.()
+      router.push(`/spots/${option.place.slug}`)
+      return
+    }
+    setDepartment(option.kind === "department" ? option.value : "")
+    setQuery(option.kind === "text" ? option.value : "")
+    setDepartmentInput(option.value)
     setOpenField(null)
   }
 
@@ -138,6 +198,7 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
     e.preventDefault()
     e.stopPropagation()
     setDepartment("")
+    setQuery("")
     setDepartmentInput("")
     if (openField === "department") departmentInputRef.current?.focus()
   }
@@ -148,20 +209,19 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
     const isDepart  = openField === "department"
     if (!isActivity && !isDepart) return
 
-    const list = isActivity ? filteredActivities : filteredDepartments
-    const select = isActivity ? selectActivity : selectDepartment
+    const count = isActivity ? filteredActivities.length : whereOptions.length
 
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setHighlightedIndex((prev) => Math.min(prev + 1, list.length - 1))
+      setHighlightedIndex((prev) => Math.min(prev + 1, count - 1))
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
       setHighlightedIndex((prev) => Math.max(prev - 1, 0))
     } else if (e.key === "Enter") {
       e.preventDefault()
-      if (list.length > 0) {
-        select(list[highlightedIndex])
-      }
+      if (count === 0) return
+      if (isActivity) selectActivity(filteredActivities[highlightedIndex])
+      else selectWhere(whereOptions[highlightedIndex])
     } else if (e.key === "Escape") {
       setOpenField(null)
     }
@@ -235,50 +295,65 @@ function SearchBarFields({ onSearch, hero = false, searchParams }: SearchBarProp
 
         <div className="search-divider" />
 
-        {/* ── Departamento ── */}
+        {/* ── Dónde: un departamento o un lugar por su nombre ── */}
         <div
           className={`search-field ${openField === "department" ? "is-open" : ""}`}
           onClick={openDepartment}
         >
-          <div className="search-field-label">Departamento</div>
+          <div className="search-field-label">Dónde</div>
           <div className="search-field-row">
             <input
               ref={departmentInputRef}
               className="search-field-input"
-              placeholder="¿A dónde vas?"
-              value={openField === "department" ? departmentInput : department}
+              placeholder="Departamento o lugar"
+              aria-label="Dónde"
+              value={openField === "department" ? departmentInput : (department || query)}
               onChange={(e) => setDepartmentInput(e.target.value)}
               onFocus={openDepartment}
               onKeyDown={handleKeyDown}
             />
-            {(openField === "department" ? departmentInput : department) && (
-              <button type="button" className="clear-btn" aria-label="Borrar departamento" onMouseDown={clearDepartment} onClick={e => e.stopPropagation()}>✕</button>
+            {(openField === "department" ? departmentInput : (department || query)) && (
+              <button type="button" className="clear-btn" aria-label="Borrar dónde" onMouseDown={clearDepartment} onClick={e => e.stopPropagation()}>✕</button>
             )}
           </div>
 
           {openField === "department" && (
             <div className="search-dropdown">
               <div className="search-dropdown-content">
-                {filteredDepartments.length > 0 ? (
-                  filteredDepartments.map((d, i) => (
-                    <div
-                      key={d}
-                      className={`search-dropdown-item
-                        ${department === d ? "selected" : ""}
-                        ${i === highlightedIndex ? "highlighted" : ""}
-                      `}
-                      onMouseEnter={() => setHighlightedIndex(i)}
-                      onMouseDown={(e) => { e.preventDefault(); selectDepartment(d) }}
-                    >
-                      {department === d && (
-                        <span style={{ fontSize: 10, color: "var(--primary)" }}>●</span>
-                      )}
-                      {d}
-                    </div>
-                  ))
+                {whereOptions.length > 0 ? (
+                  whereOptions.map((option, i) => {
+                    const first = option.kind !== "department" && (i === 0 || whereOptions[i - 1].kind === "department")
+                    const className = `search-dropdown-item${i === highlightedIndex ? " highlighted" : ""}${option.kind === "department" && department === option.value ? " selected" : ""}`
+                    return (
+                      <div key={option.kind === "place" ? `p${option.place.id}` : `${option.kind}-${option.value}`}>
+                        {first && option.kind === "place" && <div className="search-dropdown-heading">Lugares</div>}
+                        <div
+                          className={className}
+                          onMouseEnter={() => setHighlightedIndex(i)}
+                          onMouseDown={(e) => { e.preventDefault(); selectWhere(option) }}
+                        >
+                          {option.kind === "department" && (
+                            <>
+                              {department === option.value && <span style={{ fontSize: 10, color: "var(--primary)" }}>●</span>}
+                              {option.value}
+                            </>
+                          )}
+                          {option.kind === "place" && (
+                            <span className="search-dropdown-place">
+                              <span>{option.place.name}</span>
+                              <span className="search-dropdown-sub">
+                                {[option.place.category, option.place.department].filter(Boolean).join(" · ")}
+                              </span>
+                            </span>
+                          )}
+                          {option.kind === "text" && <span>🔎 Buscar «{option.value}»</span>}
+                        </div>
+                      </div>
+                    )
+                  })
                 ) : (
                   <div className="search-dropdown-empty">
-                    Intentá con otro lugar
+                    Escribí un departamento o el nombre de un lugar
                   </div>
                 )}
               </div>

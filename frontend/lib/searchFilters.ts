@@ -190,7 +190,8 @@ export function toSearchParams(obj: Record<string, string | string[] | undefined
 
 // ─── Cambios a la URL ────────────────────────────────────────────────────
 
-const BASE_KEYS = ["activity", "department", "sort", ...PRACTICAL_FILTERS.map(f => f.param)]
+// q: el texto buscado en los nombres (campo "Dónde" del buscador).
+const BASE_KEYS = ["activity", "department", "q", "sort", ...PRACTICAL_FILTERS.map(f => f.param)]
 
 // Reemplaza los filtros del panel de la actividad por los nuevos.
 export function withPanelFilters<A extends FilterActivity>(p: URLSearchParams, activity: A, state: Parameters<typeof CODECS[A]["toParams"]>[0]): URLSearchParams {
@@ -215,10 +216,10 @@ export function withSort(p: URLSearchParams, sort: string): URLSearchParams {
   return next
 }
 
-// Sin los filtros (quedan actividad, departamento y orden).
+// Sin los filtros (quedan actividad, departamento, texto y orden).
 export function withoutFilters(p: URLSearchParams): URLSearchParams {
   const next = new URLSearchParams()
-  for (const key of ["activity", "department", "sort"]) {
+  for (const key of ["activity", "department", "q", "sort"]) {
     const v = p.get(key)
     if (v) next.set(key, v)
   }
@@ -273,11 +274,11 @@ const FLAG_LABELS: Record<string, string> = {
 
 export type FilterChip = { key: string; value: string; label: string }
 
-// Los filtros aplicados (sin actividad, departamento ni orden), como chips.
+// Los filtros aplicados (sin actividad, departamento, texto ni orden), como chips.
 export function filterChips(p: URLSearchParams): FilterChip[] {
   const chips: FilterChip[] = []
   for (const [key, value] of p) {
-    if (key === "activity" || key === "department" || key === "sort") continue
+    if (key === "activity" || key === "department" || key === "q" || key === "sort") continue
     const practical = PRACTICAL_FILTERS.find(f => f.param === key && f.value === value)
     const label = practical?.label ?? LABELS[key]?.[value] ?? (value === "true" ? FLAG_LABELS[key] : undefined)
     if (label) chips.push({ key, value, label })

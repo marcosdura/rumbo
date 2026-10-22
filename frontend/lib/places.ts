@@ -133,8 +133,10 @@ export function searchMetadata(params: Record<string, string | string[] | undefi
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const activity = ACTIVITIES.find(a => a.name === one(params.activity)) ?? null
   const department = DEPARTMENT_LIST.find(d => d.name === one(params.department)) ?? null
+  const q = one(params.q)?.trim()
   return {
-    title: activity || department ? `Buscar: ${placesHeading(activity, department)} | Rumbo` : "Buscar lugares | Rumbo",
+    title: q ? `Buscar «${q}» | Rumbo`
+      : activity || department ? `Buscar: ${placesHeading(activity, department)} | Rumbo` : "Buscar lugares | Rumbo",
     robots: { index: false, follow: true },
   }
 }
