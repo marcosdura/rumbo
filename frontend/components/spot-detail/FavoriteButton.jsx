@@ -21,8 +21,9 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
     else        await addFavorite(spot, token)
   }
 
-  // variante en los detalles del spot
-  if (variant === "detail") {
+  // variante en los detalles del spot; "icon": la misma, solo el corazón
+  // (la barra de arriba de la página en el celular)
+  if (variant === "detail" || variant === "icon") {
     return (
       <>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="guardar este lugar en favoritos" pending={{ kind: "favorite", spotId: spot.id }} />}
@@ -59,16 +60,17 @@ export default function FavoriteButton({ spot, variant = "detail" }) {
             transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
           }
           .fav-btn-detail:hover .fav-heart { transform: scale(1.2); }
+          .fav-btn-detail.is-icon { padding: 9px 11px; }
         `}</style>
 
         <button
           onClick={toggle}
-          className={`fav-btn-detail ${active ? "active" : ""}`}
+          className={`fav-btn-detail${variant === "icon" ? " is-icon" : ""}${active ? " active" : ""}`}
           aria-label={active ? "Quitar de favoritos" : "Guardar en favoritos"}
         >
           <span className="fav-heart">{active ? "❤️" : <span style={{ opacity: 0.25 }}>❤️</span>}
           </span>
-          {active ? "Guardado" : "Guardar"}
+          {variant === "detail" && (active ? "Guardado" : "Guardar")}
         </button>
       </>
     )

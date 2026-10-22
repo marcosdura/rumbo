@@ -19,6 +19,7 @@ import Footer from "../../../components/layout/Footer"
 import FavoriteButton from "@/components/spot-detail/FavoriteButton"
 import ReviewsSection from "@/components/spot-detail/ReviewsSection"
 import SpotImages from "../../../components/spot-detail/SpotImages"
+import SpotImagesMobile from "@/components/spot-detail/SpotImagesMobile"
 import ShareModal from "@/components/spot-detail/ShareModal"
 import MotorhomeCard from "../../../components/spot-detail/MotorhomeCard"
 import CampingCard from "../../../components/spot-detail/CampingCard"
@@ -146,12 +147,23 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
               </p>
             )}
 
-            <button
-              onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}
-              className="mobile-back-btn"
-            >
-              ← Volver
-            </button>
+            {/* Celular: volver, y guardar y compartir solo con el ícono; debajo
+                las fotos, y después el nombre y lo demás. */}
+            <div className="spot-mobile-bar">
+              <button
+                onClick={() => cameFromRumbo(document.referrer, window.location.origin) ? router.back() : router.push("/search")}
+                className="mobile-back-btn"
+              >
+                ← Volver
+              </button>
+              <div className="spot-mobile-actions">
+                <FavoriteButton spot={spot} variant="icon" />
+                <button className="action-btn is-icon" onClick={() => setShowShare(true)} aria-label="Compartir">🔗</button>
+              </div>
+            </div>
+            <div className="spot-mobile-only">
+              <SpotImagesMobile images={spot.images} name={spot.name} />
+            </div>
 
             {/* Header */}
             <div className="fade-up fade-up-1" style={{ marginBottom: 24 }}>
@@ -214,7 +226,7 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
             <PendingNotice pending={viewer.pending} />
 
             {/* Imágenes */}
-            <div className="fade-up fade-up-2" style={{ marginBottom: spot.is_public != null ? 12 : 36 }}>
+            <div className="fade-up fade-up-2 spot-desktop-only" style={{ marginBottom: spot.is_public != null ? 12 : 36 }}>
               <SpotImages images={spot.images} name={spot.name} />
             </div>
 

@@ -104,6 +104,25 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
+/* Celular: la barra de arriba (volver, guardar, compartir) y las fotos
+   deslizables (SpotImagesMobile). En la compu no se ven. */
+.spot-mobile-bar { display: none; }
+.spot-mobile-only { display: none; }
+.action-btn.is-icon { padding: 9px 11px; }
+.spot-mobile-photos { position: relative; margin: 0 -16px 20px; }
+.spot-mobile-photos-track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.spot-mobile-photos-track::-webkit-scrollbar { display: none; }
+.spot-mobile-photo {
+  position: relative; flex: 0 0 100%; aspect-ratio: 4 / 3; scroll-snap-align: start;
+  border: none; padding: 0; margin: 0; background: #e6e1d8; cursor: pointer;
+}
+.spot-mobile-photos-count {
+  position: absolute; right: 14px; bottom: 12px; padding: 3px 10px; border-radius: 999px;
+  background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; font-weight: 600; pointer-events: none;
+}
+
 .mobile-back-btn {
   display: none;
   align-items: center;
@@ -119,7 +138,13 @@
 }
 
 @media (max-width: 768px) {
-  .mobile-back-btn { display: flex; }
+  .mobile-back-btn { display: flex; padding: 0; }
+  .spot-mobile-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .spot-mobile-actions { display: flex; gap: 8px; }
+  .spot-mobile-only { display: block; }
+  .spot-desktop-only { display: none; }
+  /* Guardar y compartir ya están en la barra de arriba. */
+  .spot-actions { display: none; }
   .spot-page-inner {
     padding: 20px 16px 40px;
   }

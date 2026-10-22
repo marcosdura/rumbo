@@ -25,7 +25,8 @@ vi.mock("../../../components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("../../../components/layout/Footer", () => ({ default: () => null }))
 vi.mock("../../../components/spot-detail/SpotImages", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/ReviewsSection", () => ({ default: () => null }))
-vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: () => null }))
+vi.mock("@/components/spot-detail/FavoriteButton", () => ({ default: ({ variant }: { variant: string }) => <button aria-label={`guardar (${variant})`}>{variant === "icon" ? "❤️" : "❤️ Guardar"}</button> }))
+vi.mock("@/components/spot-detail/SpotImagesMobile", () => ({ default: () => <div>fotos del celular</div> }))
 vi.mock("../../../components/spot-detail/ExperienciasSection", () => ({ default: () => null }))
 vi.mock("@/components/spot-detail/NearbySpots", () => ({ default: ({ spotId, services, title }: { spotId: number; services?: string; title?: string }) => <p>cercanos de {spotId}{services ? ` (${services}: ${title})` : ""}</p> }))
 
@@ -42,6 +43,24 @@ function spot(category: string, extra: Record<string, unknown> = {}) {
 afterEach(() => {
   session = null
   viewer = { is_owner: false, is_admin: false, pending: [] }
+})
+
+describe("Página del lugar en el celular", () => {
+  it("arriba: volver, y guardar y compartir solo con el ícono; después las fotos y el nombre", async () => {
+    const { container } = render(<SpotDetail spot={spot("Camping")} />)
+    await screen.findByText("Cerro Arequita")
+    const bar = container.querySelector(".spot-mobile-bar")!
+    expect(bar.textContent).toBe("← Volver❤️🔗")
+    expect(bar.querySelector('[aria-label="Compartir"]')).toBeTruthy()
+    // Las fotos del celular van entre la barra y el nombre.
+    const order = [...container.querySelectorAll(".spot-mobile-bar, .spot-mobile-only, h1")].map(el => el.tagName === "H1" ? "nombre" : el.className)
+    expect(order).toEqual(["spot-mobile-bar", "spot-mobile-only", "nombre"])
+    const { readFileSync } = await import("node:fs")
+    const css = readFileSync("app/spots/[slug]/spot-page.css", "utf-8")
+    const mobile = css.slice(css.indexOf("@media (max-width: 768px)"))
+    expect(mobile).toMatch(/\.spot-desktop-only \{ display: none; \}/)
+    expect(mobile).toMatch(/\.spot-actions \{ display: none; \}/)
+  })
 })
 
 describe("Página del lugar: está al día", () => {
