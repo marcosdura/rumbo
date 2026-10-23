@@ -285,3 +285,41 @@ Esta vez no encontré problemas nuevos de utilidad que pueda sostener con algo
 concreto: lo que quedaba (buscar por nombre, saber si la información está al
 día, fotos en reseñas) se resolvió en la tanda anterior, y las ideas siguen en
 [ideas.md](ideas.md).
+
+---
+
+# Cuarta auditoría — 23/10/2026: experiencia de uso y funcionalidades
+
+Recorrido con Chromium por rumboapp.uy (sin sesión, solo lectura) en la
+compu (1366 px) y el celular (360, 390 y 430 px), y con sesión en local
+(servidores del e2e). Solo lo comprobado; cada punto dice cómo.
+
+## 16 — Producción
+
+- [ ] **[Alta] El backend de producción quedó en una versión anterior al 20/10, y el frontend ya usa lo nuevo** — en `rumbo-production.up.railway.app` no existen `/spots/suggest` (lo toma como `/spots/{id}`: 422), `/sectors/{id}/routes/import` (404) ni el campo `info_updated_at`, y `POST /photos` no acepta fotos de reseñas (`target` sin `"review"`). Vercel sí está al día. Lo que ve la gente hoy:
+  - **Buscar por nombre no anda:** escribir "arequita" en Dónde no sugiere nada (el pedido da 422) y "Buscar «arequita»" muestra los 29 lugares (el backend viejo ignora `q`).
+  - Subir la foto de una reseña falla; "Última actualización" no aparece; el importador de vías del admin da 404.
+  - Tampoco están en producción los arreglos de seguridad del 21/10 (límite de pedidos en todo lo que escribe, tope de subidas por usuario y limpieza, certificados).
+  Es el problema de deploys de Railway: hace falta que el último deploy salga (y después revisar que `/spots/suggest?q=are` responda una lista).
+
+## 17 — Experiencia de uso
+
+- [ ] **[Media] En el celular, el título de la búsqueda queda tapado** — con una actividad elegida (el caso más común), el contador y "Recomendados" se montan sobre el título: se lee "Campg 8". Medido en 360, 390 y 430 px con Camping, Motorhome, Glamping y "Trekking en Rocha": siempre tapado (con "Todos los lugares", no).
+- [ ] **[Media] Precios y mínimos en 0 se muestran como dato** — la ficha del glamping dice "Precio por noche $0" y "Mínimo de noches 0 noches" (4 unidades en producción: Bichadero y Campin Entre las Sierras), mientras la card del mismo lugar dice "Gratis". El formulario los deja en 0 (valida que no esté vacío, y "0" pasa) y el backend no pone mínimo. Igual con experiencias a "$1 UYU" (Trekking Cañas). Arreglo: no aceptar 0 donde no tiene sentido (mínimo de noches) y decidir qué es un 0 en un precio ("Gratis" o "Consultar"), igual en todos lados.
+- [ ] **[Media] Las experiencias y las reseñas pierden los saltos de línea** — en Bichadero cada experiencia viene escrita en líneas ("Distancia: 2 km / Tiempo estimado: … / Dificultad: …") y se ve todo pegado ("…2 horas Dificultad: Media Descripción: Quebrada…"). `ExperienciasSection.tsx` y `ReviewCard.tsx` no tienen `white-space: pre-line`; la descripción del lugar, las rutas y las vías sí.
+- [ ] **[Baja] "Descripción" vacía** — `SpotDescription` se dibuja aunque no haya texto: en Surf School y Playa Sur (Cabo Polonio) queda el título "Descripción" y una card en blanco.
+- [ ] **[Baja] "No Accesible" se contradice con "Transporte público: Accesible"** — en El Gavilán, Detalles dice "Transporte público 🚌 Accesible" y Características muestra una pill roja "No Accesible". La segunda es accesibilidad para silla de ruedas, pero en la versión "No" se pierde el ♿ (`TrekkingAmenitiesCard`). Arreglo: "No accesible en silla de ruedas" (o mantener el ícono).
+- [ ] **[Baja] Una card sin foto es un rectángulo gris** — Ecoturismo Laguna Garzón no tiene fotos y en la home (primera de la fila Trekking) se ve un bloque gris vacío (`SpotCard`: un `div` con el color del borde). Arreglo: el emoji de la actividad o un fondo con la marca.
+- [ ] **[Baja] El email se corta en cualquier letra** — en el celular, "dario.bichadero@gmail.co / m" (Contacto de Bichadero). Mejor cortar en la @ o achicar.
+- [ ] **[Baja] "Hecho en Uruguay 🇺🇾" se ve "Hecho en Uruguay UY" en Windows** — Windows no dibuja emojis de banderas (captura de Chromium en Windows). Es el pie de todas las páginas.
+- [ ] **[Baja] Los pins del mapa de búsqueda dicen todos lo mismo** — con Camping elegido, los ocho pins dicen "Camping": no se sabe cuál es cuál sin tocarlos. El nombre (o el precio) diría algo.
+- *Revisado y bien:* ninguna página da errores de JavaScript; nada se sale de ancho en el celular; títulos de pestaña correctos; 404 propia; guardar y reseñar sin sesión piden iniciarla con un motivo claro; los estados vacíos del perfil (favoritos, reseñas, aportes, pedidos, notificaciones) explican qué va a aparecer y ofrecen el siguiente paso; agregar lugar dice "Paso X de N" y avisa antes de salir con datos sin guardar.
+
+## 18 — Funcionalidades útiles
+
+Cada una sale de algo visto en el recorrido.
+
+- [ ] **Compartir con el menú del teléfono** — en el celular, Compartir solo ofrece "Copiar link" y WhatsApp (no hay `navigator.share` en el código): no se puede mandar directo a Instagram, Telegram o un mail. Con la Web Share API, el celular abre su menú; en la compu queda como está.
+- [ ] **Sin resultados, ofrecer lo que sí hay** — "Escalada en Rivera" muestra "Todavía no hay lugares acá", pero hay 2 lugares de Escalada en otros departamentos. Un "Ver Escalada en todo Uruguay (2)" evita que la búsqueda termine en nada.
+- [ ] **Volver a la reseña después de iniciar sesión** — con ❤️ ya se hace (`lib/pendingAction.ts`: vuelve del login y lo guarda), pero con "Escribir una reseña" se vuelve a la página y hay que buscar el botón de nuevo. Mismo mecanismo, abriendo el formulario.
+- [ ] **Contacto de las escuelas y servicios** — Surf School no tiene email, WhatsApp ni Instagram ("No hay información de contacto disponible"): una escuela a la que no se puede escribir. Pedir al menos un contacto al cargar un lugar privado (las playas y el Arequita, que son públicos, no lo necesitan).
