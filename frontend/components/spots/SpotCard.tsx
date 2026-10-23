@@ -64,7 +64,10 @@ function SpotCard({ spot, isHighlighted = false, activeCategory, priority = fals
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <div style={{ width: "100%", height: "100%", background: "var(--border)" }} />
+            // Sin fotos: el ícono de la actividad (antes un bloque gris vacío).
+            <div className="spot-card-no-photo" aria-hidden="true">
+              {CATEGORY_EMOJI[primaryCategory?.name] ?? "📍"}
+            </div>
           )}
           <div className="spot-card-img-overlay" />
         </div>

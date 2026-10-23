@@ -124,3 +124,11 @@
   .spot-card-body     { padding: 7px 10px 9px; }
   .spot-card-badges   { gap: 4px; }
 }
+
+/* Una card sin fotos: el ícono de la actividad sobre un fondo suave. */
+.spot-card-no-photo {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  background: linear-gradient(135deg, #eef5f0, #e4ddd0);
+}

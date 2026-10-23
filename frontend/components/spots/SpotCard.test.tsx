@@ -24,6 +24,12 @@ const base = {
 }
 
 describe("SpotCard", () => {
+  it("sin fotos muestra el ícono de su actividad, no un bloque vacío", () => {
+    const { container } = render(<SpotCard spot={{ ...base, images: [], category: { name: "Trekking" }, categories: [{ name: "Trekking" }] }} />)
+    expect(container.querySelector(".spot-card-no-photo")?.textContent).toBe("🥾")
+    expect(css).toContain(".spot-card-no-photo")
+  })
+
   it("abre el lugar en la misma pestaña, y el favorito no está adentro del link", () => {
     render(<SpotCard spot={base} />)
     const link = screen.getByRole("link")
