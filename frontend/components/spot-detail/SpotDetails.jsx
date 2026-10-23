@@ -117,7 +117,9 @@ function SpotDetails({ spot }) {
           cursor: pointer;
           text-align: right;
           min-width: 0;
-          word-break: break-all;
+          /* Corta solo si no entra de otra forma (break-all cortaba en
+             cualquier letra aunque hubiera un lugar mejor, como la @). */
+          overflow-wrap: anywhere;
         }
 
         /* Detalles · Información práctica · Contacto, una al lado de la otra

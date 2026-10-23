@@ -7,6 +7,9 @@ import { useState } from "react"
 
 export default function EmailContact({ email, linkClassName }: { email: string; linkClassName: string }) {
   const [copied, setCopied] = useState(false)
+  // Si no entra en una línea, que corte después de la @ (antes cortaba en
+  // cualquier letra: "dario.bichadero@gmail.co / m").
+  const at = email.indexOf("@")
   const copy = () => {
     navigator.clipboard.writeText(email)
     setCopied(true)
@@ -14,7 +17,9 @@ export default function EmailContact({ email, linkClassName }: { email: string; 
   }
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-      <a href={`mailto:${email}`} className={linkClassName}>{email}</a>
+      <a href={`mailto:${email}`} className={linkClassName}>
+        {at > 0 ? <>{email.slice(0, at + 1)}<wbr />{email.slice(at + 1)}</> : email}
+      </a>
       <button
         type="button"
         onClick={copy}

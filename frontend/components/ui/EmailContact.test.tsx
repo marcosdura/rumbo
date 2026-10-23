@@ -12,4 +12,10 @@ describe("EmailContact", () => {
     expect(copied).toEqual(["hola@ola.uy"])
     expect(screen.getByRole("button", { name: "¡Copiado! ✓" })).toBeTruthy()
   })
+
+  it("si no entra, corta después de la @ y no en cualquier letra", () => {
+    render(<EmailContact email="dario.bichadero@gmail.com" linkClassName="x" />)
+    const link = screen.getByRole("link", { name: "dario.bichadero@gmail.com" })
+    expect(link.innerHTML).toBe("dario.bichadero@<wbr>gmail.com")
+  })
 })
