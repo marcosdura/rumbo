@@ -65,7 +65,7 @@ function FavoritesLoader() {
     if (!session?.id_token) return
     const token = session.id_token
     // Tocó ❤️ sin sesión: se guarda apenas vuelve del login.
-    const pending = takePendingAction()
+    const pending = takePendingAction("favorite")
     if (pending?.kind === "favorite") {
       api.post(`/favorites/${pending.spotId}`, undefined, { token })
         .catch(() => {}) // 409 = ya estaba; otro error: queda como antes

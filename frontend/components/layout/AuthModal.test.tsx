@@ -26,12 +26,12 @@ describe("Modal de login", () => {
     render(<AuthModal onClose={() => {}} pending={{ kind: "favorite", spotId: 12 }} />)
     fireEvent.click(screen.getByRole("button", { name: "Continuar con Google" }))
     expect(signIns).toBe(1)
-    expect(takePendingAction()).toEqual({ kind: "favorite", spotId: 12 })
+    expect(takePendingAction("favorite")).toEqual({ kind: "favorite", spotId: 12 })
   })
 
   it("sin acción pendiente no guarda nada", () => {
     render(<AuthModal onClose={() => {}} />)
     fireEvent.click(screen.getByRole("button", { name: "Continuar con Google" }))
-    expect(takePendingAction()).toBeNull()
+    expect(takePendingAction("favorite")).toBeNull()
   })
 })

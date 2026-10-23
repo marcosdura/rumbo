@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react"
 import { StarDisplay } from "@/components/ui/StarRating"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import AuthModal from "@/components/layout/AuthModal"
+import { takePendingAction } from "@/lib/pendingAction"
 import ImageGallery from "@/components/spot-detail/ImageGallery"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
@@ -54,6 +55,15 @@ export default function ReviewsSection({ spotId }: { spotId: number }) {
 
   const basePath = `/reviews/${spotId}`
 
+  // Abre el form en modo edición, precargado con lo que la reseña ya tiene.
+  const startEditing = (review: { id: number; rating: number; comment?: string | null }) => {
+    setEditingId(review.id)
+    setRating(review.rating)
+    setComment(review.comment ?? "")
+    setSubmitError(false)
+    setShowForm(true)
+  }
+
   // El error se limpia recién al cargar bien: mientras reintenta, "Cargando..."
   // tiene prioridad sobre el aviso de error.
   // Con .then y no async/await: el lint de React solo reconoce como
@@ -71,6 +81,18 @@ export default function ReviewsSection({ spotId }: { spotId: number }) {
         setReviewsTotal(revResult.totalCount ?? 0)
         setSummary(sumResult.data)
         setLoadError(false)
+        // Tocó "Escribir una reseña" sin sesión: al volver del login se abre
+        // el formulario (o la suya para editar) y se baja hasta acá. Antes
+        // volvía a la página y tenía que buscar el botón de nuevo.
+        if (token && takePendingAction("review")?.spotId === spotId) {
+          const mine = sumResult.data?.my_review
+          if (mine) startEditing(mine)
+          else setShowForm(true)
+          requestAnimationFrame(() => {
+            const el = document.getElementById("reviews")
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 140, behavior: "smooth" })
+          })
+        }
       })
       .catch(() => {
         // Sin esto la lista queda vacía y la UI dice "todavía no hay reseñas",
@@ -98,15 +120,6 @@ export default function ReviewsSection({ spotId }: { spotId: number }) {
   // lugar y la primera carga, sin sesión, quedaba para siempre.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- loadReviews se arma en cada render con spotId y token
   useEffect(() => { loadReviews() }, [spotId, token])
-
-  // Abre el form en modo edición, precargado con lo que la reseña ya tiene.
-  const startEditing = (review: { id: number; rating: number; comment?: string | null }) => {
-    setEditingId(review.id)
-    setRating(review.rating)
-    setComment(review.comment ?? "")
-    setSubmitError(false)
-    setShowForm(true)
-  }
 
   const closeForm = () => {
     setShowForm(false)
@@ -418,7 +431,7 @@ export default function ReviewsSection({ spotId }: { spotId: number }) {
         )}
       </div>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="dejar tu reseña" />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} reason="dejar tu reseña" pending={{ kind: "review", spotId }} />}
 
       {galleryPhoto && <ImageGallery images={[galleryPhoto]} name="Foto de la reseña" startIndex={0} onClose={() => setGalleryPhoto(null)} />}
 
