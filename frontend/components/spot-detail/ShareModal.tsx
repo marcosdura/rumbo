@@ -13,6 +13,16 @@ function ShareModal({ name, onClose }: { name: string; onClose: () => void }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // El menú de compartir del teléfono (Instagram, Telegram, mail...): solo
+  // donde el navegador lo tiene. El modal se abre con un toque, nunca en el
+  // servidor, así que se puede preguntar acá.
+  const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function"
+  const handleNativeShare = () => {
+    navigator.share({ title: name, text: `Mirá esto: ${name}`, url: window.location.href })
+      // Cancelar el menú también "falla": no es un error.
+      .catch(() => {})
+  }
+
   const handleWhatsApp = () => {
     const url = encodeURIComponent(window.location.href)
     const text = encodeURIComponent(`Mirá esto: ${name}\n`)
@@ -124,6 +134,16 @@ function ShareModal({ name, onClose }: { name: string; onClose: () => void }) {
                 <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontWeight: 400 }}>Compartir por mensaje</p>
               </div>
             </button>
+
+            {canShare && (
+              <button className="share-modal-btn" onClick={handleNativeShare}>
+                <span style={{ fontSize: 20 }}>📤</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 600 }}>Más opciones</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontWeight: 400 }}>Instagram, Telegram, mail…</p>
+                </div>
+              </button>
+            )}
           </div>
 
         </div>
