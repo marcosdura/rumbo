@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import type { MotorhomeDetailItem, CampingDetailItem, GlampingDetailItem } from "../types"
+import { missingGlampingFields } from "../payloads"
+import { PRICE_ERROR } from "./StepGlampingUnidades"
 import { GLAMPING_AMENITY_CATEGORIES, AMENITY_CATEGORIES, AMENITY_ICONS } from "../constants"
 import { s, errorInputBorder, amenityChipStyle, sanitizeNum } from "../styles"
 import Field from "../ui/Field"
@@ -131,11 +133,8 @@ export default function StepCategoriasAdicionales({
     if (acceptsGlamping) {
       const unitErrors: Record<number, Set<string>> = {}
       glampingUnits.forEach((unit, i) => {
-        const missing = new Set<string>()
-        if (!unit.accommodation_type) missing.add("accommodation_type")
-        if (!unit.capacity) missing.add("capacity")
-        if (!unit.price_per_night) missing.add("price_per_night")
-        if (!unit.min_nights) missing.add("min_nights")
+        // La misma validación que el paso de glamping y el dashboard.
+        const missing = missingGlampingFields(unit) as Set<string>
         if (missing.size > 0) { unitErrors[i] = missing; ok = false }
       })
       setGlampingUnitErrors(unitErrors)
@@ -268,7 +267,7 @@ export default function StepCategoriasAdicionales({
                             style={{ ...s.input, ...(unitErrors.has("capacity") ? errorInputBorder : {}) }}
                           />
                         </Field>
-                        <Field label="Precio por noche" required={true} hasError={unitErrors.has("price_per_night")} errorText="Completá el precio por noche">
+                        <Field label="Precio por noche" required={true} hasError={unitErrors.has("price_per_night")} errorText={PRICE_ERROR}>
                           <input
                             type="number" min={0} value={unit.price_per_night}
                             onChange={e => updGlampingUnit(index, "price_per_night", sanitizeNum(e.target.value))}

@@ -139,11 +139,19 @@ class GlampingAmenityResponse(GlampingAmenityCreate):
 
 class GlampingDetailCreate(BaseModel):
     accommodation_type: Optional[str]   = Field(default=None, max_length=50)
-    capacity:           Optional[int]   = None
-    price_per_night:    Optional[float] = None
-    min_nights:         Optional[int]   = None
+    # Más de 0: "$0 por noche" o "0 personas" no son datos. 0 noches sí:
+    # es "sin mínimo".
+    capacity:           Optional[int]   = Field(default=None, gt=0)
+    price_per_night:    Optional[float] = Field(default=None, gt=0)
+    min_nights:         Optional[int]   = Field(default=None, ge=0)
 
-class GlampingDetailResponse(GlampingDetailCreate):
+class GlampingDetailResponse(BaseModel):
+    # Sin los mínimos de GlampingDetailCreate: hay unidades viejas en 0 (y la
+    # respuesta también se valida: la página del lugar daba 500).
+    accommodation_type: Optional[str] = None
+    capacity:           Optional[int] = None
+    price_per_night:    Optional[float] = None
+    min_nights:         Optional[int] = None
     # False = aporte pendiente de revisión (solo lo ven su autor y el admin).
     is_approved: bool = True
     id: int

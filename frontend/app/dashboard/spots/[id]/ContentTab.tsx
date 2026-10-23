@@ -292,7 +292,7 @@ export default function ContentTab({ spotId, token, reviewed, category, showExpe
                 title={label}
                 detail={[
                   unit.capacity != null ? `${unit.capacity} personas` : null,
-                  unit.price_per_night != null ? `$ ${unit.price_per_night} por noche` : null,
+                  unit.price_per_night ? `$ ${unit.price_per_night} por noche` : null,
                 ].filter(Boolean).join(" · ")}
                 pending={!unit.is_approved}
                 onEdit={() => setEditing(`unit-${unit.id}`)}

@@ -9,6 +9,9 @@ import Field from "../ui/Field"
 import NavRow from "../ui/NavRow"
 import { missingGlampingFields } from "../payloads"
 
+// Un precio de $0 no es un precio: se pide uno de verdad.
+export const PRICE_ERROR = "Poné el precio por noche (más de $0)"
+
 interface Props {
   glampingUnits: GlampingDetailItem[]
   setGlampingUnits: (v: GlampingDetailItem[]) => void
@@ -137,7 +140,7 @@ export function GlampingUnitCard({ index, unit, errors, onChange, onRemove }: {
             onChange={e => onChange("capacity", sanitizeNum(e.target.value))}
           />
         </Field>
-        <Field label="Precio por noche" required={true} hasError={errors.has("price_per_night")} errorText="Completá el precio por noche">
+        <Field label="Precio por noche" required={true} hasError={errors.has("price_per_night")} errorText={PRICE_ERROR}>
           <input
             style={{ ...s.input, ...(errors.has("price_per_night") ? errorInputBorder : {}) }}
             type="number" min={0} value={unit.price_per_night}

@@ -31,4 +31,11 @@ describe("glamping", () => {
     expect([...missingGlampingFields(defaultGlampingDetail())].sort()).toEqual(["accommodation_type", "capacity", "min_nights", "price_per_night"])
     expect(missingGlampingFields({ accommodation_type: "domo", capacity: "2", price_per_night: "10", min_nights: "0" }).size).toBe(0)
   })
+
+  it("un precio o una capacidad en 0 no valen (0 noches sí: es sin mínimo)", () => {
+    const ok = { accommodation_type: "domo", capacity: "2", price_per_night: "10", min_nights: "0" }
+    expect([...missingGlampingFields({ ...ok, price_per_night: "0" })]).toEqual(["price_per_night"])
+    expect([...missingGlampingFields({ ...ok, capacity: "0" })]).toEqual(["capacity"])
+    expect(missingGlampingFields({ ...ok, min_nights: "0" }).size).toBe(0)
+  })
 })

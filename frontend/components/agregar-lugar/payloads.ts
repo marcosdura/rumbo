@@ -37,8 +37,10 @@ export function glampingUnitPayload(unit: GlampingDetailItem) {
 export function missingGlampingFields(unit: GlampingDetailItem): Set<keyof GlampingDetailItem> {
   const missing = new Set<keyof GlampingDetailItem>()
   if (!unit.accommodation_type) missing.add("accommodation_type")
-  if (!unit.capacity) missing.add("capacity")
-  if (!unit.price_per_night) missing.add("price_per_night")
-  if (!unit.min_nights) missing.add("min_nights")
+  // Capacidad y precio, más de 0 ("0" pasaba y se publicaba "$0 por noche").
+  // El mínimo de noches sí puede ser 0: es "sin mínimo".
+  if (!(Number(unit.capacity) > 0)) missing.add("capacity")
+  if (!(Number(unit.price_per_night) > 0)) missing.add("price_per_night")
+  if (unit.min_nights === "") missing.add("min_nights")
   return missing
 }

@@ -43,11 +43,13 @@ export default function GlampingCard({ glampingDetail, glampingAmenities }: Glam
               {unit.capacity != null && (
                 <DetailCell label="Capacidad" value={`${unit.capacity} persona${unit.capacity !== 1 ? "s" : ""}`} />
               )}
-              {unit.price_per_night != null && (
-                <DetailCell label="Precio por noche" value={`$${unit.price_per_night}`} />
+              {/* Un precio de 0 no es un dato (la card tampoco lo muestra). */}
+              {unit.price_per_night != null && unit.price_per_night > 0 && (
+                <DetailCell label="Precio por noche" value={`$${Math.round(unit.price_per_night).toLocaleString("es-UY")}`} />
               )}
+              {/* 0 = sin mínimo (así se pide en el formulario). */}
               {unit.min_nights != null && (
-                <DetailCell label="Mínimo de noches" value={`${unit.min_nights} noche${unit.min_nights !== 1 ? "s" : ""}`} />
+                <DetailCell label="Mínimo de noches" value={unit.min_nights > 0 ? `${unit.min_nights} noche${unit.min_nights !== 1 ? "s" : ""}` : "Sin mínimo"} />
               )}
             </div>
             {multi && index < glampingDetail.length - 1 && (

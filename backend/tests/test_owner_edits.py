@@ -62,6 +62,31 @@ def test_editar_un_alojamiento_de_glamping(client, db, make_spot):
     assert client.patch(f"/glamping/units/{unit.id}", json={"capacity": 9}, headers=as_user(OTHER)).status_code == 403
 
 
+def test_un_alojamiento_no_queda_a_0_pesos_ni_para_0_personas(client, db, make_spot):
+    # "$0 por noche" se publicaba como precio. 0 noches sí vale: "sin mínimo".
+    spot = make_spot(name="Domos", category="Glamping")
+    url = f"/glamping/spots/{spot.id}/glamping"
+    for bad in ({"price_per_night": 0}, {"capacity": 0}, {"min_nights": -1}):
+        r = client.post(url, json={"accommodation_type": "domo", "capacity": 2, "price_per_night": 3000, **bad}, headers=as_user(OWNER))
+        assert r.status_code == 422, bad
+    r = client.post(url, json={"accommodation_type": "domo", "capacity": 2, "price_per_night": 3000, "min_nights": 0}, headers=as_user(OWNER))
+    assert r.status_code == 200, r.text
+    assert client.patch(f"/glamping/units/{r.json()['id']}", json={"price_per_night": 0}, headers=as_user(OWNER)).status_code == 422
+
+
+def test_un_alojamiento_viejo_en_0_se_sigue_leyendo(client, db, make_spot):
+    spot = make_spot(name="Domos", category="Glamping", slug="domos")
+    unit = GlampingDetail(spot_id=spot.id, accommodation_type="domo", capacity=0, price_per_night=0, min_nights=0)
+    db.add(unit)
+    db.commit()
+    r = client.get("/spots/by-slug/domos")
+    assert r.status_code == 200, r.text
+    assert client.get(f"/spots/{spot.id}/owner-content", headers=as_user(OWNER)).status_code == 200
+    # Y se puede corregir de a un campo (la respuesta trae los otros en 0).
+    r = client.patch(f"/glamping/units/{unit.id}", json={"accommodation_type": "cabaña"}, headers=as_user(OWNER))
+    assert r.status_code == 200, r.text
+
+
 def test_caracteristicas_del_trekking_se_crean_o_se_corrigen(client, db, make_spot):
     spot = make_spot(name="Cerro", category="Trekking")
     r = client.put(f"/spots/{spot.id}/trekking-detail", json={"bathrooms": True, "fire_pits": False}, headers=as_user(OWNER))
