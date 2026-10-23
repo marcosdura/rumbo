@@ -84,7 +84,8 @@ export default function ReviewCard({ review, onEdit, onDelete, onOpenPhoto }: {
         </div>
       </div>
       {review.comment && (
-        <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10 }}>{review.comment}</p>
+        // Con los saltos de línea de quien la escribió.
+        <p style={{ fontSize: 14, color: "#3d3d3a", lineHeight: 1.65, marginTop: 10, whiteSpace: "pre-line" }}>{review.comment}</p>
       )}
       {review.photo && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>

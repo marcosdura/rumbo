@@ -9,4 +9,12 @@ describe("SpotDescription", () => {
     expect(p.textContent).toBe("Primer párrafo.\n\nSegundo párrafo.")
     expect(p.style.whiteSpace).toBe("pre-line")
   })
+
+  it("sin texto no se dibuja", () => {
+    for (const description of [null, "", "   \n "]) {
+      const { container, unmount } = render(<SpotDescription description={description} />)
+      expect(container.innerHTML).toBe("")
+      unmount()
+    }
+  })
 })

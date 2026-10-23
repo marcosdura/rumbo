@@ -24,4 +24,12 @@ describe("experiencias del lugar", () => {
     expect(container.innerHTML).toBe("")
     expect(render(<ExperienciasSection />).container.innerHTML).toBe("")
   })
+
+  it("respeta los saltos de línea de la descripción", () => {
+    const text = "Distancia: 2 km\nDificultad: Media"
+    render(<ExperienciasSection experiences={[exp(1, "Sendero", { description: text })]} />)
+    const p = screen.getByText(/Distancia: 2 km/)
+    expect(p.textContent).toBe(text)
+    expect(p.style.whiteSpace).toBe("pre-line")
+  })
 })

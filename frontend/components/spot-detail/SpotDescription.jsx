@@ -24,6 +24,8 @@ function SpotDescription({ description }) {
   }, [description])
 
   const shouldClamp = isMobile && needsTruncation && !expanded
+  // Sin texto no hay card (antes quedaba "Descripción" y una card vacía).
+  if (!description?.trim()) return null
 
   return (
     <>

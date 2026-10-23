@@ -86,9 +86,10 @@ export default function ExperienciasSection({ experiences: all = [] }: { experie
               )}
             </div>
 
-            {/* Descripción */}
+            {/* Descripción, con los saltos de línea que escribió el dueño
+                (antes "…2 horas Dificultad: Media Descripción: …" quedaba pegado). */}
             {exp.description && (
-              <p style={{ fontSize: 13, color: "#4a4a46", margin: "0 0 8px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "#4a4a46", margin: "0 0 8px", lineHeight: 1.6, whiteSpace: "pre-line" }}>
                 {exp.description}
               </p>
             )}

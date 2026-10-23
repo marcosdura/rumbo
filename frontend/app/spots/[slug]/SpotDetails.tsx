@@ -287,9 +287,11 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
               {/* La descripción a todo el ancho; debajo, una card con Detalles,
                   Información práctica y Contacto en tres columnas (en el
                   celular va antes que la descripción: es lo que se busca para ir). */}
-              <div className="fade-up fade-up-3">
-                <SpotDescription description={spot.description} />
-              </div>
+              {spot.description?.trim() && (
+                <div className="fade-up fade-up-3">
+                  <SpotDescription description={spot.description} />
+                </div>
+              )}
               <div className="fade-up fade-up-4 spot-info-card">
                 <SpotDetails spot={spot} />
               </div>
