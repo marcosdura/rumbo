@@ -107,7 +107,8 @@ def seed():
     # Dos fotos: en la compu van en grilla (a 640px), así se nota si algo la
     # pide más grande (la galería oculta del celular).
     db.add(SpotImage(spot_id=playa.id, cloudinary_public_id="rumbo/spots/e2e/playa-2", is_main=False, order=1))
-    spot("Laguna de Prueba", 5, department="Rocha")
+    # Un email largo (como el de Bichadero en producción): en el celular no\n    # entra en una línea y tiene que cortar después de la @.
+    spot("Laguna de Prueba", 5, department="Rocha", email="reservas.lagunita@gmail.com")
     # Una escuela que vino del sistema viejo (su dirección era /surf/<nombre>-7).
     escuela = spot("Escuela de Prueba", 4, department="Rocha")
     db.add(SurfDetail(spot_id=escuela.id, operates_at="Playa de Prueba", legacy_id=7))

@@ -186,8 +186,42 @@ export async function run(browser, r) {
       r.ok("Botones sueltos con hover (Compartir, Subir fotos, Reportar...)", noHover.length === 0, noHover.join(", "))
     }
 
+    // El título de la búsqueda no queda debajo del contador ni de los botones
+    // (en el celular se leía "Campg 8").
+    await page.goto(`${FRONT}/search?activity=Motorhome`, { waitUntil: "networkidle" })
+    const covered = await page.evaluate(() => {
+      const h = document.querySelector("h1.search-title")
+      const range = document.createRange()
+      range.selectNodeContents(h)
+      const t = range.getBoundingClientRect()
+      return [...h.parentElement.querySelectorAll("button, span")].filter(e => !h.contains(e))
+        .map(e => e.getBoundingClientRect())
+        .filter(o => o.width && o.left < t.right && o.right > t.left && o.top < t.bottom && o.bottom > t.top).length
+    })
+    r.ok(`[${label}] el título de la búsqueda no queda tapado`, covered === 0, `${covered} encima`)
+
+    if (label === "pc") {
+      // Los pins del mapa dicen el nombre del lugar (antes todos "Surf"). Por
+      // nombre, para que quede un solo pin (en el e2e están todos en el mismo punto).
+      await page.goto(`${FRONT}/search?activity=Surf&q=playa`, { waitUntil: "networkidle" })
+      await page.locator(".spot-pin").first().waitFor({ timeout: 10000 }).catch(() => {})
+      const pins = await page.locator(".spot-pin").allInnerTexts()
+      r.ok("[pc] los pins del mapa dicen el nombre del lugar", pins.some(t => t.includes("Playa de Prueba")), pins.join(" | ").slice(0, 120))
+    }
+
+    if (label === "celular") {
+      // Un email largo corta después de la @, no en cualquier letra.
+      await page.goto(`${FRONT}/spots/laguna-de-prueba`, { waitUntil: "networkidle" })
+      const lines = await page.locator('a[href^="mailto:"]').first().evaluate(a => [...a.childNodes].filter(n => n.nodeType === 3).map(n => {
+        const range = document.createRange()
+        range.selectNodeContents(n)
+        return new Set([...range.getClientRects()].map(r => Math.round(r.top))).size
+      }))
+      r.ok("[celular] un email largo corta después de la @", lines.length === 2 && lines.every(n => n === 1), JSON.stringify(lines))
+    }
+
     await page.goto(`${FRONT}/lugares/surf`, { waitUntil: "networkidle" })
-    const cards = await page.locator(".places-grid .spot-card").count()
+    const cards =await page.locator(".places-grid .spot-card").count()
     await page.getByRole("link", { name: /^Rocha/ }).click()
     await page.waitForURL("**/lugares/surf/rocha")
     r.ok(`[${label}] /lugares/surf muestra los lugares y lleva a Surf en Rocha`, cards === 2 && (await page.locator("h1").textContent()).includes("Surf en Rocha"), `${cards} cards`)
