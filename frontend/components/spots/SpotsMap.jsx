@@ -47,9 +47,15 @@ const buildExtraBadges = (extraCategories) => {
 // crecía hacia la derecha). El globo sale justo arriba de la pastilla.
 export const PIN_POPUP_OFFSET = -16
 
-export const createPillIcon = (categoryName, extraCategories, isActive, isSelected) => {
+// El pin dice el nombre del lugar (antes, la categoría: con Camping elegido
+// todos decían "Camping" y no se sabía cuál era cuál); el emoji ya dice la
+// actividad. Escapado: va dentro de HTML.
+export const PIN_NAME_MAX = 22
+const pinLabel = (name) => name.length > PIN_NAME_MAX ? `${name.slice(0, PIN_NAME_MAX - 1).trimEnd()}…` : name
+
+export const createPillIcon = (categoryName, extraCategories, isActive, isSelected, name) => {
   const emoji = CATEGORY_EMOJI[categoryName] || '📍'
-  const label = categoryName || 'Spot'
+  const label = name ? escapeHtml(pinLabel(name)) : (categoryName || 'Spot')
 
   const bg      = isSelected ? 'var(--primary-dark)'
                 : isActive   ? 'var(--primary)'
@@ -234,7 +240,7 @@ function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, activeCategory,
       const extraCategoryNames = pillExtraCategoryNames(categories, primaryCategoryName)
 
       const marker = L.marker([spot.lat, spot.lng], {
-        icon: createPillIcon(primaryCategoryName, extraCategoryNames, false, false),
+        icon: createPillIcon(primaryCategoryName, extraCategoryNames, false, false, spot.name),
       })
 
       marker.on('mouseover', () => onHover(spot.id))
@@ -266,7 +272,7 @@ function ClusteredMarkers({ spots, activeSpotId, selectedSpotId, activeCategory,
       const extraCategoryNames = pillExtraCategoryNames(categories, primaryCategoryName)
       const isActive = activeSpotId === spot.id
       const isSelected = selectedSpotId === spot.id
-      marker.setIcon(createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected))
+      marker.setIcon(createPillIcon(primaryCategoryName, extraCategoryNames, isActive, isSelected, spot.name))
       marker.setZIndexOffset(isSelected ? 2000 : isActive ? 1000 : 0)
     })
   }, [spots, activeSpotId, selectedSpotId, activeCategory])
