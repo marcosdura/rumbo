@@ -87,3 +87,44 @@ describe("StepInfoBasica: nombre repetido", () => {
     expect(screen.getByRole("button", { name: "✅ Sí" }).getAttribute("aria-pressed")).toBe("false")
   })
 })
+
+describe("StepInfoBasica: datos de contacto", () => {
+  const NO_CONTACT = /no tiene datos de contacto/
+  function Contact({ isPublic, service, onNext = () => {} }: { isPublic: boolean | null; service?: "surf" | "kayak"; onNext?: () => void }) {
+    // Ya había marcado "no tiene datos de contacto".
+    const [basic, setBasic] = useState({ ...emptyBasic(), noContact: true })
+    return (
+      <StepInfoBasica
+        basic={basic} setBasic={setBasic} upd={(f, v) => setBasic(p => ({ ...p, [f]: v }))}
+        isPublic={isPublic} setIsPublic={() => {}} publicTransport={null} setPublicTransport={() => {}}
+        error={null} onBack={() => {}} onNext={onNext} service={service}
+      />
+    )
+  }
+
+  it("un lugar público puede no tener contacto (un cerro, una ruta)", () => {
+    render(<Contact isPublic />)
+    expect(screen.getByText(NO_CONTACT)).toBeTruthy()
+    expect(screen.queryByLabelText("Email del lugar")).toBeNull()
+  })
+
+  it("un lugar privado, una escuela o un servicio, no: se piden los datos", () => {
+    for (const props of [{ isPublic: false }, { isPublic: null, service: "surf" as const }]) {
+      const { unmount } = render(<Contact {...props} />)
+      expect(screen.queryByText(NO_CONTACT)).toBeNull()
+      expect(screen.getByText("Email del lugar")).toBeTruthy()
+      unmount()
+    }
+  })
+
+  it("aunque lo hubiera marcado antes de elegir privado, sin contacto no sigue", () => {
+    const onNext = vi.fn()
+    render(<Contact isPublic={false} onNext={onNext} />)
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }))
+    expect(onNext).not.toHaveBeenCalled()
+    // El email queda marcado (sin contacto, el de un lugar público no se marca).
+    const email = document.querySelector('input[type="email"]') as HTMLInputElement
+    expect(email.getAttribute("style")).toContain("rgb(197, 48, 48)")
+  })
+})
+

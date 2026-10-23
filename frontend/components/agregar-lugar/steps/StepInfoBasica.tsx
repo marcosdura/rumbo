@@ -86,6 +86,13 @@ export default function StepInfoBasica({
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [basic.name])
 
+  // "No tiene datos de contacto" es para un lugar público (un cerro, una
+  // ruta). Un lugar privado, una escuela o un servicio tienen que poder
+  // recibir consultas: antes también podían marcarlo (Surf School quedó sin
+  // email, WhatsApp ni Instagram).
+  const contactOptional = !service && isPublic !== false
+  const noContact = basic.noContact && contactOptional
+
   function validate(): boolean {
     const missing = new Set<string>()
     if (!basic.name.trim()) missing.add("name")
@@ -98,13 +105,13 @@ export default function StepInfoBasica({
       if (!basic.season_start) missing.add("season_start")
       if (!basic.season_end) missing.add("season_end")
     }
-    if (!basic.noContact && !basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
+    if (!noContact && !basic.email.trim() && !basic.whatsapp.trim() && !basic.instagram.trim()) {
       missing.add("contact")
     }
-    if (!basic.noContact && basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
+    if (!noContact && basic.email.trim() && !isValidEmail(basic.email)) missing.add("email")
     const phoneCountry = PHONE_COUNTRIES.find(c => c.code === basic.whatsappCountry) ?? PHONE_COUNTRIES[0]
     const normalizedWhatsapp = normalizePhoneDigits(basic.whatsapp.trim(), phoneCountry)
-    if (!basic.noContact && basic.whatsapp.trim() && normalizedWhatsapp.length !== phoneCountry.digits) missing.add("whatsapp")
+    if (!noContact && basic.whatsapp.trim() && normalizedWhatsapp.length !== phoneCountry.digits) missing.add("whatsapp")
     if (!service && isPublic === null) missing.add("isPublic")
     if (asksResponsible && (isResponsible === null || isResponsible === undefined)) missing.add("responsible")
     if (!basic.lat || !basic.lng) missing.add("location")
@@ -227,7 +234,8 @@ export default function StepInfoBasica({
         <div style={s.card}>
           <p style={s.cardTitle}>Contacto</p>
           <p style={s.subtitle}>Completá al menos uno de los tres: email, WhatsApp o Instagram.</p>
-          <div style={{ marginBottom: basic.noContact ? 0 : 14 }}>
+          {contactOptional && (
+          <div style={{ marginBottom: noContact ? 0 : 14 }}>
             <Toggle
               label="Este lugar no tiene datos de contacto (ej: un cerro, una ruta de trekking)"
               checked={basic.noContact}
@@ -241,7 +249,8 @@ export default function StepInfoBasica({
               }}
             />
           </div>
-          {!basic.noContact && (
+          )}
+          {!noContact && (
           <div style={s.form}>
             <Field label="Email del lugar" required={false} hasError={fieldErrors.has("contact") || fieldErrors.has("email")}>
               <input
