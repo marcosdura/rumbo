@@ -11,6 +11,12 @@ const { activities } = await import("@/components/spots/SearchBar") as unknown a
 afterEach(() => vi.useRealTimers())
 
 describe("Footer", () => {
+  it("«Hecho en Uruguay» con la bandera dibujada, no el emoji (Windows lo muestra como UY)", () => {
+    const { container } = render(<Footer />)
+    expect(screen.getByRole("img", { name: "bandera de Uruguay" }).tagName.toLowerCase()).toBe("svg")
+    expect(container.textContent).not.toContain("🇺🇾")
+  })
+
   it("Explorar: cada actividad lleva a su página, y está Sumá un lugar", () => {
     render(<Footer />)
     expect(screen.getByRole("link", { name: "🧗 Escalada" }).getAttribute("href")).toBe("/lugares/escalada")

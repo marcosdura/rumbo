@@ -16,6 +16,18 @@ export const EXPLORE_LINKS = [
   { activity: "Motorhome", label: "🚐 Motorhome" },
 ]
 
+// La bandera dibujada: Windows no muestra el emoji 🇺🇾 (se veía "UY").
+function UruguayFlag() {
+  return (
+    <svg width="18" height="12" viewBox="0 0 27 18" role="img" aria-label="bandera de Uruguay" style={{ borderRadius: 2, boxShadow: "0 0 0 0.5px rgba(0,0,0,0.15)", flexShrink: 0 }}>
+      <rect width="27" height="18" fill="#fff" />
+      {[2, 6, 10, 14].map(y => <rect key={y} y={y} width="27" height="2" fill="#0038a8" />)}
+      <rect width="10" height="10" fill="#fff" />
+      <circle cx="5" cy="5" r="2.6" fill="#fcd116" stroke="#7b3f00" strokeWidth="0.4" />
+    </svg>
+  )
+}
+
 export default function Footer() {
   return (
     <>
@@ -224,7 +236,9 @@ export default function Footer() {
             <span>© {new Date().getFullYear()} Rumbo Uruguay. Todos los derechos reservados.</span>
           </div>
           <div className="sf-badges">
-            <span className="sf-badge-warm">Hecho en Uruguay 🇺🇾</span>
+            <span className="sf-badge-warm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              Hecho en Uruguay <UruguayFlag />
+            </span>
           </div>
         </div>
 
