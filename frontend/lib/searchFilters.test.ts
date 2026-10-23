@@ -3,6 +3,7 @@ import {
   CAMPING_CODEC, CLIMBING_CODEC, KAYAK_CODEC, SURF_CODEC, TREKKING_CODEC,
   filterChips, listQuery, sortOf, toSearchParams, withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters,
 } from "./searchFilters"
+import { widerSearch, widerLabel } from "./searchFilters"
 import { CAMPING_AMENITY_GROUPS } from "./camping-filters"
 import { TREKKING_FILTERS } from "./trekking-filters"
 
@@ -77,5 +78,19 @@ describe("el pedido a GET /spots", () => {
   it("los searchParams del servidor quedan igual que en el navegador (también los repetidos)", () => {
     const p = toSearchParams({ activity: "Trekking", difficulty: ["fácil", "difícil"], vacio: undefined })
     expect(p.toString()).toBe(new URLSearchParams("activity=Trekking&difficulty=fácil&difficulty=difícil").toString())
+  })
+})
+
+describe("búsqueda más amplia cuando no hay resultados", () => {
+  it("saca el departamento y el nombre; deja la actividad y el orden", () => {
+    expect(widerSearch(new URLSearchParams("activity=Escalada&department=Rivera&sort=new"))?.toString()).toBe("activity=Escalada&sort=new")
+    expect(widerSearch(new URLSearchParams("q=arequita"))?.toString()).toBe("")
+    expect(widerSearch(new URLSearchParams("activity=Escalada"))).toBeNull()
+  })
+
+  it("dice cuántos y de qué", () => {
+    expect(widerLabel("Escalada", 2)).toBe("Ver los 2 lugares de Escalada en todo Uruguay")
+    expect(widerLabel("Surf", 1)).toBe("Ver el lugar de Surf en todo Uruguay")
+    expect(widerLabel("", 5)).toBe("Ver los 5 lugares en todo Uruguay")
   })
 })

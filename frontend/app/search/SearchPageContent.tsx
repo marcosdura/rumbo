@@ -21,7 +21,7 @@ import type { ClimbingFilterState } from "../../lib/climbing-filters"
 import type { CampingFilterState } from "../../lib/camping-filters"
 import {
   CODECS, PRACTICAL_FILTERS, SORT_OPTIONS, filterChips, hasFilterPanel, isPracticalOn, listQuery, sortOf,
-  withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters, withoutPair,
+  withPanelFilters, withPractical, withSort, withoutActivity, withoutFilters, withoutPair, widerSearch, widerLabel,
   type FilterActivity,
 } from "../../lib/searchFilters"
 import { trackEvent } from "../../lib/analytics"
@@ -73,6 +73,23 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
   // Los prácticos se ven como botones prendidos; acá van los del panel.
   const panelChips = allChips.filter(c => !PRACTICAL_FILTERS.some(f => f.param === c.key))
   const activeFilterCount = allChips.length
+
+  // Sin resultados en un departamento (o buscando un nombre): cuántos hay en
+  // todo Uruguay, para ofrecerlos en vez de terminar en nada ("Escalada en
+  // Rivera" daba 0 con 2 lugares de escalada en otros departamentos).
+  const widerQuery = !loading && !error && spots.length === 0 && activeFilterCount === 0
+    ? widerSearch(searchParams)?.toString() ?? "" : ""
+  const [wider, setWider] = useState<{ query: string; count: number } | null>(null)
+  useEffect(() => {
+    if (!widerQuery) return
+    const controller = new AbortController()
+    api.get<SpotListItem[]>(`/spots?${listQuery(new URLSearchParams(widerQuery))}`, { signal: controller.signal })
+      .then(({ data, totalCount }) => setWider({ query: widerQuery, count: totalCount ?? (Array.isArray(data) ? data.length : 0) }))
+      // Si falla, queda el mensaje de siempre.
+      .catch(() => {})
+    return () => controller.abort()
+  }, [widerQuery])
+  const widerCount = wider && wider.query === widerQuery ? wider.count : 0
 
   function go(params: URLSearchParams) {
     const query = params.toString()
@@ -229,7 +246,10 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 30, fontWeight: 700, color: "#1b1b19", margin: 0, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
+              {/* Sin minWidth: 0: el título no se achica más que su palabra más
+                  larga, y si no entra con los botones, los botones bajan (antes
+                  en el celular quedaba tapado: "Campg 8"). */}
+              <h1 className="search-title" style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: 30, fontWeight: 700, color: "#1b1b19", margin: 0, lineHeight: 1.2, flex: 1 }}>
                 {title}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -385,9 +405,19 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
                       Quitar filtros
                     </button>
                   ) : (
-                    <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                      ¿Conocés uno? <Link href="/agregar-lugar" style={{ color: "var(--primary)", fontWeight: 600 }}>Sumalo</Link>
-                    </p>
+                    <>
+                      {widerCount > 0 && (
+                        <button onClick={() => go(new URLSearchParams(widerQuery))} style={{
+                          margin: "8px 0 14px", padding: "9px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                          fontFamily: "inherit", cursor: "pointer", background: "#fff", color: "var(--primary-dark)", border: "1px solid #b7dfc8",
+                        }}>
+                          {widerLabel(activity, widerCount)}
+                        </button>
+                      )}
+                      <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                        ¿Conocés uno? <Link href="/agregar-lugar" style={{ color: "var(--primary)", fontWeight: 600 }}>Sumalo</Link>
+                      </p>
+                    </>
                   )}
                 </div>
               ) : (

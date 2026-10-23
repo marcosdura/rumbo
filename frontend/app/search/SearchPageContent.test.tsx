@@ -9,6 +9,8 @@ let replaced: string[] = []
 let listRequests: string[] = []
 let failList = false
 let emptyResults = false
+// Lo que hay en todo Uruguay cuando la búsqueda (con departamento) da 0.
+let widerTotal = 0
 vi.mock("next/navigation", () => ({
   useSearchParams: () => params,
   useRouter: () => ({ replace: (url: string) => replaced.push(url) }),
@@ -29,6 +31,8 @@ vi.mock("../../lib/api", () => ({
       if (url.startsWith("/spots/pins")) return Promise.resolve({ data: [] })
       listRequests.push(url)
       if (failList) return Promise.reject(new Error("Falló la búsqueda"))
+      const wide = !url.includes("department=") && !url.includes("q=")
+      if (emptyResults && wide && widerTotal) return Promise.resolve({ data: [{ id: 2, name: "Cerro Arequita" }], totalCount: widerTotal })
       if (emptyResults) return Promise.resolve({ data: [], totalCount: 0 })
       return Promise.resolve({ data: [{ id: 1, name: "Cerro Arequita" }], totalCount: 1 })
     },
@@ -43,6 +47,7 @@ afterEach(() => {
   listRequests = []
   failList = false
   emptyResults = false
+  widerTotal = 0
 })
 
 const flush = () => act(() => Promise.resolve())
@@ -149,6 +154,37 @@ describe("Búsqueda: resultados", () => {
     expect(screen.getByRole("heading", { name: "Lugares en Flores" })).toBeTruthy()
     expect(screen.getByText("Todavía no hay lugares acá")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Sumalo" }).getAttribute("href")).toBe("/agregar-lugar")
+  })
+})
+
+describe("Búsqueda: sin resultados ofrece lo que sí hay", () => {
+  it("en un departamento sin lugares, ofrece los de todo Uruguay", async () => {
+    params = new URLSearchParams("activity=Escalada&department=Rivera")
+    emptyResults = true
+    widerTotal = 2
+    render(<SearchPage />)
+    await flush()
+    await flush()
+    // Se pidió lo mismo sin el departamento.
+    expect(listRequests.some(u => u.includes("activity=Escalada") && !u.includes("department="))).toBe(true)
+    fireEvent.click(screen.getByRole("button", { name: "Ver los 2 lugares de Escalada en todo Uruguay" }))
+    expect(lastReplace().get("department")).toBeNull()
+    expect(lastReplace().get("activity")).toBe("Escalada")
+  })
+
+  it("si en todo Uruguay tampoco hay, no ofrece nada (ni pide de más sin departamento)", async () => {
+    params = new URLSearchParams("activity=Escalada&department=Rivera")
+    emptyResults = true
+    render(<SearchPage />)
+    await flush()
+    await flush()
+    expect(screen.queryByRole("button", { name: /en todo Uruguay/ })).toBeNull()
+    params = new URLSearchParams("activity=Escalada")
+    listRequests = []
+    render(<SearchPage />)
+    await flush()
+    await flush()
+    expect(listRequests).toHaveLength(1)
   })
 })
 

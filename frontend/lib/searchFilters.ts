@@ -179,6 +179,22 @@ export function listQuery(p: URLSearchParams, offset = 0): string {
   return params.toString()
 }
 
+// Una búsqueda sin resultados, más amplia: sin departamento ni nombre (la
+// actividad y el orden quedan). null si no hay nada que sacar.
+export function widerSearch(p: URLSearchParams): URLSearchParams | null {
+  if (!p.get("department") && !p.get("q")) return null
+  const params = new URLSearchParams(p)
+  params.delete("department")
+  params.delete("q")
+  return params
+}
+
+// "Ver los 2 lugares de Escalada en todo Uruguay".
+export function widerLabel(activity: string, count: number): string {
+  const places = count === 1 ? "el lugar" : `los ${count} lugares`
+  return `Ver ${places}${activity ? ` de ${activity}` : ""} en todo Uruguay`
+}
+
 // Los searchParams que recibe una página del servidor, como en el navegador.
 export function toSearchParams(obj: Record<string, string | string[] | undefined>): URLSearchParams {
   const params = new URLSearchParams()
