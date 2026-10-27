@@ -17,6 +17,11 @@ Ordenar los lugares por distancia a donde está la persona.
 
 ## Pronóstico en el lugar
 
+**Hecho** (27/10/2026, `0af630c` backend y `8ecba5e` página): 5 días de clima
+en todos los lugares y olas en los de surf, guardado una hora por lugar.
+Open-Meteo es gratis solo para uso no comercial: si Rumbo cobra algo, hay que
+pasar a su plan pago o cambiar de proveedor.
+
 El clima de los próximos días en la página del lugar, y olas y viento en surf
 y kayak.
 
