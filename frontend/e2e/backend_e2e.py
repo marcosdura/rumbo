@@ -1,13 +1,9 @@
 """Backend para las pruebas en el navegador (e2e/run.mjs). Nunca lo importa
 el backend de producción.
 
-- Base: SQLite descartable en una carpeta temporal, creada con las
-  migraciones de Alembic (como los tests del backend). No toca la base real.
-- Login: el token "e2e:<email>" reemplaza al de Google (como el X-User de
-  backend/tests/conftest.py). El email de E2E_ADMIN es admin.
-- Cloudinary: borrar fotos no sale a internet (las subidas las intercepta
-  el navegador).
-- Sin límite de pedidos por minuto.
+- Base: SQLite descartable en una carpeta temporal. Login de prueba,
+  Cloudinary sin salir a internet y sin límite de pedidos: backend_base.py.
+- Pronóstico: siempre el mismo, sin salir a internet.
 - Datos de base: categorías, comodidades y algunos lugares publicados
   (trekking, escalada con un sector, una playa y una laguna) para los
   flujos que suman cosas a un lugar existente.
@@ -15,39 +11,19 @@ el backend de producción.
 Uso: python e2e/backend_e2e.py <puerto>
 """
 import os
-import re
 import sys
 import tempfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.normpath(os.path.join(HERE, "..", "..", "backend"))
+from backend_base import amenity_names, prepare
+
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8010
 
 db_dir = tempfile.mkdtemp(prefix="rumbo-e2e-")
 DB_URL = "sqlite:///" + os.path.join(db_dir, "e2e.db").replace("\\", "/")
-os.environ["DATABASE_URL"] = DB_URL
-os.environ.setdefault("GOOGLE_CLIENT_ID", "e2e")
-os.environ["ADMIN_EMAIL"] = os.environ.get("E2E_ADMIN", "admin@e2e.test")
-os.environ["FRONTEND_URL"] = os.environ.get("E2E_FRONTEND", "http://localhost:3100")
-sys.path.insert(0, BACKEND)
-os.chdir(BACKEND)
+main = prepare(DB_URL, os.environ.get("E2E_ADMIN", "admin@e2e.test"), os.environ.get("E2E_FRONTEND", "http://localhost:3100"))
 
-from alembic import command  # noqa: E402
-from alembic.config import Config  # noqa: E402
-
-cfg = Config(os.path.join(BACKEND, "alembic.ini"))
-cfg.set_main_option("script_location", os.path.join(BACKEND, "alembic"))
-command.upgrade(cfg, "head")
-
-import cloudinary.uploader  # noqa: E402
-from fastapi import Depends  # noqa: E402
-
-import auth  # noqa: E402
-import main  # noqa: E402
 from database import SessionLocal  # noqa: E402
 from models import Amenity, Category, ClimbingSector, Route, SpotCategory, SpotDB, SpotImage, SurfDetail, User  # noqa: E402
-
-cloudinary.uploader.destroy = lambda public_id: {"result": "ok"}
 
 # El pronóstico no sale a internet: siempre el mismo (forecast.py).
 import forecast  # noqa: E402
@@ -62,31 +38,9 @@ FAKE_MARINE = {"daily": {
     "wave_period_max": [8, 7, 9, 10, 8], "wave_direction_dominant": [135, 135, 180, 180, 90],
 }}
 forecast._get = lambda url, params: FAKE_MARINE if url == forecast.MARINE_URL else FAKE_WEATHER
-# Sin límite de pedidos por minuto (como los tests del backend): un
-# recorrido crea varios lugares seguidos.
-from limiter import limiter  # noqa: E402
-
-limiter.enabled = False
-
-
-def fake_current_user(credentials=Depends(auth.security)):
-    token = credentials.credentials if credentials else ""
-    if not token.startswith("e2e:"):
-        return None
-    email = token[4:]
-    return {"email": email, "sub": email, "name": email.split("@")[0]}
-
-
-main.app.dependency_overrides[auth.get_current_user] = fake_current_user
 
 # Mismos ids que components/agregar-lugar/constants.ts (CATEGORIES).
 CATEGORIES = {1: "Camping", 2: "Trekking", 3: "Escalada", 4: "Surf", 5: "Kayak", 6: "Glamping", 8: "Motorhome"}
-
-
-def amenity_names() -> list[str]:
-    src = open(os.path.join(HERE, "..", "components", "agregar-lugar", "constants.ts"), encoding="utf-8").read()
-    block = src[src.index("AMENITY_CATEGORIES"):]
-    return sorted({n for arr in re.findall(r"names:\s*\[([^\]]*)\]", block) for n in re.findall(r'"([^"]+)"', arr)})
 
 
 def seed():

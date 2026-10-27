@@ -27,9 +27,9 @@ function chromePath() {
   return undefined
 }
 
-export async function launch() {
+export async function launch(options = {}) {
   const executablePath = chromePath()
-  return chromium.launch(executablePath ? { executablePath } : { channel: "chrome" })
+  return chromium.launch({ ...options, ...(executablePath ? { executablePath } : { channel: "chrome" }) })
 }
 
 // El secreto de NextAuth: el del entorno o el de .env.local (sin mostrarlo).
@@ -41,7 +41,7 @@ function nextAuthSecret() {
 
 // Sesión iniciada sin pasar por Google: una cookie de NextAuth firmada con el
 // mismo secreto, con el token "e2e:<email>" que acepta e2e/backend_e2e.py.
-export async function loggedIn(context, email) {
+export async function loggedIn(context, email, front = FRONT) {
   const now = Math.floor(Date.now() / 1000)
   const token = await encode({
     secret: nextAuthSecret(),
@@ -51,7 +51,7 @@ export async function loggedIn(context, email) {
       expires_at: now + 365 * 24 * 3600, termsAcceptedAt: new Date().toISOString(), lastChecked: Date.now(),
     },
   })
-  await context.addCookies([{ name: "next-auth.session-token", value: token, url: FRONT }])
+  await context.addCookies([{ name: "next-auth.session-token", value: token, url: front }])
 }
 
 // Cloudinary simulado: las subidas devuelven el public_id pedido (como lo
