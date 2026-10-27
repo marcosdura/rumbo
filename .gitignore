@@ -48,3 +48,7 @@ next-env.d.ts
 # Pruebas en el navegador (frontend/e2e/run.mjs)
 frontend/.next-e2e/
 frontend/e2e/shots/
+# Rumbo en local (frontend/local/run.mjs): la base y las fotos que se cargan
+# ahí nunca van al repo.
+frontend/.rumbo-local/
+frontend/.next-local/

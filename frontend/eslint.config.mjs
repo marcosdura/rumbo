@@ -11,6 +11,9 @@ const eslintConfig = defineConfig([
     ".next/**",
     // El build de las pruebas en el navegador (e2e/run.mjs).
     ".next-e2e/**",
+    // Rumbo en local (local/run.mjs): su build y sus datos.
+    ".next-local/**",
+    ".rumbo-local/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
