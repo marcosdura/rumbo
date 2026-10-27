@@ -3,7 +3,7 @@ import contextlib
 import os
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
-from routers import admin_summary, spots, spot_owner, spot_admin, categories, amenities, routes, sectors, upsert, images, favorites, reviews, users, glamping, climbingroutes, change_requests, contributions, reports, notifications, claims, home, me, item_photos, owner_edits
+from routers import admin_summary, spots, spot_owner, spot_admin, categories, amenities, routes, sectors, upsert, images, favorites, reviews, users, glamping, climbingroutes, change_requests, contributions, reports, notifications, claims, home, me, item_photos, owner_edits, spot_forecast
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -102,3 +102,4 @@ app.include_router(me.router)
 app.include_router(item_photos.router)
 app.include_router(owner_edits.router)
 app.include_router(admin_summary.router)
+app.include_router(spot_forecast.router)
