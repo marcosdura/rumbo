@@ -48,6 +48,20 @@ from database import SessionLocal  # noqa: E402
 from models import Amenity, Category, ClimbingSector, Route, SpotCategory, SpotDB, SpotImage, SurfDetail, User  # noqa: E402
 
 cloudinary.uploader.destroy = lambda public_id: {"result": "ok"}
+
+# El pronóstico no sale a internet: siempre el mismo (forecast.py).
+import forecast  # noqa: E402
+FAKE_WEATHER = {"daily": {
+    "time": ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"],
+    "weather_code": [0, 2, 61, 95, 3], "temperature_2m_max": [24, 22, 18, 19, 21],
+    "temperature_2m_min": [12, 13, 11, 10, 12], "precipitation_probability_max": [0, 10, 80, 90, 20],
+    "wind_speed_10m_max": [12, 18, 30, 40, 15], "wind_direction_10m_dominant": [90, 135, 180, 225, 0],
+}}
+FAKE_MARINE = {"daily": {
+    "time": FAKE_WEATHER["daily"]["time"], "wave_height_max": [1.2, 0.8, 1.6, 2.1, 1.0],
+    "wave_period_max": [8, 7, 9, 10, 8], "wave_direction_dominant": [135, 135, 180, 180, 90],
+}}
+forecast._get = lambda url, params: FAKE_MARINE if url == forecast.MARINE_URL else FAKE_WEATHER
 # Sin límite de pedidos por minuto (como los tests del backend): un
 # recorrido crea varios lugares seguidos.
 from limiter import limiter  # noqa: E402

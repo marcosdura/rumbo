@@ -34,6 +34,7 @@ import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
 import { cameFromRumbo, lastUpdatedLabel, offSeasonNotice } from "@/lib/spotDetail"
 import { activityHref, departmentHref } from "@/lib/places"
 import NearbySpots from "@/components/spot-detail/NearbySpots"
+import ForecastCard from "@/components/spot-detail/ForecastCard"
 import type { Experience } from "@/components/spot-detail/ExperienciasSection"
 import type { PendingContribution } from "@/components/spot-detail/AddToSpot"
 import type { DetailSpot } from "@/lib/spotDetail"
@@ -359,6 +360,10 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                   </div>
                 </>
               )}
+
+              {/* El pronóstico de los próximos días (y olas en surf): para
+                  decidir cuándo ir. Junto al mapa, que es lo de "cómo llegar". */}
+              <ForecastCard spotId={spot.id} />
 
               {/* El mapa, a todo el ancho, justo antes de las reseñas. */}
               <MapCard lat={spot.lat} lng={spot.lng} name={spot.name} />

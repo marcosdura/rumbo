@@ -1,0 +1,40 @@
+/* El pronóstico: un día por celda, como las de Detalles (.detail-cell). En
+   la compu entran todos en una fila; en el celular se desliza de costado. */
+.forecast-days {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
+}
+.forecast-day {
+  /* El texto para lectores de pantalla (.forecast-sr) va absoluto: sin
+     esto se salía de la lista y corría la página de costado en el celular. */
+  position: relative;
+  background: #f7f5f0;
+  border: 1px solid #e0ddd6;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  font-family: var(--font-dm-sans), sans-serif;
+}
+.forecast-day p { margin: 0; }
+.forecast-day-name {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.forecast-day-sky { font-size: 26px; line-height: 1; margin: 8px 0 6px !important; }
+.forecast-day-temp { font-size: 15px; color: #1b1b19; margin-bottom: 6px !important; }
+.forecast-day-temp span { color: var(--muted); font-weight: 500; }
+.forecast-day-fact { font-size: 12px; color: var(--muted-strong); line-height: 1.6; white-space: nowrap; }
+.forecast-sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.forecast-source { font-size: 11px; color: var(--muted); margin: 12px 0 0; }
+.forecast-source a { color: inherit; }
+
+@media (max-width: 768px) {
+  .forecast-days {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+  }
+  .forecast-day { flex: 0 0 104px; scroll-snap-align: start; }
+}

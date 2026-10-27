@@ -200,6 +200,18 @@ export async function run(browser, r) {
     })
     r.ok(`[${label}] el título de la búsqueda no queda tapado`, covered === 0, `${covered} encima`)
 
+    // El pronóstico: 5 días y, en una playa de surf, las olas (el backend del
+    // e2e lo simula). En el celular se desliza sin correr la página.
+    await page.goto(`${FRONT}/spots/playa-de-prueba`, { waitUntil: "networkidle" })
+    await page.locator(".forecast-day").first().waitFor({ timeout: 10000 }).catch(() => {})
+    const forecastDays = await page.locator(".forecast-day").allInnerTexts()
+    const pageOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    await page.locator(".forecast-days").scrollIntoViewIfNeeded().catch(() => {})
+    await shot(page, `${label}-pronostico`)
+    r.ok(`[${label}] el pronóstico del lugar, con olas en surf`,
+      forecastDays.length === 5 && forecastDays.every(t => t.includes("🌊")) && pageOverflow === 0,
+      `${forecastDays.length} días, ${pageOverflow}px de más`)
+
     if (label === "pc") {
       // Los pins del mapa dicen el nombre del lugar (antes todos "Surf"). Por
       // nombre, para que quede un solo pin (en el e2e están todos en el mismo punto).
