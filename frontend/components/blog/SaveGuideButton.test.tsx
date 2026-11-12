@@ -35,20 +35,25 @@ describe("Guardar esta guía", () => {
   it("la guarda en las guías (no en los favoritos de lugares) y se puede sacar", async () => {
     render(<SaveGuideButton post={post} />)
     await act(() => Promise.resolve())
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "🔖 Guardar guía" })) })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardar" })) })
     expect(calls).toEqual(["POST /blog/posts/refugios/save"])
-    expect(screen.getByRole("button", { name: "🔖 Guardada" }).getAttribute("aria-pressed")).toBe("true")
-    expect(screen.getByRole("link", { name: "Ver mis guías" }).getAttribute("href")).toBe("/favorites#guias")
+    expect(screen.getByRole("button", { name: "Guardada" }).getAttribute("aria-pressed")).toBe("true")
 
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "🔖 Guardada" })) })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Guardada" })) })
     expect(calls.at(-1)).toBe("DELETE /blog/posts/refugios/save")
-    expect(screen.getByRole("button", { name: "🔖 Guardar guía" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeTruthy()
   })
 
   it("si ya la tenía guardada, lo muestra", async () => {
     saved = [post]
     render(<SaveGuideButton post={post} />)
-    expect(await screen.findByRole("button", { name: "🔖 Guardada" })).toBeTruthy()
+    expect(await screen.findByRole("button", { name: "Guardada" })).toBeTruthy()
+  })
+
+  it("solo el ícono (el celular), con su nombre para lectores de pantalla", async () => {
+    saved = [post]
+    render(<SaveGuideButton post={post} icon />)
+    expect(await screen.findByRole("button", { name: "Guía guardada" })).toBeTruthy()
   })
 
   it("sin sesión pide entrar y la guarda al volver", () => {

@@ -70,23 +70,28 @@ describe("Una nota con mapa", () => {
     expect(screen.getByTestId("map").dataset.selected).toBe("frey")
   })
 
-  it("en el celular, «Ver en el mapa» abre el mapa a pantalla completa", () => {
-    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(max-width: 768px)" }))
+  it("el título con guardar y compartir en el mismo renglón (y en el celular, los íconos)", () => {
     render(<BlogArticle post={post()} />)
-    fireEvent.click(within(document.getElementById("punto-frey")!).getByRole("button", { name: "📍 Ver en el mapa" }))
-    expect(screen.getByRole("dialog")).toBeTruthy()
-    // Escape lo cierra.
-    fireEvent.keyDown(window, { key: "Escape" })
-    expect(screen.queryByRole("dialog")).toBeNull()
-    vi.unstubAllGlobals()
+    const row = document.querySelector(".blog-title-row")!
+    expect(within(row as HTMLElement).getByRole("heading", { level: 1, name: "Travesía de refugios" })).toBeTruthy()
+    expect(within(row as HTMLElement).getByRole("button", { name: "Guardar" })).toBeTruthy()
+    expect(within(row as HTMLElement).getByRole("button", { name: "🔗 Compartir" })).toBeTruthy()
+    const bar = document.querySelector(".blog-mobile-actions") as HTMLElement
+    expect(within(bar).getByRole("button", { name: "Guardar guía" })).toBeTruthy()
+    expect(within(bar).getByRole("button", { name: "Compartir" })).toBeTruthy()
   })
 
-  it("«Ver mapa» lo abre a pantalla completa y «Cerrar mapa» lo cierra", () => {
+  it("el mapa va en su tarjeta, dentro de la página (sin pantalla completa)", () => {
+    const scrolled: unknown[] = []
+    Element.prototype.scrollIntoView = function (this: Element, opts?: unknown) { scrolled.push([this.getAttribute("aria-label"), opts]) }
     render(<BlogArticle post={post()} />)
-    fireEvent.click(screen.getByRole("button", { name: /Ver mapa · 2 puntos/ }))
-    expect(screen.getByRole("dialog", { name: "Mapa de Travesía de refugios" })).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: "✕ Cerrar mapa" }))
+    const card = screen.getByRole("region", { name: "Mapa de Travesía de refugios" })
+    expect(within(card).getByTestId("map")).toBeTruthy()
+    expect(within(card).getByText(/Mapa de la guía · 2 puntos/)).toBeTruthy()
     expect(screen.queryByRole("dialog")).toBeNull()
+    // "Ver en el mapa" sube hasta la tarjeta del mapa.
+    fireEvent.click(within(document.getElementById("punto-frey")!).getByRole("button", { name: "📍 Ver en el mapa" }))
+    expect(scrolled).toEqual([["Mapa de Travesía de refugios", { behavior: "smooth", block: "center" }]])
   })
 
   it("el recorrido con sus datos y los videos como links, sin incrustar", () => {
@@ -106,7 +111,7 @@ describe("Una nota con mapa", () => {
 describe("Una nota sin mapa", () => {
   it("una sola columna, sin botones de mapa", () => {
     render(<BlogArticle post={post({ map: null, has_map: false, blocks: [{ type: "text", text: "Hola" }] })} />)
-    expect(document.querySelector(".blog-post.has-map")).toBeNull()
+    expect(document.querySelector(".blog-map-card")).toBeNull()
     expect(screen.queryByTestId("map")).toBeNull()
     expect(screen.queryByText(/Ver mapa/)).toBeNull()
   })

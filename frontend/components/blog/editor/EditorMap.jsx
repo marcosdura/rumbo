@@ -8,7 +8,7 @@ import { MapContainer, TileLayer, Polyline, useMap, useMapEvents } from 'react-l
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useEffect, useMemo, useRef } from 'react'
-import { pinIcon, TRACK_COLORS } from '../BlogMap'
+import { pointIcon, TRACK_COLORS } from '../BlogMap'
 
 function Fit({ latLngs, fitKey }) {
   const map = useMap()
@@ -41,8 +41,8 @@ function Markers({ points, selectedId, onMove, onSelect }) {
     const layer = L.layerGroup()
     points.forEach(point => {
       const marker = L.marker([point.lat, point.lng], {
-        // Solo el abierto dice su nombre: los demás, el número (están en la lista).
-        icon: pinIcon(point, { active: point.id === selectedId, showName: point.id === selectedId }),
+        // El mismo pin que la nota (y que la búsqueda); el abierto, resaltado.
+        icon: pointIcon(point, { selected: point.id === selectedId }),
         draggable: !point.spot,
         title: point.name,
         zIndexOffset: point.id === selectedId ? 1000 : 0,

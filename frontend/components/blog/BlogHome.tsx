@@ -30,7 +30,11 @@ export default function BlogHome({ posts, initialCategory = null }: { posts: Blo
   return (
     <div className="blog-page blog-home">
       <header className="blog-home-header">
-        <p className="blog-kicker">Blog de Rumbo</p>
+        {/* Como /lugares: el subtítulo con el puntito y el título. */}
+        <div className="blog-eyebrow">
+          <span className="blog-eyebrow-dot" aria-hidden="true" />
+          <p>Blog de Rumbo</p>
+        </div>
         <h1 className="blog-home-title">Rutas, refugios y consejos para salir al aire libre</h1>
         <p className="blog-home-intro">Guías con mapa para armar tu próxima salida, en Uruguay y más allá.</p>
       </header>

@@ -53,8 +53,19 @@ export const PIN_POPUP_OFFSET = -16
 export const PIN_NAME_MAX = 22
 const pinLabel = (name) => name.length > PIN_NAME_MAX ? `${name.slice(0, PIN_NAME_MAX - 1).trimEnd()}…` : name
 
-export const createPillIcon = (categoryName, extraCategories, isActive, isSelected, name) => {
-  const emoji = CATEGORY_EMOJI[categoryName] || '📍'
+// opts (el mapa de una nota del blog, BlogMap): `emoji` para un punto que no
+// es un lugar de Rumbo (un refugio, un mirador) y `number`, el número del
+// punto en la nota, al principio de la pastilla. Sin opts, como siempre.
+export const createPillIcon = (categoryName, extraCategories, isActive, isSelected, name, opts = {}) => {
+  const emoji = opts.emoji || CATEGORY_EMOJI[categoryName] || '📍'
+  const numberHtml = opts.number != null ? `
+          <span style="
+            display:inline-flex; align-items:center; justify-content:center;
+            min-width:18px; height:18px; padding:0 4px; box-sizing:border-box; border-radius:999px;
+            background:${isSelected || isActive ? '#d8f3dc' : 'var(--primary-dark)'};
+            color:${isSelected || isActive ? 'var(--primary-dark)' : '#fff'};
+            font-size:10px; font-weight:700; line-height:1; margin-left:-5px;
+          ">${Number(opts.number)}</span>` : ''
   const label = name ? escapeHtml(pinLabel(name)) : (categoryName || 'Spot')
 
   const bg      = isSelected ? 'var(--primary-dark)'
@@ -116,6 +127,7 @@ export const createPillIcon = (categoryName, extraCategories, isActive, isSelect
           transform: ${scale};
           transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         ">
+          ${numberHtml}
           <span style="font-size:14px;line-height:1">${emoji}</span>
           ${label}
         </div>

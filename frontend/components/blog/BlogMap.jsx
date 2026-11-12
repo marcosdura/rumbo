@@ -2,13 +2,16 @@
 
 // El mapa de una nota del blog: los puntos numerados (lugares de Rumbo y
 // puntos libres), los recorridos y su inicio y fin. Se carga solo en el
-// navegador (Leaflet necesita window). El pin del punto que se está leyendo
-// se resalta; el elegido se centra y abre su globo.
+// navegador (Leaflet necesita window). Los pines son los del mapa de la
+// búsqueda (SpotsMap.createPillIcon) con el número del punto adelante. El
+// del punto que se está leyendo se resalta; el elegido se centra y abre su
+// globo.
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef } from 'react'
 import { pointAnchor } from '@/lib/blog'
+import { createPillIcon } from '@/components/spots/SpotsMap'
 
 export const TRACK_COLORS = ['#1b4332', '#b5651d', '#3a6ea5', '#8e3b46']
 
@@ -17,24 +20,13 @@ const escapeHtml = (str) =>
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]))
 
-const NAME_MAX = 22
-// Desde este zoom los pines dicen el nombre.
-const NAMES_FROM_ZOOM = 13
-const shortName = (name) => name.length > NAME_MAX ? `${name.slice(0, NAME_MAX - 1).trimEnd()}…` : name
-
-export function pinIcon(point, { active = false, showName = true } = {}) {
-  const cls = ['blog-pin', point.spot ? 'is-rumbo' : 'is-free', active ? 'is-active' : ''].filter(Boolean).join(' ')
-  return L.divIcon({
-    html: `<div class="blog-pin-wrap"><div class="${cls}">
-      <span class="blog-pin-num">${point.number}</span>
-      <span class="blog-pin-emoji" aria-hidden="true">${point.emoji}</span>
-      ${showName ? `<span class="blog-pin-name">${escapeHtml(shortName(point.name))}</span>` : ''}
-    </div></div>`,
-    className: '',
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
-    popupAnchor: [0, -16],
-  })
+// El pin de un punto: el de la búsqueda. Un lugar de Rumbo lleva el emoji de
+// su actividad; un punto libre, el de su tipo (refugio, mirador…).
+export function pointIcon(point, { active = false, selected = false } = {}) {
+  return createPillIcon(
+    point.spot ? point.kind : null, [], active, selected, point.name,
+    { emoji: point.spot ? null : point.emoji, number: point.number },
+  )
 }
 
 // Lo que dice el globo. Todo escapado: los nombres y notas los escribe alguien.
@@ -61,9 +53,7 @@ function allLatLngs(points, tracks) {
 }
 
 // Encuadra todo cada vez que el mapa cambia de tamaño: al aparecer (llega
-// sin tamaño mientras se arma la página), al abrirlo a pantalla completa en
-// el celular y al cerrarlo. Los pines llevan el nombre a la derecha: se deja
-// más margen de ese lado para que no queden cortados.
+// sin tamaño mientras se arma la página) o al girar el celular.
 function Fit({ latLngs }) {
   const map = useMap()
   useEffect(() => {
@@ -77,7 +67,9 @@ function Fit({ latLngs }) {
       map.invalidateSize()
       if (latLngs.length === 1) map.setView(latLngs[0], 13)
       else if (latLngs.length > 1) {
-        map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 14 })
+        // Más margen a los costados: el pin lleva el nombre a los dos lados
+        // del punto (si no, los de las puntas quedan cortados).
+        map.fitBounds(L.latLngBounds(latLngs), { padding: [90, 50], maxZoom: 14 })
       }
     }
     const observer = new ResizeObserver(() => {
@@ -99,7 +91,7 @@ function Markers({ points, activeId, selected, sectionIds, onPick }) {
     const layer = L.layerGroup()
     const byId = {}
     points.forEach(point => {
-      const marker = L.marker([point.lat, point.lng], { icon: pinIcon(point, { showName: false }), keyboard: true, title: point.name })
+      const marker = L.marker([point.lat, point.lng], { icon: pointIcon(point), keyboard: true, title: point.name })
       marker.bindPopup(popupHtml(point, { hasSection: sectionIds.has(point.id) }))
       marker.on('click', () => onPick?.(point.id))
       layer.addLayer(marker)
@@ -110,25 +102,16 @@ function Markers({ points, activeId, selected, sectionIds, onPick }) {
     return () => { layer.remove(); markersRef.current = {} }
   }, [map, points, sectionIds, onPick])
 
-  // Con el mapa lejos, los pines de lugares cercanos se pisan: solo número y
-  // emoji (los nombres están en la lista). El nombre aparece al acercarse o
-  // en el punto que se está leyendo.
-  const [zoom, setZoom] = useState(() => map.getZoom())
-  useEffect(() => {
-    const onZoom = () => setZoom(map.getZoom())
-    map.on('zoomend', onZoom)
-    return () => { map.off('zoomend', onZoom) }
-  }, [map])
-
   useEffect(() => {
     points.forEach(point => {
       const marker = markersRef.current[point.id]
       if (!marker) return
-      const active = point.id === activeId || point.id === selected?.id
-      marker.setIcon(pinIcon(point, { active, showName: active || zoom >= NAMES_FROM_ZOOM }))
-      marker.setZIndexOffset(active ? 1000 : 0)
+      const selectedNow = point.id === selected?.id
+      const active = point.id === activeId
+      marker.setIcon(pointIcon(point, { active, selected: selectedNow }))
+      marker.setZIndexOffset(active || selectedNow ? 1000 : 0)
     })
-  }, [points, activeId, selected, zoom])
+  }, [points, activeId, selected])
 
   // Elegido desde el texto: se centra y abre su globo. `selected.at` cambia
   // en cada toque, así el mismo punto se puede volver a elegir.
@@ -153,7 +136,9 @@ export default function BlogMap({ points, tracks, activeId, selected, sectionIds
   const center = latLngs[0] ?? [-32.5, -56.0]
 
   return (
-    <MapContainer center={center} zoom={11} minZoom={2} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+    // Como el mapa del lugar (MapCard): la rueda del mouse baja por la
+    // página; para acercarse, los botones + / −.
+    <MapContainer center={center} zoom={11} minZoom={2} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

@@ -2,9 +2,9 @@
 
 // El lugar del mapa en una página con lista o texto al lado: en la compu,
 // donde lo ponga la página (`className`); en el celular, con `open`, ocupa
-// toda la pantalla con "✕ Cerrar mapa". Lo usan la búsqueda y las notas del
-// blog. Lo de adentro lleva la clase "map-panel-inner" para perder el borde
-// redondeado a pantalla completa.
+// toda la pantalla con "✕ Cerrar mapa". Lo usa la búsqueda. Lo de adentro
+// lleva la clase "map-panel-inner" para perder el borde redondeado a
+// pantalla completa.
 import type { ReactNode } from "react"
 import "./map-panel.css"
 

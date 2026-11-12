@@ -1,16 +1,17 @@
 "use client"
 
-// "Guardar esta guía": la nota va a la lista de guías guardadas (aparte de
-// los favoritos de lugares), en /favorites. Sin sesión, pide entrar y la
-// guarda al volver (lib/pendingAction, Providers.jsx).
-import Link from "next/link"
+// "Guardar guía": la nota va a la lista de guías guardadas (aparte de los
+// favoritos de lugares), en /favorites. Se ve como "Guardar" en la página de
+// un lugar (FavoriteButton), al lado de "Compartir". Sin sesión, pide entrar
+// y la guarda al volver (lib/pendingAction, Providers.jsx).
+// icon: solo el ícono (la barra de arriba en el celular).
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import AuthModal from "@/components/layout/AuthModal"
 import type { BlogSummary } from "@/lib/blog"
 import { useSavedGuidesStore } from "@/store/savedGuidesStore"
 
-export default function SaveGuideButton({ post }: { post: BlogSummary }) {
+export default function SaveGuideButton({ post, icon = false }: { post: BlogSummary; icon?: boolean }) {
   const { data: session } = useSession()
   const token = session?.id_token
   const { loadedFor, load, save, unsave } = useSavedGuidesStore()
@@ -19,8 +20,8 @@ export default function SaveGuideButton({ post }: { post: BlogSummary }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
 
-  // Las guardadas se piden una vez por sesión (las comparten los dos botones
-  // de la nota y /favorites).
+  // Las guardadas se piden una vez por sesión (las comparten los botones de
+  // la nota y /favorites).
   useEffect(() => {
     if (token && loadedFor !== token) load(token)
   }, [token, loadedFor, load])
@@ -34,6 +35,7 @@ export default function SaveGuideButton({ post }: { post: BlogSummary }) {
     setBusy(false)
   }
 
+  const label = saved ? "Guardada" : "Guardar"
   return (
     <>
       {showAuth && (
@@ -41,15 +43,16 @@ export default function SaveGuideButton({ post }: { post: BlogSummary }) {
       )}
       <button
         type="button"
-        className={`blog-chip-btn blog-save-guide${saved ? " is-saved" : ""}`}
+        className={`blog-save-guide${saved ? " is-saved" : ""}${icon ? " is-icon" : ""}`}
         onClick={toggle}
         disabled={busy}
         aria-pressed={saved}
+        aria-label={icon ? (saved ? "Guía guardada" : "Guardar guía") : undefined}
+        title={error ? "No se pudo. Probá de nuevo." : undefined}
       >
-        {saved ? "🔖 Guardada" : "🔖 Guardar guía"}
+        <span aria-hidden="true">🔖</span>
+        {!icon && label}
       </button>
-      {saved && <Link href="/favorites#guias" className="blog-save-guide-link">Ver mis guías</Link>}
-      {error && <span className="blog-save-guide-error" role="alert">No se pudo. Probá de nuevo.</span>}
     </>
   )
 }
