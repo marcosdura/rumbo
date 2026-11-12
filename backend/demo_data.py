@@ -132,4 +132,9 @@ def load(db, admin: str, users: list[str], amenities: list[str]) -> None:
 
     db.add(Favorite(user_id=ana, spot_id=laguna.id))
     db.add(Favorite(user_id=ana, spot_id=arequita.id))
+    db.flush()
+
+    # El blog: notas con lugares de acá y puntos de Argentina (demo_blog.py).
+    import demo_blog
+    demo_blog.load(db)
     db.commit()

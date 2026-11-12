@@ -785,3 +785,31 @@ def keep_name_search(session, flush_context, instances):
     for obj in list(session.new) + list(session.dirty):
         if isinstance(obj, SpotDB) and (obj in session.new or inspect(obj).attrs.name.history.has_changes()):
             obj.name_search = normalize(obj.name)
+
+
+class BlogPost(Base):
+    """Una nota del blog (blog.py). Por ahora se cargan con blog_import.py;
+    después, desde el editor del admin. `map` y `blocks` son JSON ya
+    validados por blog.clean_post: nunca se guardan tal cual llegan."""
+    __tablename__ = "blog_posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, nullable=False, index=True)
+    title = Column(String(150), nullable=False)
+    summary = Column(String(300), nullable=True)
+    # cloudinary_public_id, como SpotImage.
+    cover_image = Column(String, nullable=True)
+    # blog.CATEGORIES: rutas, refugios, consejos, equipo.
+    category = Column(String(30), nullable=False, index=True)
+    # Libre: "Bariloche, Argentina", "Lavalleja". Rumbo no tiene lugares en
+    # todos lados, el blog sí.
+    region = Column(String(100), nullable=True)
+    # draft (no se ve) | published.
+    status = Column(String(20), nullable=False, default="draft", server_default="draft", index=True)
+    featured = Column(Boolean, nullable=False, default=False, server_default=false())
+    # {"points": [...], "tracks": [...]} o null (nota sin mapa).
+    map = Column(JSON, nullable=True)
+    blocks = Column(JSON, nullable=False)
+    published_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=True)

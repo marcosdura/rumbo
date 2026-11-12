@@ -30,6 +30,21 @@ if fresh:
     db = SessionLocal()
     demo_data.load(db, ADMIN, USERS, amenity_names())
     db.close()
+else:
+    # Una base de antes del blog: se le suman las notas de ejemplo.
+    import demo_blog  # noqa: E402
+    from database import SessionLocal  # noqa: E402
+    from models import BlogPost  # noqa: E402
+
+    db = SessionLocal()
+    if db.query(BlogPost).count() == 0:
+        try:
+            demo_blog.load(db)
+            db.commit()
+        except Exception as e:  # un lugar de ejemplo que ya borraste, por ejemplo
+            db.rollback()
+            print(f"No se pudieron cargar las notas de ejemplo del blog: {e}", flush=True)
+    db.close()
 
 if __name__ == "__main__":
     import uvicorn

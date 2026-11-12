@@ -9,6 +9,7 @@ import { signOut } from "next-auth/react"
 export const MENU_LINKS = [
   { href: "/", icon: "🏠", label: "Inicio" },
   { href: "/agregar-lugar", icon: "➕", label: "Agregar lugar" },
+  { href: "/blog", icon: "📖", label: "Blog" },
 ]
 
 export const USER_LINKS = [

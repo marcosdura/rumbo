@@ -39,3 +39,12 @@ describe("cabeceras de seguridad", () => {
     expect(directive(contentSecurityPolicy("no es url"), "connect-src")[0]).toBe("'self'")
   })
 })
+
+describe("Imágenes del blog", () => {
+  it("se pueden ver las miniaturas de YouTube, sin permitir incrustar videos", () => {
+    const csp = contentSecurityPolicy("https://api.rumbo.app")
+    const img = csp.split("; ").find(d => d.startsWith("img-src "))!
+    expect(img).toContain("https://i.ytimg.com")
+    expect(csp.split("; ").find(d => d.startsWith("frame-src "))).toBe("frame-src 'self'")
+  })
+})

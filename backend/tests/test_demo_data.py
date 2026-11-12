@@ -35,3 +35,16 @@ def test_rutas_sectores_glamping_y_lo_de_cada_usuario(client, db):
     assert len(client.get("/favorites", headers={"X-User": ANA}).json()) == 2
     admin_list = client.get("/admin/spots", headers={"X-User": ADMIN}).json()
     assert [s["name"] for s in admin_list if not s["is_approved"]] == ["Camping El Pinar"]
+
+
+def test_notas_del_blog_de_ejemplo(client, db):
+    demo_data.load(db, ADMIN, [ANA, PEDRO], [])
+    posts = client.get("/blog/posts").json()
+    # El borrador no sale.
+    assert len(posts) == 3 and posts[0]["featured"] in (True, False)
+    for p in posts:
+        assert client.get(f"/blog/posts/{p['slug']}").status_code == 200, p["slug"]
+    lavalleja = client.get("/blog/posts/un-finde-de-trekking-en-lavalleja").json()
+    # Lugares de Rumbo y puntos libres en el mismo mapa.
+    kinds = {"spot" if p.get("spot_id") else "libre" for p in lavalleja["map"]["points"]}
+    assert kinds == {"spot", "libre"} and len(lavalleja["spots"]) == 3

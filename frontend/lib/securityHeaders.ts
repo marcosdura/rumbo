@@ -38,6 +38,8 @@ export function contentSecurityPolicy(apiUrl: string | undefined, dev = false): 
       "'self'", "data:", "blob:", "https://res.cloudinary.com",
       // Mapas, el pin de Leaflet y la foto de perfil de Google.
       "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://*.googleusercontent.com",
+      // La miniatura de los videos de YouTube del blog (no se incrustan).
+      "https://i.ytimg.com",
       ...ANALYTICS,
     ],
     "font-src": ["'self'", "data:"],

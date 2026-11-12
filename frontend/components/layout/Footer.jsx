@@ -212,6 +212,7 @@ export default function Footer() {
                 <li key={l.activity}><Link href={activityHref(l.activity)}>{l.label}</Link></li>
               ))}
               <li><Link href="/agregar-lugar">＋ Sumá un lugar</Link></li>
+              <li><Link href="/blog">Blog: rutas y consejos</Link></li>
             </ul>
           </div>
 
