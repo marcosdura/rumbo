@@ -49,7 +49,7 @@ def test_buscar_por_nombre_en_la_lista_y_en_el_mapa(client, make_spot):
 
 
 def test_sugerencias_primero_las_que_empiezan_asi_y_hasta_cinco(client, make_spot):
-    make_spot(name="Cerro Arequita", slug="cerro-arequita", department="Lavalleja")
+    make_spot(name="Cerro Arequita", slug="cerro-arequita", department="Lavalleja", lat=-34.28, lng=-55.26)
     make_spot(name="Arequita Camping", slug="arequita-camping")
     for i in range(6):
         make_spot(name=f"Playa {i}", slug=f"playa-{i}")
@@ -58,7 +58,9 @@ def test_sugerencias_primero_las_que_empiezan_asi_y_hasta_cinco(client, make_spo
 
     found = client.get("/spots/suggest", params={"q": "aréquita"}).json()
     assert [s["name"] for s in found] == ["Arequita Camping", "Cerro Arequita"]
-    assert found[1] == {"id": found[1]["id"], "name": "Cerro Arequita", "slug": "cerro-arequita", "department": "Lavalleja", "category": "Camping"}
+    assert found[1] == {"id": found[1]["id"], "name": "Cerro Arequita", "slug": "cerro-arequita", "department": "Lavalleja", "category": "Camping",
+                        # Las coordenadas: el editor del blog lo pone en su mapa.
+                        "lat": -34.28, "lng": -55.26}
 
     # "Alto del Cerro" va antes en orden alfabético, pero "Cerro Chato" empieza así.
     make_spot(name="Alto del Cerro", slug="alto")

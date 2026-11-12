@@ -191,3 +191,84 @@ def test_importar_nombrando_lugares_por_slug(db, make_spot, tmp_path):
 def test_importar_con_un_slug_que_no_existe_avisa(db):
     raw = _post(blocks=[{"type": "spot", "spot": "no-existe"}])
     assert "no-existe" in _detail(lambda: blog_import.resolve_spot_slugs(db, raw))
+
+
+# ─── El editor (admin) ──────────────────────────────────────────────────────
+
+from conftest import ADMIN, as_user  # noqa: E402
+
+ADMIN_H = as_user(ADMIN)
+
+
+def test_el_editor_es_solo_del_admin(client):
+    assert client.get("/admin/blog/posts").status_code == 401
+    assert client.get("/admin/blog/posts", headers=as_user("otro@test.com")).status_code == 403
+    assert client.post("/admin/blog/posts", json=_post(), headers=as_user("otro@test.com")).status_code == 403
+    assert client.post("/admin/blog/preview", json=_post(), headers=as_user("otro@test.com")).status_code == 403
+    assert client.get("/admin/blog/can-upload", headers=as_user("otro@test.com")).status_code == 403
+    assert client.get("/admin/blog/can-upload", headers=ADMIN_H).status_code == 204
+
+
+def test_crear_editar_y_borrar_una_nota(client, db):
+    res = client.post("/admin/blog/posts", json=_post(status="draft"), headers=ADMIN_H)
+    assert res.status_code == 201
+    post = res.json()
+    assert (post["slug"], post["status"], post["published_at"]) == ("refugios-del-sur", "draft", None)
+    # El borrador está en la lista del admin pero no en la pública.
+    assert [p["title"] for p in client.get("/admin/blog/posts", headers=ADMIN_H).json()] == ["Refugios del sur"]
+    assert client.get("/blog/posts").json() == []
+
+    res = client.put(f"/admin/blog/posts/{post['id']}", json=_post(slug="otro-link", status="published"), headers=ADMIN_H)
+    assert res.status_code == 200
+    assert res.json()["slug"] == "otro-link" and res.json()["published_at"]
+    assert client.get("/blog/posts/otro-link").status_code == 200
+
+    assert client.delete(f"/admin/blog/posts/{post['id']}", headers=ADMIN_H).status_code == 204
+    assert client.get(f"/admin/blog/posts/{post['id']}", headers=ADMIN_H).status_code == 404
+    assert db.query(BlogPost).count() == 0
+
+
+def test_dos_notas_no_pueden_tener_el_mismo_link(client):
+    first = client.post("/admin/blog/posts", json=_post(), headers=ADMIN_H).json()
+    assert client.post("/admin/blog/posts", json=_post(), headers=ADMIN_H).status_code == 409
+    other = client.post("/admin/blog/posts", json=_post(title="Otra"), headers=ADMIN_H).json()
+    res = client.put(f"/admin/blog/posts/{other['id']}", json=_post(title="Otra", slug=first["slug"]), headers=ADMIN_H)
+    assert res.status_code == 409
+    # Guardar la misma nota con su propio link no choca.
+    assert client.put(f"/admin/blog/posts/{first['id']}", json=_post(), headers=ADMIN_H).status_code == 200
+
+
+def test_un_error_de_validacion_dice_que_falta(client):
+    res = client.post("/admin/blog/posts", json=_post(blocks=[{"type": "point", "point": "nada"}]), headers=ADMIN_H)
+    assert res.status_code == 422
+    assert "nada" in res.json()["detail"]
+
+
+def test_para_editar_trae_los_nombres_de_sus_lugares(client, make_spot):
+    visible = make_spot(name="Cerro Arequita")
+    oculto = make_spot(name="Oculto", approved=False)
+    raw = _post(map={"points": [{"id": "a", "spot_id": visible.id}, {"id": "b", "spot_id": oculto.id}]})
+    post = client.post("/admin/blog/posts", json=raw, headers=ADMIN_H).json()
+    data = client.get(f"/admin/blog/posts/{post['id']}", headers=ADMIN_H).json()
+    assert len(data["map"]["points"]) == 2
+    assert data["spots"][str(visible.id)]["name"] == "Cerro Arequita"
+    assert data["spots"][str(visible.id)]["available"] is True
+    assert data["spots"][str(oculto.id)]["available"] is False
+
+
+def test_la_vista_previa_valida_sin_guardar(client, db, make_spot):
+    visible = make_spot(name="Cerro Arequita")
+    raw = _post(
+        map={"points": [{"id": "a", "spot_id": visible.id}, {"id": "b", "spot_id": 9999}, FREE], "tracks": [TRACK]},
+        blocks=[{"type": "point", "point": "b"}, {"type": "gpx", "track": "ida"}],
+    )
+    res = client.post("/admin/blog/preview", json=raw, headers=ADMIN_H)
+    assert res.status_code == 200
+    data = res.json()
+    assert db.query(BlogPost).count() == 0
+    assert [p["id"] for p in data["map"]["points"]] == ["a", "frey"]
+    assert data["missing_spots"] == [9999]
+    # El bloque del lugar que no se ve se saca, como en la nota publicada.
+    assert data["blocks"] == [{"type": "gpx", "track": "ida"}]
+    assert data["map"]["tracks"][0]["elevation_gain"] == 700
+    assert client.post("/admin/blog/preview", json=_post(category="nada"), headers=ADMIN_H).status_code == 422

@@ -294,22 +294,30 @@ def clean_post(raw: dict) -> dict:
     }
 
 
-def save_post(db, raw: dict):
-    """Crea o actualiza (por slug) una nota. La fecha de publicación queda la
-    primera vez que se publica."""
-    from models import BlogPost
-    data = clean_post(raw)
-    post = db.query(BlogPost).filter(BlogPost.slug == data["slug"]).first()
-    now = datetime.now(timezone.utc)
-    if post is None:
-        post = BlogPost(**data)
-        db.add(post)
-    else:
-        for field, value in data.items():
-            setattr(post, field, value)
+def apply(post, data: dict, now: datetime | None = None):
+    """Le pone a la nota los campos de clean_post. La fecha de publicación
+    queda la primera vez que se publica (pasarla a borrador y volver a
+    publicarla no la cambia)."""
+    now = now or datetime.now(timezone.utc)
+    is_new = post.id is None
+    for field, value in data.items():
+        setattr(post, field, value)
+    if not is_new:
         post.updated_at = now
     if post.status == "published" and post.published_at is None:
         post.published_at = now
+    return post
+
+
+def save_post(db, raw: dict):
+    """Crea o actualiza (por slug) una nota: lo que usa blog_import.py."""
+    from models import BlogPost
+    data = clean_post(raw)
+    post = db.query(BlogPost).filter(BlogPost.slug == data["slug"]).first()
+    if post is None:
+        post = BlogPost()
+        db.add(post)
+    apply(post, data)
     db.flush()
     return post
 

@@ -62,7 +62,7 @@ def suggest_spots(request: Request, q: str = Query(min_length=2, max_length=80),
     spots = query.order_by(starts, func.lower(SpotDB.name), SpotDB.id).limit(SUGGEST_LIMIT).all()
     return [
         {"id": s.id, "name": s.name, "slug": s.slug, "department": s.department,
-         "category": s.category.name if s.category else None}
+         "category": s.category.name if s.category else None, "lat": s.lat, "lng": s.lng}
         for s in spots
     ]
 

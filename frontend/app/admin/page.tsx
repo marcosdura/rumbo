@@ -18,6 +18,7 @@ import type { AdminContribution } from "@/lib/contributions"
 import EditSpotModal from "./EditSpotModal"
 import AdminSidebar from "./AdminSidebar"
 import ImportRoutesTab from "./ImportRoutesTab"
+import BlogTab from "./BlogTab"
 import RejectModal, { type RejectType } from "./RejectModal"
 import { TAB_GROUPS, listsFor, sectionTitle, splitByOwner, tabCounts, visibleSpots } from "./adminNav"
 import { FORBIDDEN, useLazyList } from "./useLazyList"
@@ -308,6 +309,8 @@ export default function AdminPage() {
             }}
           />
         )}
+
+        {mode === "blog" && <BlogTab token={token} />}
 
         {mode === "importar-vias" && <ImportRoutesTab spots={spots} token={token} loading={spotList.loading} />}
 

@@ -17,6 +17,9 @@ export const TAB_GROUPS: SidebarGroup[] = [
     { id: "importar-vias", label: "📥 Importar vías" },
     { id: "cuentas-eliminadas", label: "👤 Cuentas eliminadas" },
   ] },
+  { title: "Contenido", tabs: [
+    { id: "blog", label: "📖 Notas del blog" },
+  ] },
 ]
 
 // El título de la página: la sección en la que se está, sin el emoji.

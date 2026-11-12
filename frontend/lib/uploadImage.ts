@@ -29,13 +29,25 @@ export async function uploadImageToCloudinary(
   file: File,
   publicIdParams: PublicIdParams
 ): Promise<CloudinaryUploadResult> {
-  const compressedFile = await compressImage(file)
   const publicId = buildPublicId(publicIdParams.spotId)
+  return uploadSigned(file, publicId, "/api/upload/signature", { publicId, spotId: publicIdParams.spotId })
+}
 
-  const sigRes = await fetch("/api/upload/signature", {
+// Una foto del blog (solo el admin): va a rumbo/blog con un id al azar. El
+// publicId que devuelve ya trae la carpeta ("rumbo/blog/…"): es lo que se
+// guarda en la nota.
+export async function uploadBlogImage(file: File): Promise<CloudinaryUploadResult> {
+  const publicId = crypto.randomUUID().replace(/-/g, "").slice(0, 16)
+  return uploadSigned(file, publicId, "/api/upload/blog-signature", { publicId })
+}
+
+async function uploadSigned(file: File, publicId: string, signatureUrl: string, signatureBody: object): Promise<CloudinaryUploadResult> {
+  const compressedFile = await compressImage(file)
+
+  const sigRes = await fetch(signatureUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ publicId, spotId: publicIdParams.spotId }),
+    body: JSON.stringify(signatureBody),
   })
   if (!sigRes.ok) {
     // Llegó al tope de fotos (por hora o por día): el motivo, para mostrarlo.
