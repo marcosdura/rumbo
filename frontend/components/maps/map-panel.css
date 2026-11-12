@@ -1,0 +1,47 @@
+/* El mapa que en el celular se abre a pantalla completa (MapPanel.tsx): la
+   búsqueda y las notas del blog. En la compu no cambia nada: cada página
+   lo ubica con su propia clase. */
+
+.map-panel-close { display: none; }
+
+@media (max-width: 768px) {
+  .map-panel.is-open {
+    display: block !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 1000;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .map-panel.is-open .map-panel-inner {
+    border-radius: 0 !important;
+    border: none !important;
+    height: 100% !important;
+  }
+  .map-panel.is-open .leaflet-container {
+    border-radius: 0 !important;
+  }
+  .map-panel.is-open .map-panel-close {
+    display: flex;
+    position: absolute;
+    top: 12px; right: 12px;
+    z-index: 1001;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-dm-sans), sans-serif;
+    color: #1b1b19;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: background 0.18s;
+  }
+  .map-panel.is-open .map-panel-close:hover { background: #f7f5f0; }
+}

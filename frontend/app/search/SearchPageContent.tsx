@@ -28,6 +28,7 @@ import { trackEvent } from "../../lib/analytics"
 import { api } from "../../lib/api"
 import { categoryEmoji } from "../../lib/categories"
 import type { SpotListItem } from "../../lib/types"
+import MapPanel from "@/components/maps/MapPanel"
 import "./search.css"
 import SortMenu from "../../components/ui/SortMenu"
 
@@ -474,8 +475,8 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
         </div>
 
         {/* Mapa */}
-        <div className={`search-map-panel${mapExpanded ? " map-visible-mobile" : ""}`}>
-          <div className="map-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <MapPanel open={mapExpanded} onClose={() => setMapExpanded(false)} className="search-map-panel" label="Mapa de lugares">
+          <div className="map-panel-inner" style={{ height: "100%", borderRadius: 20, overflow: "hidden", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 
             {!loading && mapSpots.length === 0 && (
               <div style={{
@@ -497,10 +498,7 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
             <SpotsMap spots={mapSpots} highlightedSpotId={highlightedSpotId} mapExpanded={mapExpanded} activeCategory={activity} />
           </div>
 
-          <button className="map-close-btn" onClick={() => setMapExpanded(false)}>
-            ✕ Cerrar mapa
-          </button>
-        </div>
+        </MapPanel>
 
       </main>
 
