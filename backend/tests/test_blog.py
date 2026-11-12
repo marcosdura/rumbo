@@ -272,3 +272,40 @@ def test_la_vista_previa_valida_sin_guardar(client, db, make_spot):
     assert data["blocks"] == [{"type": "gpx", "track": "ida"}]
     assert data["map"]["tracks"][0]["elevation_gain"] == 700
     assert client.post("/admin/blog/preview", json=_post(category="nada"), headers=ADMIN_H).status_code == 422
+
+
+# ─── Fase 4: guías del lugar y guardar todos ────────────────────────────────
+
+def test_las_guias_de_un_lugar(client, db, make_spot):
+    arequita = make_spot(name="Cerro Arequita")
+    otro = make_spot(name="Otro")
+    blog.save_post(db, _post(title="En el mapa", map={"points": [{"id": "a", "spot_id": arequita.id}]}))
+    blog.save_post(db, _post(title="En una tarjeta", blocks=[{"type": "spot", "spot_id": arequita.id}]))
+    blog.save_post(db, _post(title="Borrador", status="draft", blocks=[{"type": "spot", "spot_id": arequita.id}]))
+    blog.save_post(db, _post(title="De otro", blocks=[{"type": "spot", "spot_id": otro.id}]))
+    db.commit()
+    found = client.get("/blog/posts", params={"spot": arequita.id}).json()
+    assert sorted(p["title"] for p in found) == ["En el mapa", "En una tarjeta"]
+
+
+def test_guardar_todos_los_lugares_de_una_nota(client, db, make_spot):
+    from models import Favorite
+    a, b = make_spot(name="Uno"), make_spot(name="Dos")
+    oculto = make_spot(name="Oculto", approved=False)
+    me = as_user("ana@test.com")
+    assert client.post(f"/favorites/{a.id}", headers=me).status_code == 201
+
+    res = client.post("/favorites/bulk", json={"spot_ids": [a.id, b.id, oculto.id, 9999]}, headers=me)
+    assert res.status_code == 200
+    assert res.json() == {"added": 1, "saved": 2}
+    assert {f.spot_id for f in db.query(Favorite).all()} == {a.id, b.id}
+    # Otra vez: nada nuevo, sin error.
+    assert client.post("/favorites/bulk", json={"spot_ids": [a.id, b.id]}, headers=me).json() == {"added": 0, "saved": 2}
+
+
+def test_guardar_todos_pide_sesion_y_una_lista(client):
+    assert client.post("/favorites/bulk", json={"spot_ids": [1]}).status_code == 401
+    me = as_user("ana@test.com")
+    assert client.post("/favorites/bulk", json={"spot_ids": []}, headers=me).status_code == 422
+    assert client.post("/favorites/bulk", json={"spot_ids": ["1"]}, headers=me).status_code == 422
+    assert client.post("/favorites/bulk", json={"spot_ids": list(range(1, 62))}, headers=me).status_code == 422

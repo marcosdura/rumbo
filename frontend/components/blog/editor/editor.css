@@ -98,6 +98,11 @@
 /* Datos */
 .be-datos { display: grid; gap: 14px; max-width: 760px; }
 .be-danger-zone { border-color: #fecaca; }
+.be-instagram-grid { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 18px; align-items: start; }
+.be-instagram-story { display: grid; gap: 10px; justify-items: center; }
+.be-instagram-story img { width: 180px; height: 320px; border-radius: 14px; background: #1b4332; object-fit: cover; box-shadow: var(--shadow-card); }
+.be-instagram-links { display: grid; gap: 10px; }
+.be-instagram code { font-size: 11px; background: #f5f4f0; padding: 1px 5px; border-radius: 4px; }
 
 /* Mapa: la lista a la izquierda, el mapa a la derecha (fijo). */
 .be-map-tab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
@@ -152,4 +157,5 @@
   .be-map-tab { grid-template-columns: 1fr; }
   .be-map-box { position: relative; top: 0; height: 360px; order: -1; }
   .be-grid2 { grid-template-columns: 1fr; }
+  .be-instagram-grid { grid-template-columns: 1fr; }
 }

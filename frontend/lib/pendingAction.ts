@@ -4,11 +4,20 @@
 // la ida y vuelta a Google en la misma pestaña, y no queda colgado.
 // - favorite: se guarda el lugar (Providers.jsx).
 // - review: se abre el formulario de reseña de ese lugar (ReviewsSection).
-export type PendingKind = "favorite" | "review"
-export type PendingAction = { kind: PendingKind; spotId: number }
+// - favorites: se guardan todos los lugares de una nota del blog (Providers.jsx).
+export type PendingAction =
+  | { kind: "favorite"; spotId: number }
+  | { kind: "review"; spotId: number }
+  | { kind: "favorites"; spotIds: number[] }
+export type PendingKind = PendingAction["kind"]
 
 const KEY = "rumbo_pending_action"
-const KINDS: PendingKind[] = ["favorite", "review"]
+const KINDS: PendingKind[] = ["favorite", "review", "favorites"]
+
+const isValid = (a: PendingAction | null): a is PendingAction =>
+  !!a && KINDS.includes(a.kind) && (a.kind === "favorites"
+    ? Array.isArray(a.spotIds) && a.spotIds.length > 0 && a.spotIds.every(Number.isInteger)
+    : Number.isInteger(a.spotId))
 
 export function savePendingAction(action: PendingAction) {
   try { sessionStorage.setItem(KEY, JSON.stringify(action)) } catch {}
@@ -16,17 +25,16 @@ export function savePendingAction(action: PendingAction) {
 
 // La devuelve una sola vez (y la borra), si es de este tipo: cada una la
 // toma quien la hace (la de reseña no la puede tirar el que guarda favoritos).
-export function takePendingAction(kind: PendingKind): PendingAction | null {
+export function takePendingAction<K extends PendingKind>(kind: K): Extract<PendingAction, { kind: K }> | null {
   try {
     const raw = sessionStorage.getItem(KEY)
     if (!raw) return null
     let action: PendingAction | null = null
     try { action = JSON.parse(raw) } catch {}
-    const valid = !!action && KINDS.includes(action.kind) && Number.isInteger(action.spotId)
-    if (!valid) { sessionStorage.removeItem(KEY); return null }
-    if (action!.kind !== kind) return null
+    if (!isValid(action)) { sessionStorage.removeItem(KEY); return null }
+    if (action.kind !== kind) return null
     sessionStorage.removeItem(KEY)
-    return action
+    return action as Extract<PendingAction, { kind: K }>
   } catch {
     return null
   }

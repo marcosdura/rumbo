@@ -16,6 +16,7 @@ import {
 import BlogBlocks from "./BlogBlocks"
 import BlogCard from "./BlogCard"
 import BlogImage from "./BlogImage"
+import SaveAllButton from "./SaveAllButton"
 import "./blog.css"
 
 const BlogMap = dynamic(() => import("./BlogMap"), {
@@ -36,6 +37,8 @@ export default function BlogArticle({ post }: { post: BlogPostData }) {
     [post.blocks],
   )
   const hasMap = points.some(p => p.lat != null) || tracks.length > 0
+  // Los lugares de Rumbo de la nota (mapa y tarjetas): "Guardar todos".
+  const spotIds = useMemo(() => Object.values(post.spots).map(s => s.id), [post.spots])
 
   const [mapOpen, setMapOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -84,7 +87,10 @@ export default function BlogArticle({ post }: { post: BlogPostData }) {
           {post.summary && <p className="blog-summary">{post.summary}</p>}
           <div className="blog-meta-row">
             <p className="blog-meta">{meta}</p>
-            <ShareButton name={post.title} />
+            <div className="blog-meta-actions">
+              <SaveAllButton spotIds={spotIds} slug={post.slug} />
+              <ShareButton name={post.title} />
+            </div>
           </div>
           {post.cover_image && (
             <div className="blog-cover">
@@ -145,6 +151,7 @@ export default function BlogArticle({ post }: { post: BlogPostData }) {
           <div className="blog-end">
             <p>¿Te sirvió? Compartila con quien vaya con vos.</p>
             <div className="blog-end-actions">
+              <SaveAllButton spotIds={spotIds} slug={post.slug} />
               <ShareButton name={post.title} />
               <a className="blog-chip-btn" href="https://www.instagram.com/rumbo.app/" target="_blank" rel="noopener noreferrer">Seguinos en Instagram ↗</a>
             </div>

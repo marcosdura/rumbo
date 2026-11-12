@@ -18,6 +18,7 @@ import {
 import BlogArticle from "../BlogArticle"
 import BlockEditor from "./BlockEditor"
 import ImageField from "./ImageField"
+import InstagramPanel from "./InstagramPanel"
 import MapEditor from "./MapEditor"
 import "./editor.css"
 
@@ -262,6 +263,7 @@ export default function BlogEditor({ postId: initialId }: { postId: number | nul
             <p className="be-hint">Sale arriba de la nota, en su tarjeta y al compartir el link. Horizontal, mejor.</p>
             <ImageField value={draft.cover_image} onChange={cover_image => update(d => ({ ...d, cover_image }))} label="Subir tapa" />
           </section>
+          {isPublished && saved.slug && <InstagramPanel slug={saved.slug} />}
           {postId !== null && (
             <section className="be-card be-danger-zone">
               <h2 className="be-h2">Borrar la nota</h2>

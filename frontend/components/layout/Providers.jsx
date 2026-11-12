@@ -65,6 +65,14 @@ function FavoritesLoader() {
     if (!session?.id_token) return
     const token = session.id_token
     // Tocó ❤️ sin sesión: se guarda apenas vuelve del login.
+    // "Guardar todos los lugares" de una nota del blog, sin sesión.
+    const many = takePendingAction("favorites")
+    if (many) {
+      api.post("/favorites/bulk", { spot_ids: many.spotIds }, { token })
+        .catch(() => {})
+        .finally(() => loadFavorites(token))
+      return
+    }
     const pending = takePendingAction("favorite")
     if (pending?.kind === "favorite") {
       api.post(`/favorites/${pending.spotId}`, undefined, { token })

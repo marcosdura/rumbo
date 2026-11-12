@@ -26,3 +26,17 @@ describe("acción pendiente del login", () => {
     expect(sessionStorage.getItem("rumbo_pending_action")).toBeNull()
   })
 })
+
+describe("guardar todos los lugares de una nota", () => {
+  it("vuelve con la lista de lugares", () => {
+    savePendingAction({ kind: "favorites", spotIds: [3, 7] })
+    expect(takePendingAction("favorite")).toBeNull()
+    expect(takePendingAction("favorites")).toEqual({ kind: "favorites", spotIds: [3, 7] })
+  })
+
+  it("una lista rota se descarta", () => {
+    sessionStorage.setItem("rumbo_pending_action", JSON.stringify({ kind: "favorites", spotIds: ["x"] }))
+    expect(takePendingAction("favorites")).toBeNull()
+    expect(sessionStorage.getItem("rumbo_pending_action")).toBeNull()
+  })
+})

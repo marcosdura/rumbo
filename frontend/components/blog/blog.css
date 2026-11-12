@@ -100,6 +100,13 @@
 .blog-summary { font-size: 18px; line-height: 1.5; color: var(--muted-strong); margin: 0 0 16px; }
 .blog-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
 .blog-meta { font-size: 13px; color: var(--muted); margin: 0; }
+.blog-meta-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* "Guardar los N lugares de Rumbo": a favoritos, de una. */
+.blog-save-all { cursor: pointer; font-family: inherit; }
+.blog-save-all:disabled { opacity: 0.6; cursor: default; }
+.blog-save-all.is-done { margin: 0; font-size: 13px; color: #1f5135; font-weight: 600; }
+.blog-save-all.is-done a { color: inherit; }
+.blog-save-all-error { margin: 0; font-size: 12px; color: #9b1c1c; }
 .blog-cover { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #ede9e1; }
 
 .blog-post-body { min-width: 0; }

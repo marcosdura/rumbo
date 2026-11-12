@@ -11,9 +11,12 @@ const post = (body: unknown) => POST(new Request("http://x/api/blog/revalidate",
 afterEach(() => { admin = true; revalidatePath.mockClear() })
 
 describe("refrescar el blog al guardar", () => {
-  it("el inicio, el sitemap y las notas tocadas", async () => {
+  it("el inicio, el sitemap, /links y las notas tocadas con su historia", async () => {
     expect((await post({ slugs: ["refugios", "link-viejo", "<script>"] })).status).toBe(200)
-    expect(revalidatePath.mock.calls.map(c => c[0])).toEqual(["/blog", "/sitemap.xml", "/blog/refugios", "/blog/link-viejo"])
+    expect(revalidatePath.mock.calls.map(c => c[0])).toEqual([
+      "/blog", "/sitemap.xml", "/links",
+      "/blog/refugios", "/blog/refugios/historia", "/blog/link-viejo", "/blog/link-viejo/historia",
+    ])
   })
 
   it("solo el admin", async () => {

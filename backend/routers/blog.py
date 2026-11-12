@@ -23,14 +23,21 @@ def _published(db: Session):
 
 
 @router.get("/posts")
-def list_posts(category: Optional[str] = None, db: Session = Depends(get_db)):
-    """Las notas publicadas, de la más nueva a la más vieja (sin los bloques)."""
+def list_posts(category: Optional[str] = None, spot: Optional[int] = None, db: Session = Depends(get_db)):
+    """Las notas publicadas, de la más nueva a la más vieja (sin los bloques).
+    `spot`: solo las que nombran ese lugar (en el mapa o en una tarjeta):
+    "Aparece en estas guías" en la página del lugar."""
     query = _published(db)
     if category:
         if category not in blog.CATEGORIES:
             raise HTTPException(status_code=422, detail="Categoría inválida")
         query = query.filter(BlogPost.category == category)
-    return [blog.summary(p) for p in query.order_by(BlogPost.published_at.desc(), BlogPost.id.desc()).all()]
+    posts = query.order_by(BlogPost.published_at.desc(), BlogPost.id.desc()).all()
+    # Los lugares van dentro del JSON de la nota: se filtra acá (son pocas
+    # notas y no hace falta una tabla aparte).
+    if spot is not None:
+        posts = [p for p in posts if spot in blog.spot_ids(p)]
+    return [blog.summary(p) for p in posts]
 
 
 def _spots_by_id(db: Session, ids: list[int]) -> dict[int, dict]:

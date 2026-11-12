@@ -34,6 +34,7 @@ import SuggestedNotice from "@/components/spot-detail/SuggestedNotice"
 import { cameFromRumbo, lastUpdatedLabel, offSeasonNotice } from "@/lib/spotDetail"
 import { activityHref, departmentHref } from "@/lib/places"
 import NearbySpots from "@/components/spot-detail/NearbySpots"
+import SpotGuides from "@/components/blog/SpotGuides"
 import ForecastCard from "@/components/spot-detail/ForecastCard"
 import type { Experience } from "@/components/spot-detail/ExperienciasSection"
 import type { PendingContribution } from "@/components/spot-detail/AddToSpot"
@@ -360,6 +361,9 @@ function SpotDetail({ spot, preview = false }: { spot: SpotPageData; preview?: b
                   </div>
                 </>
               )}
+
+              {/* Las notas del blog que lo nombran (si hay). */}
+              {!preview && <SpotGuides spotId={spot.id} />}
 
               {/* El pronóstico de los próximos días (y olas en surf): para
                   decidir cuándo ir. Junto al mapa, que es lo de "cómo llegar". */}
