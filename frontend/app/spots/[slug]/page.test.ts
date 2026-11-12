@@ -79,6 +79,21 @@ describe("SEO del lugar", () => {
     expect(ld[1].itemListElement[1].item).toBe("https://rumboapp.uy/spots/cabo-2")
   })
 
+  // Google rechaza estrellas en un Place (Search Console: «<parent_node> no es válido»).
+  it("las estrellas van solo en negocios, no en un Place", async () => {
+    const { renderToStaticMarkup } = await import("react-dom/server")
+    const ldOf = async (slug: string, data: Record<string, unknown>) => {
+      spotData = data
+      const html = renderToStaticMarkup(await SpotPage({ params: Promise.resolve({ slug }) }))
+      return JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1])[0]
+    }
+    const rated = { ...cabo, review_count: 3, average_rating: 4.5 }
+    expect((await ldOf("cabo-estrellas", rated)).aggregateRating).toBeUndefined()
+    const school = await ldOf("escuela-estrellas", { ...rated, surf_detail: { id: 1 } })
+    expect(school["@type"]).toBe("SportsActivityLocation")
+    expect(school.aggregateRating).toEqual({ "@type": "AggregateRating", ratingValue: 4.5, reviewCount: 3 })
+  })
+
   it("una escuela de surf es un negocio para Google (SportsActivityLocation)", async () => {
     spotData = { ...cabo, surf_detail: { class_type: "grupal" } }
     const { renderToStaticMarkup } = await import("react-dom/server")

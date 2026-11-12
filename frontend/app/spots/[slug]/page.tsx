@@ -56,17 +56,20 @@ export default async function SpotPage({ params }: Props) {
     ? `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${mainImage.cloudinary_public_id}`
     : undefined
 
+  // Una escuela de surf o un servicio de kayak es un negocio; el resto, un lugar.
+  const isBusiness = Boolean(spot.surf_detail || spot.kayak_service_detail)
   const jsonLd = {
     "@context": "https://schema.org",
-    // Una escuela de surf o un servicio de kayak es un negocio; el resto, un lugar.
-    "@type": spot.surf_detail || spot.kayak_service_detail ? "SportsActivityLocation" : "Place",
+    "@type": isBusiness ? "SportsActivityLocation" : "Place",
     name: spot.name.trim(),
     description: spot.description?.trim() || spotFallbackDescription(spot),
     url: `${SITE_URL}/spots/${slug}`,
     ...(imageUrl ? { image: imageUrl } : {}),
     ...(spot.department ? { address: { "@type": "PostalAddress", addressRegion: spot.department } } : {}),
     ...(spot.lat && spot.lng ? { geo: { "@type": "GeoCoordinates", latitude: spot.lat, longitude: spot.lng } } : {}),
-    ...(spot.review_count > 0
+    // Google no acepta estrellas en un "Place" (Search Console: «El tipo de
+    // objeto del campo <parent_node> no es válido»): solo en negocios.
+    ...(isBusiness && spot.review_count > 0
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: spot.average_rating, reviewCount: spot.review_count } }
       : {}),
   }
