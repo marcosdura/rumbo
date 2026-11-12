@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import SpotCard from "../../components/spots/SpotCard"
@@ -40,7 +40,6 @@ export type InitialResults = { query: string; spots: SpotListItem[]; total: numb
 
 export default function SearchPage({ initial = null }: { initial?: InitialResults | null }) {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const activity   = searchParams.get("activity")   || ""
   const department = searchParams.get("department") || ""
   // El texto buscado en los nombres (campo "Dónde").
@@ -91,9 +90,14 @@ export default function SearchPage({ initial = null }: { initial?: InitialResult
   }, [widerQuery])
   const widerCount = wider && wider.query === widerQuery ? wider.count : 0
 
+  // Cambia la URL sin ir al servidor: Next sincroniza replaceState con
+  // useSearchParams y los lugares los pide el efecto de abajo, con "cargando".
+  // Con router.replace el servidor volvía a armar la página esperando al
+  // backend (page.tsx) y hasta entonces no pasaba nada: tocabas un filtro,
+  // no se veía el cambio, y aparecía tarde, a veces ya en otra página.
   function go(params: URLSearchParams) {
     const query = params.toString()
-    router.replace(query ? `/search?${query}` : "/search", { scroll: false })
+    window.history.replaceState(null, "", query ? `/search?${query}` : "/search")
   }
 
   function applyPanel<A extends FilterActivity>(a: A, state: unknown) {

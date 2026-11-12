@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 
 // URL, router y API simulados con valores comunes, no vi.fn (ver
 // components/agregar-lugar/submit.test.ts). Los filtros viven en la URL:
-// cada cambio es un router.replace a una URL nueva.
+// cada cambio es un history.replaceState a una URL nueva (sin ir al servidor).
 let params = new URLSearchParams("activity=Trekking")
 let replaced: string[] = []
 let listRequests: string[] = []
@@ -13,8 +13,10 @@ let emptyResults = false
 let widerTotal = 0
 vi.mock("next/navigation", () => ({
   useSearchParams: () => params,
-  useRouter: () => ({ replace: (url: string) => replaced.push(url) }),
 }))
+window.history.replaceState = (_state: unknown, _unused: string, url?: string | URL | null) => {
+  replaced.push(String(url))
+}
 vi.mock("next/dynamic", () => ({ default: () => () => null }))
 vi.mock("../../components/layout/Navbar", () => ({ default: () => null }))
 vi.mock("../../components/spots/SpotCard", () => ({ default: ({ spot }: { spot: { name: string } }) => <div>{spot.name}</div> }))
