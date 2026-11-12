@@ -27,16 +27,16 @@ describe("acción pendiente del login", () => {
   })
 })
 
-describe("guardar todos los lugares de una nota", () => {
-  it("vuelve con la lista de lugares", () => {
-    savePendingAction({ kind: "favorites", spotIds: [3, 7] })
+describe("guardar una guía del blog", () => {
+  it("vuelve con la nota", () => {
+    savePendingAction({ kind: "guide", slug: "refugios-bariloche" })
     expect(takePendingAction("favorite")).toBeNull()
-    expect(takePendingAction("favorites")).toEqual({ kind: "favorites", spotIds: [3, 7] })
+    expect(takePendingAction("guide")).toEqual({ kind: "guide", slug: "refugios-bariloche" })
   })
 
-  it("una lista rota se descarta", () => {
-    sessionStorage.setItem("rumbo_pending_action", JSON.stringify({ kind: "favorites", spotIds: ["x"] }))
-    expect(takePendingAction("favorites")).toBeNull()
+  it("un slug raro se descarta", () => {
+    sessionStorage.setItem("rumbo_pending_action", JSON.stringify({ kind: "guide", slug: "../admin" }))
+    expect(takePendingAction("guide")).toBeNull()
     expect(sessionStorage.getItem("rumbo_pending_action")).toBeNull()
   })
 })

@@ -4,19 +4,19 @@
 // la ida y vuelta a Google en la misma pestaña, y no queda colgado.
 // - favorite: se guarda el lugar (Providers.jsx).
 // - review: se abre el formulario de reseña de ese lugar (ReviewsSection).
-// - favorites: se guardan todos los lugares de una nota del blog (Providers.jsx).
+// - guide: se guarda esa guía del blog (Providers.jsx).
 export type PendingAction =
   | { kind: "favorite"; spotId: number }
   | { kind: "review"; spotId: number }
-  | { kind: "favorites"; spotIds: number[] }
+  | { kind: "guide"; slug: string }
 export type PendingKind = PendingAction["kind"]
 
 const KEY = "rumbo_pending_action"
-const KINDS: PendingKind[] = ["favorite", "review", "favorites"]
+const KINDS: PendingKind[] = ["favorite", "review", "guide"]
 
 const isValid = (a: PendingAction | null): a is PendingAction =>
-  !!a && KINDS.includes(a.kind) && (a.kind === "favorites"
-    ? Array.isArray(a.spotIds) && a.spotIds.length > 0 && a.spotIds.every(Number.isInteger)
+  !!a && KINDS.includes(a.kind) && (a.kind === "guide"
+    ? typeof a.slug === "string" && /^[a-z0-9-]{1,160}$/.test(a.slug)
     : Number.isInteger(a.spotId))
 
 export function savePendingAction(action: PendingAction) {

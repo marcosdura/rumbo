@@ -813,3 +813,16 @@ class BlogPost(Base):
     published_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class BlogSave(Base):
+    """Una guía del blog que alguien guardó ("Guardar esta guía"). Aparte de
+    los favoritos de lugares (Favorite): son listas distintas en /favorites."""
+    __tablename__ = "blog_saves"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    post_id = Column(Integer, ForeignKey("blog_posts.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (UniqueConstraint("user_id", "post_id", name="uq_blog_save_user_post"),)

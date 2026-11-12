@@ -2,6 +2,7 @@
 import { SessionProvider, useSession, signOut } from "next-auth/react"
 import { useEffect } from "react"
 import { useFavoritesStore } from "@/store/favoritesStore"
+import { useSavedGuidesStore } from "@/store/savedGuidesStore"
 import { trackEvent } from "@/lib/analytics"
 import { api } from "@/lib/api"
 import { takePendingAction } from "@/lib/pendingAction"
@@ -64,15 +65,14 @@ function FavoritesLoader() {
   useEffect(() => {
     if (!session?.id_token) return
     const token = session.id_token
-    // Tocó ❤️ sin sesión: se guarda apenas vuelve del login.
-    // "Guardar todos los lugares" de una nota del blog, sin sesión.
-    const many = takePendingAction("favorites")
-    if (many) {
-      api.post("/favorites/bulk", { spot_ids: many.spotIds }, { token })
+    // "Guardar guía" en una nota del blog, sin sesión: se guarda al volver.
+    const guide = takePendingAction("guide")
+    if (guide) {
+      api.post(`/blog/posts/${guide.slug}/save`, undefined, { token })
         .catch(() => {})
-        .finally(() => loadFavorites(token))
-      return
+        .finally(() => useSavedGuidesStore.getState().load(token))
     }
+    // Tocó ❤️ sin sesión: se guarda apenas vuelve del login.
     const pending = takePendingAction("favorite")
     if (pending?.kind === "favorite") {
       api.post(`/favorites/${pending.spotId}`, undefined, { token })

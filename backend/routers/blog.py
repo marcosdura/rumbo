@@ -6,13 +6,14 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import blog
-from auth import get_current_admin_user
+from auth import get_current_admin_user, get_current_user_required
 from database import get_db
 from limiter import limiter
-from models import BlogPost, SpotDB
+from models import BlogPost, BlogSave, SpotDB
 from spot_payloads import SPOT_LIST_OPTIONS, serialize_spot_list
 
 router = APIRouter(prefix="/blog", tags=["blog"])
@@ -88,6 +89,53 @@ def get_post(slug: str, db: Session = Depends(get_db)):
         .order_by(BlogPost.published_at.desc()).limit(3).all()
     )
     return {**render(db, post), "related": [blog.summary(p) for p in related]}
+
+
+# ─── Guías guardadas ("Guardar esta guía") ──────────────────────────────────
+# Aparte de los favoritos de lugares: cada uno ve las suyas en /favorites.
+
+@router.get("/saved")
+def saved_posts(db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """Las guías que guardé y siguen publicadas, la última guardada primero."""
+    rows = (
+        _published(db).join(BlogSave, BlogSave.post_id == BlogPost.id)
+        .filter(BlogSave.user_id == user["sub"])
+        .order_by(BlogSave.created_at.desc(), BlogSave.id.desc())
+        .all()
+    )
+    return [blog.summary(p) for p in rows]
+
+
+def _published_by_slug(db: Session, slug: str) -> BlogPost:
+    post = _published(db).filter(BlogPost.slug == slug).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    return post
+
+
+@router.post("/posts/{slug}/save")
+@limiter.limit("30/minute")
+def save_post(request: Request, slug: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    """Guardar una guía. Si ya estaba, no es un error."""
+    post = _published_by_slug(db, slug)
+    exists = db.query(BlogSave).filter(BlogSave.user_id == user["sub"], BlogSave.post_id == post.id).first()
+    if not exists:
+        db.add(BlogSave(user_id=user["sub"], post_id=post.id))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()  # otro pedido igual al mismo tiempo: ya quedó guardada
+    return {"saved": True}
+
+
+@router.delete("/posts/{slug}/save")
+@limiter.limit("30/minute")
+def unsave_post(request: Request, slug: str, db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
+    post = db.query(BlogPost).filter(BlogPost.slug == slug).first()
+    if post:
+        db.query(BlogSave).filter(BlogSave.user_id == user["sub"], BlogSave.post_id == post.id).delete()
+        db.commit()
+    return {"saved": False}
 
 
 # ─── El editor (admin) ──────────────────────────────────────────────────────
@@ -180,7 +228,10 @@ def admin_update(request: Request, post_id: int, raw: dict = Body(...), db: Sess
 @admin_router.delete("/posts/{post_id}", status_code=204)
 @limiter.limit("60/minute")
 def admin_delete(request: Request, post_id: int, db: Session = Depends(get_db)):
-    db.delete(_get(db, post_id))
+    post = _get(db, post_id)
+    # Quien la había guardado deja de tenerla (en SQLite la FK no borra sola).
+    db.query(BlogSave).filter(BlogSave.post_id == post.id).delete()
+    db.delete(post)
     db.commit()
 
 

@@ -288,24 +288,55 @@ def test_las_guias_de_un_lugar(client, db, make_spot):
     assert sorted(p["title"] for p in found) == ["En el mapa", "En una tarjeta"]
 
 
-def test_guardar_todos_los_lugares_de_una_nota(client, db, make_spot):
-    from models import Favorite
-    a, b = make_spot(name="Uno"), make_spot(name="Dos")
-    oculto = make_spot(name="Oculto", approved=False)
+def test_guardar_una_guia_aparte_de_los_favoritos(client, db):
+    from models import BlogSave, Favorite
+    blog.save_post(db, _post(title="Uno"))
+    blog.save_post(db, _post(title="Dos"))
+    db.commit()
     me = as_user("ana@test.com")
-    assert client.post(f"/favorites/{a.id}", headers=me).status_code == 201
+    assert client.post("/blog/posts/uno/save", headers=me).json() == {"saved": True}
+    assert client.post("/blog/posts/dos/save", headers=me).status_code == 200
+    # Otra vez: no es un error ni la duplica.
+    assert client.post("/blog/posts/uno/save", headers=me).status_code == 200
+    assert db.query(BlogSave).count() == 2
+    # La última guardada primero; los favoritos de lugares no se tocan.
+    assert [p["title"] for p in client.get("/blog/saved", headers=me).json()] == ["Dos", "Uno"]
+    assert db.query(Favorite).count() == 0
+    # Cada uno ve las suyas.
+    assert client.get("/blog/saved", headers=as_user("otro@test.com")).json() == []
 
-    res = client.post("/favorites/bulk", json={"spot_ids": [a.id, b.id, oculto.id, 9999]}, headers=me)
-    assert res.status_code == 200
-    assert res.json() == {"added": 1, "saved": 2}
-    assert {f.spot_id for f in db.query(Favorite).all()} == {a.id, b.id}
-    # Otra vez: nada nuevo, sin error.
-    assert client.post("/favorites/bulk", json={"spot_ids": [a.id, b.id]}, headers=me).json() == {"added": 0, "saved": 2}
+    assert client.delete("/blog/posts/uno/save", headers=me).json() == {"saved": False}
+    assert [p["title"] for p in client.get("/blog/saved", headers=me).json()] == ["Dos"]
 
 
-def test_guardar_todos_pide_sesion_y_una_lista(client):
-    assert client.post("/favorites/bulk", json={"spot_ids": [1]}).status_code == 401
+def test_guardar_pide_sesion_y_una_nota_publicada(client, db):
+    blog.save_post(db, _post(title="Borrador", status="draft"))
+    db.commit()
+    assert client.post("/blog/posts/borrador/save").status_code == 401
+    assert client.get("/blog/saved").status_code == 401
+    assert client.post("/blog/posts/borrador/save", headers=as_user("ana@test.com")).status_code == 404
+    assert client.post("/blog/posts/no-existe/save", headers=as_user("ana@test.com")).status_code == 404
+
+
+def test_una_guia_guardada_que_pasa_a_borrador_o_se_borra(client, db):
+    from models import BlogSave
+    post = blog.save_post(db, _post(title="Uno"))
+    db.commit()
     me = as_user("ana@test.com")
-    assert client.post("/favorites/bulk", json={"spot_ids": []}, headers=me).status_code == 422
-    assert client.post("/favorites/bulk", json={"spot_ids": ["1"]}, headers=me).status_code == 422
-    assert client.post("/favorites/bulk", json={"spot_ids": list(range(1, 62))}, headers=me).status_code == 422
+    client.post("/blog/posts/uno/save", headers=me)
+    # A borrador: deja de verse en la lista (y vuelve si se publica otra vez).
+    client.put(f"/admin/blog/posts/{post.id}", json=_post(title="Uno", status="draft"), headers=ADMIN_H)
+    assert client.get("/blog/saved", headers=me).json() == []
+    # Borrada: se va también de lo guardado.
+    client.delete(f"/admin/blog/posts/{post.id}", headers=ADMIN_H)
+    assert db.query(BlogSave).count() == 0
+
+
+def test_borrar_la_cuenta_borra_sus_guias_guardadas(client, db, make_user):
+    from models import BlogSave
+    make_user("ana@test.com")
+    blog.save_post(db, _post(title="Uno"))
+    db.commit()
+    client.post("/blog/posts/uno/save", headers=as_user("ana@test.com"))
+    assert client.delete("/users/me", headers=as_user("ana@test.com")).status_code == 200
+    assert db.query(BlogSave).count() == 0

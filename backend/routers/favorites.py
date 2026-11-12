@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from database import get_db
@@ -26,31 +26,6 @@ def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_curren
         .all()
     )
     return serialize_spot_list(db, spots)
-
-
-MAX_BULK = 60
-
-
-@router.post("/bulk")
-@limiter.limit("10/minute")
-async def add_favorites(request: Request, body: dict = Body(...), db: Session = Depends(get_db), user: dict = Depends(get_current_user_required)):
-    """Guardar varios de una ("Guardar todos los lugares" de una nota del
-    blog). Solo los publicados; los que ya estaban no cuentan como error."""
-    ids = body.get("spot_ids")
-    if not isinstance(ids, list) or not ids or len(ids) > MAX_BULK or not all(isinstance(i, int) and not isinstance(i, bool) for i in ids):
-        raise HTTPException(status_code=422, detail=f"spot_ids: entre 1 y {MAX_BULK} ids")
-    wanted = set(ids)
-    visible = {s.id for s in home.visible(db.query(SpotDB.id).filter(SpotDB.id.in_(wanted)))}
-    already = {f.spot_id for f in db.query(Favorite.spot_id).filter(Favorite.user_id == user["sub"], Favorite.spot_id.in_(visible))}
-    added = [i for i in ids if i in visible and i not in already]
-    for spot_id in dict.fromkeys(added):
-        db.add(Favorite(user_id=user["sub"], spot_id=spot_id))
-    try:
-        db.commit()
-    except IntegrityError:
-        # Otro pedido igual al mismo tiempo: lo que quedó guardado, quedó.
-        db.rollback()
-    return {"added": len(set(added)), "saved": len(visible)}
 
 
 @router.post("/{spot_id}", status_code=status.HTTP_201_CREATED)

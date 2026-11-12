@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 import item_photos
-from models import User, Favorite, Review, SpotDB, SpotChangeRequest
+from models import BlogSave, User, Favorite, Review, SpotDB, SpotChangeRequest
 from database import get_db
 from auth import get_current_user_required
 from limiter import limiter
@@ -42,6 +42,7 @@ async def delete_account(
     orphan_photos = item_photos.photos_for_deleted(db, "review_id", review_ids, db_user.email)
     db.query(Review).filter(Review.user_id == user_id).delete()
     db.query(Favorite).filter(Favorite.user_id == user_id).delete()
+    db.query(BlogSave).filter(BlogSave.user_id == user_id).delete()
 
     # Los spots no se borran: se desactivan (dejan de mostrarse públicamente)
     # y quedan a la vista del admin en /admin bajo "Cuentas eliminadas" para
