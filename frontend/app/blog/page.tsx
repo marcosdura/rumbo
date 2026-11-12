@@ -21,8 +21,11 @@ export const metadata: Metadata = {
 
 // Si el backend falla, el error sigue hasta app/error.tsx (como los lugares).
 export default async function BlogPage({ searchParams }: Props) {
-  const { data: posts } = await api.get<BlogSummary[]>("/blog/posts", { next: { revalidate: 600 } })
+  // Primero la categoría del link: así la página se arma al pedirla y no en
+  // el build. En el build de Vercel el backend nuevo puede no estar
+  // desplegado todavía (Railway despliega a la par) y el deploy fallaba.
   const initialCategory = asCategory((await searchParams).categoria)
+  const { data: posts } = await api.get<BlogSummary[]>("/blog/posts", { next: { revalidate: 600 } })
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
